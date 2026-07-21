@@ -1,6 +1,6 @@
-# Using this template
+# Using this starter
 
-This is a **template repository**, not a collaborative product. The
+This is a **starter repository**, not a collaborative product. The
 expected flow is:
 
 1. **Fork** it to your own GitHub account or organisation.
@@ -46,7 +46,7 @@ If you've made heavy local customisations, rebasing can surface
 conflicts every time you pull. Pinning to a specific upstream tag and
 updating on your schedule is a valid alternative.
 
-## Reporting bugs in the upstream template
+## Reporting bugs in the upstream starter
 
 If you find a bug in the upstream code — not one you introduced in your
 fork — please file it using the
@@ -95,7 +95,7 @@ closed — open the issue first to align.
 
 ## If you maintain a public fork
 
-- Rebrand. The "CRM Template for WhatsApp" name, favicon, and
+- Rebrand. The "WhatsApp CRM" name, favicon, and
   `wacrm.tech` URL belong to the upstream project; please swap them
   for your own before putting your deployment in front of users.
 - Keep the MIT [`LICENSE`](./LICENSE) file — that's how the template's

@@ -1,6 +1,6 @@
-# wacrm — CRM Template for WhatsApp
+# WhatsApp CRM
 
-> Self-hostable CRM template for WhatsApp® — shared inbox, contacts,
+> Self-hostable WhatsApp CRM — shared inbox, contacts,
 > sales pipelines, broadcasts, and no-code automations. Fork it, brand
 > it, host it.
 
@@ -46,7 +46,7 @@ clone or fork it to run your own CRM.
 
 ## Why fork this?
 
-This is a **template**, not a product. Forking means you get:
+This is a **starter**, not a product. Forking means you get:
 
 - **Full ownership** — your code, your Supabase project, your domain,
   your data. No SaaS lock-in, no seat pricing, no trust dance.
@@ -149,7 +149,7 @@ Key pages:
 
 ## Contributing
 
-This is a template, not a collaborative product — the expected flow is
+This is a starter, not a collaborative product — the expected flow is
 fork → customise → deploy, **not** upstream contribution. Bug reports
 and security issues are welcome; feature PRs often belong in your fork
 rather than here. Details in
