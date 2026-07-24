@@ -42,3 +42,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+@
+.vercel
+*.log
+check-*.js
+get-anon-key.js
+combined.sql
+login-page.html
