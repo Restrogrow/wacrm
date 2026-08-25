@@ -26,10 +26,10 @@ export default function ContactPage() {
         <div className="rounded-lg border border-border p-5">
           <h2 className="text-sm font-semibold text-foreground">Email</h2>
           <a
-            href="mailto:restrogrow@gmail.com"
+            href="mailto:support.repeatgrow@gmail.com"
             className="mt-1 block text-sm text-muted-foreground underline"
           >
-            restrogrow@gmail.com
+            support.repeatgrow@gmail.com
           </a>
         </div>
 
