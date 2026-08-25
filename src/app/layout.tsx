@@ -28,9 +28,9 @@ export const metadata: Metadata = {
     index: false,
     follow: false,
   },
-  icons: {
-    icon: [{ url: "/icon" }],
-  },
+  // No manual `icons` override — `src/app/icon.png` and
+  // `src/app/apple-icon.png` are auto-detected by Next.js's file
+  // convention and injected into <head> automatically.
   formatDetection: {
     email: false,
     address: false,

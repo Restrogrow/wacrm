@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 
 // This route renders the Repeat Grow marketing homepage. It was migrated
 // from a standalone static HTML file (landing-page/index.html) so it can
@@ -152,16 +153,7 @@ const LANDING_CSS = `
 .lp-page .brand-mark{
   width: 26px;
   height: 26px;
-  border: 1px solid var(--border-accent);
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  background: var(--accent-soft);
+  object-fit: contain;
   flex: none;
 }
 .lp-page .brand-word{ font-family: var(--font-mono); }
@@ -995,7 +987,7 @@ const LANDING_BODY_HTML = `
 <nav class="site-nav">
   <div class="container">
     <a href="#top" class="brand">
-      <span class="brand-mark">&gt;_</span>
+      <img src="/logo.png" alt="Repeat Grow" class="brand-mark" width="26" height="26">
       <span class="brand-word">Repeat<span class="dim">Grow</span></span>
     </a>
     <div class="nav-links">
@@ -1363,7 +1355,7 @@ const LANDING_BODY_HTML = `
     <div class="footer-top">
       <div class="footer-brand">
         <a href="#top" class="brand">
-          <span class="brand-mark">&gt;_</span>
+          <img src="/logo.png" alt="Repeat Grow" class="brand-mark" width="26" height="26">
           <span class="brand-word">Repeat<span class="dim">Grow</span></span>
         </a>
         <p>WhatsApp CRM for sales and support teams — built on the official WhatsApp Business API, set up and supported for you.</p>
@@ -1452,7 +1444,11 @@ export default function Home() {
     <>
       <style dangerouslySetInnerHTML={{ __html: LANDING_CSS }} />
       <div className="lp-page" dangerouslySetInnerHTML={{ __html: LANDING_BODY_HTML }} />
-      <script dangerouslySetInnerHTML={{ __html: LANDING_SCRIPT }} />
+      <Script
+        id="landing-page-script"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{ __html: LANDING_SCRIPT }}
+      />
     </>
   );
 }
