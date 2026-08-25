@@ -160,8 +160,8 @@ export default function TermsPage() {
           <h2 className="text-lg font-semibold text-foreground">13. Contact</h2>
           <p className="mt-3">
             Questions about these Terms can be sent to{" "}
-            <a href="mailto:restrogrow@gmail.com" className="underline">
-              restrogrow@gmail.com
+            <a href="mailto:support.repeatgrow@gmail.com" className="underline">
+              support.repeatgrow@gmail.com
             </a>
             .
           </p>

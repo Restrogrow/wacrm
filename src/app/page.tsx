@@ -1337,7 +1337,7 @@ const LANDING_BODY_HTML = `
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Public REST API included</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Ongoing support when you need it</li>
         </ul>
-        <a href="mailto:restrogrow@gmail.com?subject=Repeat%20Grow%20pricing" class="btn btn-primary">Email us for pricing &rarr;</a>
+        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20pricing" class="btn btn-primary">Email us for pricing &rarr;</a>
       </div>
     </div>
   </div>
