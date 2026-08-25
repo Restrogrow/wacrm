@@ -1006,7 +1006,6 @@ const LANDING_BODY_HTML = `
     </div>
     <div class="nav-right">
       <a href="/login" class="nav-login">Login</a>
-      <a href="https://wa.me/91XXXXXXXXXX" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Chat on WhatsApp</a>
       <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobileNav">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
@@ -1020,7 +1019,6 @@ const LANDING_BODY_HTML = `
     <a href="#pricing">Pricing</a>
     <a href="#">Docs</a>
     <a href="/login">Login</a>
-    <a href="https://wa.me/91XXXXXXXXXX" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Chat on WhatsApp</a>
   </div>
 </div>
 
@@ -1034,8 +1032,7 @@ const LANDING_BODY_HTML = `
       <h1>Turn one-time chats into <span class="accent-text">repeat</span> customers.</h1>
       <p class="hero-sub">Repeat Grow is a WhatsApp CRM for sales and support teams — shared inbox, contacts, sales pipelines, broadcasts, and no-code automations, built on the official WhatsApp Business API. We set it up for your business, so your team is selling on WhatsApp in days.</p>
       <div class="hero-ctas">
-        <a href="https://wa.me/91XXXXXXXXXX" target="_blank" rel="noopener" class="btn btn-primary">Chat on WhatsApp &rarr;</a>
-        <a href="#how-it-works" class="btn btn-ghost">See how it works</a>
+        <a href="#how-it-works" class="btn btn-primary">See how it works</a>
       </div>
       <div class="hero-meta">
         <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Official WhatsApp Business API</span>
@@ -1340,7 +1337,7 @@ const LANDING_BODY_HTML = `
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Public REST API included</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Ongoing support when you need it</li>
         </ul>
-        <a href="https://wa.me/91XXXXXXXXXX" target="_blank" rel="noopener" class="btn btn-primary">Chat on WhatsApp for pricing &rarr;</a>
+        <a href="mailto:restrogrow@gmail.com?subject=Repeat%20Grow%20pricing" class="btn btn-primary">Email us for pricing &rarr;</a>
       </div>
     </div>
   </div>
@@ -1351,10 +1348,9 @@ const LANDING_BODY_HTML = `
   <div class="container">
     <span class="eyebrow" style="justify-content:center;">Ready when you are</span>
     <h2 style="margin-top:18px;">Turn WhatsApp into your best sales channel.</h2>
-    <p>Chat with us and we'll get your team set up on Repeat Grow — usually live within days.</p>
+    <p>Email us and we'll get your team set up on Repeat Grow — usually live within days.</p>
     <div class="hero-ctas">
-      <a href="https://wa.me/91XXXXXXXXXX" target="_blank" rel="noopener" class="btn btn-primary">Chat on WhatsApp &rarr;</a>
-      <a href="#pricing" class="btn btn-ghost">See what's included</a>
+      <a href="#pricing" class="btn btn-primary">See what's included</a>
     </div>
   </div>
 </section>
@@ -1384,18 +1380,19 @@ const LANDING_BODY_HTML = `
       <div class="footer-col">
         <h4>Resources</h4>
         <ul>
+          <li><a href="/about">About Us</a></li>
+          <li><a href="/contact">Contact Us</a></li>
           <li><a href="#">Help Center</a></li>
-          <li><a href="#">Contact us</a></li>
-          <li><a href="#">WhatsApp API guide</a></li>
           <li><a href="#">API reference</a></li>
         </ul>
       </div>
       <div class="footer-col">
         <h4>Legal</h4>
         <ul>
-          <li><a href="#">Privacy</a></li>
-          <li><a href="#">Terms</a></li>
-          <li><a href="#">Security</a></li>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms &amp; Conditions</a></li>
+          <li><a href="/disclaimer">Disclaimer</a></li>
+          <li><a href="/security">Security</a></li>
         </ul>
       </div>
     </div>
