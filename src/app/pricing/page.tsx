@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { LANDING_CSS } from "@/lib/landing-css";
 import { LANDING_SCRIPT } from "@/lib/landing-script";
-import { LANDING_NAV_HTML, LANDING_FOOTER_HTML } from "@/lib/landing-chrome";
+import {
+  LANDING_NAV_HTML,
+  LANDING_FOOTER_HTML,
+  LANDING_WHATSAPP_FLOAT_HTML,
+} from "@/lib/landing-chrome";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -189,7 +193,11 @@ export default function PricingPage() {
       <div
         className="lp-page"
         dangerouslySetInnerHTML={{
-          __html: LANDING_NAV_HTML + PRICING_BODY_HTML + LANDING_FOOTER_HTML,
+          __html:
+            LANDING_NAV_HTML +
+            PRICING_BODY_HTML +
+            LANDING_FOOTER_HTML +
+            LANDING_WHATSAPP_FLOAT_HTML,
         }}
       />
       <Script

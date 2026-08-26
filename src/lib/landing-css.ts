@@ -115,7 +115,7 @@ export const LANDING_CSS = `
 .lp-page .site-nav .container{
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 48px;
   height: 68px;
 }
 .lp-page .brand{
@@ -139,7 +139,7 @@ export const LANDING_CSS = `
 .lp-page .nav-links{
   display: flex;
   align-items: center;
-  gap: 34px;
+  gap: 28px;
 }
 .lp-page .nav-links a{
   font-size: 14.5px;
@@ -164,13 +164,22 @@ export const LANDING_CSS = `
   display: flex;
   align-items: center;
   gap: 20px;
+  margin-left: auto;
 }
 .lp-page .nav-login{
   font-size: 14px;
-  color: var(--text-muted);
-  transition: color .15s ease;
+  font-weight: 600;
+  color: var(--text);
+  padding: 8px 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
 }
-.lp-page .nav-login:hover{ color: var(--text); }
+.lp-page .nav-login:hover{
+  border-color: var(--border-accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
 
 .lp-page .btn{
   display: inline-flex;
@@ -870,6 +879,29 @@ export const LANDING_CSS = `
 .lp-page .cta-band .hero-ctas{ justify-content: center; margin-top: 32px; }
 
 
+.lp-page .whatsapp-float{
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 200;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px -6px rgba(37,211,102,0.55), 0 2px 10px rgba(16,24,32,0.18);
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.lp-page .whatsapp-float:hover{
+  background: #20bd5a;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 14px 30px -6px rgba(37,211,102,0.65), 0 6px 14px rgba(16,24,32,0.2);
+}
+.lp-page .whatsapp-float svg{ width: 30px; height: 30px; }
+
 .lp-page footer{ padding: 72px 0 34px; background: var(--accent-deep); }
 .lp-page .footer-top{
   display: grid;
@@ -926,6 +958,8 @@ export const LANDING_CSS = `
 @media (max-width: 720px){
   .lp-page .container{ padding: 0 20px; }
   .lp-page section{ padding: 76px 0; }
+  .lp-page .whatsapp-float{ width: 50px; height: 50px; right: 16px; bottom: 16px; }
+  .lp-page .whatsapp-float svg{ width: 26px; height: 26px; }
   .lp-page .nav-links{ display: none; }
   .lp-page .nav-right .nav-login{ display: none; }
   .lp-page .nav-toggle{ display: flex; }
