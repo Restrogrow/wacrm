@@ -14,7 +14,28 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MessageSquare, CheckCircle, UsersRound } from "lucide-react";
+
+const NATURE_OF_BUSINESS_OPTIONS = [
+  "Retail & E-commerce",
+  "Services & Consulting",
+  "Healthcare",
+  "Education",
+  "Real Estate",
+  "Hospitality & Travel",
+  "Finance & Insurance",
+  "Manufacturing",
+  "Other",
+];
+
+const TEAM_SIZE_OPTIONS = ["Just me", "2-5", "6-20", "21-50", "50+"];
 
 // `useSearchParams` opts the component out of static prerendering
 // unless wrapped in Suspense — same pattern as /login.
@@ -36,6 +57,10 @@ function SignupPageInner() {
   const inviteToken = searchParams.get("invite");
 
   const [fullName, setFullName] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [natureOfBusiness, setNatureOfBusiness] = useState("");
+  const [teamSize, setTeamSize] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -47,6 +72,16 @@ function SignupPageInner() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!natureOfBusiness) {
+      setError("Please select the nature of your business");
+      return;
+    }
+
+    if (!teamSize) {
+      setError("Please select your team size");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -74,6 +109,10 @@ function SignupPageInner() {
       options: {
         data: {
           full_name: fullName,
+          business_name: businessName,
+          mobile_number: mobileNumber,
+          nature_of_business: natureOfBusiness,
+          team_size: teamSize,
         },
         ...(emailRedirectTo ? { emailRedirectTo } : {}),
       },
@@ -168,6 +207,78 @@ function SignupPageInner() {
                 required
                 className="border-border bg-muted text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20"
               />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="businessName" className="text-muted-foreground">
+                Business name
+              </Label>
+              <Input
+                id="businessName"
+                type="text"
+                placeholder="Acme Inc."
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                required
+                className="border-border bg-muted text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="mobileNumber" className="text-muted-foreground">
+                Mobile number
+              </Label>
+              <Input
+                id="mobileNumber"
+                type="tel"
+                placeholder="+91 98765 43210"
+                value={mobileNumber}
+                onChange={(e) => setMobileNumber(e.target.value)}
+                required
+                className="border-border bg-muted text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="natureOfBusiness" className="text-muted-foreground">
+                Nature of business
+              </Label>
+              <Select
+                value={natureOfBusiness}
+                onValueChange={(value) => setNatureOfBusiness(value ?? "")}
+              >
+                <SelectTrigger id="natureOfBusiness" className="bg-muted">
+                  <SelectValue placeholder="Select an option" />
+                </SelectTrigger>
+                <SelectContent>
+                  {NATURE_OF_BUSINESS_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="teamSize" className="text-muted-foreground">
+                Team size
+              </Label>
+              <Select
+                value={teamSize}
+                onValueChange={(value) => setTeamSize(value ?? "")}
+              >
+                <SelectTrigger id="teamSize" className="bg-muted">
+                  <SelectValue placeholder="Select an option" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TEAM_SIZE_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex flex-col gap-2">
