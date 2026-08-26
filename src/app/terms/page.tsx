@@ -76,11 +76,33 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-semibold text-foreground">5. Fees &amp; Payment</h2>
           <p className="mt-3">
-            Repeat Grow is offered on a custom-plan basis, scoped to your
-            team size and WhatsApp volume. Fees, billing frequency, and
-            payment terms are as agreed in writing (including by email) at
-            the time your plan is set up. We do not publish a fixed public
-            price list.
+            Repeat Grow is offered on the published subscription plans
+            listed on our{" "}
+            <Link href="/#pricing" className="underline">
+              pricing page
+            </Link>
+            , billed monthly or yearly in advance. Larger or custom
+            requirements are scoped and agreed separately in writing
+            (including by email). WhatsApp per-conversation charges are
+            billed by Meta directly and are separate from your Repeat Grow
+            subscription. All fees are non-refundable except where required
+            by law; see Section 5A (No Refund Policy).
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold text-foreground">
+            5A. No Refund Policy
+          </h2>
+          <p className="mt-3">
+            Subscription payments are non-refundable, including for partial
+            billing periods, unused capacity, or early cancellation. You may
+            cancel future renewals at any time by contacting{" "}
+            <a href="mailto:support.repeatgrow@gmail.com" className="underline">
+              support.repeatgrow@gmail.com
+            </a>
+            ; cancellation stops the next billing cycle but does not refund
+            the current one.
           </p>
         </section>
 

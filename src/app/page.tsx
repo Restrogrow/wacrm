@@ -798,6 +798,83 @@ const LANDING_CSS = `
   max-width: 480px;
   margin: 0 auto;
 }
+.lp-page .pricing-toggle{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin: 0 auto 40px;
+  padding: 5px;
+  width: fit-content;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--bg-elevated);
+}
+.lp-page .cycle-btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.lp-page .cycle-btn.is-active{
+  background: var(--accent);
+  color: #06120c;
+}
+.lp-page .cycle-btn .save-badge{
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(6,18,12,0.16);
+}
+.lp-page .cycle-btn:not(.is-active) .save-badge{
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.lp-page .pricing-grid-3{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  align-items: stretch;
+}
+.lp-page .pricing-grid-3[hidden]{ display: none; }
+.lp-page .price-card .price-period{
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.lp-page .price-card .price-period .save{ color: var(--accent); }
+.lp-page .price-card .price-note{
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.lp-page .price-card .limits{
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lp-page .price-card .limits li{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.lp-page .price-card .limits li b{ color: var(--text); font-weight: 600; }
 .lp-page .price-card{
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
@@ -954,6 +1031,7 @@ const LANDING_CSS = `
   .lp-page .app-col{ border-right: none; border-bottom: 1px solid var(--border); }
   .lp-page .thread{ order: -1; }
   .lp-page .pricing-grid{ grid-template-columns: 1fr; }
+  .lp-page .pricing-grid-3{ grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
   .lp-page .footer-top{ grid-template-columns: 1fr 1fr; row-gap: 36px; }
 }
 
@@ -1314,24 +1392,144 @@ const LANDING_BODY_HTML = `
     <div class="section-head reveal">
       <span class="eyebrow">Pricing</span>
       <h2>Pricing that fits your business</h2>
-      <p>Every team's WhatsApp volume and headcount is different, so we scope your plan instead of forcing you into a fixed tier. No hidden fees, no long-term lock-in.</p>
+      <p>Simple, published plans that scale with your contacts and team. No hidden fees. We handle WhatsApp Business API setup on every plan.</p>
     </div>
 
-    <div class="pricing-single reveal">
-      <div class="price-card featured">
-        <span class="plan-name mono">Repeat Grow</span>
-        <h3>Custom plan</h3>
-        <p class="desc">Tell us about your team and your WhatsApp volume, and we'll put together a plan that fits — with everything below included.</p>
+    <div class="pricing-toggle reveal" role="group" aria-label="Billing cycle">
+      <button type="button" class="cycle-btn is-active" data-cycle="monthly" aria-pressed="true">Monthly</button>
+      <button type="button" class="cycle-btn" data-cycle="yearly" aria-pressed="false">Yearly <span class="save-badge">Save 10%</span></button>
+    </div>
+
+    <div class="pricing-grid-3 reveal" data-cycle-panel="monthly">
+      <div class="price-card">
+        <span class="plan-name mono">Starter</span>
+        <h3>&#8377;499<small>/month</small></h3>
+        <p class="price-note">+ WhatsApp per-conversation fees billed by Meta</p>
+        <p class="desc">For a single team getting started with WhatsApp support and sales.</p>
         <ul class="price-list">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Shared inbox, pipelines, broadcasts &amp; automations</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Official WhatsApp Business API setup, handled for you</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Onboarding &amp; training for your whole team</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Public REST API included</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Ongoing support when you need it</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Shared inbox on the official WhatsApp Business API</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Sales pipelines &amp; broadcasts with Meta-approved templates</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Public REST API &amp; webhook access</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Self-service support + docs</li>
         </ul>
-        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20pricing" class="btn btn-primary">Email us for pricing &rarr;</a>
+        <ul class="limits">
+          <li>Contacts import/export<b>2,000</b></li>
+          <li>Broadcasts/month<b>60</b></li>
+          <li>Automation flows<b>5</b></li>
+          <li>Custom fields<b>5</b></li>
+          <li>Team members<b>5</b></li>
+        </ul>
+        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Starter%20plan%20(monthly)" class="btn btn-ghost">Choose Starter</a>
+      </div>
+      <div class="price-card featured">
+        <span class="plan-name mono">Growth</span>
+        <h3>&#8377;999<small>/month</small></h3>
+        <p class="price-note">+ WhatsApp per-conversation fees billed by Meta</p>
+        <p class="desc">For growing teams running more campaigns with more people on the inbox.</p>
+        <ul class="price-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Everything in Starter</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>No-code automation flows with branches &amp; webhooks</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Real-time dashboard &amp; activity feed</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Priority support (24&ndash;48 hrs)</li>
+        </ul>
+        <ul class="limits">
+          <li>Contacts import/export<b>50,000</b></li>
+          <li>Broadcasts/month<b>250</b></li>
+          <li>Automation flows<b>25</b></li>
+          <li>Custom fields<b>25</b></li>
+          <li>Team members<b>25</b></li>
+        </ul>
+        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Growth%20plan%20(monthly)" class="btn btn-primary">Choose Growth</a>
+      </div>
+      <div class="price-card">
+        <span class="plan-name mono">Enterprise</span>
+        <h3>&#8377;1,999<small>/month</small></h3>
+        <p class="price-note">+ WhatsApp per-conversation fees billed by Meta</p>
+        <p class="desc">For larger teams that need no caps and hands-on setup.</p>
+        <ul class="price-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Everything in Growth</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Dedicated onboarding &amp; training</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Standard support + Business Manager setup</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Call + WhatsApp team support</li>
+        </ul>
+        <ul class="limits">
+          <li>Contacts import/export<b>Unlimited</b></li>
+          <li>Broadcasts/month<b>Unlimited</b></li>
+          <li>Automation flows<b>Unlimited</b></li>
+          <li>Custom fields<b>Unlimited</b></li>
+          <li>Team members<b>Unlimited</b></li>
+        </ul>
+        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Enterprise%20plan%20(monthly)" class="btn btn-ghost">Choose Enterprise</a>
       </div>
     </div>
+
+    <div class="pricing-grid-3" data-cycle-panel="yearly" hidden>
+      <div class="price-card">
+        <span class="plan-name mono">Starter</span>
+        <h3>&#8377;5,389<small>/year</small></h3>
+        <p class="price-period"><span class="save">Save 10%</span> &middot; &#8776; &#8377;449/month</p>
+        <p class="price-note">+ WhatsApp per-conversation fees billed by Meta</p>
+        <p class="desc">For a single team getting started with WhatsApp support and sales.</p>
+        <ul class="price-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Shared inbox on the official WhatsApp Business API</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Sales pipelines &amp; broadcasts with Meta-approved templates</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Public REST API &amp; webhook access</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Self-service support + docs</li>
+        </ul>
+        <ul class="limits">
+          <li>Contacts import/export<b>2,000</b></li>
+          <li>Broadcasts/month<b>60</b></li>
+          <li>Automation flows<b>5</b></li>
+          <li>Custom fields<b>5</b></li>
+          <li>Team members<b>5</b></li>
+        </ul>
+        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Starter%20plan%20(yearly)" class="btn btn-ghost">Choose Starter</a>
+      </div>
+      <div class="price-card featured">
+        <span class="plan-name mono">Growth</span>
+        <h3>&#8377;10,789<small>/year</small></h3>
+        <p class="price-period"><span class="save">Save 10%</span> &middot; &#8776; &#8377;899/month</p>
+        <p class="price-note">+ WhatsApp per-conversation fees billed by Meta</p>
+        <p class="desc">For growing teams running more campaigns with more people on the inbox.</p>
+        <ul class="price-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Everything in Starter</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>No-code automation flows with branches &amp; webhooks</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Real-time dashboard &amp; activity feed</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Priority support (24&ndash;48 hrs)</li>
+        </ul>
+        <ul class="limits">
+          <li>Contacts import/export<b>50,000</b></li>
+          <li>Broadcasts/month<b>250</b></li>
+          <li>Automation flows<b>25</b></li>
+          <li>Custom fields<b>25</b></li>
+          <li>Team members<b>25</b></li>
+        </ul>
+        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Growth%20plan%20(yearly)" class="btn btn-primary">Choose Growth</a>
+      </div>
+      <div class="price-card">
+        <span class="plan-name mono">Enterprise</span>
+        <h3>&#8377;21,589<small>/year</small></h3>
+        <p class="price-period"><span class="save">Save 10%</span> &middot; &#8776; &#8377;1,799/month</p>
+        <p class="price-note">+ WhatsApp per-conversation fees billed by Meta</p>
+        <p class="desc">For larger teams that need no caps and hands-on setup.</p>
+        <ul class="price-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Everything in Growth</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Dedicated onboarding &amp; training</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Standard support + Business Manager setup</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Call + WhatsApp team support</li>
+        </ul>
+        <ul class="limits">
+          <li>Contacts import/export<b>Unlimited</b></li>
+          <li>Broadcasts/month<b>Unlimited</b></li>
+          <li>Automation flows<b>Unlimited</b></li>
+          <li>Custom fields<b>Unlimited</b></li>
+          <li>Team members<b>Unlimited</b></li>
+        </ul>
+        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Enterprise%20plan%20(yearly)" class="btn btn-ghost">Choose Enterprise</a>
+      </div>
+    </div>
+
+    <p class="how-caption" style="margin-top:32px;">Need something bigger, or a self-hosted deployment? <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Custom%20plan" style="color:var(--accent);">Email us</a> and we'll scope a custom plan.</p>
   </div>
 </section>
 
@@ -1419,6 +1617,23 @@ const LANDING_SCRIPT = `
       });
     });
   }
+
+  // Pricing monthly/yearly toggle
+  var cycleBtns = document.querySelectorAll('.cycle-btn');
+  var cyclePanels = document.querySelectorAll('[data-cycle-panel]');
+  cycleBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var cycle = btn.getAttribute('data-cycle');
+      cycleBtns.forEach(function(b){
+        var isActive = b === btn;
+        b.classList.toggle('is-active', isActive);
+        b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+      cyclePanels.forEach(function(panel){
+        panel.hidden = panel.getAttribute('data-cycle-panel') !== cycle;
+      });
+    });
+  });
 
   // Scroll-reveal
   var revealEls = document.querySelectorAll('.reveal');
