@@ -275,7 +275,7 @@ export const LANDING_CSS = `
 .lp-page .hero .container{
   position: relative;
 }
-.lp-page .hero-copy{ max-width: 640px; }
+.lp-page .hero-copy{ max-width: 640px; margin: 0 auto; text-align: center; }
 
 .lp-page .hero-copy, .lp-page .feature-card, .lp-page .price-card, .lp-page .app-col{
   min-width: 0;
@@ -288,7 +288,7 @@ export const LANDING_CSS = `
 }
 .lp-page .hero h1 .accent-text{ color: var(--accent); }
 .lp-page .hero-sub{
-  margin-top: 22px;
+  margin: 22px auto 0;
   font-size: 17.5px;
   color: var(--text-muted);
   max-width: 46ch;
@@ -298,6 +298,7 @@ export const LANDING_CSS = `
   margin-top: 34px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 14px;
   flex-wrap: wrap;
 }
@@ -309,6 +310,7 @@ export const LANDING_CSS = `
 .lp-page .hero-meta{
   margin-top: 30px;
   display: flex;
+  justify-content: center;
   gap: 22px;
   flex-wrap: wrap;
   font-family: var(--font-mono);
