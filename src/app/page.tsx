@@ -987,7 +987,7 @@ const LANDING_BODY_HTML = `
 <nav class="site-nav">
   <div class="container">
     <a href="#top" class="brand">
-      <img src="/logo.png" alt="Repeat Grow" class="brand-mark" width="26" height="26">
+      <img src="/logo-v2.png" alt="Repeat Grow" class="brand-mark" width="26" height="26">
       <span class="brand-word">Repeat<span class="dim">Grow</span></span>
     </a>
     <div class="nav-links">
@@ -1355,7 +1355,7 @@ const LANDING_BODY_HTML = `
     <div class="footer-top">
       <div class="footer-brand">
         <a href="#top" class="brand">
-          <img src="/logo.png" alt="Repeat Grow" class="brand-mark" width="26" height="26">
+          <img src="/logo-v2.png" alt="Repeat Grow" class="brand-mark" width="26" height="26">
           <span class="brand-word">Repeat<span class="dim">Grow</span></span>
         </a>
         <p>WhatsApp CRM for sales and support teams — built on the official WhatsApp Business API, set up and supported for you.</p>

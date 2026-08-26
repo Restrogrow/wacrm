@@ -185,7 +185,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
         <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
           <Link href="/dashboard" className="flex items-center gap-2">
             <Image
-              src="/logo.png"
+              src="/logo-v2.png"
               alt="Repeat Grow"
               width={32}
               height={32}
