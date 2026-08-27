@@ -7,11 +7,44 @@ import {
   LANDING_FOOTER_HTML,
   LANDING_WHATSAPP_FLOAT_HTML,
 } from "@/lib/landing-chrome";
-import { BRAND_KEYWORDS } from "@/lib/seo";
+import { BRAND_KEYWORDS, SITE_URL, buildBreadcrumbNode } from "@/lib/seo";
 
 const PRICING_TITLE = "Pricing";
 const PRICING_DESCRIPTION =
   "Repeat Grow pricing — Starter, Growth, and Enterprise plans for WhatsApp CRM teams. Transparent pricing, no hidden fees, setup included.";
+
+const PRICING_PLANS = [
+  { name: "Starter", price: "499" },
+  { name: "Growth", price: "999" },
+  { name: "Enterprise", price: "1999" },
+] as const;
+
+const PRICING_STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@graph": [
+    buildBreadcrumbNode([{ name: "Pricing", path: "/pricing" }]),
+    {
+      "@type": "Service",
+      serviceType: "WhatsApp CRM software",
+      name: "Repeat Grow",
+      url: `${SITE_URL}/pricing`,
+      provider: { "@type": "Organization", name: "Repeat Grow", url: SITE_URL },
+      offers: PRICING_PLANS.map((plan) => ({
+        "@type": "Offer",
+        name: `${plan.name} plan`,
+        url: `${SITE_URL}/pricing`,
+        priceCurrency: "INR",
+        price: plan.price,
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          priceCurrency: "INR",
+          price: plan.price,
+          unitText: "MONTH",
+        },
+      })),
+    },
+  ],
+};
 
 export const metadata: Metadata = {
   title: PRICING_TITLE,
@@ -208,6 +241,12 @@ const PRICING_BODY_HTML = `
 export default function PricingPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(PRICING_STRUCTURED_DATA),
+        }}
+      />
       <style dangerouslySetInnerHTML={{ __html: LANDING_CSS }} />
       <div
         className="lp-page"

@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { buildBreadcrumbSchema } from "@/lib/seo";
+
+const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
+  { name: "About Us", path: "/about" },
+]);
 
 const ABOUT_DESCRIPTION =
   "Repeat Grow is a WhatsApp CRM for sales and support teams, built on the official WhatsApp Business API. Meet the team behind it.";
@@ -25,6 +30,10 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }}
+      />
       <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
         &larr; Back to Repeat Grow
       </Link>

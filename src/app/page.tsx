@@ -7,7 +7,7 @@ import {
   LANDING_FOOTER_HTML,
   LANDING_WHATSAPP_FLOAT_HTML,
 } from "@/lib/landing-chrome";
-import { BRAND_KEYWORDS, SITE_URL } from "@/lib/seo";
+import { BRAND_KEYWORDS, SITE_URL, buildOrganizationNode } from "@/lib/seo";
 
 const HOME_TITLE = "Repeat Grow — WhatsApp CRM for sales & support teams.";
 const HOME_DESCRIPTION =
@@ -15,26 +15,26 @@ const HOME_DESCRIPTION =
 
 const STRUCTURED_DATA = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  name: "Repeat Grow",
-  alternateName: "RepeatGrow",
-  url: SITE_URL,
-  description: HOME_DESCRIPTION,
-  applicationCategory: "BusinessApplication",
-  operatingSystem: "Web",
-  offers: {
-    "@type": "AggregateOffer",
-    priceCurrency: "INR",
-    lowPrice: "499",
-    highPrice: "1999",
-    offerCount: "3",
-  },
-  publisher: {
-    "@type": "Organization",
-    name: "Repeat Grow",
-    url: SITE_URL,
-    logo: `${SITE_URL}/logo-v2.png`,
-  },
+  "@graph": [
+    buildOrganizationNode(),
+    {
+      "@type": "SoftwareApplication",
+      name: "Repeat Grow",
+      alternateName: "RepeatGrow",
+      url: SITE_URL,
+      description: HOME_DESCRIPTION,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      offers: {
+        "@type": "AggregateOffer",
+        priceCurrency: "INR",
+        lowPrice: "499",
+        highPrice: "1999",
+        offerCount: "3",
+      },
+      publisher: { "@id": SITE_URL },
+    },
+  ],
 };
 
 // This route renders the Repeat Grow marketing homepage. It was migrated
