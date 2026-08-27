@@ -193,7 +193,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
               priority
             />
             <span className="text-sm font-semibold text-foreground">
-              WhatsApp CRM
+              Repeat Grow
             </span>
           </Link>
           <button

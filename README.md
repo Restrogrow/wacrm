@@ -1,4 +1,4 @@
-# WhatsApp CRM
+# Repeat Grow
 
 > Self-hostable WhatsApp CRM — shared inbox, contacts,
 > sales pipelines, broadcasts, and no-code automations. Fork it, brand

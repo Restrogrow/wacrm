@@ -1,6 +1,6 @@
 {
   "name": "whatsapp-crm",
-  "displayName": "WhatsApp CRM",
+  "displayName": "Repeat Grow",
   "version": "0.4.0",
   "private": true,
   "description": "Self-hostable WhatsApp CRM built on Next.js and Supabase — shared inbox, contacts, sales pipelines, broadcasts, and no-code automations.",
