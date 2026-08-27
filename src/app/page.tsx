@@ -205,7 +205,7 @@ const LANDING_BODY_HTML = `
           <p>Scoped, revocable API keys for building custom automations on top of your CRM data.</p>
         </div>
         <div class="mini-code">
-          <span class="mini-code-line"><span class="mc-prompt">$</span> curl https://app.repeatgrow.com/api/v1/contacts \\</span>
+          <span class="mini-code-line"><span class="mc-prompt">$</span> curl https://repeatgrow.com/api/v1/contacts \\</span>
           <span class="mini-code-line">&nbsp;&nbsp;-H "Authorization: Bearer rg_sk_live_••••"</span>
           <span class="mc-out">{"contacts": 1842, "status": "ok"}</span>
         </div>
@@ -267,7 +267,7 @@ const LANDING_BODY_HTML = `
     <div class="app-window reveal">
       <div class="app-window-bar">
         <div class="window-dots"><i></i><i></i><i></i></div>
-        <span class="app-url">app.repeatgrow.com/inbox</span>
+        <span class="app-url">repeatgrow.com/inbox</span>
       </div>
       <div class="app-window-body">
         <div class="app-col">
