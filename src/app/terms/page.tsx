@@ -3,6 +3,9 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions",
+  alternates: {
+    canonical: "/terms",
+  },
   robots: {
     index: true,
     follow: true,

@@ -7,11 +7,30 @@ import {
   LANDING_FOOTER_HTML,
   LANDING_WHATSAPP_FLOAT_HTML,
 } from "@/lib/landing-chrome";
+import { BRAND_KEYWORDS } from "@/lib/seo";
+
+const PRICING_TITLE = "Pricing";
+const PRICING_DESCRIPTION =
+  "Repeat Grow pricing — Starter, Growth, and Enterprise plans for WhatsApp CRM teams. Transparent pricing, no hidden fees, setup included.";
 
 export const metadata: Metadata = {
-  title: "Pricing",
-  description:
-    "Repeat Grow pricing — Starter, Growth, and Enterprise plans for WhatsApp CRM teams. Published pricing, no hidden fees, WhatsApp Business API setup included on every plan.",
+  title: PRICING_TITLE,
+  description: PRICING_DESCRIPTION,
+  keywords: BRAND_KEYWORDS,
+  alternates: {
+    canonical: "/pricing",
+  },
+  openGraph: {
+    type: "website",
+    url: "/pricing",
+    title: `${PRICING_TITLE} — Repeat Grow`,
+    description: PRICING_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${PRICING_TITLE} — Repeat Grow`,
+    description: PRICING_DESCRIPTION,
+  },
   robots: {
     index: true,
     follow: true,

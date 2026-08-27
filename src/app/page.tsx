@@ -7,6 +7,35 @@ import {
   LANDING_FOOTER_HTML,
   LANDING_WHATSAPP_FLOAT_HTML,
 } from "@/lib/landing-chrome";
+import { BRAND_KEYWORDS, SITE_URL } from "@/lib/seo";
+
+const HOME_TITLE = "Repeat Grow — WhatsApp CRM for sales & support teams.";
+const HOME_DESCRIPTION =
+  "Repeat Grow is a WhatsApp CRM built on the official WhatsApp Business API — shared inbox, sales pipelines, broadcasts, and automations, set up for you.";
+
+const STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Repeat Grow",
+  alternateName: "RepeatGrow",
+  url: SITE_URL,
+  description: HOME_DESCRIPTION,
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  offers: {
+    "@type": "AggregateOffer",
+    priceCurrency: "INR",
+    lowPrice: "499",
+    highPrice: "1999",
+    offerCount: "3",
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "Repeat Grow",
+    url: SITE_URL,
+    logo: `${SITE_URL}/logo-v2.png`,
+  },
+};
 
 // This route renders the Repeat Grow marketing homepage. It was migrated
 // from a standalone static HTML file (landing-page/index.html) so it can
@@ -21,10 +50,24 @@ import {
 // them without duplicating ~1000 lines.
 export const metadata: Metadata = {
   title: {
-    absolute: "Repeat Grow — WhatsApp CRM for sales & support teams.",
+    absolute: HOME_TITLE,
   },
-  description:
-    "Repeat Grow is a WhatsApp CRM built on the official WhatsApp Business API. Shared inbox, contacts, sales pipelines, broadcasts, and no-code automations — set up and supported for you.",
+  description: HOME_DESCRIPTION,
+  keywords: BRAND_KEYWORDS,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+  },
   // The root layout defaults every route to noindex/nofollow since this is
   // primarily a private CRM app. This is the one public marketing page, so
   // it opts back in to being indexed.
@@ -340,6 +383,10 @@ const LANDING_BODY_HTML = `
 export default function Home() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+      />
       <style dangerouslySetInnerHTML={{ __html: LANDING_CSS }} />
       <div
         className="lp-page"

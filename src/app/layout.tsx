@@ -12,6 +12,13 @@ import {
   STORAGE_KEY,
   THEME_IDS,
 } from "@/lib/themes";
+import {
+  BRAND_KEYWORDS,
+  BRAND_NAME,
+  DEFAULT_DESCRIPTION,
+  DEFAULT_TITLE,
+  SITE_URL,
+} from "@/lib/seo";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -19,11 +26,29 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Repeat Grow",
     template: "%s — Repeat Grow",
   },
-  description: "WhatsApp CRM for sales and support teams — shared inbox, contacts, pipelines, broadcasts, and automations.",
+  description: DEFAULT_DESCRIPTION,
+  keywords: BRAND_KEYWORDS,
+  authors: [{ name: BRAND_NAME }],
+  creator: BRAND_NAME,
+  publisher: BRAND_NAME,
+  category: "Business Software",
+  openGraph: {
+    type: "website",
+    siteName: BRAND_NAME,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+  },
   robots: {
     index: false,
     follow: false,

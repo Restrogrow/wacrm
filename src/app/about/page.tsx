@@ -1,8 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+const ABOUT_DESCRIPTION =
+  "Repeat Grow is a WhatsApp CRM for sales and support teams, built on the official WhatsApp Business API. Meet the team behind it.";
+
 export const metadata: Metadata = {
   title: "About Us",
+  description: ABOUT_DESCRIPTION,
+  alternates: {
+    canonical: "/about",
+  },
+  openGraph: {
+    type: "website",
+    url: "/about",
+    title: "About Us — Repeat Grow",
+    description: ABOUT_DESCRIPTION,
+  },
   robots: {
     index: true,
     follow: true,

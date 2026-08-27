@@ -1,8 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+const CONTACT_DESCRIPTION =
+  "Contact Repeat Grow for WhatsApp CRM support, sales, and onboarding — email, phone, or WhatsApp, we reply fast.";
+
 export const metadata: Metadata = {
   title: "Contact Us",
+  description: CONTACT_DESCRIPTION,
+  alternates: {
+    canonical: "/contact",
+  },
+  openGraph: {
+    type: "website",
+    url: "/contact",
+    title: "Contact Us — Repeat Grow",
+    description: CONTACT_DESCRIPTION,
+  },
   robots: {
     index: true,
     follow: true,
