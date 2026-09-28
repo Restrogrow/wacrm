@@ -178,6 +178,45 @@ export async function subscribeWabaToApp(
   }
 }
 
+export interface ExchangeCodeForTokenArgs {
+  /** Short-lived authorization code from FB.login's callback (`response.authResponse.code`). Expires in 30 seconds. */
+  code: string
+  /** Meta App ID (env META_APP_ID) — must match the appId the client-side FB SDK was initialised with. */
+  appId: string
+  /** Meta App Secret (env META_APP_SECRET). Never sent to the browser. */
+  appSecret: string
+}
+
+/**
+ * Exchange an Embedded Signup authorization code for a customer-scoped
+ * Business Integration System User (BISU) access token.
+ *
+ * GET /oauth/access_token?client_id&client_secret&code — a plain query
+ * exchange (no redirect_uri), since Embedded Signup uses the JS SDK's
+ * popup flow rather than a redirect-based OAuth dance. The returned
+ * token is scoped to whatever WABA/assets the customer granted in the
+ * popup; store it encrypted, never return it to the browser.
+ */
+export async function exchangeCodeForToken(
+  args: ExchangeCodeForTokenArgs
+): Promise<{ accessToken: string }> {
+  const { code, appId, appSecret } = args
+  const params = new URLSearchParams({
+    client_id: appId,
+    client_secret: appSecret,
+    code,
+  })
+  const response = await fetch(`${META_API_BASE}/oauth/access_token?${params.toString()}`)
+  if (!response.ok) {
+    await throwMetaError(response, `Meta token exchange failed: ${response.status}`)
+  }
+  const data = (await response.json()) as { access_token?: string }
+  if (!data.access_token) {
+    throw new Error('Meta did not return an access_token for this code.')
+  }
+  return { accessToken: data.access_token }
+}
+
 export interface GetSubscribedAppsArgs {
   wabaId: string
   accessToken: string

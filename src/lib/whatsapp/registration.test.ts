@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  exchangeCodeForToken,
   getSubscribedApps,
   registerPhoneNumber,
   subscribeWabaToApp,
@@ -127,6 +128,48 @@ describe('subscribeWabaToApp', () => {
     await expect(
       subscribeWabaToApp({ wabaId: 'WABA_1', accessToken: 'tok' }),
     ).rejects.toThrow(/Insufficient permissions/);
+  });
+});
+
+describe('exchangeCodeForToken', () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+  beforeEach(() => {
+    fetchMock = vi.fn().mockResolvedValue(okResponse({ access_token: 'BISU_TOKEN' }));
+    vi.stubGlobal('fetch', fetchMock);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('GETs /oauth/access_token with client_id, client_secret, and code', async () => {
+    const result = await exchangeCodeForToken({
+      code: 'SHORT_LIVED_CODE',
+      appId: 'APP_ID',
+      appSecret: 'APP_SECRET',
+    });
+    expect(result).toEqual({ accessToken: 'BISU_TOKEN' });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toContain('/oauth/access_token?');
+    expect(url).toContain('client_id=APP_ID');
+    expect(url).toContain('client_secret=APP_SECRET');
+    expect(url).toContain('code=SHORT_LIVED_CODE');
+    expect(init).toBeUndefined();
+  });
+
+  it('throws when Meta returns no access_token', async () => {
+    fetchMock.mockResolvedValueOnce(okResponse({}));
+    await expect(
+      exchangeCodeForToken({ code: 'C', appId: 'A', appSecret: 'S' }),
+    ).rejects.toThrow(/did not return an access_token/);
+  });
+
+  it('surfaces Meta errors on non-OK', async () => {
+    fetchMock.mockResolvedValueOnce(
+      errorResponse(400, { error: { message: 'Invalid verification code format.' } }),
+    );
+    await expect(
+      exchangeCodeForToken({ code: 'expired', appId: 'A', appSecret: 'S' }),
+    ).rejects.toThrow(/Invalid verification code format/);
   });
 });
 

@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { SettingsPanelHead } from './settings-panel-head';
+import { EmbeddedSignupButton } from './embedded-signup-button';
 import {
   Accordion,
   AccordionItem,
@@ -74,6 +75,13 @@ export function WhatsAppConfig() {
   // multi-number bug that prompted this work.
   const isRegistered = Boolean(config?.registered_at);
   const lastRegistrationError = config?.last_registration_error ?? null;
+
+  // PIN-only registration completion (POST /api/whatsapp/config/register)
+  // — decrypts the already-stored token server-side, so it works for
+  // Embedded Signup rows too, which have no access token the user could
+  // re-paste into the main form.
+  const [registerPin, setRegisterPin] = useState('');
+  const [registeringPin, setRegisteringPin] = useState(false);
 
   const [verifyingRegistration, setVerifyingRegistration] = useState(false);
   type RegistrationProbe = {
@@ -331,6 +339,34 @@ export function WhatsAppConfig() {
     }
   }
 
+  async function handleRegisterWithPin() {
+    if (!/^\d{6}$/.test(registerPin)) {
+      toast.error('PIN must be exactly 6 digits');
+      return;
+    }
+    try {
+      setRegisteringPin(true);
+      const res = await fetch('/api/whatsapp/config/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: registerPin }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.registered) {
+        toast.error(data.error || 'Registration failed');
+        return;
+      }
+      toast.success('Registered — Meta will now deliver events to wacrm.');
+      setRegisterPin('');
+      if (accountId) await fetchConfig(accountId);
+    } catch (err) {
+      console.error('Register-with-PIN error:', err);
+      toast.error('Failed to register with Meta');
+    } finally {
+      setRegisteringPin(false);
+    }
+  }
+
   async function handleReset() {
     if (!confirm('This will delete the current WhatsApp config so you can re-enter it. Continue?')) {
       return;
@@ -523,6 +559,35 @@ export function WhatsAppConfig() {
               )}
             </AlertDescription>
 
+            {!isRegistered && (
+              <div className="mt-3 flex flex-wrap items-end gap-2">
+                <div className="space-y-1">
+                  <Label className="text-muted-foreground text-xs">2-step verification PIN</Label>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="6-digit PIN"
+                    value={registerPin}
+                    onChange={(e) => setRegisterPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground tracking-widest h-8 w-36"
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  onClick={handleRegisterWithPin}
+                  disabled={registeringPin || registerPin.length !== 6}
+                  className="h-8 bg-primary hover:bg-primary/90 text-primary-foreground"
+                >
+                  {registeringPin ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    'Register'
+                  )}
+                </Button>
+              </div>
+            )}
+
             {registrationProbe && (
               <div className="mt-3 rounded border border-border bg-card/60 px-3 py-2 space-y-1.5 text-[11px]">
                 <p className="font-medium text-foreground">
@@ -556,6 +621,24 @@ export function WhatsAppConfig() {
             )}
           </Alert>
         )}
+
+        {/* Quick Connect via Meta Embedded Signup */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-foreground">Quick connect (recommended)</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Sign in with Facebook and pick your WhatsApp Business Account —
+              no copying credentials by hand.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EmbeddedSignupButton
+              onConnected={() => {
+                if (accountId) fetchConfig(accountId);
+              }}
+            />
+          </CardContent>
+        </Card>
 
         {/* API Credentials */}
         <Card>
