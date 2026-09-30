@@ -54,6 +54,10 @@ export function WhatsAppConfig() {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('unknown');
   const [resetReason, setResetReason] = useState<ResetReason>(null);
   const [statusMessage, setStatusMessage] = useState<string>('');
+  // Set when Embedded Signup finishes successfully — drives the
+  // prominent confirmation banner (the toast alone kept getting
+  // missed, and users were left unsure whether the popup "did").
+  const [justConnected, setJustConnected] = useState(false);
   // Guards against re-hydrating the form when the load effect below
   // re-runs for reasons unrelated to actually switching accounts —
   // e.g. Supabase's onAuthStateChange fires a token refresh (new
@@ -622,6 +626,28 @@ export function WhatsAppConfig() {
           </Alert>
         )}
 
+        {/* Embedded Signup success confirmation — stays visible (unlike
+            the toast) until the number is fully registered. */}
+        {justConnected && (
+          <Alert className="bg-emerald-950/40 border-emerald-600/40">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="size-5 text-emerald-400 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <AlertTitle className="text-emerald-200 mb-1">
+                  {isRegistered
+                    ? 'WhatsApp connected — you\'re live!'
+                    : 'WhatsApp connected — one step left'}
+                </AlertTitle>
+                <AlertDescription className="text-emerald-100/80 text-sm">
+                  {isRegistered
+                    ? 'Your number is registered and Meta will deliver incoming messages to your inbox.'
+                    : 'Your phone number is saved. Finish by entering the 6-digit 2-step verification PIN below and clicking Save — until then Meta will NOT deliver incoming messages.'}
+                </AlertDescription>
+              </div>
+            </div>
+          </Alert>
+        )}
+
         {/* Quick Connect via Meta Embedded Signup */}
         <Card>
           <CardHeader>
@@ -634,6 +660,7 @@ export function WhatsAppConfig() {
           <CardContent>
             <EmbeddedSignupButton
               onConnected={() => {
+                setJustConnected(true);
                 if (accountId) fetchConfig(accountId);
               }}
             />
