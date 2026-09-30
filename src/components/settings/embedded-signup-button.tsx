@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 // runtime; there's no official @types package for it.
 interface FacebookLoginResponse {
   authResponse?: { code?: string };
+  status?: string;
+  error_message?: string;
 }
 interface FacebookSDK {
   init: (opts: {
@@ -99,6 +101,7 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
   const sessionDataRef = useRef<EmbeddedSignupSessionData | null>(null);
   const codeRef = useRef<string | null>(null);
   const exchangedRef = useRef(false);
+  const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const appId = process.env.NEXT_PUBLIC_META_APP_ID;
   const configId = process.env.NEXT_PUBLIC_META_CONFIG_ID;
@@ -111,9 +114,22 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
       const session = sessionDataRef.current;
       const code = codeRef.current;
       if (!session || !code) return;
-      if (session.event !== 'FINISH' && session.event !== 'FINISH_ONLY_WABA') return;
-      if (!session.waba_id || !session.phone_number_id) return;
+      if (session.event !== 'FINISH' && session.event !== 'FINISH_ONLY_WABA') {
+        // Intermediate progress events (business selection etc.) — wait for
+        // the final one instead of exchanging.
+        console.debug('[embedded-signup] intermediate signup event:', session.event, session.current_step);
+        return;
+      }
+      if (!session.waba_id || !session.phone_number_id) {
+        console.error('[embedded-signup] FINISH event missing waba_id/phone_number_id:', session);
+        toast.error(
+          'Meta finished the signup but did not send the WhatsApp account IDs. Check that your Facebook Login configuration in the Meta app is a "Login for Business" config with WhatsApp permissions.',
+          { duration: 15000 }
+        );
+        return;
+      }
 
+      if (watchdogRef.current) clearTimeout(watchdogRef.current);
       exchangedRef.current = true;
       setStatus('exchanging');
       try {
@@ -143,6 +159,7 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
         console.error('Embedded Signup exchange failed:', err);
         toast.error('Failed to complete WhatsApp connection');
       } finally {
+        if (watchdogRef.current) clearTimeout(watchdogRef.current);
         setStatus('idle');
         sessionDataRef.current = null;
         codeRef.current = null;
@@ -160,6 +177,8 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
       }
       if (data.type !== 'WA_EMBEDDED_SIGNUP') return;
 
+      console.debug('[embedded-signup] WA_EMBEDDED_SIGNUP message:', data);
+
       if (data.event === 'CANCEL') {
         if (data.error_message) {
           toast.error(`Meta signup error: ${data.error_message}`);
@@ -176,7 +195,10 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
     }
 
     window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      if (watchdogRef.current) clearTimeout(watchdogRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appId, configId]);
 
@@ -190,7 +212,26 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
       (response) => {
         if (response.authResponse?.code) {
           codeRef.current = response.authResponse.code;
+          console.debug('[embedded-signup] received auth code from FB.login');
+          // If the WA_EMBEDDED_SIGNUP postMessage never arrives (wrong
+          // configuration type / missing WhatsApp permissions in the Meta
+          // app), the flow would hang silently — warn after a grace period.
+          if (watchdogRef.current) clearTimeout(watchdogRef.current);
+          watchdogRef.current = setTimeout(() => {
+            if (!exchangedRef.current && codeRef.current) {
+              toast.error(
+                'Meta returned the login code but never confirmed the signup. This usually means the Facebook Login configuration in your Meta app is missing WhatsApp permissions or is not a "Login for Business" config.',
+                { duration: 15000 }
+              );
+            }
+          }, 15000);
         } else {
+          console.error('[embedded-signup] FB.login returned no auth code:', response);
+          toast.error(
+            response.error_message ||
+              'Facebook login was cancelled or returned no authorization code. Check that this domain is allowlisted in your Meta app\'s Facebook Login settings.',
+            { duration: 15000 }
+          );
           setStatus('idle');
         }
       },
