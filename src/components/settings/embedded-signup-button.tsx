@@ -30,7 +30,6 @@ interface FacebookSDK {
         setup: Record<string, unknown>;
         /** 'whatsapp_business_app_onboarding' enables the coexistence (existing Business app number) path. */
         featureType?: string;
-        sessionInfoVersion?: string;
         /** Embedded Signup architecture version — v4 is the current unified flow; v2 is deprecated Oct 2026. */
         version?: string;
       };
@@ -289,15 +288,19 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
           // Signup popup offers "connect your existing WhatsApp
           // Business app account" (the FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING
           // session event) alongside the standard new-number flow.
+          // Required on every launch, even with a v4 configuration —
+          // v4 is selected by the Login-for-Business config, this
+          // selector picks the Business-app path within it.
           featureType: 'whatsapp_business_app_onboarding',
-          // Session-info version must match the session-logging
-          // postMessage contract this component listens for.
-          sessionInfoVersion: '3',
           // v4 = current Embedded Signup architecture. Without this the
           // popup falls back to the legacy flow, which ignores
           // featureType and never shows the coexistence screen.
           // Meta deprecates the legacy flow on 2026-10-15.
           version: 'v4',
+          // NOTE: sessionInfoVersion is deliberately NOT sent — it's a
+          // v2-era override; a v4 configuration returns version-3
+          // session info without it (our listener doesn't check the
+          // version field).
         },
       }
     );
