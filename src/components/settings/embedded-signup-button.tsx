@@ -44,7 +44,7 @@ declare global {
   }
 }
 
-const FB_SDK_VERSION = 'v21.0';
+const FB_SDK_VERSION = 'v23.0';
 const FB_SDK_SCRIPT_ID = 'facebook-jssdk';
 
 interface EmbeddedSignupSessionData {
