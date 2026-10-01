@@ -26,7 +26,12 @@ interface FacebookSDK {
       config_id: string;
       response_type: 'code';
       override_default_response_type: true;
-      extras: { setup: Record<string, unknown> };
+      extras: {
+        setup: Record<string, unknown>;
+        /** 'whatsapp_business_app_onboarding' enables the coexistence (existing Business app number) path. */
+        featureType?: string;
+        sessionInfoVersion?: string;
+      };
     }
   ) => void;
 }
@@ -47,6 +52,15 @@ interface EmbeddedSignupSessionData {
   business_id?: string;
   current_step?: string;
   error_message?: string;
+  /**
+   * Meta sets this on FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING — the
+   * "coexistence" flow where the customer connected an EXISTING
+   * WhatsApp Business app number instead of a fresh Cloud API number.
+   * The session data may only carry waba_id in that case, so the
+   * exchange waits for the phone number to arrive from the
+   * phone_number_id lookup fallback (see the server route).
+   */
+  business_app_onboarding?: boolean;
 }
 
 function loadFacebookSdk(appId: string): Promise<FacebookSDK> {
@@ -114,16 +128,33 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
       const session = sessionDataRef.current;
       const code = codeRef.current;
       if (!session || !code) return;
-      if (session.event !== 'FINISH' && session.event !== 'FINISH_ONLY_WABA') {
+      const isBizAppOnboarding = session.event === 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING';
+      if (
+        session.event !== 'FINISH' &&
+        session.event !== 'FINISH_ONLY_WABA' &&
+        !isBizAppOnboarding
+      ) {
         // Intermediate progress events (business selection etc.) — wait for
         // the final one instead of exchanging.
         console.debug('[embedded-signup] intermediate signup event:', session.event, session.current_step);
         return;
       }
-      if (!session.waba_id || !session.phone_number_id) {
-        console.error('[embedded-signup] FINISH event missing waba_id/phone_number_id:', session);
+      // Coexistence onboarding: Meta documents that the session may
+      // only carry waba_id (no phone_number_id). The server resolves
+      // the number via the WABA's phone_numbers edge, so waba_id is
+      // the only hard requirement here.
+      if (!session.waba_id) {
+        console.error('[embedded-signup] FINISH event missing waba_id:', session);
         toast.error(
           'Meta finished the signup but did not send the WhatsApp account IDs. Check that your Facebook Login configuration in the Meta app is a "Login for Business" config with WhatsApp permissions.',
+          { duration: 15000 }
+        );
+        return;
+      }
+      if (!isBizAppOnboarding && !session.phone_number_id) {
+        console.error('[embedded-signup] FINISH event missing phone_number_id:', session);
+        toast.error(
+          'Meta finished the signup but did not send the phone number ID. Check that your Facebook Login configuration in the Meta app is a "Login for Business" config with WhatsApp permissions.',
           { duration: 15000 }
         );
         return;
@@ -139,8 +170,9 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
           body: JSON.stringify({
             code,
             waba_id: session.waba_id,
-            phone_number_id: session.phone_number_id,
+            phone_number_id: session.phone_number_id || null,
             business_id: session.business_id,
+            business_app_onboarding: isBizAppOnboarding,
           }),
         });
         const data = await res.json();
@@ -148,12 +180,21 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
           toast.error(data.error || 'Failed to complete WhatsApp connection');
           return;
         }
-        toast.success(
-          data.phone_info?.verified_name
-            ? `Connected to ${data.phone_info.verified_name}. Add your 2-step PIN below to finish registration.`
-            : 'WhatsApp connected. Add your 2-step PIN below to finish registration.',
-          { duration: 10000 }
-        );
+        if (data.coexistence) {
+          toast.success(
+            data.phone_info?.verified_name
+              ? `Connected to ${data.phone_info.verified_name} (WhatsApp Business app stays in sync). Importing chats and contacts in the background — keep the app open for a few minutes.`
+              : 'Connected. Your WhatsApp Business app number is now linked — importing chats and contacts in the background.',
+            { duration: 12000 }
+          );
+        } else {
+          toast.success(
+            data.phone_info?.verified_name
+              ? `Connected to ${data.phone_info.verified_name}. Add your 2-step PIN below to finish registration.`
+              : 'WhatsApp connected. Add your 2-step PIN below to finish registration.',
+            { duration: 10000 }
+          );
+        }
         onConnected();
       } catch (err) {
         console.error('Embedded Signup exchange failed:', err);
@@ -239,7 +280,18 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
         config_id: configId!,
         response_type: 'code',
         override_default_response_type: true,
-        extras: { setup: {} },
+        extras: {
+          setup: {},
+          // featureType is what ENABLES the coexistence path — there is
+          // no dashboard toggle for it. With this set, the Embedded
+          // Signup popup offers "connect your existing WhatsApp
+          // Business app account" (the FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING
+          // session event) alongside the standard new-number flow.
+          featureType: 'whatsapp_business_app_onboarding',
+          // Session-info version must match the session-logging
+          // postMessage contract this component listens for.
+          sessionInfoVersion: '3',
+        },
       }
     );
   }

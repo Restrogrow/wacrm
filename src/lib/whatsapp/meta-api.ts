@@ -251,6 +251,102 @@ export async function getSubscribedApps(
 }
 
 // ============================================================
+// Coexistence (WhatsApp Business app + Cloud API, same number)
+// ============================================================
+//
+// A Tech Provider can onboard an existing WhatsApp Business app
+// number onto Cloud API ("coexistence"). Those numbers are already
+// registered — /register must be skipped — and the provider gets a
+// 24h window to initiate the ONE-SHOT contacts + history syncs via
+// the SMB App Data API. See migration 032 and smb-webhook.ts.
+
+export interface CheckCoexistenceStatusArgs {
+  phoneNumberId: string
+  accessToken: string
+}
+
+export interface CoexistenceStatus {
+  /** True when the number is in use with BOTH the Business app and Cloud API. */
+  isOnBizApp: boolean
+  /** Always "CLOUD_API" when isOnBizApp is true. */
+  platformType?: string
+}
+
+/**
+ * Ask Meta whether a phone number is a coexistence number
+ * (Business app + Cloud API simultaneously).
+ */
+export async function checkCoexistenceStatus(
+  args: CheckCoexistenceStatusArgs
+): Promise<CoexistenceStatus> {
+  const { phoneNumberId, accessToken } = args
+  const url = `${META_API_BASE}/${phoneNumberId}?fields=is_on_biz_app,platform_type`
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    await throwMetaError(response, `Meta API error: ${response.status}`)
+  }
+  const data = (await response.json()) as {
+    is_on_biz_app?: boolean
+    platform_type?: string
+  }
+  return {
+    isOnBizApp: data.is_on_biz_app === true,
+    platformType: data.platform_type,
+  }
+}
+
+export type SmbSyncType = 'smb_app_state_sync' | 'history'
+
+export interface InitiateSmbAppDataSyncArgs {
+  phoneNumberId: string
+  accessToken: string
+  syncType: SmbSyncType
+}
+
+export interface SmbAppDataSyncResult {
+  /** Meta's request_id — store it, support asks for it on escalations. */
+  requestId: string
+}
+
+/**
+ * Initiate a ONE-SHOT WhatsApp Business app data sync (SMB App Data API).
+ *
+ *   syncType "smb_app_state_sync" → Meta streams the business's
+ *     WhatsApp contacts back via smb_app_state_sync webhooks.
+ *   syncType "history"           → Meta streams up to 180 days of
+ *     chat history via history webhooks (declined → error 2593109).
+ *
+ * Each sync_type can be requested exactly once per onboarding; a
+ * second call fails. Callers must persist success via the
+ * smb_contacts_synced_at / smb_history_synced_at columns before
+ * deciding whether a retry is legitimate.
+ */
+export async function initiateSmbAppDataSync(
+  args: InitiateSmbAppDataSyncArgs
+): Promise<SmbAppDataSyncResult> {
+  const { phoneNumberId, accessToken, syncType } = args
+  const url = `${META_API_BASE}/${phoneNumberId}/smb_app_data`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ messaging_product: 'whatsapp', sync_type: syncType }),
+  })
+  if (!response.ok) {
+    await throwMetaError(response, `Meta API error: ${response.status}`)
+  }
+  const data = (await response.json()) as { request_id?: string }
+  if (!data.request_id) {
+    throw new Error('Meta accepted the smb_app_data request but returned no request_id.')
+  }
+  return { requestId: data.request_id }
+}
+
+// ============================================================
 // Sending
 // ============================================================
 

@@ -4,6 +4,7 @@ import { decrypt } from '@/lib/whatsapp/encryption'
 import {
   getSubscribedApps,
   verifyPhoneNumber,
+  checkCoexistenceStatus,
 } from '@/lib/whatsapp/meta-api'
 
 /**
@@ -90,16 +91,21 @@ export async function GET() {
     phone_metadata_ok: boolean
     waba_subscribed_to_app: boolean | null
     locally_marked_registered: boolean
+    is_coexistence_number: boolean
   } = {
     config_exists: true,
     token_decryptable: true,
     phone_metadata_ok: false,
     waba_subscribed_to_app: null,
     locally_marked_registered: config.registered_at != null,
+    // Seeded from the row; confirmed live against Meta below.
+    is_coexistence_number: config.is_on_biz_app === true,
   }
   const errors: string[] = []
 
-  // 1. Phone metadata
+  // 1. Phone metadata + coexistence probe (same fetch as metadata
+    // would not carry the fields, so they're two calls — the
+    // coexistence probe is best-effort and never blocks `live`).
   try {
     await verifyPhoneNumber({
       phoneNumberId: config.phone_number_id,
@@ -110,6 +116,27 @@ export async function GET() {
     errors.push(
       `Phone metadata check failed: ${err instanceof Error ? err.message : String(err)}`,
     )
+  }
+
+  // 1b. Coexistence probe — is this number in use with the WhatsApp
+  // Business app too? Also detects the case where a row was saved
+  // with is_on_biz_app=false but the business later connected the
+  // Business app.
+  try {
+    const coexistence = await checkCoexistenceStatus({
+      phoneNumberId: config.phone_number_id,
+      accessToken,
+    })
+    checks.is_coexistence_number = coexistence.isOnBizApp
+    if (coexistence.isOnBizApp !== (config.is_on_biz_app === true)) {
+      // Repair the row silently — Meta is the source of truth.
+      await supabase
+        .from('whatsapp_config')
+        .update({ is_on_biz_app: coexistence.isOnBizApp })
+        .eq('id', config.id)
+    }
+  } catch {
+    // Probe failure is non-fatal — leave the seeded value.
   }
 
   // 2. WABA subscription — only meaningful if we have a waba_id
@@ -140,10 +167,13 @@ export async function GET() {
     )
   }
 
+  // Coexistence numbers are registered by the Business app itself —
+  // they're live as soon as metadata + subscription check out.
+  const isCoexistence = checks.is_coexistence_number
   const live =
     checks.phone_metadata_ok &&
     (checks.waba_subscribed_to_app ?? false) &&
-    checks.locally_marked_registered
+    (isCoexistence || checks.locally_marked_registered)
 
   return NextResponse.json({
     live,
@@ -152,5 +182,12 @@ export async function GET() {
     last_registration_error: config.last_registration_error ?? null,
     registered_at: config.registered_at ?? null,
     subscribed_apps_at: config.subscribed_apps_at ?? null,
+    coexistence: {
+      is_on_biz_app: checks.is_coexistence_number,
+      contacts_synced_at: config.smb_contacts_synced_at ?? null,
+      history_synced_at: config.smb_history_synced_at ?? null,
+      history_progress: config.smb_sync_progress ?? null,
+      sync_error: config.smb_sync_error ?? null,
+    },
   })
 }

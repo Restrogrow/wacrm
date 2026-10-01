@@ -249,6 +249,25 @@ export interface WhatsAppConfig {
   subscribed_apps_at?: string;
   /** Last error from /register; cleared on success. */
   last_registration_error?: string;
+  /**
+   * Coexistence (WhatsApp Business app + Cloud API on the same
+   * number, onboarded via Embedded Signup's
+   * FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING event). True means
+   * /register was skipped (the Business app owns registration) and
+   * the one-shot SMB app data syncs (contacts + history) were or
+   * still must be initiated.
+   */
+  is_on_biz_app?: boolean;
+  /** When the one-shot contacts sync (sync_type smb_app_state_sync) was successfully initiated. */
+  smb_contacts_synced_at?: string;
+  /** When the one-shot history sync (sync_type history) was successfully initiated. */
+  smb_history_synced_at?: string;
+  /** Meta request_ids per sync_type, e.g. { contacts, history } — support reference. */
+  smb_sync_request_ids?: Record<string, string>;
+  /** Last SMB sync failure (initiation error or the business declining history sharing). */
+  smb_sync_error?: string;
+  /** Overall history-sync progress % (0-100) from the latest history webhook. */
+  smb_sync_progress?: number;
 }
 
 // Raw Meta status enum. We persist this verbatim from Meta (sync + webhook)

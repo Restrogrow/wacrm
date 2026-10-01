@@ -12,6 +12,11 @@ import {
   handleTemplateWebhookChange,
   isTemplateWebhookField,
 } from '@/lib/whatsapp/template-webhook'
+import {
+  handleCoexistenceAccountUpdate,
+  handleCoexistenceWebhookChange,
+  isCoexistenceWebhookField,
+} from '@/lib/whatsapp/smb-webhook'
 
 // The `after()` callback in POST runs within this route's max duration.
 // Inbound processing can fan out to per-media Meta verification calls, so
@@ -81,6 +86,17 @@ interface WhatsAppWebhookEntry {
         recipient_id: string
       }>
     }
+    field: string
+  }>
+}
+
+// Coexistence fields (history / smb_app_state_sync / smb_message_echoes)
+// and account_update arrive on the same WABA webhook object but with
+// value shapes the messaging branches must not touch.
+interface LooseWebhookEntry {
+  id?: string
+  changes?: Array<{
+    value?: unknown
     field: string
   }>
 }
@@ -228,6 +244,27 @@ async function processWebhook(body: { entry?: WhatsAppWebhookEntry[] }) {
         await handleTemplateWebhookChange(
           { field: change.field, value: change.value as unknown },
           supabaseAdmin(),
+        )
+        continue
+      }
+
+      // Coexistence events (WhatsApp Business app + Cloud API on one
+      // number): contact sync, message echoes, history import, and
+      // the PARTNER_REMOVED/ACCOUNT_OFFBOARDED disconnects that come
+      // in on account_update. Same reasoning as templates — distinct
+      // value shapes, dedicated handlers.
+      if (isCoexistenceWebhookField(change.field)) {
+        await handleCoexistenceWebhookChange(
+          { field: change.field, value: change.value as unknown },
+          supabaseAdmin(),
+        )
+        continue
+      }
+      if (change.field === 'account_update') {
+        await handleCoexistenceAccountUpdate(
+          (change.value ?? {}) as { event?: string; phone_number?: string },
+          supabaseAdmin(),
+          (entry as LooseWebhookEntry).id,
         )
         continue
       }
