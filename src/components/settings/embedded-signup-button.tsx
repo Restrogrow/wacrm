@@ -31,6 +31,8 @@ interface FacebookSDK {
         /** 'whatsapp_business_app_onboarding' enables the coexistence (existing Business app number) path. */
         featureType?: string;
         sessionInfoVersion?: string;
+        /** Embedded Signup architecture version — v4 is the current unified flow; v2 is deprecated Oct 2026. */
+        version?: string;
       };
     }
   ) => void;
@@ -291,6 +293,11 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
           // Session-info version must match the session-logging
           // postMessage contract this component listens for.
           sessionInfoVersion: '3',
+          // v4 = current Embedded Signup architecture. Without this the
+          // popup falls back to the legacy flow, which ignores
+          // featureType and never shows the coexistence screen.
+          // Meta deprecates the legacy flow on 2026-10-15.
+          version: 'v4',
         },
       }
     );
