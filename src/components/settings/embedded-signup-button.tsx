@@ -118,6 +118,19 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
   const exchangedRef = useRef(false);
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Visible debug trace — mirrors every console.debug/error call below
+  // into on-screen state so the raw Meta payload is readable without
+  // opening DevTools. Capped at 20 entries; persists across attempts
+  // within this page load so a failed run stays inspectable.
+  type DebugEvent = { ts: string; label: string; data: unknown };
+  const [debugLog, setDebugLog] = useState<DebugEvent[]>([]);
+  const [showDebug, setShowDebug] = useState(false);
+  const pushDebug = useCallback((label: string, data: unknown) => {
+    setDebugLog((prev) =>
+      [...prev, { ts: new Date().toLocaleTimeString(), label, data }].slice(-20)
+    );
+  }, []);
+
   const appId = process.env.NEXT_PUBLIC_META_APP_ID;
   const configId = process.env.NEXT_PUBLIC_META_CONFIG_ID;
 
@@ -144,6 +157,7 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
       // Intermediate progress events (business selection etc.) — wait for
       // the final one instead of exchanging.
       console.debug('[embedded-signup] intermediate signup event:', session.event, session.current_step);
+      pushDebug('intermediate event', { event: session.event, current_step: session.current_step });
       return;
     }
     // Coexistence onboarding: Meta documents that the session may
@@ -152,18 +166,22 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
     // the only hard requirement here.
     if (!session.waba_id) {
       console.error('[embedded-signup] FINISH event missing waba_id:', session);
+      pushDebug('ERROR: FINISH missing waba_id — full session payload', session);
       toast.error(
         'Meta finished the signup but did not send the WhatsApp account IDs. Check that your Facebook Login configuration in the Meta app is a "Login for Business" config with WhatsApp permissions.',
         { duration: 15000 }
       );
+      setShowDebug(true);
       return;
     }
     if (!isBizAppOnboarding && !session.phone_number_id) {
       console.error('[embedded-signup] FINISH event missing phone_number_id:', session);
+      pushDebug('ERROR: FINISH missing phone_number_id — full session payload', session);
       toast.error(
         'Meta finished the signup but did not send the phone number ID. Check that your Facebook Login configuration in the Meta app is a "Login for Business" config with WhatsApp permissions.',
         { duration: 15000 }
       );
+      setShowDebug(true);
       return;
     }
 
@@ -183,8 +201,10 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
         }),
       });
       const data = await res.json();
+      pushDebug(`server exchange → HTTP ${res.status}`, data);
       if (!res.ok) {
         toast.error(data.error || 'Failed to complete WhatsApp connection');
+        setShowDebug(true);
         return;
       }
       if (data.coexistence) {
@@ -205,7 +225,9 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
       onConnected();
     } catch (err) {
       console.error('Embedded Signup exchange failed:', err);
+      pushDebug('ERROR: exchange request threw', err instanceof Error ? err.message : String(err));
       toast.error('Failed to complete WhatsApp connection');
+      setShowDebug(true);
     } finally {
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
       setStatus('idle');
@@ -213,7 +235,7 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
       codeRef.current = null;
       exchangedRef.current = false;
     }
-  }, [onConnected]);
+  }, [onConnected, pushDebug]);
 
   useEffect(() => {
     if (!appId || !configId) return;
@@ -229,6 +251,7 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
       if (data.type !== 'WA_EMBEDDED_SIGNUP') return;
 
       console.debug('[embedded-signup] WA_EMBEDDED_SIGNUP message:', data);
+      pushDebug('WA_EMBEDDED_SIGNUP message received', data);
 
       if (data.event === 'CANCEL') {
         if (data.error_message) {
@@ -250,11 +273,13 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
       window.removeEventListener('message', handleMessage);
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
     };
-  }, [appId, configId, tryExchange]);
+  }, [appId, configId, tryExchange, pushDebug]);
 
   if (!appId || !configId) return null;
 
   async function handleClick() {
+    setDebugLog([]);
+    setShowDebug(false);
     setStatus('loading-sdk');
     const FB = await loadFacebookSdk(appId!);
     setStatus('awaiting-popup');
@@ -263,6 +288,7 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
         if (response.authResponse?.code) {
           codeRef.current = response.authResponse.code;
           console.debug('[embedded-signup] received auth code from FB.login');
+          pushDebug('FB.login callback: auth code received', { code_length: response.authResponse.code.length });
           // The WA_EMBEDDED_SIGNUP postMessage and this code can arrive in
           // either order — if the message already landed first, this is
           // the only thing that will ever trigger the exchange.
@@ -273,6 +299,11 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
           if (watchdogRef.current) clearTimeout(watchdogRef.current);
           watchdogRef.current = setTimeout(() => {
             if (!exchangedRef.current && codeRef.current) {
+              pushDebug(
+                'WATCHDOG: 15s elapsed with a code but no completed exchange',
+                { last_session_data: sessionDataRef.current }
+              );
+              setShowDebug(true);
               toast.error(
                 'Meta returned the login code but never confirmed the signup. This usually means the Facebook Login configuration in your Meta app is missing WhatsApp permissions or is not a "Login for Business" config.',
                 { duration: 15000 }
@@ -281,6 +312,8 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
           }, 15000);
         } else {
           console.error('[embedded-signup] FB.login returned no auth code:', response);
+          pushDebug('ERROR: FB.login returned no auth code', response);
+          setShowDebug(true);
           toast.error(
             response.error_message ||
               'Facebook login was cancelled or returned no authorization code. Check that this domain is allowlisted in your Meta app\'s Facebook Login settings.',
@@ -321,22 +354,56 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
   const busy = status !== 'idle';
 
   return (
-    <Button
-      onClick={handleClick}
-      disabled={busy}
-      className="bg-[#1877F2] hover:bg-[#1877F2]/90 text-white"
-    >
-      {busy ? (
-        <>
-          <Loader2 className="size-4 animate-spin" />
-          {status === 'exchanging' ? 'Finishing connection...' : 'Waiting for Meta...'}
-        </>
-      ) : (
-        <>
-          <MessageCircle className="size-4" />
-          Connect with Facebook
-        </>
+    <div className="space-y-2">
+      <Button
+        onClick={handleClick}
+        disabled={busy}
+        className="bg-[#1877F2] hover:bg-[#1877F2]/90 text-white"
+      >
+        {busy ? (
+          <>
+            <Loader2 className="size-4 animate-spin" />
+            {status === 'exchanging' ? 'Finishing connection...' : 'Waiting for Meta...'}
+          </>
+        ) : (
+          <>
+            <MessageCircle className="size-4" />
+            Connect with Facebook
+          </>
+        )}
+      </Button>
+
+      {/* Raw diagnostic trace — every postMessage, FB.login callback, and
+          server response from the run just made, readable without
+          opening DevTools. Auto-opens on any error; always
+          manually togglable so a successful run can still be inspected. */}
+      {debugLog.length > 0 && (
+        <div className="rounded border border-border bg-card/60">
+          <button
+            type="button"
+            onClick={() => setShowDebug((v) => !v)}
+            className="w-full px-3 py-1.5 text-left text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            {showDebug ? '▾' : '▸'} Debug trace ({debugLog.length} event{debugLog.length === 1 ? '' : 's'})
+          </button>
+          {showDebug && (
+            <div className="max-h-80 overflow-y-auto border-t border-border px-3 py-2 space-y-2">
+              {debugLog.map((entry, i) => (
+                <div key={i} className="text-[11px]">
+                  <p className="font-medium text-foreground">
+                    {entry.ts} — {entry.label}
+                  </p>
+                  <pre className="mt-0.5 overflow-x-auto rounded bg-muted/60 p-1.5 text-muted-foreground">
+                    {typeof entry.data === 'string'
+                      ? entry.data
+                      : JSON.stringify(entry.data, null, 2)}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
-    </Button>
+    </div>
   );
 }

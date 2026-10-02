@@ -93,6 +93,13 @@ export function WhatsAppConfig() {
     display_phone_number?: string;
     verified_name?: string;
   };
+  type CoexistenceStatus = {
+    is_on_biz_app?: boolean;
+    contacts_synced_at?: string | null;
+    history_synced_at?: string | null;
+    history_progress?: unknown;
+    sync_error?: string | null;
+  };
   type RegistrationProbe = {
     live: boolean;
     checks: Record<string, boolean | null>;
@@ -101,6 +108,7 @@ export function WhatsAppConfig() {
     last_registration_error?: string | null;
     registered_at?: string | null;
     subscribed_apps_at?: string | null;
+    coexistence?: CoexistenceStatus;
   };
   const [registrationProbe, setRegistrationProbe] =
     useState<RegistrationProbe | null>(null);
@@ -641,6 +649,30 @@ export function WhatsAppConfig() {
                       <li key={i}>• {e}</li>
                     ))}
                   </ul>
+                )}
+                {registrationProbe.coexistence?.is_on_biz_app && (
+                  <div className="pt-1.5 mt-1.5 border-t border-border/60 space-y-0.5">
+                    <p className="font-medium text-foreground">
+                      WhatsApp Business app sync (coexistence)
+                    </p>
+                    <p className="text-muted-foreground">
+                      Contacts:{' '}
+                      {registrationProbe.coexistence.contacts_synced_at
+                        ? `synced ${new Date(registrationProbe.coexistence.contacts_synced_at).toLocaleString()}`
+                        : 'not synced yet'}
+                    </p>
+                    <p className="text-muted-foreground">
+                      History:{' '}
+                      {registrationProbe.coexistence.history_synced_at
+                        ? `synced ${new Date(registrationProbe.coexistence.history_synced_at).toLocaleString()}`
+                        : 'not synced yet'}
+                    </p>
+                    {registrationProbe.coexistence.sync_error && (
+                      <p className="text-red-300">
+                        • Sync error: {registrationProbe.coexistence.sync_error}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             )}
