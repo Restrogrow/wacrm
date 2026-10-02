@@ -1,6 +1,13 @@
-import type { NextConfig } from "next";
-
 /**
+ * Plain JS (not .ts) deliberately. Next.js transpiles next.config.ts
+ * through SWC before loading it; on hosts whose glibc is too old for
+ * the native @next/swc binary (e.g. Hostinger, glibc < 2.29), Next
+ * falls back to the WASM build of SWC, which doesn't transpile ESM to
+ * CJS for the config file — it loads next.config.ts as broken ESM and
+ * the build fails with "Cannot find module .../<hash>.next.config"
+ * before a single app file is even touched. A .mjs config sidesteps
+ * the SWC step entirely: Node loads it directly as native ESM.
+ *
  * Baseline security headers applied to every response.
  *
  * CSP ships as `Content-Security-Policy-Report-Only` so the browser
@@ -66,9 +73,10 @@ const SECURITY_HEADERS = [
       "form-action 'self'",
     ].join("; "),
   },
-] as const;
+];
 
-const nextConfig: NextConfig = {
+/** @type {import("next").NextConfig} */
+const nextConfig = {
   turbopack: {
     root: process.cwd(),
   },
