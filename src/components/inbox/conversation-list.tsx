@@ -453,6 +453,9 @@ function ConversationItem({
       {/* Avatar */}
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-foreground">
         {contact?.avatar_url ? (
+          // Same arbitrary-URL avatar case as contact-sidebar.tsx —
+          // next/image would need `unoptimized` here too, for no gain.
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={contact.avatar_url}
             alt={displayName}

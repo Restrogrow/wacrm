@@ -107,6 +107,10 @@ function MediaImage({ url, alt }: { url: string; alt: string }) {
   }
 
   return (
+    // next/image needs a fixed width/height or `fill` + sized container;
+    // this renders arbitrary WhatsApp media of unknown aspect ratio within
+    // a max-size box, which `fill` would change the display behavior of.
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src ?? ""}
       alt={alt}

@@ -232,10 +232,6 @@ interface SmbMessageEchoesValue {
   message_echoes?: MessageEcho[]
 }
 
-const ECHO_ALLOWED_CONTENT_TYPES = new Set([
-  'text', 'image', 'document', 'audio', 'video', 'location',
-])
-
 /**
  * Persist a message the business sent from the WhatsApp Business app
  * as an agent-side message in the matching conversation. Keeps the
