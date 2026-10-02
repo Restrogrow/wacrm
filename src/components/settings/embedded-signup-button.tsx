@@ -242,13 +242,26 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
 
     function handleMessage(event: MessageEvent) {
       if (!event.origin.endsWith('facebook.com')) return;
-      let data: EmbeddedSignupSessionData & { type?: string };
+      let parsed: EmbeddedSignupSessionData & {
+        type?: string;
+        // Current Meta payload format nests waba_id/phone_number_id/
+        // business_id/etc. inside a `data` sub-object while `type` and
+        // `event` stay top-level — confirmed from a live debug trace
+        // where `session.waba_id` was undefined despite Meta sending it,
+        // because it was actually at `session.data.waba_id`. Flattened
+        // below so the rest of this component doesn't need to care
+        // which shape arrived.
+        data?: Record<string, unknown>;
+      };
       try {
-        data = JSON.parse(event.data);
+        parsed = JSON.parse(event.data);
       } catch {
         return;
       }
-      if (data.type !== 'WA_EMBEDDED_SIGNUP') return;
+      if (parsed.type !== 'WA_EMBEDDED_SIGNUP') return;
+
+      const { type: _type, data: nested, ...rest } = parsed;
+      const data: EmbeddedSignupSessionData = { ...rest, ...(nested ?? {}) };
 
       console.debug('[embedded-signup] WA_EMBEDDED_SIGNUP message:', data);
       pushDebug('WA_EMBEDDED_SIGNUP message received', data);
