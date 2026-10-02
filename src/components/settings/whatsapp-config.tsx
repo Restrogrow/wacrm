@@ -182,7 +182,7 @@ export function WhatsAppConfig() {
     // for the first render window and bail without ever retrying
     // once the profile arrives.
     if (authLoading || profileLoading) return;
-    if (!user || !accountId) {
+    if (!user?.id || !accountId) {
       loadedAccountIdRef.current = null;
       setLoading(false);
       return;
