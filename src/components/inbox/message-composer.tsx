@@ -375,6 +375,27 @@ export function MessageComposer({
     setDraft((d) => (d ? { ...d, caption } : d));
   }, []);
 
+  // Clear any in-progress draft when the active conversation changes —
+  // unsent text or a staged attachment for conversation A shouldn't
+  // bleed into conversation B (same reasoning as the reply-draft reset
+  // in message-thread.tsx). This component isn't remounted on switch,
+  // so without this the next conversation would inherit the old one's
+  // half-typed message. Mirrors the unmount-cleanup effect above,
+  // using the same refs so it doesn't need `draft`/`recording` in
+  // its dependencies.
+  useEffect(() => {
+    setText("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+    clearTimer();
+    cancelledRef.current = true;
+    void recorderRef.current?.stop().catch(() => {});
+    setRecording(false);
+    removeStaged(draftRef.current?.path);
+    setDraft(null);
+  }, [conversationId, clearTimer, removeStaged]);
+
   // ---- Render --------------------------------------------------------
 
   return (
