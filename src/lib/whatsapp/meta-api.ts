@@ -250,6 +250,49 @@ export async function getSubscribedApps(
   return data.data ?? []
 }
 
+export interface AppWebhookSubscription {
+  object: string
+  callbackUrl: string
+  active: boolean
+  fields: string[]
+}
+
+/**
+ * Diagnostic — fetch the APP-LEVEL webhook subscription config (Meta
+ * App Dashboard → WhatsApp → Configuration → Webhook Fields), using
+ * the app access token (META_APP_ID|META_APP_SECRET) rather than any
+ * one customer's token.
+ *
+ * This is the setting that caused the "every connected number shows
+ * Live but no messages arrive, with no per-account symptom to point
+ * at" failure mode: subscribing a WABA via subscribeWabaToApp only
+ * tells Meta to route ITS events to this app — whether the app's
+ * webhook actually RECEIVES the "messages" field at all is this
+ * separate, app-wide toggle. If someone unchecks it, every connected
+ * account stops receiving inbound-message events simultaneously.
+ */
+export async function getAppWebhookSubscriptions(): Promise<AppWebhookSubscription[]> {
+  const appId = process.env.META_APP_ID
+  const appSecret = process.env.META_APP_SECRET
+  if (!appId || !appSecret) {
+    throw new Error('META_APP_ID/META_APP_SECRET not configured on the server')
+  }
+  const params = new URLSearchParams({ access_token: `${appId}|${appSecret}` })
+  const response = await fetch(`${META_API_BASE}/${appId}/subscriptions?${params.toString()}`)
+  if (!response.ok) {
+    await throwMetaError(response, `Meta API error: ${response.status}`)
+  }
+  const data = (await response.json()) as {
+    data?: { object: string; callback_url: string; active: boolean; fields?: { name: string }[] }[]
+  }
+  return (data.data ?? []).map((s) => ({
+    object: s.object,
+    callbackUrl: s.callback_url,
+    active: s.active,
+    fields: (s.fields ?? []).map((f) => f.name),
+  }))
+}
+
 // ============================================================
 // Coexistence (WhatsApp Business app + Cloud API, same number)
 // ============================================================

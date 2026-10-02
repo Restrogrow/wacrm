@@ -5,6 +5,8 @@ import {
   getSubscribedApps,
   verifyPhoneNumber,
   checkCoexistenceStatus,
+  getAppWebhookSubscriptions,
+  type MetaPhoneInfo,
 } from '@/lib/whatsapp/meta-api'
 
 /**
@@ -92,6 +94,7 @@ export async function GET() {
     waba_subscribed_to_app: boolean | null
     locally_marked_registered: boolean
     is_coexistence_number: boolean
+    messages_field_subscribed: boolean | null
   } = {
     config_exists: true,
     token_decryptable: true,
@@ -100,14 +103,16 @@ export async function GET() {
     locally_marked_registered: config.registered_at != null,
     // Seeded from the row; confirmed live against Meta below.
     is_coexistence_number: config.is_on_biz_app === true,
+    messages_field_subscribed: null,
   }
   const errors: string[] = []
+  let phoneInfo: MetaPhoneInfo | null = null
 
   // 1. Phone metadata + coexistence probe (same fetch as metadata
     // would not carry the fields, so they're two calls — the
     // coexistence probe is best-effort and never blocks `live`).
   try {
-    await verifyPhoneNumber({
+    phoneInfo = await verifyPhoneNumber({
       phoneNumberId: config.phone_number_id,
       accessToken,
     })
@@ -167,18 +172,46 @@ export async function GET() {
     )
   }
 
+  // 3. App-level webhook field subscription. Per-WABA subscription
+  // (check 2 above) only tells Meta to route THIS WABA's events to
+  // our app; whether the app's webhook actually receives the
+  // "messages" field at all is a separate, app-wide toggle (Meta
+  // App Dashboard → WhatsApp → Configuration → Webhook Fields). If
+  // that gets unchecked, every connected account stops receiving
+  // inbound messages at once, with "connected" + "subscribed" still
+  // showing true per-account — this is the check that catches it.
+  try {
+    const subs = await getAppWebhookSubscriptions()
+    const wabaSub = subs.find((s) => s.object === 'whatsapp_business_account')
+    checks.messages_field_subscribed =
+      wabaSub?.active === true && wabaSub.fields.includes('messages')
+    if (!checks.messages_field_subscribed) {
+      errors.push(
+        'The app\'s "messages" webhook field is not subscribed (Meta App Dashboard → WhatsApp → Configuration → Webhook Fields). This blocks inbound messages for EVERY connected account, not just this one.',
+      )
+    }
+  } catch (err) {
+    // Non-fatal — e.g. META_APP_ID/META_APP_SECRET not set in this
+    // environment. Leave as null rather than failing the whole probe.
+    errors.push(
+      `App webhook subscription check failed: ${err instanceof Error ? err.message : String(err)}`,
+    )
+  }
+
   // Coexistence numbers are registered by the Business app itself —
   // they're live as soon as metadata + subscription check out.
   const isCoexistence = checks.is_coexistence_number
   const live =
     checks.phone_metadata_ok &&
     (checks.waba_subscribed_to_app ?? false) &&
+    (checks.messages_field_subscribed ?? true) &&
     (isCoexistence || checks.locally_marked_registered)
 
   return NextResponse.json({
     live,
     checks,
     errors,
+    phone_info: phoneInfo,
     last_registration_error: config.last_registration_error ?? null,
     registered_at: config.registered_at ?? null,
     subscribed_apps_at: config.subscribed_apps_at ?? null,

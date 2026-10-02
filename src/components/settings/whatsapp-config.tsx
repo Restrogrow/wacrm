@@ -13,6 +13,7 @@ import {
   Zap,
   AlertTriangle,
   RotateCcw,
+  Phone,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -88,16 +89,27 @@ export function WhatsAppConfig() {
   const [registeringPin, setRegisteringPin] = useState(false);
 
   const [verifyingRegistration, setVerifyingRegistration] = useState(false);
+  type PhoneInfo = {
+    display_phone_number?: string;
+    verified_name?: string;
+  };
   type RegistrationProbe = {
     live: boolean;
     checks: Record<string, boolean | null>;
     errors?: string[];
+    phone_info?: PhoneInfo | null;
     last_registration_error?: string | null;
     registered_at?: string | null;
     subscribed_apps_at?: string | null;
   };
   const [registrationProbe, setRegistrationProbe] =
     useState<RegistrationProbe | null>(null);
+  // The real Meta-verified phone number for the connected config —
+  // shown next to Setup Instructions so "connected" means something
+  // concrete (a phone number you recognize), not just a status badge.
+  // Populated by whichever of fetchConfig / Save / Verify Registration
+  // ran most recently; cleared on disconnect.
+  const [phoneInfo, setPhoneInfo] = useState<PhoneInfo | null>(null);
 
   const webhookUrl =
     typeof window !== 'undefined'
@@ -139,6 +151,7 @@ export function WhatsAppConfig() {
         setVerifyToken('');
         setPin('');
         setTokenEdited(false);
+        setPhoneInfo(null);
       }
       // Clear any stale probe result when reloading the row.
       setRegistrationProbe(null);
@@ -153,19 +166,23 @@ export function WhatsAppConfig() {
             setConnectionStatus('connected');
             setResetReason(null);
             setStatusMessage('');
+            setPhoneInfo(payload.phone_info ?? null);
           } else {
             setConnectionStatus('disconnected');
             setResetReason(payload.needs_reset ? 'token_corrupted' : payload.reason === 'meta_api_error' ? 'meta_api_error' : null);
             setStatusMessage(payload.message || '');
+            setPhoneInfo(null);
           }
         } catch (err) {
           console.error('Health check failed:', err);
           setConnectionStatus('disconnected');
+          setPhoneInfo(null);
         }
       } else {
         setConnectionStatus('disconnected');
         setResetReason(null);
         setStatusMessage('');
+        setPhoneInfo(null);
       }
     } catch (err) {
       console.error('fetchConfig error:', err);
@@ -244,6 +261,8 @@ export function WhatsAppConfig() {
         setSaving(false);
         return;
       }
+
+      setPhoneInfo(data.phone_info ?? null);
 
       // The route now returns a structured outcome:
       //   * registered=true   → number is live, events will flow
@@ -326,6 +345,7 @@ export function WhatsAppConfig() {
       });
       const data = (await res.json()) as RegistrationProbe;
       setRegistrationProbe(data);
+      if (data.phone_info) setPhoneInfo(data.phone_info);
       if (data.live) {
         toast.success('Number is fully wired — Meta is delivering events.');
       } else {
@@ -396,6 +416,7 @@ export function WhatsAppConfig() {
       setConnectionStatus('disconnected');
       setResetReason(null);
       setStatusMessage('');
+      setPhoneInfo(null);
     } catch (err) {
       console.error('Reset error:', err);
       toast.error('Failed to reset configuration');
@@ -959,6 +980,43 @@ export function WhatsAppConfig() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Connected phone number — the real Meta-verified number, not
+            just a "connected" status badge. Fetched from Meta
+            (GET /{phone_number_id}) via the health check, Save, or
+            Verify Registration — whichever ran most recently. */}
+        {connectionStatus === 'connected' && (
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle className="text-foreground text-base flex items-center gap-2">
+                <Phone className="size-4 text-emerald-400" />
+                Connected Number
+              </CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Verified directly against Meta, not just read from what was typed in.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {phoneInfo?.display_phone_number ? (
+                <div className="space-y-1">
+                  <p className="text-lg font-semibold text-foreground">
+                    {phoneInfo.display_phone_number}
+                  </p>
+                  {phoneInfo.verified_name && (
+                    <p className="text-sm text-muted-foreground">
+                      {phoneInfo.verified_name}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Marked connected, but Meta hasn&apos;t confirmed a phone number yet.
+                  Click &quot;Verify Registration&quot; above to check.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
     </section>
