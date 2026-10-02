@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Loader2, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -121,93 +121,102 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
   const appId = process.env.NEXT_PUBLIC_META_APP_ID;
   const configId = process.env.NEXT_PUBLIC_META_CONFIG_ID;
 
+  /**
+   * Lifted out of the message-listener effect so both arrival orders
+   * trigger it: the WA_EMBEDDED_SIGNUP postMessage and FB.login's code
+   * callback race each other and can land in either order. Previously
+   * this only ran from the postMessage handler, so when the FINISH
+   * event arrived before the code did, the exchange silently never
+   * fired again once the code showed up — the flow just hung until the
+   * watchdog toast.
+   */
+  const tryExchange = useCallback(async () => {
+    if (exchangedRef.current) return;
+    const session = sessionDataRef.current;
+    const code = codeRef.current;
+    if (!session || !code) return;
+    const isBizAppOnboarding = session.event === 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING';
+    if (
+      session.event !== 'FINISH' &&
+      session.event !== 'FINISH_ONLY_WABA' &&
+      !isBizAppOnboarding
+    ) {
+      // Intermediate progress events (business selection etc.) — wait for
+      // the final one instead of exchanging.
+      console.debug('[embedded-signup] intermediate signup event:', session.event, session.current_step);
+      return;
+    }
+    // Coexistence onboarding: Meta documents that the session may
+    // only carry waba_id (no phone_number_id). The server resolves
+    // the number via the WABA's phone_numbers edge, so waba_id is
+    // the only hard requirement here.
+    if (!session.waba_id) {
+      console.error('[embedded-signup] FINISH event missing waba_id:', session);
+      toast.error(
+        'Meta finished the signup but did not send the WhatsApp account IDs. Check that your Facebook Login configuration in the Meta app is a "Login for Business" config with WhatsApp permissions.',
+        { duration: 15000 }
+      );
+      return;
+    }
+    if (!isBizAppOnboarding && !session.phone_number_id) {
+      console.error('[embedded-signup] FINISH event missing phone_number_id:', session);
+      toast.error(
+        'Meta finished the signup but did not send the phone number ID. Check that your Facebook Login configuration in the Meta app is a "Login for Business" config with WhatsApp permissions.',
+        { duration: 15000 }
+      );
+      return;
+    }
+
+    if (watchdogRef.current) clearTimeout(watchdogRef.current);
+    exchangedRef.current = true;
+    setStatus('exchanging');
+    try {
+      const res = await fetch('/api/whatsapp/embedded-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          waba_id: session.waba_id,
+          phone_number_id: session.phone_number_id || null,
+          business_id: session.business_id,
+          business_app_onboarding: isBizAppOnboarding,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || 'Failed to complete WhatsApp connection');
+        return;
+      }
+      if (data.coexistence) {
+        toast.success(
+          data.phone_info?.verified_name
+            ? `Connected to ${data.phone_info.verified_name} (WhatsApp Business app stays in sync). Importing chats and contacts in the background — keep the app open for a few minutes.`
+            : 'Connected. Your WhatsApp Business app number is now linked — importing chats and contacts in the background.',
+          { duration: 12000 }
+        );
+      } else {
+        toast.success(
+          data.phone_info?.verified_name
+            ? `Connected to ${data.phone_info.verified_name}. Add your 2-step PIN below to finish registration.`
+            : 'WhatsApp connected. Add your 2-step PIN below to finish registration.',
+          { duration: 10000 }
+        );
+      }
+      onConnected();
+    } catch (err) {
+      console.error('Embedded Signup exchange failed:', err);
+      toast.error('Failed to complete WhatsApp connection');
+    } finally {
+      if (watchdogRef.current) clearTimeout(watchdogRef.current);
+      setStatus('idle');
+      sessionDataRef.current = null;
+      codeRef.current = null;
+      exchangedRef.current = false;
+    }
+  }, [onConnected]);
+
   useEffect(() => {
     if (!appId || !configId) return;
-
-    async function tryExchange() {
-      if (exchangedRef.current) return;
-      const session = sessionDataRef.current;
-      const code = codeRef.current;
-      if (!session || !code) return;
-      const isBizAppOnboarding = session.event === 'FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING';
-      if (
-        session.event !== 'FINISH' &&
-        session.event !== 'FINISH_ONLY_WABA' &&
-        !isBizAppOnboarding
-      ) {
-        // Intermediate progress events (business selection etc.) — wait for
-        // the final one instead of exchanging.
-        console.debug('[embedded-signup] intermediate signup event:', session.event, session.current_step);
-        return;
-      }
-      // Coexistence onboarding: Meta documents that the session may
-      // only carry waba_id (no phone_number_id). The server resolves
-      // the number via the WABA's phone_numbers edge, so waba_id is
-      // the only hard requirement here.
-      if (!session.waba_id) {
-        console.error('[embedded-signup] FINISH event missing waba_id:', session);
-        toast.error(
-          'Meta finished the signup but did not send the WhatsApp account IDs. Check that your Facebook Login configuration in the Meta app is a "Login for Business" config with WhatsApp permissions.',
-          { duration: 15000 }
-        );
-        return;
-      }
-      if (!isBizAppOnboarding && !session.phone_number_id) {
-        console.error('[embedded-signup] FINISH event missing phone_number_id:', session);
-        toast.error(
-          'Meta finished the signup but did not send the phone number ID. Check that your Facebook Login configuration in the Meta app is a "Login for Business" config with WhatsApp permissions.',
-          { duration: 15000 }
-        );
-        return;
-      }
-
-      if (watchdogRef.current) clearTimeout(watchdogRef.current);
-      exchangedRef.current = true;
-      setStatus('exchanging');
-      try {
-        const res = await fetch('/api/whatsapp/embedded-signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            code,
-            waba_id: session.waba_id,
-            phone_number_id: session.phone_number_id || null,
-            business_id: session.business_id,
-            business_app_onboarding: isBizAppOnboarding,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          toast.error(data.error || 'Failed to complete WhatsApp connection');
-          return;
-        }
-        if (data.coexistence) {
-          toast.success(
-            data.phone_info?.verified_name
-              ? `Connected to ${data.phone_info.verified_name} (WhatsApp Business app stays in sync). Importing chats and contacts in the background — keep the app open for a few minutes.`
-              : 'Connected. Your WhatsApp Business app number is now linked — importing chats and contacts in the background.',
-            { duration: 12000 }
-          );
-        } else {
-          toast.success(
-            data.phone_info?.verified_name
-              ? `Connected to ${data.phone_info.verified_name}. Add your 2-step PIN below to finish registration.`
-              : 'WhatsApp connected. Add your 2-step PIN below to finish registration.',
-            { duration: 10000 }
-          );
-        }
-        onConnected();
-      } catch (err) {
-        console.error('Embedded Signup exchange failed:', err);
-        toast.error('Failed to complete WhatsApp connection');
-      } finally {
-        if (watchdogRef.current) clearTimeout(watchdogRef.current);
-        setStatus('idle');
-        sessionDataRef.current = null;
-        codeRef.current = null;
-        exchangedRef.current = false;
-      }
-    }
 
     function handleMessage(event: MessageEvent) {
       if (!event.origin.endsWith('facebook.com')) return;
@@ -241,8 +250,7 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
       window.removeEventListener('message', handleMessage);
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appId, configId]);
+  }, [appId, configId, tryExchange]);
 
   if (!appId || !configId) return null;
 
@@ -255,6 +263,10 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
         if (response.authResponse?.code) {
           codeRef.current = response.authResponse.code;
           console.debug('[embedded-signup] received auth code from FB.login');
+          // The WA_EMBEDDED_SIGNUP postMessage and this code can arrive in
+          // either order — if the message already landed first, this is
+          // the only thing that will ever trigger the exchange.
+          void tryExchange();
           // If the WA_EMBEDDED_SIGNUP postMessage never arrives (wrong
           // configuration type / missing WhatsApp permissions in the Meta
           // app), the flow would hang silently — warn after a grace period.
