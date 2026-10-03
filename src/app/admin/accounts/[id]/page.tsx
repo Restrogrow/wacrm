@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { ROLE_META } from "@/components/settings/role-meta";
 import { isAccountRole } from "@/lib/auth/roles";
+import { WhatsappDiagnosticsPanel } from "@/components/admin/whatsapp-diagnostics-panel";
 
 export const metadata: Metadata = {
   title: "Account details",
@@ -315,6 +316,8 @@ export default async function AdminAccountDetailPage({
               </div>
             )}
           </div>
+
+          <WhatsappDiagnosticsPanel accountId={account.id} />
         </div>
       )}
     </div>
