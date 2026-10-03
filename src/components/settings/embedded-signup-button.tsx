@@ -32,6 +32,8 @@ interface FacebookSDK {
         featureType?: string;
         /** Embedded Signup architecture version — v4 is the current unified flow; v2 is deprecated Oct 2026. */
         version?: string;
+        /** Required for the coexistence WABA-selection screen to appear — see Meta's own sample code. */
+        sessionInfoVersion?: string;
       };
     }
   ) => void;
@@ -355,10 +357,14 @@ export function EmbeddedSignupButton({ onConnected }: EmbeddedSignupButtonProps)
           // featureType and never shows the coexistence screen.
           // Meta deprecates the legacy flow on 2026-10-15.
           version: 'v4',
-          // NOTE: sessionInfoVersion is deliberately NOT sent — it's a
-          // v2-era override; a v4 configuration returns version-3
-          // session info without it (our listener doesn't check the
-          // version field).
+          // Required on every launch (standard AND coexistence) per
+          // Meta's own sample code. Previously omitted here on the
+          // (wrong) assumption that v4 configs don't need it — without
+          // it, selecting an existing number in the popup falls back to
+          // the generic "migrate/remove from Business app" screen
+          // instead of showing the real "keep using both" coexistence
+          // option. This is the actual fix for that symptom.
+          sessionInfoVersion: '3',
         },
       }
     );
