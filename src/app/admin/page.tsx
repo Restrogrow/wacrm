@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
 import { supabaseAdmin } from "@/lib/flows/admin-client";
 import { Badge } from "@/components/ui/badge";
@@ -107,12 +109,20 @@ export default async function PlatformAdminPage() {
                 <TableHead>Members</TableHead>
                 <TableHead>WhatsApp</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead className="w-8" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {accounts.map((account) => (
-                <TableRow key={account.id}>
-                  <TableCell className="font-medium">{account.name}</TableCell>
+                <TableRow key={account.id} className="group">
+                  <TableCell className="font-medium">
+                    <Link
+                      href={`/admin/accounts/${account.id}`}
+                      className="hover:underline"
+                    >
+                      {account.name}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {account.ownerLabel}
                   </TableCell>
@@ -130,6 +140,15 @@ export default async function PlatformAdminPage() {
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(account.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Link
+                      href={`/admin/accounts/${account.id}`}
+                      className="text-muted-foreground group-hover:text-foreground"
+                      aria-label={`View ${account.name}`}
+                    >
+                      <ChevronRight className="size-4" />
+                    </Link>
                   </TableCell>
                 </TableRow>
               ))}
