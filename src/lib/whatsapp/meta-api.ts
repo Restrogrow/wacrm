@@ -155,6 +155,17 @@ export async function registerPhoneNumber(
   throw new Error(message)
 }
 
+/**
+ * True when /register's error is Meta's "this number belongs to the
+ * WhatsApp Business app" rejection, not a real failure. It confirms
+ * the number is a coexistence number — /register must never be
+ * called for one (the Business app owns registration) — so callers
+ * should treat this as "detected coexistence", not "save failed".
+ */
+export function isSmbRegistrationRejection(message: string): boolean {
+  return /not available for smb businesses/i.test(message)
+}
+
 export interface SubscribeWabaToAppArgs {
   wabaId: string
   accessToken: string

@@ -5,6 +5,7 @@ import {
   registerPhoneNumber,
   subscribeWabaToApp,
   verifyPhoneNumber,
+  isSmbRegistrationRejection,
 } from '@/lib/whatsapp/meta-api'
 import { encrypt, decrypt } from '@/lib/whatsapp/encryption'
 
@@ -274,7 +275,7 @@ export async function POST(request: Request) {
     // /register when the user didn't provide a PIN this time around.
     const { data: existing } = await supabase
       .from('whatsapp_config')
-      .select('id, registered_at, phone_number_id')
+      .select('id, registered_at, phone_number_id, is_on_biz_app')
       .eq('account_id', accountId)
       .maybeSingle()
 
@@ -295,6 +296,11 @@ export async function POST(request: Request) {
     // was supplied (see below). Distinct from registrationError — this
     // is not a failure, just an incomplete-but-valid save.
     let registrationSkipped = false
+    // True when /register's failure was Meta's "not available for SMB
+    // businesses" rejection — this number is on the WhatsApp Business
+    // app, discovered only now because the manual form has no way to
+    // know that up front. Not a real error; see isSmbRegistrationRejection.
+    let isCoexistence = existing?.is_on_biz_app === true
 
     const needsRegistration = !sameNumber || (typeof pin === 'string' && pin.length > 0)
     if (needsRegistration) {
@@ -318,13 +324,17 @@ export async function POST(request: Request) {
           })
           registeredAt = new Date().toISOString()
         } catch (err) {
-          registrationError =
-            err instanceof Error ? err.message : 'Unknown Meta API error'
-          console.error('Phone number /register failed:', registrationError)
-          // We deliberately fall through and still save the row so the
-          // user can retry without re-entering everything. The UI
-          // surfaces `last_registration_error` so they see WHY it's
-          // not actually live yet.
+          const message = err instanceof Error ? err.message : 'Unknown Meta API error'
+          if (isSmbRegistrationRejection(message)) {
+            isCoexistence = true
+          } else {
+            registrationError = message
+            console.error('Phone number /register failed:', registrationError)
+            // We deliberately fall through and still save the row so the
+            // user can retry without re-entering everything. The UI
+            // surfaces `last_registration_error` so they see WHY it's
+            // not actually live yet.
+          }
         }
       }
     }
@@ -363,6 +373,7 @@ export async function POST(request: Request) {
       registered_at: registrationError ? null : registeredAt,
       subscribed_apps_at: subscribedAppsAt ?? null,
       last_registration_error: registrationError,
+      is_on_biz_app: isCoexistence,
       updated_at: new Date().toISOString(),
     }
 
@@ -399,6 +410,29 @@ export async function POST(request: Request) {
           { status: 500 }
         )
       }
+    }
+
+    if (isCoexistence) {
+      // Discovered only now that /register was rejected — this
+      // number is on the WhatsApp Business app. Messaging already
+      // works (metadata + WABA subscription don't need /register),
+      // but we deliberately do NOT auto-start the contacts/history
+      // sync like Embedded Signup's coexistence path does: Meta's
+      // smb_app_data API requires the number to have gone through
+      // the actual FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING handshake
+      // in the Embedded Signup popup first — confirmed live, it
+      // rejects a manually-connected number with "not onboarded on
+      // to WhatsApp Business Platform". There's no server-side way
+      // to trigger that handshake retroactively.
+      return NextResponse.json({
+        success: true,
+        saved: true,
+        registered: false,
+        coexistence: true,
+        phone_info: phoneInfo,
+        message:
+          'This number is managed by the WhatsApp Business app — no PIN needed, and messages already work. To also auto-import existing contacts and chat history, reconnect using "Connect with Facebook" instead — only that flow can complete the handshake Meta requires for the import.',
+      })
     }
 
     if (registrationError) {
