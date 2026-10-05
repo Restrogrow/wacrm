@@ -73,3 +73,40 @@ export function buildBreadcrumbSchema(items: Array<{ name: string; path: string 
     ...buildBreadcrumbNode(items),
   };
 }
+
+/** Standalone-valid BlogPosting JSON-LD (carries "@context") for a blog article. */
+export function buildArticleSchema(article: {
+  title: string;
+  description: string;
+  path: string;
+  datePublished: string;
+  dateModified?: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: article.title,
+    description: article.description,
+    url: `${SITE_URL}${article.path}`,
+    datePublished: article.datePublished,
+    dateModified: article.dateModified ?? article.datePublished,
+    author: { "@id": SITE_URL },
+    publisher: { "@id": SITE_URL },
+    mainEntityOfPage: `${SITE_URL}${article.path}`,
+  };
+}
+
+/** FAQPage node without "@context" — for nesting inside an "@graph". */
+export function buildFAQNode(items: Array<{ question: string; answer: string }>) {
+  return {
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+}

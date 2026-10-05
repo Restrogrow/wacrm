@@ -1,0 +1,39 @@
+# Repeat Grow
+
+> Repeat Grow is a WhatsApp CRM for sales and support teams, built on the official WhatsApp Business API (Meta Cloud API) — shared inbox, contacts, sales pipelines, broadcasts, no-code automations, and a public REST API, with setup done for you.
+
+Repeat Grow is not a WhatsApp Business app replacement add-on and not an unofficial/jailbroken WhatsApp client — it connects directly to Meta's official WhatsApp Business API, so the number stays compliant. Teams are typically live within days because Repeat Grow handles WhatsApp Business verification, number registration, and data import.
+
+## Product
+
+- Shared inbox: multiple agents on one WhatsApp Business number, with per-conversation assignment, status, and internal notes.
+- Contacts: custom fields, CSV import, automatic deduplication, full conversation and deal history per contact.
+- Sales pipelines: Kanban boards with deals linked directly to WhatsApp conversations.
+- Broadcasts: Meta-approved message templates with delivery/read tracking and per-recipient variable substitution.
+- No-code automations: visual builder triggered by inbound messages, new contacts, keywords, or schedule — branches, waits, tags, webhooks.
+- Real-time dashboard: response times, daily volume, pipeline value, cross-module activity feed.
+- Team accounts: invite by link, role-based access (owner / admin / agent / viewer).
+- Public REST API: scoped, revocable API keys for building custom automations on top of CRM data.
+
+## Pricing
+
+Plans are published at https://repeatgrow.com/pricing and start at ₹499/month (Starter), ₹999/month (Growth), and ₹1,999/month (Enterprise), billed monthly or yearly (10% discount). WhatsApp Business API setup is included on every plan; Meta's own per-conversation messaging fees are billed separately by Meta. Plans differ by contact limits, broadcasts/month, automation flows, custom fields, and team members — Enterprise is uncapped on all of these.
+
+## Docs
+
+- [Homepage](https://repeatgrow.com/): product overview, features, FAQ.
+- [Pricing](https://repeatgrow.com/pricing): plans, limits, and billing cycles.
+- [About](https://repeatgrow.com/about): company background.
+- [Contact](https://repeatgrow.com/contact): support contact details.
+- [Security](https://repeatgrow.com/security): security practices and data handling.
+
+## Legal
+
+- [Privacy Policy](https://repeatgrow.com/privacy)
+- [Terms & Conditions](https://repeatgrow.com/terms)
+- [Disclaimer](https://repeatgrow.com/disclaimer)
+
+## Contact
+
+- Support email: support.repeatgrow@gmail.com
+- WhatsApp: https://wa.me/916377568749

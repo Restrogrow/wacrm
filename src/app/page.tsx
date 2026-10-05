@@ -7,11 +7,44 @@ import {
   LANDING_FOOTER_HTML,
   LANDING_WHATSAPP_FLOAT_HTML,
 } from "@/lib/landing-chrome";
-import { BRAND_KEYWORDS, SITE_URL, buildOrganizationNode } from "@/lib/seo";
+import { BRAND_KEYWORDS, SITE_URL, buildFAQNode, buildOrganizationNode } from "@/lib/seo";
 
 const HOME_TITLE = "Repeat Grow — WhatsApp CRM for sales & support teams.";
 const HOME_DESCRIPTION =
   "Repeat Grow is a WhatsApp CRM built on the official WhatsApp Business API — shared inbox, sales pipelines, broadcasts, and automations, set up for you.";
+
+const HOME_FAQS = [
+  {
+    question: "Is Repeat Grow built on the official WhatsApp Business API?",
+    answer:
+      "Yes. Repeat Grow runs entirely on Meta's official WhatsApp Business API (Cloud API) — not a jailbroken app or an unofficial automation layer — so your number stays compliant and can't get banned for using third-party clients.",
+  },
+  {
+    question: "How long does it take to get set up?",
+    answer:
+      "Most teams are live in days, not months. We handle WhatsApp Business verification, number registration, and data import for you, so your team starts working from the shared inbox almost immediately.",
+  },
+  {
+    question: "Do I need the regular WhatsApp Business app too?",
+    answer:
+      "No. Repeat Grow replaces it. Once your number is connected through the official API, all conversations, contacts, and broadcasts are managed from Repeat Grow's shared inbox instead of the WhatsApp Business app.",
+  },
+  {
+    question: "What does Repeat Grow cost?",
+    answer:
+      "Plans start at ₹499/month and scale with your contacts and team size. Pricing is published on our pricing page, with no hidden setup fees — WhatsApp Business API setup is included on every plan.",
+  },
+  {
+    question: "Can multiple agents use the same WhatsApp number?",
+    answer:
+      "Yes. Repeat Grow is a shared inbox by design — multiple agents can work from one WhatsApp Business number with per-conversation assignment, status tracking, and internal notes.",
+  },
+  {
+    question: "Does Repeat Grow integrate with other tools?",
+    answer:
+      "Repeat Grow includes a public REST API with scoped, revocable API keys, plus webhook support in the automation builder, so you can connect it to your existing stack or build custom workflows on top of your CRM data.",
+  },
+];
 
 const STRUCTURED_DATA = {
   "@context": "https://schema.org",
@@ -34,8 +67,17 @@ const STRUCTURED_DATA = {
       },
       publisher: { "@id": SITE_URL },
     },
+    buildFAQNode(HOME_FAQS),
   ],
 };
+
+const FAQ_HTML = HOME_FAQS.map(
+  (faq, index) => `
+      <details class="faq-item"${index === 0 ? " open" : ""}>
+        <summary>${faq.question}</summary>
+        <p>${faq.answer}</p>
+      </details>`
+).join("");
 
 // This route renders the Repeat Grow marketing homepage. It was migrated
 // from a standalone static HTML file (landing-page/index.html) so it can
@@ -355,6 +397,47 @@ const LANDING_BODY_HTML = `
       <div class="hero-ctas" style="justify-content:center; margin-top:28px;">
         <a href="/pricing" class="btn btn-primary">See plans &amp; pricing</a>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= USE CASES ============================= -->
+<section id="use-cases">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Built for your team</span>
+      <h2>WhatsApp CRM for every customer-facing team</h2>
+      <p>The same shared inbox, pipeline, and automation engine — configured for how your industry actually sells and supports on WhatsApp.</p>
+    </div>
+    <div class="usecase-grid reveal">
+      <a href="/whatsapp-crm-for-ecommerce" class="usecase-card">
+        <h3>E-commerce &amp; D2C</h3>
+        <p>Order updates, COD confirmations, abandoned-cart follow-ups, and promo broadcasts tied to each customer's order history.</p>
+        <span class="usecase-link">See the e-commerce use case &rarr;</span>
+      </a>
+      <a href="/whatsapp-crm-for-real-estate" class="usecase-card">
+        <h3>Real Estate</h3>
+        <p>Property leads land straight in a pipeline, with automated site-visit reminders and listing broadcasts.</p>
+        <span class="usecase-link">See the real estate use case &rarr;</span>
+      </a>
+      <a href="/whatsapp-crm-for-education" class="usecase-card">
+        <h3>Coaching &amp; Education</h3>
+        <p>Enquiry-to-enrollment pipeline, demo-class follow-ups, and batch broadcasts for timetables and fee reminders.</p>
+        <span class="usecase-link">See the education use case &rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= FAQ ============================= -->
+<section id="faq" class="section-alt">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">FAQ</span>
+      <h2>Questions, answered</h2>
+      <p>Everything teams usually ask before switching their WhatsApp number to Repeat Grow.</p>
+    </div>
+    <div class="faq-list reveal">${FAQ_HTML}
     </div>
   </div>
 </section>

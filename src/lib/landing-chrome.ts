@@ -56,10 +56,19 @@ export const LANDING_FOOTER_HTML = `
         </ul>
       </div>
       <div class="footer-col">
+        <h4>Solutions</h4>
+        <ul>
+          <li><a href="/whatsapp-crm-for-ecommerce">E-commerce</a></li>
+          <li><a href="/whatsapp-crm-for-real-estate">Real Estate</a></li>
+          <li><a href="/whatsapp-crm-for-education">Coaching &amp; Education</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
         <h4>Resources</h4>
         <ul>
           <li><a href="/about">About Us</a></li>
           <li><a href="/contact">Contact Us</a></li>
+          <li><a href="/blog">Blog</a></li>
           <li><a href="#">Help Center</a></li>
           <li><a href="#">API reference</a></li>
         </ul>

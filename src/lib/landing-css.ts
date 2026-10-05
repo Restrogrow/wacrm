@@ -522,6 +522,58 @@ export const LANDING_CSS = `
 .lp-page .fork-item h3{ font-size: 17px; margin-bottom: 6px; color: var(--text); }
 .lp-page .fork-item p{ font-size: 14.5px; color: var(--text-muted); line-height: 1.65; }
 
+.lp-page .usecase-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.lp-page .usecase-card{
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  background: var(--bg);
+  transition: border-color .15s ease, background .15s ease;
+}
+.lp-page .usecase-card:hover{ border-color: var(--border-accent); background: var(--bg-elevated); }
+.lp-page .usecase-card h3{ font-size: 16px; color: var(--text); margin-bottom: 6px; }
+.lp-page .usecase-card p{ font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+.lp-page .usecase-card .usecase-link{ display: inline-block; margin-top: 14px; font-size: 13.5px; font-weight: 600; color: var(--accent); }
+@media (max-width: 860px){ .lp-page .usecase-grid{ grid-template-columns: 1fr; } }
+
+.lp-page .faq-list{ max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.lp-page .faq-item{
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  padding: 4px 24px;
+}
+.lp-page .faq-item summary{
+  list-style: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 18px 28px 18px 0;
+  position: relative;
+}
+.lp-page .faq-item summary::-webkit-details-marker{ display: none; }
+.lp-page .faq-item summary::after{
+  content: "+";
+  position: absolute;
+  right: 0;
+  top: 16px;
+  font-size: 20px;
+  color: var(--accent);
+}
+.lp-page .faq-item[open] summary::after{ content: "\\2212"; }
+.lp-page .faq-item p{
+  font-size: 14.5px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin: -4px 0 20px;
+}
+
 .lp-page .app-window{
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
@@ -905,8 +957,8 @@ export const LANDING_CSS = `
 .lp-page footer{ padding: 72px 0 34px; background: var(--accent-deep); }
 .lp-page .footer-top{
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr;
-  gap: 40px;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+  gap: 32px;
   padding-bottom: 52px;
   border-bottom: 1px solid rgba(255,255,255,0.18);
 }
