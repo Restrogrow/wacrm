@@ -111,3 +111,49 @@ describe("proxy — refreshed auth cookies survive redirects", () => {
     expect(res.cookies.get(ROTATED.name)?.value).toBe(ROTATED.value);
   });
 });
+
+describe("proxy — canonical host redirect", () => {
+  it("redirects www.repeatgrow.com to the apex domain, preserving path and query", async () => {
+    const res = await proxy(
+      new NextRequest("https://repeatgrow.com/pricing?plan=growth", {
+        headers: { host: "www.repeatgrow.com" },
+      }),
+    );
+
+    expect(res.status).toBe(308);
+    expect(res.headers.get("location")).toBe(
+      "https://repeatgrow.com/pricing?plan=growth",
+    );
+  });
+
+  it("prefers x-forwarded-host over host when both are present", async () => {
+    const res = await proxy(
+      new NextRequest("https://repeatgrow.com/about", {
+        headers: { host: "internal.proxy", "x-forwarded-host": "www.repeatgrow.com" },
+      }),
+    );
+
+    expect(res.status).toBe(308);
+    expect(res.headers.get("location")).toBe("https://repeatgrow.com/about");
+  });
+
+  it("does not redirect requests already on the apex domain", async () => {
+    const res = await proxy(
+      new NextRequest("https://repeatgrow.com/contact", {
+        headers: { host: "repeatgrow.com" },
+      }),
+    );
+
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("does not redirect unrelated hosts (e.g. local dev or preview URLs)", async () => {
+    const res = await proxy(
+      new NextRequest("https://app.test/contact", {
+        headers: { host: "app.test" },
+      }),
+    );
+
+    expect(res.headers.get("location")).toBeNull();
+  });
+});

@@ -1,7 +1,34 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { SITE_URL } from '@/lib/seo'
+
+// Google was indexing https://repeatgrow.com/ and https://www.repeatgrow.com/
+// as separate, un-deduplicated pages ("Duplicate without user-selected
+// canonical" in Search Console) because both hosts served identical content
+// with no redirect between them. Canonical tags alone didn't fix it — Google
+// picked www as the canonical itself for some pages, ignoring our rel=canonical
+// pointing at the apex. Force a single host at the edge instead.
+//
+// request.nextUrl.hostname reflects the address Next.js's own server is
+// bound to (localhost in dev, an internal address behind Hostinger's
+// reverse proxy in prod) — not the public host the visitor requested. The
+// Host header carries that instead, so the redirect target is built from
+// SITE_URL rather than by mutating nextUrl, which would otherwise leak the
+// internal protocol/port into the Location header.
+const CANONICAL_HOST = new URL(SITE_URL).hostname
 
 export async function proxy(request: NextRequest) {
+  const requestHost = (
+    request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? ''
+  ).split(':')[0]
+  if (requestHost && requestHost !== CANONICAL_HOST && requestHost.endsWith('repeatgrow.com')) {
+    const target = new URL(
+      request.nextUrl.pathname + request.nextUrl.search,
+      SITE_URL
+    )
+    return NextResponse.redirect(target, 308)
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
