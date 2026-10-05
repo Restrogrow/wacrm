@@ -26,6 +26,7 @@ interface MetaButton {
   url?: string
   phone_number?: string
   example?: string[] | string
+  otp_type?: string
 }
 
 interface MetaTemplateComponent {
@@ -101,7 +102,21 @@ function parseButtons(metaButtons: MetaButton[] | undefined): TemplateButton[] {
           example: Array.isArray(b.example) ? b.example[0] ?? '' : b.example ?? '',
         })
         break
-      // OTP, FLOW, etc — out of scope for v1; drop silently.
+      case 'OTP':
+        // Authentication templates' button comes back from Meta as
+        // type "OTP" with an otp_type (COPY_CODE / ONE_TAP / ZERO_TAP),
+        // not literally "COPY_CODE". Only COPY_CODE maps to something
+        // we can send — ONE_TAP/ZERO_TAP need an app package name +
+        // signature hash we don't collect, so those still drop silently.
+        if (b.otp_type?.toUpperCase() === 'COPY_CODE') {
+          out.push({
+            type: 'COPY_CODE',
+            text: b.text || 'Copy Code',
+            example: Array.isArray(b.example) ? b.example[0] ?? '' : b.example ?? '',
+          })
+        }
+        break
+      // FLOW, etc — out of scope for v1; drop silently.
     }
   }
   return out
