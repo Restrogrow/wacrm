@@ -102,6 +102,45 @@ function SignupPageInner() {
 
     setLoading(true);
 
+    // Invited teammates: the server creates the account pre-confirmed
+    // (valid invite required), then we sign in and accept the invite
+    // right away — no "check your email" step.
+    if (isInvite) {
+      const res = await fetch(
+        `/api/invitations/${encodeURIComponent(inviteToken!)}/signup`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ full_name: fullName, email, password }),
+        },
+      );
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(json.error ?? "Could not create your account");
+        setLoading(false);
+        return;
+      }
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (signInErr) {
+        setError(signInErr.message);
+        setLoading(false);
+        return;
+      }
+      const redeem = await fetch(
+        `/api/invitations/${encodeURIComponent(inviteToken!)}/redeem`,
+        { method: "POST" },
+      );
+      // Full reload so the dashboard loads with the joined account. If
+      // the auto-accept failed, the join page shows why and a retry.
+      window.location.href = redeem.ok
+        ? "/dashboard"
+        : `/join/${encodeURIComponent(inviteToken!)}`;
+      return;
+    }
+
     // If we have an invite token, point Supabase's verification
     // email back at the join page so the user can accept after
     // verifying. Without a token, Supabase uses its default
@@ -194,7 +233,7 @@ function SignupPageInner() {
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             {inviteToken
-              ? "Just your name, email and a password — then verify your email to join your team."
+              ? "Just your name, email and a password — you'll join your team right away."
               : "Get started with Repeat Grow"}
           </CardDescription>
         </CardHeader>
@@ -447,7 +486,13 @@ function SignupPageInner() {
               disabled={loading}
               className="mt-1.5 h-10 w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              {loading ? "Creating account..." : "Create account"}
+              {loading
+                ? isInvite
+                  ? "Joining your team..."
+                  : "Creating account..."
+                : isInvite
+                  ? "Create account & join"
+                  : "Create account"}
             </Button>
           </form>
 
