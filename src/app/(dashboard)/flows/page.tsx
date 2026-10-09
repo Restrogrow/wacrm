@@ -16,6 +16,7 @@ import {
   HelpCircle,
   UserPlus,
   FileText,
+  Sparkles,
 } from "lucide-react";
 
 import { useCan } from "@/hooks/use-can";
@@ -30,6 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -90,6 +92,8 @@ export default function FlowsPage() {
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
   const [templates, setTemplates] = useState<TemplateSummary[]>([]);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -175,6 +179,30 @@ export default function FlowsPage() {
     }
   }
 
+  async function handleGenerate() {
+    if (!aiPrompt.trim()) return;
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/flows/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt.trim() }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json.error ?? `Generate failed: ${res.status}`);
+      }
+      setCreateOpen(false);
+      setAiPrompt("");
+      toast.success("Flow created as a draft — review it, then activate.");
+      router.push(`/flows/${(json as { flow: FlowRow }).flow.id}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't generate flow.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   async function handleDelete(flow: FlowRow) {
     const yes = window.confirm(
       `Delete "${flow.name}"? Any active runs will end immediately.`,
@@ -214,14 +242,25 @@ export default function FlowsPage() {
             menus, FAQs, and triage before a human steps in.
           </p>
         </div>
-        <GatedButton
-          canAct={canCreate}
-          gateReason="create flows"
-          onClick={() => setCreateOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          New flow
-        </GatedButton>
+        <div className="flex items-center gap-2">
+          <GatedButton
+            canAct={canCreate}
+            gateReason="create flows"
+            variant="outline"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Sparkles className="h-4 w-4" />
+            Create with AI
+          </GatedButton>
+          <GatedButton
+            canAct={canCreate}
+            gateReason="create flows"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            New flow
+          </GatedButton>
+        </div>
       </header>
 
       {flows.length === 0 ? (
@@ -251,9 +290,48 @@ export default function FlowsPage() {
           <DialogHeader>
             <DialogTitle>Create a new flow</DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Start from a template or build from scratch.
+              Describe it for AI, start from a template, or build from scratch.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/5 p-4">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              Create with AI
+            </p>
+            <Textarea
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder={
+                "Describe the flow in your own words (English or Hinglish). e.g.\n" +
+                "When a customer says hi, welcome them and show 3 buttons: Order Food, Book Table, Talk to us. " +
+                "Order Food → send our website link. Book Table → ask date, time and guests, then hand to staff."
+              }
+              rows={5}
+              maxLength={4000}
+              disabled={generating}
+              className="bg-background text-sm"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleGenerate();
+              }}
+            />
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[11px] text-muted-foreground">
+                Saved as a draft so you can review it before going live.
+              </p>
+              <Button
+                onClick={handleGenerate}
+                disabled={!aiPrompt.trim() || generating || creating}
+              >
+                {generating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {generating ? "Building flow…" : "Generate flow"}
+              </Button>
+            </div>
+          </div>
 
           {templates.length > 0 && (
             <div className="space-y-3">
