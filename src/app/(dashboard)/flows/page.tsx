@@ -192,10 +192,14 @@ export default function FlowsPage() {
       if (!res.ok) {
         throw new Error(json.error ?? `Generate failed: ${res.status}`);
       }
+      const created = (json as { flow: FlowRow }).flow;
       setCreateOpen(false);
       setAiPrompt("");
-      toast.success("Flow created as a draft — review it, then activate.");
-      router.push(`/flows/${(json as { flow: FlowRow }).flow.id}`);
+      toast.success("Flow created as a draft — review it, then activate.", {
+        description: describeTrigger(created),
+        duration: 8000,
+      });
+      router.push(`/flows/${created.id}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't generate flow.");
     } finally {

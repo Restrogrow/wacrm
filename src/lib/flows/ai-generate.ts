@@ -53,7 +53,12 @@ export interface GeneratedFlow {
     node_type: string;
     config: Record<string, unknown>;
   }>;
+  /** Tag names to create; set_tag nodes reference them as
+   *  `${NEW_TAG_PREFIX}${name}` until the caller swaps in real ids. */
+  new_tags: string[];
 }
+
+export const NEW_TAG_PREFIX = "new-tag:";
 
 export type GenerateResult =
   | { ok: true; generated: GeneratedFlow; warnings: ValidationIssue[] }
@@ -64,7 +69,7 @@ export function buildSystemPrompt(tags: AiTag[]): string {
   const tagList =
     tags.length > 0
       ? tags.map((t) => `  - "${t.name}" → tag_id "${t.id}"`).join("\n")
-      : "  (none — do NOT use set_tag nodes)";
+      : "  (none yet)";
 
   return `You design WhatsApp chatbot flows for a CRM. Reply with ONE JSON object only — no markdown, no commentary.
 
@@ -87,7 +92,8 @@ export function buildSystemPrompt(tags: AiTag[]): string {
                     "sections": [ { "title": string, "rows": [ { "reply_id": string, "title": string, "description"?: string, "next_node_key": string } ] } ] }   // waits for a tap
 - collect_input:  { "prompt_text": string, "var_key": string, "validation": "any", "next_node_key": string }   // asks a question, stores the typed reply
 - condition:      { "subject": "var", "subject_key": string, "operator": "equals" | "contains" | "present" | "absent", "value"?: string, "true_next": string, "false_next": string }
-- set_tag:        { "mode": "add", "tag_id": string, "next_node_key": string }   // tag the contact in the CRM
+- set_tag:        { "mode": "add", "tag_id": string, "next_node_key": string }     // tag the contact with an EXISTING tag
+               or { "mode": "add", "tag_name": string, "next_node_key": string }   // a NEW tag, created automatically
 - handoff:        { "note": string }   // ends the bot, hands the chat to a human agent
 - end:            {}                   // ends the bot
 
@@ -103,12 +109,12 @@ export function buildSystemPrompt(tags: AiTag[]): string {
 - var_key: letters, digits, underscore; starts with a letter. Reuse captured values in later text as {{vars.var_key}}.
 - WhatsApp has no link buttons here: put website URLs inside message text.
 - Use WhatsApp formatting (*bold*) and a few emoji to keep it friendly. Write in the language the user writes the flow content in.
-- Unless the user clearly asks otherwise, use trigger_type "keyword" with sensible keywords for the flow's purpose.
-- For a greeting trigger use match_type "exact" with variants like hi, hii, hello, hey, namaste — "contains" with "hi" would also match words like "this".
+- Trigger: if the user names the words that should start the flow, use exactly those. Otherwise customers will simply say hi, so use trigger_type "keyword", match_type "exact" and keywords ["hi","hii","hiii","hi!","hello","hello!","helo","hey","hlo","namaste","start"]. Never invent topic words (like "lead" or "restaurant") as the only triggers — customers don't type those.
+- Use match_type "exact" for short words — "contains" with "hi" would also match words like "this".
 
 ## CRM tags available for set_tag
 ${tagList}
-Only use tag_id values from this list. If the user asks to save/record a choice and a matching tag exists, add a set_tag node right after that choice.`;
+When the user asks to save/record a choice, add a set_tag node right after that choice. Use an existing tag_id ONLY if that tag's name really means the same thing; otherwise use "tag_name" with a clear name like "Service: Cloud Kitchen". Different choices must get different tags — never reuse one tag for several options.`;
 }
 
 /** Parse the outermost {...} in the reply, ignoring fences or stray prose. */
@@ -131,9 +137,12 @@ export function parseJsonObject(raw: string): Record<string, unknown> | null {
  */
 export function normalizeGenerated(
   obj: Record<string, unknown>,
-  tagIds: Set<string>,
+  tags: AiTag[],
 ): { generated: GeneratedFlow; extraIssues: ValidationIssue[] } {
   const extraIssues: ValidationIssue[] = [];
+  const tagIds = new Set(tags.map((t) => t.id));
+  const tagIdByName = new Map(tags.map((t) => [t.name.trim().toLowerCase(), t.id]));
+  const newTags = new Set<string>();
   const trigger_type =
     obj.trigger_type === "first_inbound_message" || obj.trigger_type === "manual"
       ? obj.trigger_type
@@ -154,10 +163,26 @@ export function normalizeGenerated(
     const node = n as Record<string, unknown>;
     const node_key = typeof node.node_key === "string" ? node.node_key.trim() : "";
     const node_type = typeof node.node_type === "string" ? node.node_type : "";
-    const config =
+    let config =
       node.config && typeof node.config === "object" && !Array.isArray(node.config)
         ? (node.config as Record<string, unknown>)
         : {};
+    if (node_type === "set_tag" && !tagIds.has(String(config.tag_id ?? ""))) {
+      // Resolve a tag_name to an existing tag, or mark it for creation
+      // with a placeholder id the route swaps for the real one.
+      const tagName = typeof config.tag_name === "string" ? config.tag_name.trim() : "";
+      if (tagName) {
+        const rest = { ...config };
+        delete rest.tag_name;
+        const existingId = tagIdByName.get(tagName.toLowerCase());
+        if (existingId) {
+          config = { ...rest, tag_id: existingId };
+        } else {
+          newTags.add(tagName);
+          config = { ...rest, tag_id: `${NEW_TAG_PREFIX}${tagName}` };
+        }
+      }
+    }
     if (!ALLOWED_NODE_TYPES.has(node_type)) {
       extraIssues.push({
         severity: "error",
@@ -166,12 +191,17 @@ export function normalizeGenerated(
         message: `Node type "${node_type}" is not allowed. Use one of: ${[...ALLOWED_NODE_TYPES].join(", ")}.`,
       });
     }
-    if (node_type === "set_tag" && !tagIds.has(String(config.tag_id ?? ""))) {
+    const tagId = String(config.tag_id ?? "");
+    if (
+      node_type === "set_tag" &&
+      !tagIds.has(tagId) &&
+      !tagId.startsWith(NEW_TAG_PREFIX)
+    ) {
       extraIssues.push({
         severity: "error",
         scope: "node",
         node_key,
-        message: `set_tag uses unknown tag_id "${String(config.tag_id ?? "")}". Use only tag ids from the provided list, or remove this node.`,
+        message: `set_tag uses unknown tag_id "${tagId}". Use a tag_id from the list, or "tag_name" to create a new tag.`,
       });
     }
     nodes.push({ node_key, node_type, config });
@@ -196,6 +226,7 @@ export function normalizeGenerated(
             : "start",
       },
       nodes,
+      new_tags: [...newTags],
     },
     extraIssues,
   };
@@ -253,7 +284,6 @@ export async function generateFlowFromPrompt(
     return { ok: false, error: "AI is not configured (API_GROQ is missing)." };
   }
   const model = opts.model ?? process.env.GROQ_MODEL ?? DEFAULT_MODEL;
-  const tagIds = new Set(tags.map((t) => t.id));
 
   const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
     { role: "system", content: buildSystemPrompt(tags) },
@@ -275,7 +305,7 @@ export async function generateFlowFromPrompt(
         { severity: "error", scope: "flow", message: "Response was not a valid JSON object." },
       ];
     } else {
-      const { generated, extraIssues } = normalizeGenerated(obj, tagIds);
+      const { generated, extraIssues } = normalizeGenerated(obj, tags);
       const issues = [
         ...extraIssues,
         ...validateFlowForActivation(generated.flow, generated.nodes),

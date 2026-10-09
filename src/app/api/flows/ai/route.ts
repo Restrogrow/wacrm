@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
-import { generateFlowFromPrompt } from '@/lib/flows/ai-generate'
+import { generateFlowFromPrompt, NEW_TAG_PREFIX } from '@/lib/flows/ai-generate'
 
 /**
  * POST /api/flows/ai — { prompt } → generate a flow with AI and save it
@@ -55,9 +55,30 @@ export async function POST(request: Request) {
       { status: 422 },
     )
   }
-  const { flow, nodes } = result.generated
+  const { flow, nodes, new_tags } = result.generated
 
   const admin = supabaseAdmin()
+
+  // Create any tags the AI asked for, then point set_tag nodes at them.
+  const newTagIds = new Map<string, string>()
+  if (new_tags.length > 0) {
+    const { data: made, error: tagErr } = await admin
+      .from('tags')
+      .insert(new_tags.map((name) => ({ name, user_id: user.id, account_id: accountId })))
+      .select('id, name')
+    if (tagErr || !made) {
+      return NextResponse.json(
+        { error: tagErr?.message ?? 'tag insert failed' },
+        { status: 500 },
+      )
+    }
+    for (const t of made) newTagIds.set(`${NEW_TAG_PREFIX}${t.name}`, t.id)
+  }
+  const resolvedNodes = nodes.map((n) =>
+    n.node_type === 'set_tag' && newTagIds.has(String(n.config.tag_id))
+      ? { ...n, config: { ...n.config, tag_id: newTagIds.get(String(n.config.tag_id)) } }
+      : n,
+  )
   const { data: created, error: flowErr } = await admin
     .from('flows')
     .insert({
@@ -80,7 +101,7 @@ export async function POST(request: Request) {
   }
 
   const { error: nodesErr } = await admin.from('flow_nodes').insert(
-    nodes.map((n) => ({
+    resolvedNodes.map((n) => ({
       flow_id: created.id,
       node_key: n.node_key,
       node_type: n.node_type,
