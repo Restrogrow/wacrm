@@ -41,10 +41,14 @@ const STATUS_COLORS: Record<ConversationStatus, string> = {
   closed: "bg-muted-foreground",
 };
 
-type InboxFilter = ConversationStatus | "all" | "unread";
+type InboxFilter = ConversationStatus | "all" | "unread" | "recent";
+
+/** "Recent" shows conversations with a message in this window. */
+const RECENT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 const FILTER_OPTIONS: { label: string; value: InboxFilter }[] = [
   { label: "All", value: "all" },
+  { label: "Recent (24h)", value: "recent" },
   { label: "Unread", value: "unread" },
   { label: "Open", value: "open" },
   { label: "Pending", value: "pending" },
@@ -61,6 +65,13 @@ export function ConversationList({
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InboxFilter>("all");
   const [loading, setLoading] = useState(true);
+  // Clock for the "Recent" window — ticks each minute so conversations
+  // age out of the filter without a reload.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
   // Contact-based filters (issue #272). Tags use OR logic (a conversation
   // matches if its contact carries any selected tag), consistent with
   // Broadcast audience filtering. Company is an exact match on the field.
@@ -158,6 +169,13 @@ export function ConversationList({
 
     if (filter === "unread") {
       result = result.filter((c) => c.unread_count > 0);
+    } else if (filter === "recent") {
+      const cutoff = now - RECENT_WINDOW_MS;
+      result = result.filter(
+        (c) =>
+          !!c.last_message_at &&
+          new Date(c.last_message_at).getTime() >= cutoff
+      );
     } else if (filter !== "all") {
       result = result.filter((c) => c.status === filter);
     }
@@ -182,8 +200,13 @@ export function ConversationList({
       });
     }
 
-    return result;
-  }, [conversations, filter, search, selectedTagIds, selectedCompany]);
+    // Newest activity first. The initial fetch is ordered server-side,
+    // but realtime events patch rows in place, so without this a
+    // conversation with a fresh message stays where it was.
+    const ts = (c: Conversation) =>
+      c.last_message_at ? new Date(c.last_message_at).getTime() : 0;
+    return [...result].sort((a, b) => ts(b) - ts(a));
+  }, [conversations, filter, search, selectedTagIds, selectedCompany, now]);
 
   const toggleTag = useCallback((id: string) => {
     setSelectedTagIds((prev) =>
