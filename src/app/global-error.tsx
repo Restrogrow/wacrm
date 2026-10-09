@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import "./globals.css";
+import { isStaleBuildError, reloadOnceForStaleBuild } from "@/lib/stale-build";
 
 // Only fires when the root layout itself throws — everything else is
 // caught by error.tsx. Deliberately minimal (no ThemeProvider, no
@@ -14,9 +15,13 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const stale = isStaleBuildError(error);
+
   useEffect(() => {
     console.error("[global error boundary]", error);
-  }, [error]);
+    // Old JS from before a deploy — a reload picks up the new build.
+    if (stale) reloadOnceForStaleBuild();
+  }, [error, stale]);
 
   return (
     <html lang="en" className="h-full">
@@ -32,7 +37,7 @@ export default function GlobalError({
         </div>
         <button
           type="button"
-          onClick={() => reset()}
+          onClick={() => (stale ? window.location.reload() : reset())}
           className="inline-flex h-8 items-center justify-center rounded-lg bg-white px-3 text-sm font-medium text-black hover:bg-white/80"
         >
           Try again
