@@ -55,6 +55,11 @@ function SignupPageInner() {
   // points back at /join/<token> so the user lands on the redeem
   // step after verifying instead of being dropped on /dashboard.
   const inviteToken = searchParams.get("invite");
+  // Invited teammates join an existing business, so they only need
+  // name + email + password. The business fields describe the account
+  // they're joining (already set up by the owner) — and handle_new_user
+  // treats them as optional, so leaving them out is safe.
+  const isInvite = !!inviteToken;
 
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -75,17 +80,17 @@ function SignupPageInner() {
     e.preventDefault();
     setError(null);
 
-    if (!natureOfBusiness) {
+    if (!isInvite && !natureOfBusiness) {
       setError("Please select the nature of your business");
       return;
     }
 
-    if (!teamSize) {
+    if (!isInvite && !teamSize) {
       setError("Please select your team size");
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (!isInvite && password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
@@ -109,13 +114,15 @@ function SignupPageInner() {
       email,
       password,
       options: {
-        data: {
-          full_name: fullName,
-          business_name: businessName,
-          mobile_number: mobileNumber,
-          nature_of_business: natureOfBusiness,
-          team_size: teamSize,
-        },
+        data: isInvite
+          ? { full_name: fullName }
+          : {
+              full_name: fullName,
+              business_name: businessName,
+              mobile_number: mobileNumber,
+              nature_of_business: natureOfBusiness,
+              team_size: teamSize,
+            },
         ...(emailRedirectTo ? { emailRedirectTo } : {}),
       },
     });
@@ -173,7 +180,7 @@ function SignupPageInner() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
-      <Card className="w-full max-w-xl border-border bg-card">
+      <Card className={`w-full border-border bg-card ${isInvite ? "max-w-md" : "max-w-xl"}`}>
         <CardHeader className="items-center pb-2 text-center">
           <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
             {inviteToken ? (
@@ -187,7 +194,7 @@ function SignupPageInner() {
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             {inviteToken
-              ? "Verify your email, then accept the invitation to join your team."
+              ? "Just your name, email and a password — then verify your email to join your team."
               : "Get started with Repeat Grow"}
           </CardDescription>
         </CardHeader>
@@ -199,6 +206,70 @@ function SignupPageInner() {
               </div>
             )}
 
+            {isInvite ? (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="fullName" className="text-muted-foreground">
+                    Your name
+                  </Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    autoComplete="name"
+                    className={inputClassName}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="email" className="text-muted-foreground">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    className={inputClassName}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="password" className="text-muted-foreground">
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="At least 6 characters"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      autoComplete="new-password"
+                      className={`${inputClassName} pr-10`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="size-4" />
+                      ) : (
+                        <Eye className="size-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+            <>
             <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="fullName" className="text-muted-foreground">
@@ -368,6 +439,8 @@ function SignupPageInner() {
                 </div>
               </div>
             </div>
+            </>
+            )}
 
             <Button
               type="submit"
