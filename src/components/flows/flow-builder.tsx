@@ -40,6 +40,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -589,7 +590,7 @@ function AddNodeButton({ onAdd }: { onAdd: (type: NodeType) => void }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="border-border bg-popover">
         {groupNodeTypesByCategory(types).map((group, i) => (
-          <div key={group.id}>
+          <DropdownMenuGroup key={group.id}>
             {i > 0 && <DropdownMenuSeparator />}
             <DropdownMenuLabel className="text-muted-foreground text-[11px] font-semibold tracking-wider uppercase">
               {group.label}
@@ -603,7 +604,7 @@ function AddNodeButton({ onAdd }: { onAdd: (type: NodeType) => void }) {
                 </DropdownMenuItem>
               );
             })}
-          </div>
+          </DropdownMenuGroup>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
