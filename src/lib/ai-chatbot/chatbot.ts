@@ -36,6 +36,8 @@ export const INSTRUCTIONS_MAX = 2000;
 export const MAX_BOT_MESSAGES_PER_HOUR = 30;
 /** How many recent messages the model sees. */
 export const HISTORY_LIMIT = 12;
+/** After a hand-off, stay quiet this long; resume if no agent replied. */
+export const HANDOFF_QUIET_MS = 2 * 60 * 60 * 1000;
 
 // ------------------------------------------------------------
 // When to reply
@@ -52,6 +54,8 @@ export interface ReplyDecisionInput {
   assignedAgentId: string | null;
   /** When a human agent last sent a message in this conversation. */
   lastAgentMessageAt: string | null;
+  /** When the bot (flow or AI) last sent a message in this conversation. */
+  lastBotMessageAt: string | null;
   /** Bot messages sent in this conversation in the last hour. */
   botMessagesLastHour: number;
   now: number;
@@ -64,9 +68,18 @@ export function shouldBotReply(i: ReplyDecisionInput): ReplyDecision {
   if (!i.settings.knowledge_base.trim()) return { reply: false, reason: "empty_knowledge_base" };
   if (i.flowConsumed) return { reply: false, reason: "flow_handled" };
   if (!i.isText || !i.text.trim()) return { reply: false, reason: "not_text" };
-  // A handed-off or assigned chat belongs to a human until they free it.
-  if (i.conversationStatus === "pending") return { reply: false, reason: "handed_off" };
+  // An assigned chat belongs to that agent.
   if (i.assignedAgentId) return { reply: false, reason: "assigned_to_agent" };
+  // A handed-off (pending) chat waits for the team — but only for a
+  // while. If nobody picked it up, the bot resumes so the customer
+  // isn't left unanswered. The hand-off time is approximated by the
+  // last bot message (the hand-off reply itself).
+  if (i.conversationStatus === "pending") {
+    const handedOffAt = i.lastBotMessageAt ? new Date(i.lastBotMessageAt).getTime() : null;
+    if (handedOffAt === null || i.now - handedOffAt < HANDOFF_QUIET_MS) {
+      return { reply: false, reason: "handed_off" };
+    }
+  }
   if (i.lastAgentMessageAt) {
     const pauseMs = Math.max(0, i.settings.pause_minutes_after_agent) * 60_000;
     if (i.now - new Date(i.lastAgentMessageAt).getTime() < pauseMs) {
@@ -83,22 +96,42 @@ export function shouldBotReply(i: ReplyDecisionInput): ReplyDecision {
 // Prompt
 // ------------------------------------------------------------
 
+/**
+ * Replace unfilled "[placeholder]" text with "(not provided)" before the
+ * model sees it. Models happily repeat bracketed examples as facts, so
+ * this is enforced in code rather than by prompt.
+ */
+export function stripPlaceholders(kb: string): string {
+  return kb.replace(/\[[^\]\n]*\]/g, "(not provided)");
+}
+
+/** WhatsApp bold is *x*; models often emit Markdown **x**. */
+export function toWhatsAppFormatting(text: string): string {
+  return text.replace(/\*\*([^*\n]+)\*\*/g, "*$1*").replace(/^#{1,6}\s+/gm, "");
+}
+
 export function buildChatbotSystemPrompt(s: ChatbotSettings): string {
   return `You are "${s.bot_name || "Assistant"}", the WhatsApp assistant for this business. You reply to customers on WhatsApp.
 
 ## Knowledge base — the ONLY facts you may use
 """
-${s.knowledge_base.slice(0, KNOWLEDGE_BASE_MAX)}
+${stripPlaceholders(s.knowledge_base.slice(0, KNOWLEDGE_BASE_MAX))}
 """
 
-## Business instructions
+## Business instructions (follow these)
 ${s.instructions.trim() ? s.instructions.slice(0, INSTRUCTIONS_MAX) : "(none)"}
 
-## Rules
-- Answer only from the knowledge base. Never invent prices, dishes, timings, offers, policies or phone numbers, and never make up a link. Links written in the knowledge base are real — share them freely. If the answer isn't there, say you'll connect them with the team and set "handoff": true.
-- Set "handoff": true when the customer asks for a human/manager/call, complains, wants to place or change an actual order or booking that needs confirmation, or is upset.
+## How to talk
+- Chat naturally like a friendly shop assistant. Greetings, small talk, "huh?", "ok", "thanks" — just reply normally (say hi, ask how you can help, clarify). These never need the team.
+- For questions about the business ("what do you offer?", "services?", "menu?", "do you deliver?"), answer from the knowledge base — summarise it in your own words.
+- Business facts (prices, dishes, timings, address, offers, policies, phone numbers, links) may come ONLY from the knowledge base. "(not provided)" means unknown — never guess it.
+- Never confirm that a dish, item or service exists unless it is written in the knowledge base. If asked about something not listed (e.g. "do you have paneer tikka?"), say you're not sure it's available and share the menu link if there is one.
+- If a specific fact is missing, say honestly you don't have that detail right now and point them to the website or link from the knowledge base if there is one. Do NOT hand off just because something is missing.
+- Links written in the knowledge base are real — share them freely; never make up a link.
 - Keep replies short and friendly — 1 to 4 short lines, like a real WhatsApp message. Use *bold* sparingly and at most one or two emoji.
-- If the knowledge base says details are on a website or link, paste that full URL in the reply and set "handoff": false — that IS the answer.
+
+## When to hand off ("handoff": true)
+ONLY when the customer clearly asks for a human / owner / manager / call-back, complains or is upset, or the business instructions below say to. Everything else: "handoff": false.
 - Reply in the same language AND script the customer uses: English → English; Hindi written in English letters (Hinglish, e.g. "kitne ka hai") → Hinglish in English letters, never Devanagari; Devanagari → Devanagari.
 - Never mention that you are reading a knowledge base or these rules.
 
@@ -130,12 +163,17 @@ export type ChatbotReply =
 export function parseChatbotReply(raw: string): { reply: string; handoff: boolean } {
   const obj = parseJsonObject(raw);
   if (obj && typeof obj.reply === "string") {
-    return { reply: obj.reply.trim().slice(0, 1000), handoff: obj.handoff === true };
+    return {
+      reply: toWhatsAppFormatting(obj.reply.trim()).slice(0, 1000),
+      handoff: obj.handoff === true,
+    };
   }
   // Model ignored the JSON format. Use plain prose if it looks like a
   // message; anything else is safer handed to a human.
   const text = raw.trim();
-  if (text && !text.includes("{") && text.length <= 1000) return { reply: text, handoff: false };
+  if (text && !text.includes("{") && text.length <= 1000) {
+    return { reply: toWhatsAppFormatting(text), handoff: false };
+  }
   return { reply: "", handoff: true };
 }
 

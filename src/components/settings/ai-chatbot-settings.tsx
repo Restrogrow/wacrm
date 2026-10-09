@@ -128,7 +128,7 @@ export function AiChatbotSettings() {
     <div>
       <SettingsPanelHead
         title="AI chatbot"
-        description="Let AI reply to customers on WhatsApp using your own information. It only answers from the knowledge below, stays quiet while your team is chatting, and hands the chat to a person when it can't help."
+        description="Let AI chat with customers on WhatsApp using your own information. It answers from the knowledge below, stays quiet while your team is chatting, and hands the chat to a person only when the customer asks for one."
         action={
           <div className="flex items-center gap-2.5">
             <Label htmlFor="ai-enabled" className="text-sm">
@@ -229,8 +229,9 @@ export function AiChatbotSettings() {
 
           <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-xs">
             <li>Flows always go first — the bot only answers messages no active flow handled.</li>
-            <li>It doesn&apos;t reply to button taps, media, chats assigned to someone, or chats marked Pending.</li>
-            <li>To give the chat back to the bot after your team is done, set the conversation to Open.</li>
+            <li>It doesn&apos;t reply to button taps, media, or chats assigned to someone.</li>
+            <li>After handing a chat to your team it waits 2 hours; if nobody replied by then, it starts answering again. Setting the chat to Open resumes it right away.</li>
+            <li>Lines with [square brackets] are treated as not filled in — replace them with real details.</li>
           </ul>
         </div>
 

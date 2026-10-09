@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  buildChatbotSystemPrompt,
+  stripPlaceholders,
+  toWhatsAppFormatting,
   DEFAULT_CHATBOT_SETTINGS,
   MAX_BOT_MESSAGES_PER_HOUR,
   normalizeChatbotSettings,
@@ -18,6 +21,7 @@ const base: ReplyDecisionInput = {
   conversationStatus: "open",
   assignedAgentId: null,
   lastAgentMessageAt: null,
+  lastBotMessageAt: null,
   botMessagesLastHour: 0,
   now,
 };
@@ -43,8 +47,14 @@ describe("shouldBotReply", () => {
     expect(why({ text: "   " })).toBe("not_text");
   });
 
-  it("stays quiet while humans own the chat", () => {
+  it("waits after a hand-off, then resumes if nobody picked it up", () => {
+    const ago = (h: number) => new Date(now - h * 3_600_000).toISOString();
     expect(why({ conversationStatus: "pending" })).toBe("handed_off");
+    expect(why({ conversationStatus: "pending", lastBotMessageAt: ago(1) })).toBe("handed_off");
+    expect(why({ conversationStatus: "pending", lastBotMessageAt: ago(3) })).toBe("reply");
+  });
+
+  it("stays quiet while humans own the chat", () => {
     expect(why({ assignedAgentId: "agent-1" })).toBe("assigned_to_agent");
     expect(why({ lastAgentMessageAt: new Date(now - 10 * 60_000).toISOString() })).toBe("agent_recently_active");
     expect(why({ lastAgentMessageAt: new Date(now - 31 * 60_000).toISOString() })).toBe("reply");
@@ -67,6 +77,18 @@ describe("parseChatbotReply", () => {
   it("falls back to prose, and hands off on junk", () => {
     expect(parseChatbotReply("We open at 11.")).toEqual({ reply: "We open at 11.", handoff: false });
     expect(parseChatbotReply('{"oops": 1')).toEqual({ reply: "", handoff: true });
+  });
+});
+
+describe("knowledge-base hygiene", () => {
+  it("hides unfilled [placeholders] from the model", () => {
+    expect(stripPlaceholders("Open: [11 AM – 11 PM]\nVeg: yes")).toBe("Open: (not provided)\nVeg: yes");
+    expect(buildChatbotSystemPrompt({ ...base.settings!, knowledge_base: "Phone: [+91 XXXXX]" })).not.toContain("XXXXX");
+  });
+
+  it("converts Markdown bold to WhatsApp bold", () => {
+    expect(toWhatsAppFormatting("**Delivery** across Jaipur")).toBe("*Delivery* across Jaipur");
+    expect(parseChatbotReply('{"reply":"## Menu\\n**Thali** ₹299","handoff":false}').reply).toBe("Menu\n*Thali* ₹299");
   });
 });
 

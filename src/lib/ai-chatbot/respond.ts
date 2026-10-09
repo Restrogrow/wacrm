@@ -39,7 +39,7 @@ export async function maybeReplyWithAI(input: ChatbotInbound): Promise<void> {
     if (!settings.enabled) return;
 
     const hourAgo = new Date(Date.now() - 3_600_000).toISOString();
-    const [{ data: conv }, { data: lastAgent }, { count: botCount }] = await Promise.all([
+    const [{ data: conv }, { data: lastAgent }, { data: lastBot }, { count: botCount }] = await Promise.all([
       db
         .from("conversations")
         .select("status, assigned_agent_id")
@@ -50,6 +50,14 @@ export async function maybeReplyWithAI(input: ChatbotInbound): Promise<void> {
         .select("created_at")
         .eq("conversation_id", input.conversationId)
         .eq("sender_type", "agent")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      db
+        .from("messages")
+        .select("created_at")
+        .eq("conversation_id", input.conversationId)
+        .eq("sender_type", "bot")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
@@ -69,6 +77,7 @@ export async function maybeReplyWithAI(input: ChatbotInbound): Promise<void> {
       conversationStatus: (conv?.status as string | undefined) ?? null,
       assignedAgentId: (conv?.assigned_agent_id as string | null | undefined) ?? null,
       lastAgentMessageAt: (lastAgent?.created_at as string | undefined) ?? null,
+      lastBotMessageAt: (lastBot?.created_at as string | undefined) ?? null,
       botMessagesLastHour: botCount ?? 0,
       now: Date.now(),
     });
