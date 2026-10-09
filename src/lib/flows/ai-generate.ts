@@ -235,7 +235,7 @@ export function normalizeGenerated(
 async function callGroq(
   apiKey: string,
   model: string,
-  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+  messages: ChatMessage[],
 ): Promise<string> {
   const res = await fetch(GROQ_URL, {
     method: "POST",
@@ -274,21 +274,85 @@ async function callGroq(
   return content;
 }
 
+type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
+type AiOpts = { apiKey?: string; model?: string };
+
+/** The current flow as the model sees it — positions are canvas-only. */
+export interface EditableFlow {
+  name: string;
+  description: string | null;
+  trigger_type: string;
+  trigger_config: Record<string, unknown>;
+  entry_node_id: string | null;
+  nodes: Array<{ node_key: string; node_type: string; config: Record<string, unknown> }>;
+}
+
 export async function generateFlowFromPrompt(
   prompt: string,
   tags: AiTag[],
-  opts: { apiKey?: string; model?: string } = {},
+  opts: AiOpts = {},
+): Promise<GenerateResult> {
+  return runWithRepair(
+    [
+      { role: "system", content: buildSystemPrompt(tags) },
+      { role: "user", content: prompt },
+    ],
+    tags,
+    opts,
+  );
+}
+
+/**
+ * Apply a plain-language change ("add a Contact Us button", "write the
+ * welcome in Hindi") to an existing flow. Returns the FULL updated flow,
+ * checked by the same validator + repair loop as generation.
+ */
+export async function editFlowWithPrompt(
+  current: EditableFlow,
+  instruction: string,
+  tags: AiTag[],
+  opts: AiOpts = {},
+): Promise<GenerateResult> {
+  const snapshot = {
+    name: current.name,
+    description: current.description,
+    trigger_type: current.trigger_type,
+    trigger_config: current.trigger_config,
+    entry_node_id: current.entry_node_id ?? "start",
+    nodes: current.nodes.map((n) => ({
+      node_key: n.node_key,
+      node_type: n.node_type,
+      config: n.config,
+    })),
+  };
+  return runWithRepair(
+    [
+      { role: "system", content: buildSystemPrompt(tags) },
+      {
+        role: "user",
+        content:
+          "Here is the CURRENT flow:\n" +
+          JSON.stringify(snapshot) +
+          "\n\nApply this change:\n" +
+          instruction +
+          "\n\nRules for editing: change only what the request needs; keep every other node, its node_key, text and trigger exactly as they are; keep existing tag_ids. Reply with the FULL updated flow JSON object (all nodes, not just the changed ones).",
+      },
+    ],
+    tags,
+    opts,
+  );
+}
+
+async function runWithRepair(
+  messages: ChatMessage[],
+  tags: AiTag[],
+  opts: AiOpts,
 ): Promise<GenerateResult> {
   const apiKey = opts.apiKey ?? process.env.API_GROQ ?? process.env.GROQ_API_KEY;
   if (!apiKey) {
     return { ok: false, error: "AI is not configured (API_GROQ is missing)." };
   }
   const model = opts.model ?? process.env.GROQ_MODEL ?? DEFAULT_MODEL;
-
-  const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-    { role: "system", content: buildSystemPrompt(tags) },
-    { role: "user", content: prompt },
-  ];
 
   let lastIssues: ValidationIssue[] = [];
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
@@ -335,4 +399,23 @@ export async function generateFlowFromPrompt(
     error: "The AI couldn't produce a valid flow. Try describing it a bit more simply.",
     issues: lastIssues,
   };
+}
+
+/**
+ * Create any tags the AI asked for and swap their placeholder ids in
+ * set_tag nodes for real ones. `insertTags` does the DB write so this
+ * stays testable; it returns the created rows.
+ */
+export async function resolveNewTags(
+  generated: GeneratedFlow,
+  insertTags: (names: string[]) => Promise<AiTag[]>,
+): Promise<GeneratedFlow["nodes"]> {
+  if (generated.new_tags.length === 0) return generated.nodes;
+  const made = await insertTags(generated.new_tags);
+  const idByPlaceholder = new Map(made.map((t) => [`${NEW_TAG_PREFIX}${t.name}`, t.id]));
+  return generated.nodes.map((n) => {
+    const real =
+      n.node_type === "set_tag" ? idByPlaceholder.get(String(n.config.tag_id)) : undefined;
+    return real ? { ...n, config: { ...n.config, tag_id: real } } : n;
+  });
 }

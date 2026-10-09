@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
-import { generateFlowFromPrompt, NEW_TAG_PREFIX } from '@/lib/flows/ai-generate'
+import { generateFlowFromPrompt, resolveNewTags } from '@/lib/flows/ai-generate'
 
 /**
  * POST /api/flows/ai — { prompt } → generate a flow with AI and save it
@@ -55,30 +55,27 @@ export async function POST(request: Request) {
       { status: 422 },
     )
   }
-  const { flow, nodes, new_tags } = result.generated
+  const { flow } = result.generated
 
   const admin = supabaseAdmin()
 
   // Create any tags the AI asked for, then point set_tag nodes at them.
-  const newTagIds = new Map<string, string>()
-  if (new_tags.length > 0) {
-    const { data: made, error: tagErr } = await admin
-      .from('tags')
-      .insert(new_tags.map((name) => ({ name, user_id: user.id, account_id: accountId })))
-      .select('id, name')
-    if (tagErr || !made) {
-      return NextResponse.json(
-        { error: tagErr?.message ?? 'tag insert failed' },
-        { status: 500 },
-      )
-    }
-    for (const t of made) newTagIds.set(`${NEW_TAG_PREFIX}${t.name}`, t.id)
+  let resolvedNodes
+  try {
+    resolvedNodes = await resolveNewTags(result.generated, async (names) => {
+      const { data, error } = await admin
+        .from('tags')
+        .insert(names.map((name) => ({ name, user_id: user.id, account_id: accountId })))
+        .select('id, name')
+      if (error || !data) throw new Error(error?.message ?? 'tag insert failed')
+      return data
+    })
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'tag insert failed' },
+      { status: 500 },
+    )
   }
-  const resolvedNodes = nodes.map((n) =>
-    n.node_type === 'set_tag' && newTagIds.has(String(n.config.tag_id))
-      ? { ...n, config: { ...n.config, tag_id: newTagIds.get(String(n.config.tag_id)) } }
-      : n,
-  )
   const { data: created, error: flowErr } = await admin
     .from('flows')
     .insert({

@@ -246,25 +246,14 @@ export default function FlowsPage() {
             menus, FAQs, and triage before a human steps in.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <GatedButton
-            canAct={canCreate}
-            gateReason="create flows"
-            variant="outline"
-            onClick={() => setCreateOpen(true)}
-          >
-            <Sparkles className="h-4 w-4" />
-            Create with AI
-          </GatedButton>
-          <GatedButton
-            canAct={canCreate}
-            gateReason="create flows"
-            onClick={() => setCreateOpen(true)}
-          >
-            <Plus className="h-4 w-4" />
-            New flow
-          </GatedButton>
-        </div>
+        <GatedButton
+          canAct={canCreate}
+          gateReason="create flows"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+          New flow
+        </GatedButton>
       </header>
 
       {flows.length === 0 ? (

@@ -5,6 +5,7 @@ import {
   NEW_TAG_PREFIX,
   normalizeGenerated,
   parseJsonObject,
+  resolveNewTags,
 } from "./ai-generate";
 
 describe("parseJsonObject", () => {
@@ -78,6 +79,29 @@ describe("buildSystemPrompt", () => {
     expect(buildSystemPrompt([{ id: "abc", name: "VIP" }])).toContain('"VIP" → tag_id "abc"');
     expect(buildSystemPrompt([])).toContain("(none yet)");
     expect(buildSystemPrompt([])).toContain('"start"]');
+  });
+});
+
+describe("resolveNewTags", () => {
+  it("swaps placeholder tag ids for created ones", async () => {
+    const nodes = await resolveNewTags(
+      {
+        flow: {
+          name: "x",
+          description: null,
+          trigger_type: "keyword",
+          trigger_config: {},
+          entry_node_id: "start",
+        },
+        nodes: [
+          { node_key: "a", node_type: "set_tag", config: { tag_id: `${NEW_TAG_PREFIX}Hot`, next_node_key: "end" } },
+          { node_key: "b", node_type: "set_tag", config: { tag_id: "existing", next_node_key: "end" } },
+        ],
+        new_tags: ["Hot"],
+      },
+      async (names) => names.map((name) => ({ id: `id-${name}`, name })),
+    );
+    expect(nodes.map((n) => n.config.tag_id)).toEqual(["id-Hot", "existing"]);
   });
 });
 

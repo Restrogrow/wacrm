@@ -27,6 +27,7 @@
 import { useEffect, useState } from "react";
 import { GitFork, List } from "lucide-react";
 
+import { AiEditBar } from "./ai-edit-bar";
 import { FlowBuilder } from "./flow-builder";
 import { FlowCanvas } from "./flow-canvas";
 import { FlowEditorProvider } from "./flow-editor-state";
@@ -94,6 +95,7 @@ export function FlowEditorShell({ initialFlow, initialNodes }: Props) {
     <FlowEditorProvider initialFlow={initialFlow} initialNodes={initialNodes}>
       <div className="flex h-full min-h-0 flex-col">
         <EditorHeader />
+        <AiEditBar />
 
         {/* ---- mode row: view toggle + node-type legend ----
             Omitted entirely on mobile (canvas is unavailable there and

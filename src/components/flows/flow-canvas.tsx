@@ -315,9 +315,16 @@ function FlowCanvasInner() {
   // positions into editor state once. Otherwise the next drag would
   // save only the dragged node and every other node would fall back
   // to (0,0), which feels like nodes teleporting around the canvas.
+  // Re-arms whenever positions are real again, so a later reset to
+  // all-zero (e.g. an AI edit that adds steps) gets laid out and
+  // persisted too — not just the first load.
   const persistedAutoLayoutRef = useRef(false);
   useEffect(() => {
-    if (!autoLayoutPositions || persistedAutoLayoutRef.current) return;
+    if (!autoLayoutPositions) {
+      persistedAutoLayoutRef.current = false;
+      return;
+    }
+    if (persistedAutoLayoutRef.current) return;
     persistedAutoLayoutRef.current = true;
     updateNodePositions(
       Object.fromEntries(
