@@ -27,7 +27,7 @@ export default function GlobalError({
           </h1>
           <p className="max-w-sm text-sm text-white/60">
             Repeat Grow hit an unexpected error. Try reloading — if it
-            keeps happening, reach out at support.repeatgrow@gmail.com.
+            keeps happening, reach out at support@repeatgrow.com.
           </p>
         </div>
         <button

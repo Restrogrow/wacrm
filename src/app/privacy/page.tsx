@@ -171,8 +171,8 @@ export default function PrivacyPolicyPage() {
             Repeat Grow
             <br />
             Email:{" "}
-            <a href="mailto:support.repeatgrow@gmail.com" className="underline">
-              support.repeatgrow@gmail.com
+            <a href="mailto:support@repeatgrow.com" className="underline">
+              support@repeatgrow.com
             </a>
           </p>
         </section>

@@ -82,8 +82,8 @@ export default function SecurityPage() {
           <p className="mt-3">
             If you believe you&apos;ve found a security vulnerability in Repeat
             Grow, please report it privately to{" "}
-            <a href="mailto:support.repeatgrow@gmail.com" className="underline">
-              support.repeatgrow@gmail.com
+            <a href="mailto:support@repeatgrow.com" className="underline">
+              support@repeatgrow.com
             </a>{" "}
             rather than disclosing it publicly. We&apos;ll acknowledge your
             report and work with you to understand and address the issue.

@@ -76,8 +76,8 @@ export default function DisclaimerPage() {
           <h2 className="text-lg font-semibold text-foreground">Contact</h2>
           <p className="mt-3">
             Questions about this Disclaimer can be sent to{" "}
-            <a href="mailto:support.repeatgrow@gmail.com" className="underline">
-              support.repeatgrow@gmail.com
+            <a href="mailto:support@repeatgrow.com" className="underline">
+              support@repeatgrow.com
             </a>
             . See also our{" "}
             <Link href="/terms" className="underline">

@@ -20,7 +20,7 @@ export const BRAND_KEYWORDS = [
   "official WhatsApp Business API software",
 ];
 
-export const SUPPORT_EMAIL = "support.repeatgrow@gmail.com";
+export const SUPPORT_EMAIL = "support@repeatgrow.com";
 export const SUPPORT_PHONE = "+916377568749";
 
 /** Organization node, standalone-valid (carries "@context") for use as its own JSON-LD block. */

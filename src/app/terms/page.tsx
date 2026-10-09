@@ -110,8 +110,8 @@ export default function TermsPage() {
             Subscription payments are non-refundable, including for partial
             billing periods, unused capacity, or early cancellation. You may
             cancel future renewals at any time by contacting{" "}
-            <a href="mailto:support.repeatgrow@gmail.com" className="underline">
-              support.repeatgrow@gmail.com
+            <a href="mailto:support@repeatgrow.com" className="underline">
+              support@repeatgrow.com
             </a>
             ; cancellation stops the next billing cycle but does not refund
             the current one.
@@ -194,8 +194,8 @@ export default function TermsPage() {
           <h2 className="text-lg font-semibold text-foreground">13. Contact</h2>
           <p className="mt-3">
             Questions about these Terms can be sent to{" "}
-            <a href="mailto:support.repeatgrow@gmail.com" className="underline">
-              support.repeatgrow@gmail.com
+            <a href="mailto:support@repeatgrow.com" className="underline">
+              support@repeatgrow.com
             </a>
             .
           </p>

@@ -109,7 +109,7 @@ const PRICING_BODY_HTML = `
           <li>Custom fields<b>5</b></li>
           <li>Team members<b>5</b></li>
         </ul>
-        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Starter%20plan%20(monthly)" class="btn btn-ghost">Choose Starter</a>
+        <a href="mailto:support@repeatgrow.com?subject=Repeat%20Grow%20-%20Starter%20plan%20(monthly)" class="btn btn-ghost">Choose Starter</a>
       </div>
       <div class="price-card featured">
         <span class="plan-name mono">Growth</span>
@@ -129,7 +129,7 @@ const PRICING_BODY_HTML = `
           <li>Custom fields<b>25</b></li>
           <li>Team members<b>25</b></li>
         </ul>
-        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Growth%20plan%20(monthly)" class="btn btn-primary">Choose Growth</a>
+        <a href="mailto:support@repeatgrow.com?subject=Repeat%20Grow%20-%20Growth%20plan%20(monthly)" class="btn btn-primary">Choose Growth</a>
       </div>
       <div class="price-card">
         <span class="plan-name mono">Enterprise</span>
@@ -149,7 +149,7 @@ const PRICING_BODY_HTML = `
           <li>Custom fields<b>Unlimited</b></li>
           <li>Team members<b>Unlimited</b></li>
         </ul>
-        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Enterprise%20plan%20(monthly)" class="btn btn-ghost">Choose Enterprise</a>
+        <a href="mailto:support@repeatgrow.com?subject=Repeat%20Grow%20-%20Enterprise%20plan%20(monthly)" class="btn btn-ghost">Choose Enterprise</a>
       </div>
     </div>
 
@@ -173,7 +173,7 @@ const PRICING_BODY_HTML = `
           <li>Custom fields<b>5</b></li>
           <li>Team members<b>5</b></li>
         </ul>
-        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Starter%20plan%20(yearly)" class="btn btn-ghost">Choose Starter</a>
+        <a href="mailto:support@repeatgrow.com?subject=Repeat%20Grow%20-%20Starter%20plan%20(yearly)" class="btn btn-ghost">Choose Starter</a>
       </div>
       <div class="price-card featured">
         <span class="plan-name mono">Growth</span>
@@ -194,7 +194,7 @@ const PRICING_BODY_HTML = `
           <li>Custom fields<b>25</b></li>
           <li>Team members<b>25</b></li>
         </ul>
-        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Growth%20plan%20(yearly)" class="btn btn-primary">Choose Growth</a>
+        <a href="mailto:support@repeatgrow.com?subject=Repeat%20Grow%20-%20Growth%20plan%20(yearly)" class="btn btn-primary">Choose Growth</a>
       </div>
       <div class="price-card">
         <span class="plan-name mono">Enterprise</span>
@@ -215,11 +215,11 @@ const PRICING_BODY_HTML = `
           <li>Custom fields<b>Unlimited</b></li>
           <li>Team members<b>Unlimited</b></li>
         </ul>
-        <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Enterprise%20plan%20(yearly)" class="btn btn-ghost">Choose Enterprise</a>
+        <a href="mailto:support@repeatgrow.com?subject=Repeat%20Grow%20-%20Enterprise%20plan%20(yearly)" class="btn btn-ghost">Choose Enterprise</a>
       </div>
     </div>
 
-    <p class="how-caption" style="margin-top:32px;">Need something bigger, or a self-hosted deployment? <a href="mailto:support.repeatgrow@gmail.com?subject=Repeat%20Grow%20-%20Custom%20plan" style="color:var(--accent);">Email us</a> and we'll scope a custom plan.</p>
+    <p class="how-caption" style="margin-top:32px;">Need something bigger, or a self-hosted deployment? <a href="mailto:support@repeatgrow.com?subject=Repeat%20Grow%20-%20Custom%20plan" style="color:var(--accent);">Email us</a> and we'll scope a custom plan.</p>
   </div>
 </section>
 
