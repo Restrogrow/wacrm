@@ -551,9 +551,21 @@ async function advanceFromNodeKey(
   nodes: Map<string, FlowNodeRow>,
 ): Promise<{ outcome: "advanced" | "completed" | "handed_off" }> {
   let currentKey: string | null = startNodeKey;
-  // Defensive cap — if a flow has a cycle (which the validator
-  // SHOULD catch but doesn't yet in v1), we bail rather than loop.
+  // Every suspending/terminal node returns, so revisiting a node within
+  // one pass means an auto-advance cycle (e.g. send_message -> start).
+  // Bail on the first revisit — otherwise each lap re-sends messages
+  // to the customer until the safety cap below trips.
+  const visited = new Set<string>();
+  // Defensive cap — backstop in case the visited check is ever bypassed.
   for (let safety = 0; safety < 64; safety += 1) {
+    if (currentKey && visited.has(currentKey)) {
+      await logEvent(db, run.id, "error", currentKey, {
+        reason: "auto_advance_cycle",
+      });
+      await endRun(db, run.id, "failed", "auto_advance_cycle");
+      return { outcome: "completed" };
+    }
+    if (currentKey) visited.add(currentKey);
     if (!currentKey) {
       await logEvent(db, run.id, "error", null, {
         reason: "next_node_key was null mid-advance",

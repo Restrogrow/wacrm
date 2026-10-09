@@ -132,7 +132,54 @@ export function validateFlowForActivation(
     }
   }
 
+  issues.push(...validateNoAutoAdvanceCycles(nodes));
+
   return issues;
+}
+
+// ============================================================
+// Auto-advance cycles — a loop made only of nodes that never wait
+// for the customer (e.g. send_message -> start -> send_message)
+// would re-send messages on every lap at runtime.
+// ============================================================
+
+const AUTO_ADVANCING = new Set([
+  "start",
+  "send_message",
+  "send_media",
+  "condition",
+  "set_tag",
+]);
+
+function validateNoAutoAdvanceCycles(nodes: NodeInput[]): ValidationIssue[] {
+  const byKey = new Map<string, NodeInput>();
+  for (const n of nodes) byKey.set(n.node_key, n);
+
+  const state = new Map<string, "visiting" | "done">();
+  const flagged = new Set<string>();
+
+  const visit = (key: string): void => {
+    const node = byKey.get(key);
+    if (!node || !AUTO_ADVANCING.has(node.node_type)) return;
+    const s = state.get(key);
+    if (s === "done") return;
+    if (s === "visiting") {
+      flagged.add(key);
+      return;
+    }
+    state.set(key, "visiting");
+    for (const next of outgoingEdges(node)) visit(next);
+    state.set(key, "done");
+  };
+
+  for (const n of nodes) visit(n.node_key);
+
+  return [...flagged].map((node_key) => ({
+    severity: "error" as const,
+    scope: "node" as const,
+    node_key,
+    message: `Node "${node_key}" is part of a loop that never waits for the customer — it would send messages endlessly. Point it to an End node instead.`,
+  }));
 }
 
 // ============================================================

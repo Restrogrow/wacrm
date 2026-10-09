@@ -516,6 +516,48 @@ describe("validateFlowForActivation — send_media", () => {
   });
 });
 
+describe("validateFlowForActivation — auto-advance cycles", () => {
+  it("rejects send_message looping back to start", () => {
+    const issues = validateFlowForActivation(validFlow, [
+      { node_key: "start", node_type: "start", config: { next_node_key: "msg" } },
+      {
+        node_key: "msg",
+        node_type: "send_message",
+        config: { text: "hi", next_node_key: "start" },
+      },
+    ]);
+    expect(
+      issues.some(
+        (i) => i.severity === "error" && i.message.includes("loop"),
+      ),
+    ).toBe(true);
+  });
+
+  it("allows a loop that passes through a node waiting for the customer", () => {
+    const issues = validateFlowForActivation(validFlow, [
+      { node_key: "start", node_type: "start", config: { next_node_key: "menu" } },
+      {
+        node_key: "menu",
+        node_type: "send_buttons",
+        config: {
+          text: "Pick one",
+          buttons: [
+            { reply_id: "again", title: "Again", next_node_key: "msg" },
+            { reply_id: "done", title: "Done", next_node_key: "end" },
+          ],
+        },
+      },
+      {
+        node_key: "msg",
+        node_type: "send_message",
+        config: { text: "ok", next_node_key: "menu" },
+      },
+      { node_key: "end", node_type: "end", config: {} },
+    ]);
+    expect(issues.filter((i) => i.message.includes("loop"))).toEqual([]);
+  });
+});
+
 describe("reachableFromEntry", () => {
   it("walks the graph from the entry", () => {
     const set = reachableFromEntry("start", validNodes);
