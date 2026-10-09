@@ -7,6 +7,7 @@ import { findExistingContact, isUniqueViolation } from '@/lib/contacts/dedupe'
 import { verifyMetaWebhookSignature } from '@/lib/whatsapp/webhook-signature'
 import { runAutomationsForTrigger } from '@/lib/automations/engine'
 import { dispatchInboundToFlows } from '@/lib/flows/engine'
+import { maybeReplyWithAI } from '@/lib/ai-chatbot/respond'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import {
   handleTemplateWebhookChange,
@@ -787,8 +788,10 @@ async function processMessage(
   // Fire any automations that react to this webhook event. All dispatches
   // run here (not earlier) so the contact, conversation, and inbound
   // message all exist before any step — including send_message — runs.
-  // Fire-and-forget: a slow or failing automation must not block the
-  // webhook's 200 OK response to Meta.
+  // They run concurrently and are awaited below: we're inside the route's
+  // `after()` block (Meta already has its 200), which only keeps the
+  // function alive for promises it can see — detached promises could be
+  // frozen mid-automation on serverless hosts.
   const inboundText = contentText ?? message.text?.body ?? ''
   const automationTriggers: (
     | 'new_contact_created'
@@ -809,7 +812,7 @@ async function processMessage(
   // listens to only one trigger runs only when that trigger matches.
   if (contactOutcome.wasCreated) automationTriggers.unshift('new_contact_created')
   if (isFirstInboundMessage) automationTriggers.unshift('first_inbound_message')
-  for (const triggerType of automationTriggers) {
+  const automationRuns = automationTriggers.map((triggerType) =>
     runAutomationsForTrigger({
       accountId,
       triggerType,
@@ -819,7 +822,21 @@ async function processMessage(
         conversation_id: conversation.id,
       },
     }).catch((err) => console.error('[automations] dispatch failed:', err))
-  }
+  )
+
+  // AI chatbot: answers typed messages no flow handled, from the
+  // account's knowledge base. Never throws; no-op when disabled.
+  const chatbotRun = maybeReplyWithAI({
+    accountId,
+    userId: configOwnerUserId,
+    contactId: contactRecord.id,
+    conversationId: conversation.id,
+    text: inboundText,
+    isText: message.type === 'text' && !interactiveReplyId,
+    flowConsumed,
+  })
+
+  await Promise.all([...automationRuns, chatbotRun])
 
   // message.received webhook (public API). Awaited — not fire-and-forget
   // — because we're inside the route's `after()` block, which only keeps

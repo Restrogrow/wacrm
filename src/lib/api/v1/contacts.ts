@@ -12,6 +12,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { findExistingContact, isUniqueViolation } from '@/lib/contacts/dedupe';
 import { resolveImportTagIds } from '@/lib/contacts/resolve-import-tags';
 import { sanitizePhoneForMeta, isValidE164 } from '@/lib/whatsapp/phone-utils';
+import { runAutomationsForTrigger } from '@/lib/automations/engine';
 
 /** Row select that embeds the contact's tags for serialization. */
 export const CONTACT_SELECT = '*, contact_tags(tags(*))';
@@ -203,6 +204,18 @@ export async function setContactTags(
       .from('contact_tags')
       .insert(toAdd.map((tag_id) => ({ contact_id: contactId, tag_id })));
     if (error) throw new ContactError('Failed to update contact tags', 500);
+    // Newly added tags fire "Tag Added" automations, same as tagging in
+    // the dashboard or from a flow. Never throws.
+    await Promise.all(
+      toAdd.map((tag_id) =>
+        runAutomationsForTrigger({
+          accountId,
+          triggerType: 'tag_added',
+          contactId,
+          context: { tag_id },
+        })
+      )
+    );
   }
 }
 

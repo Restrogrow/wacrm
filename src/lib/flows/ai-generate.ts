@@ -10,14 +10,18 @@
  *
  * Env:
  *   API_GROQ     — required (GROQ_API_KEY also accepted).
- *   GROQ_MODEL   — optional, defaults to DEFAULT_MODEL.
+ *   GROQ_MODEL   — optional, defaults to DEFAULT_GROQ_MODEL (lib/ai/groq).
  */
 
 import { INTERACTIVE_LIMITS } from "@/lib/whatsapp/meta-api";
+import {
+  groqApiKey,
+  groqChat,
+  groqModel,
+  parseJsonObject,
+  type ChatMessage,
+} from "@/lib/ai/groq";
 import { validateFlowForActivation, type ValidationIssue } from "./validate";
-
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_MODEL = "openai/gpt-oss-120b";
 /** One initial attempt + one repair attempt. Kept low for free-tier TPM. */
 const MAX_ATTEMPTS = 2;
 
@@ -119,18 +123,7 @@ ${tagList}
 When the user asks to save/record a choice, add a set_tag node right after that choice. Use an existing tag_id ONLY if that tag's name really means the same thing; otherwise use "tag_name" with a clear name like "Service: Cloud Kitchen". Different choices must get different tags — never reuse one tag for several options.`;
 }
 
-/** Parse the outermost {...} in the reply, ignoring fences or stray prose. */
-export function parseJsonObject(raw: string): Record<string, unknown> | null {
-  const start = raw.indexOf("{");
-  const end = raw.lastIndexOf("}");
-  if (start === -1 || end <= start) return null;
-  try {
-    const v = JSON.parse(raw.slice(start, end + 1));
-    return v && typeof v === "object" && !Array.isArray(v) ? v : null;
-  } catch {
-    return null;
-  }
-}
+export { parseJsonObject };
 
 /**
  * Coerce the model's object into the shapes the validator and DB
@@ -234,49 +227,9 @@ export function normalizeGenerated(
   };
 }
 
-async function callGroq(
-  apiKey: string,
-  model: string,
-  messages: ChatMessage[],
-): Promise<string> {
-  const res = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: 0.4,
-      max_completion_tokens: 6000,
-      // No response_format: Groq's json_object mode hard-fails the whole
-      // request (400 json_validate_failed) on minor slips; we parse
-      // leniently and repair via the validation loop instead.
-      ...(model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
-    }),
-  });
-  const text = await res.text();
-  if (!res.ok) {
-    let msg = text;
-    try {
-      msg = JSON.parse(text)?.error?.message ?? text;
-    } catch {
-      // keep raw text
-    }
-    if (res.status === 429) {
-      throw new Error(`AI rate limit reached — wait a minute and try again. (${msg})`);
-    }
-    throw new Error(`AI request failed (${res.status}): ${msg}`);
-  }
-  const content = JSON.parse(text)?.choices?.[0]?.message?.content;
-  if (typeof content !== "string" || !content.trim()) {
-    throw new Error("AI returned an empty response.");
-  }
-  return content;
-}
+const callGroq = (apiKey: string, model: string, messages: ChatMessage[]) =>
+  groqChat({ apiKey, model, messages });
 
-type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
 type AiOpts = { apiKey?: string; model?: string };
 
 /** The current flow as the model sees it — positions are canvas-only. */
@@ -350,11 +303,11 @@ async function runWithRepair(
   tags: AiTag[],
   opts: AiOpts,
 ): Promise<GenerateResult> {
-  const apiKey = opts.apiKey ?? process.env.API_GROQ ?? process.env.GROQ_API_KEY;
+  const apiKey = opts.apiKey ?? groqApiKey();
   if (!apiKey) {
     return { ok: false, error: "AI is not configured (API_GROQ is missing)." };
   }
-  const model = opts.model ?? process.env.GROQ_MODEL ?? DEFAULT_MODEL;
+  const model = groqModel(opts.model);
 
   let lastIssues: ValidationIssue[] = [];
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
