@@ -578,7 +578,13 @@ async function resolveConversationId(args: ExecuteArgs): Promise<string> {
   return data.id as string
 }
 
-function triggerMatches(automation: Automation, ctx: AutomationContext | undefined): boolean {
+export function triggerMatches(automation: Automation, ctx: AutomationContext | undefined): boolean {
+  if (automation.trigger_type === 'tag_added') {
+    // Only the automation configured for THIS tag — otherwise every
+    // tag_added automation would fire on every tag.
+    const tagId = (automation.trigger_config as { tag_id?: string } | null)?.tag_id
+    return !!tagId && tagId === ctx?.tag_id
+  }
   if (automation.trigger_type !== 'keyword_match') return true
   const cfg = automation.trigger_config as KeywordMatchTriggerConfig
   if (!cfg?.keywords || cfg.keywords.length === 0) return false

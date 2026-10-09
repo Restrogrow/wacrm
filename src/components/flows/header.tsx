@@ -22,6 +22,7 @@
  * /flows/[id]/runs) — those don't belong in the hook.
  */
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -31,6 +32,7 @@ import {
   PauseCircle,
   PlayCircle,
   Save,
+  Smartphone,
   Trash2,
   Workflow,
 } from "lucide-react";
@@ -41,6 +43,7 @@ import {
   useFlowEditor,
   type BuilderState,
 } from "./flow-editor-state";
+import { PreviewDialog } from "./preview-dialog";
 
 export function EditorHeader() {
   const router = useRouter();
@@ -56,6 +59,7 @@ export function EditorHeader() {
     setStatus,
     deleteFlow,
   } = useFlowEditor();
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-1.5 px-6 pt-5">
@@ -95,6 +99,10 @@ export function EditorHeader() {
 
         {/* ---- right: runs · delete · activate · save ---- */}
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <Button variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
+            <Smartphone className="h-3.5 w-3.5" />
+            Preview
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -170,6 +178,9 @@ export function EditorHeader() {
         aria-label="Flow description"
         className="w-full max-w-[78ch] rounded-md border border-transparent bg-transparent px-2 py-1 text-[13px] text-muted-foreground outline-none transition-colors placeholder:text-muted-foreground/60 hover:bg-muted/50 focus:border-primary focus:bg-transparent focus:text-foreground"
       />
+      {previewOpen && (
+        <PreviewDialog open={previewOpen} onOpenChange={setPreviewOpen} />
+      )}
     </div>
   );
 }

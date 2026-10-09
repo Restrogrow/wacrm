@@ -371,11 +371,38 @@ export function FlowEditorProvider({
         if (next === "active") {
           await save();
         }
-        const res = await fetch(`/api/flows/${initialFlow.id}/activate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: next }),
-        });
+        const post = (pauseConflicting: boolean) =>
+          fetch(`/api/flows/${initialFlow.id}/activate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              status: next,
+              pause_conflicting: pauseConflicting,
+            }),
+          });
+        let res = await post(false);
+        if (res.status === 409) {
+          // Another active flow already reacts to the same words; the
+          // older one would always win, so offer to pause it.
+          const json = (await res.json().catch(() => ({}))) as {
+            conflicts?: Array<{ name: string; words: string[] }>;
+          };
+          const lines = (json.conflicts ?? []).map((c) =>
+            c.words.length > 0
+              ? `• "${c.name}" — also starts on: ${c.words.join(", ")}`
+              : `• "${c.name}" — also starts on a contact's first message`,
+          );
+          const ok = window.confirm(
+            "These active flows use the same trigger, so this flow would never run:\n\n" +
+              lines.join("\n") +
+              "\n\nPause them and activate this flow?",
+          );
+          if (!ok) {
+            toast.message("Not activated — the other flow is still live.");
+            return;
+          }
+          res = await post(true);
+        }
         if (!res.ok) {
           const json = await res.json().catch(() => ({}));
           throw new Error(json.error ?? `Status update failed: ${res.status}`);

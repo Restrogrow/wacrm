@@ -286,6 +286,7 @@ function validateNode(
           message: `Send-message points to non-existent node "${cfg.next_node_key}".`,
         });
       }
+      issues.push(...validateLinkButton(node));
       break;
     }
 
@@ -763,6 +764,36 @@ function validateNode(
       });
   }
 
+  return issues;
+}
+
+/** Optional link button on send_message: both fields or neither. */
+function validateLinkButton(node: NodeInput): ValidationIssue[] {
+  const cfg = node.config as { link_label?: string; link_url?: string };
+  const label = cfg.link_label?.trim() ?? "";
+  const url = cfg.link_url?.trim() ?? "";
+  if (!label && !url) return [];
+  const issue = (field: string, message: string): ValidationIssue => ({
+    severity: "error",
+    scope: "node",
+    node_key: node.node_key,
+    field,
+    message,
+  });
+  const issues: ValidationIssue[] = [];
+  if (!label) issues.push(issue("link_label", "Link button needs a label (e.g. \"View Menu\")."));
+  else if (label.length > INTERACTIVE_LIMITS.buttonTitleMaxLength) {
+    issues.push(
+      issue(
+        "link_label",
+        `Link button label is ${label.length} chars; WhatsApp allows ${INTERACTIVE_LIMITS.buttonTitleMaxLength}.`,
+      ),
+    );
+  }
+  if (!url) issues.push(issue("link_url", "Link button needs a URL."));
+  else if (!/^https?:\/\/\S+\.\S+/i.test(url)) {
+    issues.push(issue("link_url", "Link URL must be a full web address starting with https://"));
+  }
   return issues;
 }
 

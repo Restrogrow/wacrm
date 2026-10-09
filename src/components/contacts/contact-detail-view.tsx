@@ -242,6 +242,17 @@ export function ContactDetailView({
       if (!error) {
         setContactTagIds((prev) => [...prev, tagId]);
         onUpdated();
+        // Fire "Tag Added" automations (e.g. create a pipeline deal).
+        // Fire-and-forget: tagging already succeeded.
+        void fetch("/api/automations/engine", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            trigger_type: "tag_added",
+            contact_id: contactId,
+            context: { tag_id: tagId },
+          }),
+        }).catch(() => {});
       }
     }
     setSavingTags(false);

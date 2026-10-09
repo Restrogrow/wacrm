@@ -516,6 +516,34 @@ describe("validateFlowForActivation — send_media", () => {
   });
 });
 
+describe("validateFlowForActivation — send_message link button", () => {
+  const withLink = (link: Record<string, unknown>) =>
+    validateFlowForActivation(validFlow, [
+      { node_key: "start", node_type: "start", config: { next_node_key: "msg" } },
+      {
+        node_key: "msg",
+        node_type: "send_message",
+        config: { text: "Order online", next_node_key: "end", ...link },
+      },
+      { node_key: "end", node_type: "end", config: {} },
+    ]).filter((i) => i.field === "link_label" || i.field === "link_url");
+
+  it("accepts no link, or a full label + https URL", () => {
+    expect(withLink({})).toEqual([]);
+    expect(withLink({ link_label: "🌐 View Menu", link_url: "https://tasteofbanaras.in" })).toEqual([]);
+  });
+
+  it("requires both fields together", () => {
+    expect(withLink({ link_label: "View Menu" }).map((i) => i.field)).toEqual(["link_url"]);
+    expect(withLink({ link_url: "https://x.in" }).map((i) => i.field)).toEqual(["link_label"]);
+  });
+
+  it("rejects long labels and non-URLs", () => {
+    expect(withLink({ link_label: "x".repeat(21), link_url: "https://x.in" }).map((i) => i.field)).toEqual(["link_label"]);
+    expect(withLink({ link_label: "Menu", link_url: "tasteofbanaras" }).map((i) => i.field)).toEqual(["link_url"]);
+  });
+});
+
 describe("validateFlowForActivation — auto-advance cycles", () => {
   it("rejects send_message looping back to start", () => {
     const issues = validateFlowForActivation(validFlow, [

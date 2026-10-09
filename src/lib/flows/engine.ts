@@ -33,7 +33,9 @@
  */
 
 import { supabaseAdmin } from "./admin-client";
+import { runAutomationsForTrigger } from "@/lib/automations/engine";
 import {
+  engineSendCtaUrl,
   engineSendInteractiveButtons,
   engineSendInteractiveList,
   engineSendMedia,
@@ -592,13 +594,22 @@ async function advanceFromNodeKey(
     if (node.node_type === "send_message") {
       const cfg = node.config as unknown as SendMessageNodeConfig;
       try {
-        const { whatsapp_message_id } = await engineSendText({
+        const text = interpolateVars(cfg.text, run.vars);
+        const base = {
           accountId: run.account_id,
-    userId: run.user_id,
+          userId: run.user_id,
           conversationId: run.conversation_id!,
           contactId: run.contact_id!,
-          text: interpolateVars(cfg.text, run.vars),
-        });
+        };
+        const { whatsapp_message_id } =
+          cfg.link_label?.trim() && cfg.link_url?.trim()
+            ? await engineSendCtaUrl({
+                ...base,
+                bodyText: text,
+                displayText: cfg.link_label.trim(),
+                url: cfg.link_url.trim(),
+              })
+            : await engineSendText({ ...base, text });
         await logEvent(db, run.id, "message_sent", node.node_key, {
           node_type: "send_message",
           whatsapp_message_id,
@@ -720,12 +731,28 @@ async function advanceFromNodeKey(
       const cfg = node.config as unknown as SetTagNodeConfig;
       try {
         if (cfg.mode === "add") {
-          await db
+          // ignoreDuplicates + select returns a row only when the tag
+          // is NEW for this contact — re-tagging must not re-fire
+          // "Tag Added" automations (e.g. create a second deal).
+          const { data: inserted } = await db
             .from("contact_tags")
             .upsert(
               { contact_id: run.contact_id!, tag_id: cfg.tag_id },
-              { onConflict: "contact_id,tag_id" },
-            );
+              { onConflict: "contact_id,tag_id", ignoreDuplicates: true },
+            )
+            .select("tag_id");
+          if (inserted && inserted.length > 0 && run.contact_id) {
+            // Never throws (see runAutomationsForTrigger).
+            await runAutomationsForTrigger({
+              accountId: run.account_id,
+              triggerType: "tag_added",
+              contactId: run.contact_id,
+              context: {
+                tag_id: cfg.tag_id,
+                conversation_id: run.conversation_id ?? undefined,
+              },
+            });
+          }
         } else {
           await db
             .from("contact_tags")

@@ -32,6 +32,13 @@ export interface SendMessageNodeConfig {
   text: string;
   /** Auto-advance target after the message lands at Meta. */
   next_node_key: string;
+  /**
+   * Optional link button ("🌐 View Menu" → https://…). When both are
+   * set the message goes out as a WhatsApp CTA-URL message instead of
+   * plain text. Label ≤ 20 chars.
+   */
+  link_label?: string;
+  link_url?: string;
 }
 
 export interface SendButtonsNodeConfig {

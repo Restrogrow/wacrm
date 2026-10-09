@@ -85,7 +85,9 @@ export function buildSystemPrompt(tags: AiTag[]): string {
 
 ## Node types (config shapes)
 - start:          { "next_node_key": string }      // exactly one, node_key "start"
-- send_message:   { "text": string, "next_node_key": string }   // sends text, auto-advances
+- send_message:   { "text": string, "next_node_key": string, "link_label"?: string, "link_url"?: string }
+                  // sends text, auto-advances. Set link_label (≤ 20 chars, e.g. "🌐 View Menu") + link_url (https://…)
+                  // to show a tappable website button under the text.
 - send_buttons:   { "text": string, "header_text"?: string, "footer_text"?: string,
                     "buttons": [ { "reply_id": string, "title": string, "next_node_key": string } ] }   // waits for a tap
 - send_list:      { "text": string, "button_label": string, "header_text"?: string, "footer_text"?: string,
@@ -107,7 +109,7 @@ export function buildSystemPrompt(tags: AiTag[]): string {
 - send_list: 1–${L.maxListRowsTotal} rows in total across all sections; row title ≤ ${L.listRowTitleMaxLength} chars; row description ≤ ${L.listRowDescriptionMaxLength} chars; button_label ≤ ${L.buttonTitleMaxLength} chars; section title ≤ ${L.listRowTitleMaxLength} chars.
 - header_text / footer_text ≤ ${L.headerTextMaxLength} chars. Message text ≤ ${L.bodyMaxLength} chars.
 - var_key: letters, digits, underscore; starts with a letter. Reuse captured values in later text as {{vars.var_key}}.
-- WhatsApp has no link buttons here: put website URLs inside message text.
+- To send customers to a website, use a send_message with link_label + link_url (a real tappable button) — don't just paste the URL in the text.
 - Use WhatsApp formatting (*bold*) and a few emoji to keep it friendly. Write in the language the user writes the flow content in.
 - Trigger: if the user names the words that should start the flow, use exactly those. Otherwise customers will simply say hi, so use trigger_type "keyword", match_type "exact" and keywords ["hi","hii","hiii","hi!","hello","hello!","helo","hey","hlo","namaste","start"]. Never invent topic words (like "lead" or "restaurant") as the only triggers — customers don't type those.
 - Use match_type "exact" for short words — "contains" with "hi" would also match words like "this".

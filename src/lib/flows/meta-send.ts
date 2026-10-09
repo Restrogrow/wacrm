@@ -1,5 +1,6 @@
 import {
   sendInteractiveButtons,
+  sendInteractiveCtaUrl,
   sendInteractiveList,
   sendMediaMessage,
   sendTextMessage,
@@ -311,9 +312,32 @@ export async function engineSendInteractiveList(
   return sendInteractiveViaMeta({ ...args, kind: 'list' })
 }
 
+interface SendCtaUrlEngineArgs {
+  accountId: string
+  userId: string
+  conversationId: string
+  contactId: string
+  bodyText: string
+  displayText: string
+  url: string
+}
+
+/**
+ * Send a message with a single link button ("🌐 View Menu") from the
+ * Flows engine. Used by `send_message` nodes that set link_label +
+ * link_url. Auto-advances like plain text — tapping a URL button opens
+ * the browser and produces no webhook.
+ */
+export async function engineSendCtaUrl(
+  args: SendCtaUrlEngineArgs,
+): Promise<{ whatsapp_message_id: string }> {
+  return sendInteractiveViaMeta({ ...args, kind: 'cta_url' })
+}
+
 type SendInput =
   | (SendInteractiveButtonsEngineArgs & { kind: 'buttons' })
   | (SendInteractiveListEngineArgs & { kind: 'list' })
+  | (SendCtaUrlEngineArgs & { kind: 'cta_url' })
 
 async function sendInteractiveViaMeta(
   input: SendInput,
@@ -359,6 +383,17 @@ async function sendInteractiveViaMeta(
         buttons: input.buttons,
         headerText: input.headerText,
         footerText: input.footerText,
+      })
+      return r.messageId
+    }
+    if (input.kind === 'cta_url') {
+      const r = await sendInteractiveCtaUrl({
+        phoneNumberId: config.phone_number_id,
+        accessToken,
+        to: phone,
+        bodyText: input.bodyText,
+        displayText: input.displayText,
+        url: input.url,
       })
       return r.messageId
     }

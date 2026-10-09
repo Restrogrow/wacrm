@@ -83,6 +83,29 @@ export function NodeConfigForm({
             value={(cfg as { text?: string }).text ?? ""}
             onChange={(v) => onUpdateConfig({ text: v })}
           />
+          <div className="space-y-1.5 rounded-md border border-border p-2.5">
+            <label className="block text-xs text-muted-foreground">
+              Link button (optional) — customer taps it to open your website
+            </label>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+              <Input
+                value={(cfg as { link_label?: string }).link_label ?? ""}
+                onChange={(e) => onUpdateConfig({ link_label: e.target.value })}
+                placeholder="🌐 View Menu"
+                maxLength={20}
+                aria-label="Link button label"
+                className="bg-muted text-sm"
+              />
+              <Input
+                value={(cfg as { link_url?: string }).link_url ?? ""}
+                onChange={(e) => onUpdateConfig({ link_url: e.target.value })}
+                placeholder="https://yourwebsite.com"
+                inputMode="url"
+                aria-label="Link button URL"
+                className="bg-muted text-sm"
+              />
+            </div>
+          </div>
           <NextNodeRow
             value={(cfg as { next_node_key?: string }).next_node_key ?? ""}
             allNodes={allNodes}

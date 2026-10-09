@@ -1014,6 +1014,71 @@ export async function sendInteractiveButtons(
   return { messageId: data.messages[0].id }
 }
 
+export interface SendInteractiveCtaUrlArgs {
+  phoneNumberId: string
+  accessToken: string
+  to: string
+  bodyText: string
+  /** Button label (≤ 20 chars per Meta). */
+  displayText: string
+  /** https URL opened when the customer taps the button. */
+  url: string
+  headerText?: string
+  footerText?: string
+}
+
+/**
+ * Send a message with a single "call to action" URL button (e.g.
+ * "🌐 View Menu"). Tapping opens the link in the customer's browser;
+ * Meta sends no webhook back, so callers treat it like plain text and
+ * auto-advance.
+ */
+export async function sendInteractiveCtaUrl(
+  args: SendInteractiveCtaUrlArgs
+): Promise<MetaSendResult> {
+  const { phoneNumberId, accessToken, to, bodyText, displayText, url, headerText, footerText } = args
+  validateInteractiveBody(bodyText)
+  validateInteractiveHeaderFooter(headerText, footerText)
+  if (!displayText) throw new Error('Link button needs a label.')
+  if (displayText.length > INTERACTIVE_LIMITS.buttonTitleMaxLength) {
+    throw new Error(
+      `Link button label "${displayText}" exceeds ${INTERACTIVE_LIMITS.buttonTitleMaxLength} chars.`
+    )
+  }
+  if (!/^https?:\/\//i.test(url)) throw new Error(`Link button URL must start with https://`)
+
+  const interactive: Record<string, unknown> = {
+    type: 'cta_url',
+    body: { text: bodyText },
+    action: {
+      name: 'cta_url',
+      parameters: { display_text: displayText, url },
+    },
+  }
+  if (headerText) interactive.header = { type: 'text', text: headerText }
+  if (footerText) interactive.footer = { text: footerText }
+
+  const response = await fetch(`${META_API_BASE}/${phoneNumberId}/messages`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to,
+      type: 'interactive',
+      interactive,
+    }),
+  })
+  if (!response.ok) {
+    await throwMetaError(response, `Meta API error: ${response.status}`)
+  }
+  const data = await response.json()
+  return { messageId: data.messages[0].id }
+}
+
 export interface InteractiveListRow {
   /** Stable id sent back in the webhook when tapped (≤ 200 chars). */
   id: string

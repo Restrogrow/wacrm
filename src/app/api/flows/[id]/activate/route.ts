@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { validateFlowForActivation } from '@/lib/flows/validate'
+import { findTriggerConflicts, type TriggerFlow } from '@/lib/flows/conflicts'
 
 /**
  * POST /api/flows/[id]/activate
@@ -32,7 +33,11 @@ export async function POST(
   }
 
   const body = (await request.json().catch(() => null)) as
-    | { status?: 'draft' | 'active' | 'archived' }
+    | {
+        status?: 'draft' | 'active' | 'archived'
+        /** Pause other active flows whose triggers overlap this one. */
+        pause_conflicting?: boolean
+      }
     | null
   const status = body?.status
   if (!status || !['draft', 'active', 'archived'].includes(status)) {
@@ -59,7 +64,7 @@ export async function POST(
     const [{ data: flow }, { data: nodes }] = await Promise.all([
       admin
         .from('flows')
-        .select('name, trigger_type, trigger_config, entry_node_id')
+        .select('name, trigger_type, trigger_config, entry_node_id, account_id')
         .eq('id', id)
         .maybeSingle(),
       admin
@@ -92,6 +97,37 @@ export async function POST(
         },
         { status: 422 },
       )
+    }
+
+    // Another active flow listening for the same words would win (the
+    // runner picks the oldest), so this one would silently never run.
+    const { data: others } = await admin
+      .from('flows')
+      .select('id, name, trigger_type, trigger_config')
+      .eq('account_id', flow.account_id)
+      .eq('status', 'active')
+      .neq('id', id)
+    const conflicts = findTriggerConflicts(
+      { id, ...(flow as Omit<TriggerFlow, 'id'>) },
+      (others ?? []) as TriggerFlow[],
+    )
+    if (conflicts.length > 0) {
+      if (!body?.pause_conflicting) {
+        return NextResponse.json(
+          {
+            error: 'Another active flow already uses these trigger words.',
+            conflicts,
+          },
+          { status: 409 },
+        )
+      }
+      const { error: pauseErr } = await admin
+        .from('flows')
+        .update({ status: 'draft', updated_at: new Date().toISOString() })
+        .in('id', conflicts.map((c) => c.id))
+      if (pauseErr) {
+        return NextResponse.json({ error: pauseErr.message }, { status: 500 })
+      }
     }
   }
 
