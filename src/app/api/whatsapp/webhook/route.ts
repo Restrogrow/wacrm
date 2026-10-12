@@ -8,6 +8,13 @@ import { verifyMetaWebhookSignature } from '@/lib/whatsapp/webhook-signature'
 import { runAutomationsForTrigger } from '@/lib/automations/engine'
 import { dispatchInboundToFlows } from '@/lib/flows/engine'
 import { maybeReplyWithAI } from '@/lib/ai-chatbot/respond'
+import {
+  detectOptKeyword,
+  OPT_IN_CONFIRMATION,
+  OPT_OUT_CONFIRMATION,
+  setContactOptOut,
+} from '@/lib/contacts/opt-out'
+import { engineSendText } from '@/lib/flows/meta-send'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import {
   handleTemplateWebhookChange,
@@ -745,6 +752,31 @@ async function processMessage(
   await flagBroadcastReplyIfAny(accountId, contactRecord.id)
 
   // ============================================================
+  // Opt-out (STOP) / opt-in (START). WhatsApp policy requires
+  // honouring opt-outs; the contact is then skipped by broadcasts.
+  // A handled keyword is answered with a confirmation and treated as
+  // consumed, so flows, keyword automations and the AI chatbot don't
+  // also reply to it.
+  // ============================================================
+  const optKeyword =
+    message.type === 'text' && !interactiveReplyId
+      ? detectOptKeyword(contentText ?? message.text?.body)
+      : null
+  let optHandled = false
+  if (optKeyword) {
+    optHandled = await setContactOptOut(supabaseAdmin(), contactRecord.id, optKeyword === 'opt_out')
+    if (optHandled) {
+      await engineSendText({
+        accountId,
+        userId: configOwnerUserId,
+        conversationId: conversation.id,
+        contactId: contactRecord.id,
+        text: optKeyword === 'opt_out' ? OPT_OUT_CONFIRMATION : OPT_IN_CONFIRMATION,
+      }).catch((err) => console.error('[opt-out] confirmation failed:', err))
+    }
+  }
+
+  // ============================================================
   // Flow runner dispatch.
   //
   // If the runner consumes the message (it either advanced an active
@@ -763,7 +795,7 @@ async function processMessage(
   // no active flows take the runner's early-exit "no_match" path
   // basically for free (one indexed SELECT for the active run).
   // ============================================================
-  const flowResult = await dispatchInboundToFlows({
+  const flowResult = optHandled ? { consumed: true } : await dispatchInboundToFlows({
     accountId,
     userId: configOwnerUserId,
     contactId: contactRecord.id,

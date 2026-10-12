@@ -311,6 +311,11 @@ export default function DocsPage() {
                 Sent, delivered, read, replied, and failed counts update live.
               </Step>
             </ol>
+            <Tip>
+              Customers who reply <b>STOP</b> (or UNSUBSCRIBE) are unsubscribed automatically, get a short
+              confirmation, and are skipped by every broadcast. They show an <b>Opted out</b> badge in
+              Contacts. Replying <b>START</b> subscribes them again.
+            </Tip>
           </Section>
 
           <Section id="automations" n={8} title="Automations & flows" intro="Let Repeat Grow handle the repetitive work.">

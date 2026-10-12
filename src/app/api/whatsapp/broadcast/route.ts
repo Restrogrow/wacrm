@@ -4,6 +4,7 @@ import { sendTemplateMessage } from '@/lib/whatsapp/meta-api'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import type { SendTimeParams } from '@/lib/whatsapp/template-send-builder'
 import { isMessageTemplate } from '@/lib/whatsapp/template-row-guard'
+import { loadOptedOutPhones, phoneKey } from '@/lib/contacts/opt-out'
 import {
   sanitizePhoneForMeta,
   isValidE164,
@@ -175,6 +176,9 @@ export async function POST(request: Request) {
     }
     const templateRow = rawTemplateRow ?? null
 
+    // Contacts who replied STOP are never broadcast to (WhatsApp policy).
+    const optedOut = await loadOptedOutPhones(supabase, accountId)
+
     const results: BroadcastResult[] = []
     let sentCount = 0
     let failedCount = 0
@@ -187,6 +191,16 @@ export async function POST(request: Request) {
           phone: recipient.phone,
           status: 'failed',
           error: 'Invalid phone number format',
+        })
+        failedCount++
+        continue
+      }
+
+      if (optedOut.has(phoneKey(sanitized))) {
+        results.push({
+          phone: recipient.phone,
+          status: 'failed',
+          error: 'Opted out (replied STOP)',
         })
         failedCount++
         continue

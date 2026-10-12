@@ -251,7 +251,8 @@ curl -X POST https://repeatgrow.com/api/v1/broadcasts \
 ```
 
 Recipients are capped at **1000 per request** — split larger sends.
-Invalid phone numbers are dropped and counted as `rejected`. Response
+Invalid phone numbers, and contacts who replied STOP (opted out), are
+dropped and counted as `rejected`. Response
 (202):
 
 ```json

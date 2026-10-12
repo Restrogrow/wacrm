@@ -599,6 +599,14 @@ export default function ContactsPage() {
                   </TableCell>
                   <TableCell className="text-foreground font-medium">
                     {contact.name || <span className="text-muted-foreground italic">Unnamed</span>}
+                    {contact.opted_out_at ? (
+                      <span
+                        title="Replied STOP — broadcasts skip this contact until they reply START"
+                        className="ml-2 inline-flex items-center rounded border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 align-middle text-[10px] font-medium uppercase tracking-wide text-amber-400"
+                      >
+                        Opted out
+                      </span>
+                    ) : null}
                   </TableCell>
                   <TableCell className="text-muted-foreground font-mono text-xs">
                     {contact.phone}

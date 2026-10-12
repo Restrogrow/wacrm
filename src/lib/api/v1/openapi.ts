@@ -281,8 +281,8 @@ export const OPENAPI_SPEC = {
         summary: 'Launch a template broadcast',
         description:
           'Sends an approved template to up to 1,000 recipients per request. Returns immediately while sends ' +
-          'run in the background — poll `GET /broadcasts/{id}` for progress. Invalid numbers are dropped and ' +
-          'counted as `rejected`. Scope: `broadcasts:send`.',
+          'run in the background — poll `GET /broadcasts/{id}` for progress. Invalid numbers and contacts who ' +
+          'replied STOP (opted out) are dropped and counted as `rejected`. Scope: `broadcasts:send`.',
         'x-scope': 'broadcasts:send',
         requestBody: {
           required: true,

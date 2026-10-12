@@ -98,6 +98,8 @@ export interface Contact {
   email?: string;
   company?: string;
   avatar_url?: string;
+  /** Set when the contact replied STOP (migration 036); broadcasts skip them. */
+  opted_out_at?: string | null;
   created_at: string;
   updated_at: string;
   /** Hydrated by queries that embed `contact_tags(tags(*))` (e.g. the

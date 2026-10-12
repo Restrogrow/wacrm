@@ -415,6 +415,14 @@ export function ContactDetailView({
                   </SheetTitle>
                   <SheetDescription className="text-muted-foreground text-xs mt-0.5">
                     Contact details
+                    {contact.opted_out_at ? (
+                      <span
+                        title="Replied STOP — broadcasts skip this contact until they reply START"
+                        className="ml-2 inline-flex items-center rounded border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-400"
+                      >
+                        Opted out
+                      </span>
+                    ) : null}
                   </SheetDescription>
                   <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                     <button

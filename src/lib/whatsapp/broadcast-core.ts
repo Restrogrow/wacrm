@@ -29,6 +29,7 @@ import {
 import { isMessageTemplate } from '@/lib/whatsapp/template-row-guard';
 import type { MessageTemplate } from '@/types';
 import { findOrCreateContact } from '@/lib/api/v1/contacts';
+import { loadOptedOutPhones, phoneKey } from '@/lib/contacts/opt-out';
 
 /** Thrown by createBroadcast on a caller-visible failure; route maps it. */
 export class BroadcastError extends Error {
@@ -145,11 +146,14 @@ export async function createBroadcast(
 
   // Resolve each recipient to a contact. Invalid phones are dropped
   // (counted as rejected) rather than aborting the whole broadcast.
+  // Contacts who replied STOP are skipped (WhatsApp policy) and
+  // counted as rejected, like invalid numbers.
+  const optedOut = await loadOptedOutPhones(db, accountId);
   const resolved: { contactId: string; phone: string; params: string[] }[] = [];
   let rejected = 0;
   for (const r of recipients) {
     const sanitized = sanitizePhoneForMeta(typeof r.to === 'string' ? r.to : '');
-    if (!isValidE164(sanitized)) {
+    if (!isValidE164(sanitized) || optedOut.has(phoneKey(sanitized))) {
       rejected++;
       continue;
     }
@@ -180,7 +184,7 @@ export async function createBroadcast(
   if (deduped.length === 0) {
     throw new BroadcastError(
       'bad_request',
-      'No recipients had a valid E.164 phone number',
+      'No recipients left to send to (invalid phone numbers or contacts who opted out)',
       400
     );
   }
