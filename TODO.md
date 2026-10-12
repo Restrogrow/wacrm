@@ -17,10 +17,11 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 - [ ] **#3 Free trial.** "Start Free Trial" has no trial: add trial
       start/end on the account, reminders before it ends, and what happens
       after (read-only or downgrade).
-- [ ] **#5 Background jobs (cron).** Automations with waits/schedules and
-      flows need `/api/automations/cron` and `/api/flows/cron` called every
-      minute with `AUTOMATION_CRON_SECRET`. Confirm a Hostinger cron job
-      exists for both, and document it in the README.
+- [x] **#5 Background jobs (cron).** Done 2026-10-13:
+      `AUTOMATION_CRON_SECRET` is set and Hostinger runs
+      `/api/automations/cron` and `/api/flows/cron` every minute with the
+      `x-cron-secret` header (both verified returning 200).
+      Still to do: document this setup in the README.
 
 ## 🟠 Customer-facing gaps
 
@@ -112,6 +113,18 @@ each needs a backwards-compatible rollout.
 - [ ] **#26 Smarter AI:** chatbot creates leads/deals and tags
       customers; reply suggestions and chat summaries for agents;
       knowledge base from a website URL or PDF instead of pasted text.
+- [ ] **#32 Daily WhatsApp summary.** Every day at 12 pm, send the
+      business owner a WhatsApp message with the day's numbers: messages
+      sent and received, new contacts, conversations opened / closed /
+      pending, average first-response time, broadcasts sent (delivered,
+      read, replied, failed), templates approved or rejected, chatbot
+      replies and hand-offs, deals won and pipeline value, and opt-outs.
+      Notes: run it from the existing every-minute cron (or a new
+      `/api/reports/daily` cron route); per-account on/off, time and
+      recipient number(s) in Settings; use the account's time zone
+      (`CHATBOT_TIMEZONE` today); needs an approved UTILITY template
+      because the owner may not have messaged the number in the last
+      24 hours; record each send so it isn't sent twice in a day.
 - [ ] **#27 Analytics:** per-agent response times, broadcast
       click/revenue tracking, inbox → won-deal funnel.
 - [ ] **#28 More ways in:** Click-to-WhatsApp ad leads (Facebook /
