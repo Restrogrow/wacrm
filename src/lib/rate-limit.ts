@@ -148,6 +148,11 @@ export const RATE_LIMITS = {
    *  instance deploy needs the Redis swap described at the top of
    *  this file (the per-key call sites don't change). */
   publicApi: { limit: 120, windowMs: 60_000 },
+  /** Connect token exchange (`POST /api/v1/connect/token`), keyed per
+   *  IP and per client. A partner exchanges one code per owner who
+   *  clicks "Connect", so 30/min is far above real use while making
+   *  client-secret or code guessing pointless. */
+  connectToken: { limit: 30, windowMs: 60_000 },
 } as const;
 
 /** Test-only helper. Clears the in-memory state so unit tests don't

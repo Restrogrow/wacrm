@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { SITE_URL } from '@/lib/seo'
+import { safeNextPath } from '@/lib/auth/safe-next'
 
 // Google was indexing https://repeatgrow.com/ and https://www.repeatgrow.com/
 // as separate, un-deduplicated pages ("Duplicate without user-selected
@@ -90,8 +91,12 @@ export async function proxy(request: NextRequest) {
       url.pathname = `/join/${encodeURIComponent(inviteToken)}`
       url.search = ''
     } else {
-      url.pathname = '/dashboard'
-      url.search = ''
+      // Honour a same-origin `next` (e.g. a /connect consent page) so an
+      // already-signed-in user lands back where they started.
+      const next = safeNextPath(request.nextUrl.searchParams.get('next'))
+      const target = new URL(next, request.nextUrl.origin)
+      url.pathname = target.pathname
+      url.search = target.search
     }
     return withRefreshedCookies(NextResponse.redirect(url))
   }

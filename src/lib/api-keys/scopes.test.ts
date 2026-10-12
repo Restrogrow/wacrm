@@ -61,3 +61,25 @@ describe('SCOPE_DESCRIPTIONS', () => {
     }
   });
 });
+
+describe('API_SCOPES', () => {
+  it('lists every scope, including the template scopes used by Connect', () => {
+    expect([...API_SCOPES]).toEqual([
+      'messages:send',
+      'messages:read',
+      'contacts:read',
+      'contacts:write',
+      'conversations:read',
+      'broadcasts:send',
+      'webhooks:manage',
+      'templates:read',
+      'templates:write',
+    ]);
+    expect(SCOPE_DESCRIPTIONS['templates:read']).toBe(
+      'List message templates and their review status'
+    );
+    expect(SCOPE_DESCRIPTIONS['templates:write']).toBe(
+      'Create message templates and submit them to Meta'
+    );
+  });
+});

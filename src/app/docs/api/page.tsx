@@ -43,6 +43,7 @@ type Operation = {
   summary: string;
   description?: string;
   "x-scope"?: string;
+  security?: readonly unknown[];
   parameters?: readonly Param[];
   requestBody?: { content: { "application/json": { example?: unknown } } };
   responses: Record<
@@ -69,10 +70,9 @@ const slug = (e: Endpoint) => e.op.operationId.replace(/[A-Z]/g, (c) => `-${c.to
 
 function curlFor(e: Endpoint): string {
   const url = `${BASE_URL}${e.path}`;
-  const lines = [
-    `curl${e.method === "get" ? "" : ` -X ${e.method.toUpperCase()}`} "${url}"`,
-    `  -H "Authorization: Bearer $REPEATGROW_API_KEY"`,
-  ];
+  const lines = [`curl${e.method === "get" ? "" : ` -X ${e.method.toUpperCase()}`} "${url}"`];
+  // Endpoints with `security: []` (Connect token exchange) take no API key.
+  if (e.op.security?.length !== 0) lines.push(`  -H "Authorization: Bearer $REPEATGROW_API_KEY"`);
   const example = e.op.requestBody?.content["application/json"].example;
   if (example !== undefined) {
     lines.push(`  -H "Content-Type: application/json"`);

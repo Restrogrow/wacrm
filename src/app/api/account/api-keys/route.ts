@@ -40,7 +40,7 @@ const MAX_EXPIRY_DAYS = 365;
 // Columns safe to expose. `key_hash` is deliberately excluded — it
 // never leaves the server.
 const SAFE_COLUMNS =
-  'id, name, key_prefix, scopes, last_used_at, expires_at, revoked_at, created_at';
+  'id, name, key_prefix, scopes, last_used_at, expires_at, revoked_at, created_at, client_id, created_by';
 
 export async function GET() {
   try {
@@ -62,7 +62,29 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ keys: data ?? [] });
+    // Attach the creator's name so Settings → Connected apps can show
+    // who connected each app. Profiles of teammates are member-readable.
+    const keys = data ?? [];
+    const creatorIds = [
+      ...new Set(keys.map((k) => k.created_by).filter((id): id is string => !!id)),
+    ];
+    const names = new Map<string, string | null>();
+    if (creatorIds.length) {
+      const { data: profiles } = await ctx.supabase
+        .from('profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', creatorIds);
+      for (const p of profiles ?? []) {
+        names.set(p.user_id as string, (p.full_name as string) || (p.email as string) || null);
+      }
+    }
+
+    return NextResponse.json({
+      keys: keys.map((k) => ({
+        ...k,
+        created_by_name: k.created_by ? names.get(k.created_by) ?? null : null,
+      })),
+    });
   } catch (err) {
     return toErrorResponse(err);
   }

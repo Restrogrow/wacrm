@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { safeNextPath } from "@/lib/auth/safe-next";
 
 // Supabase's auth emails (password reset, signup confirmation, invites)
 // land here with a PKCE `code` query param. We exchange it for a session
@@ -7,15 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 // `redirectTo` call asked for via `next` — e.g. forgot-password sends
 // `next=/reset-password`.
 //
-// `next` must stay same-origin: it's attacker-controllable (anyone can
-// craft `/auth/callback?code=...&next=https://evil.com`), so only accept
-// a path starting with a single `/`.
-function safeNextPath(next: string | null): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) {
-    return "/dashboard";
-  }
-  return next;
-}
+// `next` must stay same-origin — see safeNextPath.
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);

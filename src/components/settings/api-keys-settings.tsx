@@ -51,6 +51,8 @@ interface ApiKey {
   expires_at: string | null;
   revoked_at: string | null;
   created_at: string;
+  /** Set on keys minted by "Connect RepeatGrow" — shown under Connected apps. */
+  client_id?: string | null;
 }
 
 function fmtDate(iso: string): string {
@@ -72,6 +74,7 @@ export function ApiKeysSettings() {
   const { canEditSettings } = useAuth();
 
   const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [connectedCount, setConnectedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
@@ -85,7 +88,11 @@ export function ApiKeysSettings() {
         return;
       }
       const data = (await res.json()) as { keys: ApiKey[] };
-      setKeys(data.keys);
+      // Keys belonging to connected apps live in Settings → Connected apps.
+      setKeys(data.keys.filter((k) => !k.client_id));
+      setConnectedCount(
+        data.keys.filter((k) => k.client_id && !k.revoked_at).length
+      );
     } catch (err) {
       console.error('[ApiKeysSettings] load error:', err);
       toast.error('Could not reach the server');
@@ -153,6 +160,19 @@ export function ApiKeysSettings() {
           </RequireRole>
         }
       />
+
+      {connectedCount > 0 && (
+        <p className="text-muted-foreground text-xs">
+          {connectedCount === 1
+            ? '1 connected app also has access.'
+            : `${connectedCount} connected apps also have access.`}{' '}
+          Manage them in{' '}
+          <a href="/settings?tab=connected-apps" className="text-foreground underline">
+            Connected apps
+          </a>
+          .
+        </p>
+      )}
 
       {keys.length === 0 ? (
         <Card>

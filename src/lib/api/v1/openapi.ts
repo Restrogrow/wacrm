@@ -91,7 +91,9 @@ export const OPENAPI_SPEC = {
     { name: 'Contacts', description: 'Create, list, read, and update contacts.' },
     { name: 'Conversations', description: 'Read conversations and their messages.' },
     { name: 'Broadcasts', description: 'Launch template broadcasts and track progress.' },
+    { name: 'Templates', description: 'Create WhatsApp message templates and follow their review by Meta.' },
     { name: 'Webhooks', description: 'Register endpoints that receive events from your account.' },
+    { name: 'Connect', description: 'For partner apps: exchange a "Connect RepeatGrow" code for a key, and disconnect.' },
   ],
   paths: {
     '/me': {
@@ -318,6 +320,141 @@ export const OPENAPI_SPEC = {
         responses: {
           '200': { description: 'The broadcast.', content: json(dataEnvelope(ref('Broadcast'))) },
           ...errorResponses(401, 403, 404, 429),
+        },
+      },
+    },
+    '/templates': {
+      get: {
+        tags: ['Templates'],
+        operationId: 'listTemplates',
+        summary: 'List message templates',
+        description:
+          'Your templates and their review status, optionally filtered by `names` (comma-separated, up to 50). ' +
+          "Status is kept current by Meta's review webhook. Scope: `templates:read`.",
+        'x-scope': 'templates:read',
+        parameters: [
+          {
+            name: 'names',
+            in: 'query',
+            description: 'Comma-separated template names, up to 50.',
+            schema: { type: 'string', example: 'order_update,birthday_gift' },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Matching templates.',
+            content: json(dataEnvelope({ type: 'array', items: ref('TemplateDetail') }), {
+              data: [
+                {
+                  id: '6f1e…',
+                  name: 'birthday_gift',
+                  language: 'en',
+                  category: 'MARKETING',
+                  status: 'APPROVED',
+                  rejection_reason: null,
+                  body_text: 'Happy birthday, {{1}}! Your treat: {{2}}.',
+                  updated_at: '2026-10-12T10:00:00.000Z',
+                },
+              ],
+            }),
+          },
+          ...errorResponses(400, 401, 403, 429),
+        },
+      },
+      post: {
+        tags: ['Templates'],
+        operationId: 'createTemplate',
+        summary: 'Create a template and submit it to Meta',
+        description:
+          'Submits the template to Meta for review. Safe to call again: the same name, language and wording returns ' +
+          'the current template with `200` and nothing is resubmitted; a `REJECTED` or `DRAFT` template is resubmitted; ' +
+          'an approved or pending template with different wording returns `409 conflict` (use a new name). ' +
+          'AUTHENTICATION templates are not supported. Scope: `templates:write`.',
+        'x-scope': 'templates:write',
+        requestBody: {
+          required: true,
+          content: json(ref('CreateTemplateRequest'), {
+            name: 'birthday_gift',
+            category: 'MARKETING',
+            language: 'en',
+            body_text: 'Happy birthday, {{1}}! Your treat: {{2}}.',
+            sample_values: { body: ['Priya', 'Free dessert'] },
+          }),
+        },
+        responses: {
+          '201': {
+            description: 'Submitted (or resubmitted) to Meta for review.',
+            content: json(dataEnvelope(ref('Template')), {
+              data: { id: '6f1e…', name: 'birthday_gift', language: 'en', category: 'MARKETING', status: 'PENDING' },
+            }),
+          },
+          '200': {
+            description: 'Already exists with the same wording; nothing resubmitted.',
+            content: json(dataEnvelope(ref('Template'))),
+          },
+          '409': {
+            description: "`conflict` — exists with different wording and can't be changed. Use a new name.",
+            content: json(ref('Error')),
+          },
+          '502': { description: '`meta_error` — Meta rejected the submission.', content: json(ref('Error')) },
+          ...errorResponses(400, 401, 403, 429, 500),
+        },
+      },
+    },
+    '/connect/token': {
+      post: {
+        tags: ['Connect'],
+        operationId: 'exchangeConnectCode',
+        summary: 'Exchange a Connect code for an API key',
+        description:
+          'Server to server, for registered partner apps only. After the account owner clicks **Allow** on ' +
+          '`/connect/{client}`, exchange the one-time code (valid 5 minutes, single use) for a scoped API key. ' +
+          'Authenticates with the client secret, not an API key. The key is returned once and never shown again.',
+        security: [],
+        requestBody: {
+          required: true,
+          content: json(ref('ConnectTokenRequest'), {
+            client_id: 'restrogrow',
+            client_secret: 'rgcs_…',
+            code: 'k3J…',
+            redirect_uri: 'https://restrogrow.com/main/api/repeatgrow_connect.php',
+          }),
+        },
+        responses: {
+          '200': {
+            description: 'A new API key for the account that approved.',
+            content: json(dataEnvelope(ref('ConnectTokenResult')), {
+              data: {
+                api_key: 'wacrm_live_…',
+                account: { id: '7d0c…', name: 'Spice Garden' },
+                phone_number: '+91 98765 43210',
+                scopes: ['messages:send', 'templates:read', 'templates:write'],
+              },
+            }),
+          },
+          '400': {
+            description: '`invalid_request`, or `invalid_grant`: the code is invalid, expired, used, or for another redirect_uri.',
+            content: json(ref('Error')),
+          },
+          '401': { description: '`invalid_client` — unknown client or wrong secret.', content: json(ref('Error')) },
+          ...errorResponses(429),
+        },
+      },
+    },
+    '/keys/revoke-self': {
+      post: {
+        tags: ['Connect'],
+        operationId: 'revokeSelf',
+        summary: 'Revoke the calling API key',
+        description: 'Any valid key can revoke itself, e.g. when a partner app disconnects. Needs no scope.',
+        responses: {
+          '200': {
+            description: 'Revoked. The next request with this key gets `401`.',
+            content: json(dataEnvelope({ type: 'object', properties: { revoked: { type: 'boolean' } } }), {
+              data: { revoked: true },
+            }),
+          },
+          ...errorResponses(401, 429),
         },
       },
     },
@@ -709,6 +846,77 @@ export const OPENAPI_SPEC = {
           url: { type: 'string', format: 'uri' },
           events: { type: 'array', items: { type: 'string', enum: [...WEBHOOK_EVENTS] } },
           is_active: { type: 'boolean' },
+        },
+      },
+      Template: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          name: { type: 'string' },
+          language: { type: 'string', example: 'en' },
+          category: { type: 'string', enum: ['MARKETING', 'UTILITY', 'AUTHENTICATION'] },
+          status: {
+            type: 'string',
+            enum: ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'PAUSED', 'DISABLED', 'IN_APPEAL', 'PENDING_DELETION'],
+          },
+        },
+      },
+      TemplateDetail: {
+        allOf: [
+          ref('Template'),
+          {
+            type: 'object',
+            properties: {
+              rejection_reason: { type: ['string', 'null'] },
+              body_text: { type: 'string' },
+              updated_at: { type: ['string', 'null'], format: 'date-time' },
+            },
+          },
+        ],
+      },
+      CreateTemplateRequest: {
+        type: 'object',
+        required: ['name', 'category', 'language', 'body_text'],
+        properties: {
+          name: { type: 'string', description: 'Lowercase letters, digits and underscores.', example: 'birthday_gift' },
+          category: { type: 'string', description: 'MARKETING or UTILITY, any case.', example: 'MARKETING' },
+          language: { type: 'string', example: 'en' },
+          body_text: { type: 'string', description: 'Use {{1}}, {{2}}… for variables.' },
+          sample_values: {
+            type: 'object',
+            description: 'One sample per variable, required by Meta for review.',
+            properties: {
+              body: { type: 'array', items: { type: 'string' } },
+              header: { type: 'array', items: { type: 'string' } },
+            },
+          },
+          header_type: { type: 'string', enum: ['text', 'image', 'video', 'document'] },
+          header_content: { type: 'string' },
+          header_media_url: { type: 'string', format: 'uri' },
+          footer_text: { type: 'string' },
+          buttons: { type: 'array', items: { type: 'object' } },
+        },
+      },
+      ConnectTokenRequest: {
+        type: 'object',
+        required: ['client_id', 'client_secret', 'code', 'redirect_uri'],
+        properties: {
+          client_id: { type: 'string' },
+          client_secret: { type: 'string' },
+          code: { type: 'string', description: 'The one-time code from the redirect.' },
+          redirect_uri: { type: 'string', description: 'Exactly the redirect_uri the code was issued for.' },
+        },
+      },
+      ConnectTokenResult: {
+        type: 'object',
+        properties: {
+          api_key: { type: 'string', description: 'Shown once. Store it securely.' },
+          account: {
+            type: 'object',
+            properties: { id: { type: 'string', format: 'uuid' }, name: { type: ['string', 'null'] } },
+          },
+          phone_number: { type: ['string', 'null'], description: 'The connected WhatsApp number, if known.' },
+          scopes: { type: 'array', items: { type: 'string', enum: [...API_SCOPES] } },
         },
       },
       WebhookDelivery: {

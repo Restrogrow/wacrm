@@ -16,6 +16,7 @@ import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel'
 import { DealsSettings } from '@/components/settings/deals-settings';
 import { MembersTab } from '@/components/settings/members-tab';
 import { ApiKeysSettings } from '@/components/settings/api-keys-settings';
+import { ConnectedAppsSettings } from '@/components/settings/connected-apps-settings';
 import { AiChatbotSettings } from '@/components/settings/ai-chatbot-settings';
 import {
   resolveSection,
@@ -63,6 +64,7 @@ export default function SettingsPage() {
     deals: <DealsSettings />,
     members: <MembersTab />,
     api: <ApiKeysSettings />,
+    'connected-apps': <ConnectedAppsSettings />,
   };
 
   return (
