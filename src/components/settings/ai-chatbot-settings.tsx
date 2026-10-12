@@ -42,6 +42,14 @@ FAQ: Jain food available on request. No onion-garlic option for thali.`;
 
 type ChatTurn = { role: 'user' | 'assistant'; content: string; handoff?: boolean };
 
+const TEST_SUGGESTIONS = [
+  'Hi',
+  'What are your timings?',
+  'Are you open now?',
+  'Do you deliver?',
+  'I want to talk to someone',
+];
+
 export function AiChatbotSettings() {
   const { canEditSettings } = useAuth();
   const [settings, setSettings] = useState<ChatbotSettings>(DEFAULT_CHATBOT_SETTINGS);
@@ -150,7 +158,7 @@ export function AiChatbotSettings() {
 
       {!aiConfigured && (
         <p className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-          The server has no AI key yet. Set <code>API_GROQ</code> in your hosting environment variables, then redeploy.
+          The server has no AI key yet. Set <code>GEMINI_KEY</code> in your hosting environment variables, then redeploy.
         </p>
       )}
 
@@ -229,7 +237,9 @@ export function AiChatbotSettings() {
 
           <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-xs">
             <li>Flows always go first — the bot only answers messages no active flow handled.</li>
-            <li>It doesn&apos;t reply to button taps, media, or chats assigned to someone.</li>
+            <li>It waits a few seconds before replying, so several quick messages get one answer, and it stays quiet if an automation or teammate already replied.</li>
+            <li>It knows the current date and time, so it can answer &quot;are you open now?&quot; from your timings.</li>
+            <li>For photos and voice notes it asks the customer to type, or hands payment proofs and complaints to your team. It doesn&apos;t reply to button taps or chats assigned to someone.</li>
             <li>After handing a chat to your team it waits 2 hours; if nobody replied by then, it starts answering again. Setting the chat to Open resumes it right away.</li>
             <li>Lines with [square brackets] are treated as not filled in — replace them with real details.</li>
           </ul>
@@ -261,8 +271,8 @@ function TestChat({ settings }: { settings: ChatbotSettings }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [turns.length, busy]);
 
-  async function ask() {
-    const text = draft.trim();
+  async function ask(override?: string) {
+    const text = (override ?? draft).trim();
     if (!text || busy) return;
     const next: ChatTurn[] = [...turns, { role: 'user', content: text }];
     setTurns(next);
@@ -308,9 +318,22 @@ function TestChat({ settings }: { settings: ChatbotSettings }) {
         <div className="h-[340px] overflow-y-auto rounded-lg border border-border bg-[#0b141a] p-3">
           <div className="flex flex-col gap-2">
             {turns.length === 0 && (
-              <p className="m-auto pt-24 text-center text-xs text-slate-400">
-                Try: &quot;What are your timings?&quot; or &quot;Do you deliver to Malviya Nagar?&quot;
-              </p>
+              <div className="m-auto flex flex-col items-center gap-2 pt-16 text-center">
+                <p className="text-xs text-slate-400">Try a question, or tap one:</p>
+                <div className="flex flex-wrap justify-center gap-1.5">
+                  {TEST_SUGGESTIONS.map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => void ask(q)}
+                      disabled={busy}
+                      className="rounded-full border border-slate-600 px-2.5 py-1 text-xs text-slate-200 hover:border-emerald-500 hover:text-white"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
             {turns.map((t, i) => (
               <div key={i} className={cn('flex flex-col', t.role === 'user' ? 'items-end' : 'items-start')}>

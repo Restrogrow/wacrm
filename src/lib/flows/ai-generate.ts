@@ -1,6 +1,6 @@
 /**
  * Generate a flow (trigger + nodes) from a plain-language description
- * using Groq's OpenAI-compatible chat API.
+ * using Google Gemini (lib/ai/gemini).
  *
  * The model is asked for a single JSON object matching the shapes in
  * `./types`. Its output is normalised, then run through the same
@@ -9,18 +9,19 @@
  * DRAFT, so a human always reviews it before it goes live.
  *
  * Env:
- *   API_GROQ     — required (GROQ_API_KEY also accepted).
- *   GROQ_MODEL   — optional, defaults to DEFAULT_GROQ_MODEL (lib/ai/groq).
+ *   GEMINI_KEY   — required (GEMINI_API_KEY also accepted).
+ *   GEMINI_MODEL — optional, defaults to DEFAULT_GEMINI_MODEL (lib/ai/gemini).
  */
 
 import { INTERACTIVE_LIMITS } from "@/lib/whatsapp/meta-api";
 import {
-  groqApiKey,
-  groqChat,
-  groqModel,
+  AI_NOT_CONFIGURED,
+  aiApiKey,
+  aiChat,
+  aiModel,
   parseJsonObject,
   type ChatMessage,
-} from "@/lib/ai/groq";
+} from "@/lib/ai/gemini";
 import { validateFlowForActivation, type ValidationIssue } from "./validate";
 /** One initial attempt + one repair attempt. Kept low for free-tier TPM. */
 const MAX_ATTEMPTS = 2;
@@ -227,8 +228,8 @@ export function normalizeGenerated(
   };
 }
 
-const callGroq = (apiKey: string, model: string, messages: ChatMessage[]) =>
-  groqChat({ apiKey, model, messages });
+const callAi = (apiKey: string, model: string, messages: ChatMessage[]) =>
+  aiChat({ apiKey, model, messages });
 
 type AiOpts = { apiKey?: string; model?: string };
 
@@ -303,17 +304,17 @@ async function runWithRepair(
   tags: AiTag[],
   opts: AiOpts,
 ): Promise<GenerateResult> {
-  const apiKey = opts.apiKey ?? groqApiKey();
+  const apiKey = opts.apiKey ?? aiApiKey();
   if (!apiKey) {
-    return { ok: false, error: "AI is not configured (API_GROQ is missing)." };
+    return { ok: false, error: AI_NOT_CONFIGURED };
   }
-  const model = groqModel(opts.model);
+  const model = aiModel(opts.model);
 
   let lastIssues: ValidationIssue[] = [];
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     let content: string;
     try {
-      content = await callGroq(apiKey, model, messages);
+      content = await callAi(apiKey, model, messages);
     } catch (err) {
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }

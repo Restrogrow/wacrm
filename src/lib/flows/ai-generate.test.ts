@@ -107,15 +107,15 @@ describe("resolveNewTags", () => {
 
 describe("generateFlowFromPrompt", () => {
   it("fails cleanly without an API key", async () => {
-    const prev = { a: process.env.API_GROQ, b: process.env.GROQ_API_KEY };
-    delete process.env.API_GROQ;
-    delete process.env.GROQ_API_KEY;
+    const prev = { a: process.env.GEMINI_KEY, b: process.env.GEMINI_API_KEY };
+    delete process.env.GEMINI_KEY;
+    delete process.env.GEMINI_API_KEY;
     try {
       const res = await generateFlowFromPrompt("hi flow", []);
       expect(res).toMatchObject({ ok: false });
     } finally {
-      if (prev.a !== undefined) process.env.API_GROQ = prev.a;
-      if (prev.b !== undefined) process.env.GROQ_API_KEY = prev.b;
+      if (prev.a !== undefined) process.env.GEMINI_KEY = prev.a;
+      if (prev.b !== undefined) process.env.GEMINI_API_KEY = prev.b;
     }
   });
 });

@@ -7,11 +7,34 @@ import { supabaseAdmin } from "@/lib/flows/admin-client";
 import { engineSendText } from "@/lib/flows/meta-send";
 import {
   HISTORY_LIMIT,
+  chatbotTimeZone,
   generateChatbotReply,
   normalizeChatbotSettings,
   shouldBotReply,
   toChatHistory,
 } from "./chatbot";
+
+/**
+ * Wait this long before answering. Customers often send a thought as
+ * several quick messages ("hi" / "do you deliver" / "to sector 21?");
+ * waiting lets the bot answer them together once, and lets an
+ * automation or a teammate who answered meanwhile take precedence.
+ */
+export const REPLY_DEBOUNCE_MS = 4000;
+
+type LatestMessage = { id: string; sender_type: string } | null;
+
+/**
+ * After the debounce, should this webhook still answer? Only if the
+ * newest message in the thread is still the customer message we saw
+ * before waiting. A newer customer message means its own webhook will
+ * answer everything; a newer agent/bot message means someone already did.
+ */
+export function stillLatest(before: LatestMessage, after: LatestMessage): boolean {
+  return !!before && !!after && before.id === after.id && after.sender_type === "customer";
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export interface ChatbotInbound {
   accountId: string;
@@ -21,6 +44,8 @@ export interface ChatbotInbound {
   conversationId: string;
   text: string;
   isText: boolean;
+  /** Photo, voice note, video or document. */
+  isMedia?: boolean;
   flowConsumed: boolean;
 }
 
@@ -36,7 +61,23 @@ export async function maybeReplyWithAI(input: ChatbotInbound): Promise<void> {
     // Missing table (migration 034 not applied) or no row → bot is off.
     if (settingsErr || !row) return;
     const settings = normalizeChatbotSettings(row);
-    if (!settings.enabled) return;
+    // Cheap exits before waiting.
+    if (!settings.enabled || input.flowConsumed) return;
+    if (!(input.isText && input.text.trim()) && !input.isMedia) return;
+
+    const latest = async (): Promise<LatestMessage> => {
+      const { data } = await db
+        .from("messages")
+        .select("id, sender_type")
+        .eq("conversation_id", input.conversationId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return (data as LatestMessage) ?? null;
+    };
+    const before = await latest();
+    await sleep(REPLY_DEBOUNCE_MS);
+    if (!stillLatest(before, await latest())) return;
 
     const hourAgo = new Date(Date.now() - 3_600_000).toISOString();
     const [{ data: conv }, { data: lastAgent }, { data: lastBot }, { count: botCount }] = await Promise.all([
@@ -73,6 +114,7 @@ export async function maybeReplyWithAI(input: ChatbotInbound): Promise<void> {
       settings,
       flowConsumed: input.flowConsumed,
       isText: input.isText,
+      isMedia: input.isMedia,
       text: input.text,
       conversationStatus: (conv?.status as string | undefined) ?? null,
       assignedAgentId: (conv?.assigned_agent_id as string | null | undefined) ?? null,
@@ -83,16 +125,25 @@ export async function maybeReplyWithAI(input: ChatbotInbound): Promise<void> {
     });
     if (!decision.reply) return;
 
-    // Recent thread (includes the message that just arrived).
-    const { data: recent } = await db
-      .from("messages")
-      .select("sender_type, content_text, created_at")
-      .eq("conversation_id", input.conversationId)
-      .order("created_at", { ascending: false })
-      .limit(HISTORY_LIMIT);
+    // Recent thread (includes the messages that just arrived) and who
+    // the customer is.
+    const [{ data: recent }, { data: contact }] = await Promise.all([
+      db
+        .from("messages")
+        .select("sender_type, content_text, content_type, created_at")
+        .eq("conversation_id", input.conversationId)
+        .order("created_at", { ascending: false })
+        .limit(HISTORY_LIMIT),
+      db.from("contacts").select("name").eq("id", input.contactId).maybeSingle(),
+    ]);
     const history = toChatHistory([...(recent ?? [])].reverse());
 
-    const result = await generateChatbotReply(settings, history);
+    const result = await generateChatbotReply(settings, history, {
+      context: {
+        customerName: (contact?.name as string | null | undefined) ?? null,
+        timeZone: chatbotTimeZone(),
+      },
+    });
     if (!result.ok) {
       console.error("[ai-chatbot] generate failed:", result.error);
       return;

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCurrentAccount, requireRole, toErrorResponse } from '@/lib/auth/account'
+import { aiApiKey } from '@/lib/ai/gemini'
 import {
   DEFAULT_CHATBOT_SETTINGS,
   normalizeChatbotSettings,
@@ -38,7 +39,7 @@ export async function GET() {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({
       settings: data ? normalizeChatbotSettings(data) : DEFAULT_CHATBOT_SETTINGS,
-      ai_configured: !!(process.env.API_GROQ ?? process.env.GROQ_API_KEY),
+      ai_configured: !!aiApiKey(),
     })
   } catch (err) {
     return toErrorResponse(err)

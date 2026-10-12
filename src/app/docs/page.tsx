@@ -281,6 +281,12 @@ export default function DocsPage() {
                 automatically. Approval usually takes minutes and at most 24 hours.
               </Step>
             </ol>
+            <Tip>
+              <b>Faster: Create with AI.</b> Click <b>Create with AI</b> on the Templates page and paste
+              the message you want to send. AI picks the name, category and language, turns names, dates
+              and codes into variables with samples, adds buttons for links or phone numbers, and asks you
+              if anything is missing. Check the preview and click <b>Submit for approval</b>.
+            </Tip>
             <ul className="bullets">
               <li>Already have templates in Meta? Click <b>Sync from Meta</b> to bring them into Repeat Grow.</li>
               <li>You can edit or delete a template from the same page. Deleting removes it from Meta too.</li>

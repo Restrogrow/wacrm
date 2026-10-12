@@ -11,6 +11,7 @@ import {
   X,
   Pencil,
   RotateCcw,
+  Sparkles,
   Upload,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -26,6 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { SettingsPanelHead } from './settings-panel-head';
+import { AiTemplateDialog } from './ai-template-dialog';
 import {
   Dialog,
   DialogContent,
@@ -50,6 +52,7 @@ import { templateStatusConfig } from '@/lib/template-status';
 import {
   extractVariableIndices,
   TEMPLATE_LIMITS,
+  type TemplatePayload,
 } from '@/lib/whatsapp/template-validators';
 
 const CATEGORIES = ['Marketing', 'Utility', 'Authentication'] as const;
@@ -138,6 +141,7 @@ export function TemplateManager() {
   // dialog title + CTA. Set to the template id to pre-fill from a row.
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [aiOpen, setAiOpen] = useState(false);
   // Template selected for the confirm-delete dialog. The destructive
   // action goes through this two-step so a slip on the trash icon
   // doesn't take the template off Meta as well as locally.
@@ -253,6 +257,35 @@ export function TemplateManager() {
     setEditingId(null);
     setForm(emptyForm);
     setDialogOpen(true);
+  }
+
+  /** Open the full editor pre-filled with an AI draft. */
+  function openFromDraft(draft: TemplatePayload) {
+    setEditingId(null);
+    setForm({
+      ...emptyForm,
+      name: draft.name,
+      category: draft.category,
+      language: draft.language,
+      header_format: (draft.header_type ?? 'none') as HeaderFormat,
+      header_content: draft.header_content ?? '',
+      header_media_url: draft.header_media_url ?? '',
+      header_sample: draft.sample_values?.header?.[0] ?? '',
+      body_text: draft.body_text,
+      body_samples: draft.sample_values?.body ?? [],
+      footer_text: draft.footer_text ?? '',
+      buttons: draft.buttons ?? [],
+    });
+    setDialogOpen(true);
+  }
+
+  async function handleAiSubmitted(dryRun: boolean) {
+    if (user) await fetchTemplates(user.id);
+    toast.success(
+      dryRun
+        ? 'Template saved (dry-run — no Meta call)'
+        : 'Submitted to Meta — typical review time is 24 hours. Status updates automatically.',
+    );
   }
 
   async function handleSubmit() {
@@ -497,6 +530,10 @@ export function TemplateManager() {
               <RefreshCw className={`size-4 ${syncing ? 'animate-spin' : ''}`} />
               {syncing ? 'Syncing…' : 'Sync from Meta'}
             </Button>
+            <Button variant="outline" onClick={() => setAiOpen(true)}>
+              <Sparkles className="size-4" />
+              Create with AI
+            </Button>
             <Button onClick={openCreate}>
               <Plus className="size-4" />
               New Template
@@ -627,6 +664,13 @@ export function TemplateManager() {
           })}
         </div>
       )}
+
+      <AiTemplateDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        onEdit={openFromDraft}
+        onSubmitted={handleAiSubmitted}
+      />
 
       <Dialog
         open={dialogOpen}

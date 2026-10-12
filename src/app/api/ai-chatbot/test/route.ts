@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import {
+  chatbotTimeZone,
   generateChatbotReply,
   normalizeChatbotSettings,
 } from '@/lib/ai-chatbot/chatbot'
-import type { ChatMessage } from '@/lib/ai/groq'
+import type { ChatMessage } from '@/lib/ai/gemini'
 
 /**
  * POST /api/ai-chatbot/test — { settings, messages } → the bot's reply.
@@ -33,7 +34,11 @@ export async function POST(request: Request) {
         role: m.role === 'assistant' ? 'assistant' : 'user',
         content: String(m.content).slice(0, 1500),
       }))
-    const result = await generateChatbotReply(settings, history)
+    // Same context as live replies (current time in the business's time
+    // zone), so "are you open now?" tests the real answer.
+    const result = await generateChatbotReply(settings, history, {
+      context: { timeZone: chatbotTimeZone() },
+    })
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 })
     return NextResponse.json({
       reply: result.reply || settings.handoff_message,

@@ -153,6 +153,10 @@ export const RATE_LIMITS = {
    *  clicks "Connect", so 30/min is far above real use while making
    *  client-secret or code guessing pointless. */
   connectToken: { limit: 30, windowMs: 60_000 },
+  /** "Create template with AI" drafts, per user. Each call is a paid
+   *  Gemini request (two with a repair), so cap it well above a person
+   *  iterating on wording but below a stuck retry loop. */
+  aiTemplateDraft: { limit: 10, windowMs: 60_000 },
 } as const;
 
 /** Test-only helper. Clears the in-memory state so unit tests don't

@@ -117,7 +117,7 @@ WhatsApp webhook must be reachable over HTTPS.
 - **App**: Next.js 16 (App Router), React 19, TypeScript, Tailwind v4.
 - **Data**: Supabase (Postgres, Auth, Storage, row-level security).
 - **WhatsApp**: Meta Cloud API (official WhatsApp Business API).
-- **AI**: Groq for the AI chatbot.
+- **AI**: Google Gemini for the AI chatbot and AI flow builder (`GEMINI_KEY`).
 
 ## Security
 
