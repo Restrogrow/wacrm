@@ -6,7 +6,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
+        // The OpenAPI spec is public documentation; keep it crawlable even
+        // though the rest of /api/ is not.
+        allow: ["/", "/api/v1/openapi.json"],
         disallow: [
           "/api/",
           "/admin",

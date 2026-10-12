@@ -14,7 +14,7 @@ export const LANDING_NAV_HTML = `
       <a href="/#features">Features</a>
       <a href="/#why-us">Why Us</a>
       <a href="/pricing">Pricing</a>
-      <a href="#">Docs</a>
+      <a href="/docs">Docs</a>
     </div>
     <div class="nav-right">
       <a href="/login" class="nav-login">Login</a>
@@ -29,7 +29,7 @@ export const LANDING_NAV_HTML = `
     <a href="/#features">Features</a>
     <a href="/#why-us">Why Us</a>
     <a href="/pricing">Pricing</a>
-    <a href="#">Docs</a>
+    <a href="/docs">Docs</a>
     <a href="/login">Login</a>
   </div>
 </div>
@@ -69,8 +69,8 @@ export const LANDING_FOOTER_HTML = `
           <li><a href="/about">About Us</a></li>
           <li><a href="/contact">Contact Us</a></li>
           <li><a href="/blog">Blog</a></li>
-          <li><a href="#">Help Center</a></li>
-          <li><a href="#">API reference</a></li>
+          <li><a href="/docs">Help Center</a></li>
+          <li><a href="/docs/api">API reference</a></li>
         </ul>
       </div>
       <div class="footer-col">

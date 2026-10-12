@@ -26,6 +26,9 @@ Plans are published at https://repeatgrow.com/pricing and start at ₹499/month 
 - [About](https://repeatgrow.com/about): company background.
 - [Contact](https://repeatgrow.com/contact): support contact details.
 - [Security](https://repeatgrow.com/security): security practices and data handling.
+- [Help Center](https://repeatgrow.com/docs): how to use Repeat Grow — WhatsApp setup, inbox, contacts, pipelines, broadcasts, automations, team roles.
+- [API reference](https://repeatgrow.com/docs/api): REST API guide with authentication, endpoints, webhooks, and code examples.
+- [OpenAPI spec](https://repeatgrow.com/api/v1/openapi.json): machine-readable OpenAPI 3.1 description of the public API.
 
 ## Legal
 
