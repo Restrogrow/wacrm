@@ -10,6 +10,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { phoneVariants } from '@/lib/whatsapp/phone-utils';
+
 export type OptKeyword = 'opt_out' | 'opt_in';
 
 // Whole-message matches only, so "stop the order" or "cancel my
@@ -112,3 +114,53 @@ export async function setContactOptOut(
   }
   return true;
 }
+
+/**
+ * Has the contact with this phone (in any trunk-prefix variant) opted
+ * out? False when unknown or when migration 036 isn't applied.
+ */
+export async function isPhoneOptedOut(
+  db: SupabaseClient,
+  accountId: string,
+  phone: string
+): Promise<boolean> {
+  const digits = phoneKey(phone);
+  if (!digits) return false;
+  const { data, error } = await db
+    .from('contacts')
+    .select('id')
+    .eq('account_id', accountId)
+    .in('phone_normalized', phoneVariants(digits))
+    .not('opted_out_at', 'is', null)
+    .limit(1);
+  if (error) {
+    console.warn('[opt-out] opt-out lookup failed:', error.message);
+    return false;
+  }
+  return (data ?? []).length > 0;
+}
+
+/**
+ * Opt-outs block marketing, not service messages: a template counts as
+ * marketing unless it's known locally as UTILITY or AUTHENTICATION
+ * (an unknown template is treated as marketing, the safe side).
+ */
+export async function isMarketingTemplate(
+  db: SupabaseClient,
+  accountId: string,
+  name: string,
+  language: string | null | undefined
+): Promise<boolean> {
+  let query = db
+    .from('message_templates')
+    .select('category')
+    .eq('account_id', accountId)
+    .eq('name', name);
+  if (language) query = query.eq('language', language);
+  const { data } = await query.limit(1);
+  const category = String(data?.[0]?.category ?? '').toUpperCase();
+  return category !== 'UTILITY' && category !== 'AUTHENTICATION';
+}
+
+export const OPTED_OUT_SEND_MESSAGE =
+  'This contact replied STOP and has opted out of marketing messages. They can opt back in by replying START.';

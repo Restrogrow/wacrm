@@ -29,11 +29,18 @@
 // Response (201):
 //   { "data": { "message_id", "whatsapp_message_id", "conversation_id",
 //               "contact_id", "contact_created" } }
+//
+// 403 opted_out: a marketing template to a contact who replied STOP.
 // ============================================================
 
 import { requireApiKey } from '@/lib/auth/api-context';
 import { ok, fail, toApiErrorResponse } from '@/lib/api/v1/respond';
 import { resolveConversationByPhone } from '@/lib/whatsapp/resolve-conversation';
+import {
+  isMarketingTemplate,
+  isPhoneOptedOut,
+  OPTED_OUT_SEND_MESSAGE,
+} from '@/lib/contacts/opt-out';
 import {
   sendMessageToConversation,
   validateSendMessageParams,
@@ -85,6 +92,22 @@ export async function POST(request: Request) {
       mediaUrl: typeof body.media_url === 'string' ? body.media_url : null,
       templateName: typeof template?.name === 'string' ? template.name : null,
     });
+
+    // Customers who replied STOP don't get marketing templates (WhatsApp
+    // policy). Service replies and utility templates still go through.
+    if (
+      type === 'template' &&
+      typeof template?.name === 'string' &&
+      (await isPhoneOptedOut(ctx.supabase, ctx.accountId, to)) &&
+      (await isMarketingTemplate(
+        ctx.supabase,
+        ctx.accountId,
+        template.name,
+        typeof template.language === 'string' ? template.language : 'en_US'
+      ))
+    ) {
+      return fail('opted_out', OPTED_OUT_SEND_MESSAGE, 403);
+    }
 
     // Find-or-create the conversation for this phone, then send. Both
     // steps share `SendMessageError`, so one catch maps the whole

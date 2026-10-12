@@ -151,7 +151,12 @@ export const OPENAPI_SPEC = {
             description: '`meta_error` — WhatsApp rejected the send.',
             content: json(ref('Error')),
           },
-          ...errorResponses(400, 401, 403, 429, 500),
+          '403': {
+            description:
+              '`forbidden` — the key lacks `messages:send`; or `opted_out` — a marketing template to a contact who replied STOP.',
+            content: json(ref('Error')),
+          },
+          ...errorResponses(400, 401, 429, 500),
         },
       },
     },

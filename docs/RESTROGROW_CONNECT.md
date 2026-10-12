@@ -17,6 +17,9 @@ consent page `src/app/connect/[client]`, `POST /api/v1/connect/token`, `GET`/`PO
 - `POST /api/v1/templates` returns `201` for a new submission or a resubmission, `200` when nothing was
   sent, and also `409` for a *pending* template with different wording (Meta can't edit pending ones).
 - `category` and `status` are returned uppercase, in Meta's words.
+- Opt-outs: a customer who replies STOP to the restaurant's number is marked opted out in RepeatGrow
+  (START opts back in). `POST /api/v1/messages` then refuses **marketing** templates to them with
+  `403 {"error":{"code":"opted_out"}}`; utility templates and normal replies still go through.
 
 ## 1. The flow
 

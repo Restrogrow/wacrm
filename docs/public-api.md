@@ -170,8 +170,10 @@ Response (201):
 ```
 
 Domain error codes beyond the table above: `whatsapp_not_configured`
-(400), `meta_error` (502 — the request reached Meta and it rejected the
-send), `template_malformed` (500).
+(400), `opted_out` (403 — a marketing template to a contact who replied
+STOP; utility templates and normal replies still go through),
+`meta_error` (502 — the request reached Meta and it rejected the send),
+`template_malformed` (500).
 
 ### `GET /api/v1/contacts`
 
