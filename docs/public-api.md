@@ -30,7 +30,8 @@ one it was created in. There is no cross-account access.
 
 ### Creating a key
 
-In the dashboard: **Settings → API keys → New API key**. Only
+Log in at <https://repeatgrow.com/login> and open **Settings → API keys**
+(<https://repeatgrow.com/settings?tab=api>), then click **New API key**. Only
 **admins and owners** can create keys.
 
 1. Give the key a name (after the integration that will use it).
@@ -41,7 +42,7 @@ In the dashboard: **Settings → API keys → New API key**. Only
 
 ### Revoking a key
 
-**Settings → API keys → Revoke.** Revocation is effective on the
+**Settings → API keys → Revoke** (<https://repeatgrow.com/settings?tab=api>). Revocation is effective on the
 key's next request. Revoked keys stay in the list as an audit trail.
 
 ## Scopes

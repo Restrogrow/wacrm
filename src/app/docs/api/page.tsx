@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 
 const BASE_URL = `${SITE_URL}/api/v1`;
 const SPEC_URL = `${BASE_URL}/openapi.json`;
+const SITE_HOST = new URL(SITE_URL).host;
 
 const TOC = [
   { id: "quickstart", label: "Quickstart" },
@@ -236,6 +237,10 @@ export default function ApiReferencePage() {
             Send WhatsApp messages, sync contacts, read conversations, launch broadcasts, and
             get real-time events from your own apps and scripts.
           </p>
+          <p className="docs-site">
+            For your Repeat Grow account at <a href={SITE_URL}>{SITE_HOST}</a> · Manage keys at{" "}
+            <a href={`${SITE_URL}/settings?tab=api`}>{SITE_HOST}/settings?tab=api</a>
+          </p>
           <div className="hero-actions">
             <span className="docs-pill">
               <span className="k">Base URL</span> {BASE_URL}
@@ -260,7 +265,8 @@ export default function ApiReferencePage() {
                 <li>
                   <b className="step-title">Create an API key</b>
                   <span className="step-body">
-                    In Repeat Grow, open <span className="ui-path">Settings → API keys → New API key</span>.
+                    Log in at <a href={`${SITE_URL}/login`}>{SITE_HOST}</a> and open{" "}
+                    <a href={`${SITE_URL}/settings?tab=api`} className="ui-path ui-link">Settings → API keys</a>, then click <b>New API key</b>.
                     Only admins and owners can do this.
                   </span>
                 </li>
@@ -296,7 +302,7 @@ export default function ApiReferencePage() {
               </p>
               <ul className="bullets">
                 <li>Each key belongs to one account and can only do what its scopes allow.</li>
-                <li>Repeat Grow stores only a hash, so a lost key can&apos;t be shown again. Revoke it and create a new one.</li>
+                <li>Repeat Grow stores only a hash, so a lost key can&apos;t be shown again. Revoke it and create a new one in{" "}<a href={`${SITE_URL}/settings?tab=api`}>{SITE_HOST}/settings?tab=api</a>.</li>
                 <li>Keep keys on your server. Never put them in a website or mobile app.</li>
               </ul>
             </div>

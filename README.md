@@ -5,6 +5,7 @@
 > broadcasts, no-code automations, an AI chatbot, and a public REST API.
 
 **Website:** [repeatgrow.com](https://repeatgrow.com) ·
+**App login:** [repeatgrow.com/login](https://repeatgrow.com/login) ·
 **Help Center:** [repeatgrow.com/docs](https://repeatgrow.com/docs) ·
 **API reference:** [repeatgrow.com/docs/api](https://repeatgrow.com/docs/api) ·
 **Support:** [support@repeatgrow.com](mailto:support@repeatgrow.com)
@@ -54,7 +55,8 @@ curl -X POST https://repeatgrow.com/api/v1/messages \
   -d '{ "to": "+14155550123", "text": "Hi 👋" }'
 ```
 
-Create keys in **Settings → API keys**.
+Create keys at [repeatgrow.com/settings?tab=api](https://repeatgrow.com/settings?tab=api)
+(**Settings → API keys**).
 
 ## Local development
 

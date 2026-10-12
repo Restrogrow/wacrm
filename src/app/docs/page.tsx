@@ -3,7 +3,9 @@ import Link from "next/link";
 import {
   Bot,
   Code2,
+  FileText,
   GitBranch,
+  HelpCircle,
   MessageSquare,
   PlugZap,
   Radio,
@@ -13,7 +15,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { buildBreadcrumbSchema, SUPPORT_EMAIL, SUPPORT_PHONE } from "@/lib/seo";
+import { buildBreadcrumbSchema, SITE_URL, SUPPORT_EMAIL, SUPPORT_PHONE } from "@/lib/seo";
 import { Toc } from "./docs-ui";
 
 const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([{ name: "Docs", path: "/docs" }]);
@@ -32,7 +34,8 @@ const TOPICS: { id: string; label: string; blurb: string; icon: LucideIcon }[] =
   { id: "inbox", label: "Shared inbox", blurb: "Assign, reply, and add notes as a team.", icon: MessageSquare },
   { id: "contacts", label: "Contacts", blurb: "Import, tag, and organise customers.", icon: Users },
   { id: "pipelines", label: "Pipelines", blurb: "Track deals on Kanban boards.", icon: GitBranch },
-  { id: "broadcasts", label: "Templates & broadcasts", blurb: "Message many customers at once.", icon: Radio },
+  { id: "templates", label: "Message templates", blurb: "Create and submit templates to Meta.", icon: FileText },
+  { id: "broadcasts", label: "Broadcasts", blurb: "Message many customers at once.", icon: Radio },
   { id: "automations", label: "Automations & flows", blurb: "Reply and tag automatically.", icon: Zap },
   { id: "ai-chatbot", label: "AI chatbot", blurb: "Answer chats from your knowledge base.", icon: Bot },
   { id: "team", label: "Team members", blurb: "Invite teammates and set roles.", icon: UsersRound },
@@ -109,7 +112,17 @@ function Tip({ children, warn }: { children: React.ReactNode; warn?: boolean }) 
   );
 }
 
-const Ui = ({ children }: { children: React.ReactNode }) => <span className="ui-path">{children}</span>;
+const SITE_HOST = new URL(SITE_URL).host;
+
+/** An app location like "Settings → Templates". With `to`, links to that page on repeatgrow.com. */
+const Ui = ({ children, to }: { children: React.ReactNode; to?: string }) =>
+  to ? (
+    <a href={`${SITE_URL}${to}`} className="ui-path ui-link">
+      {children}
+    </a>
+  ) : (
+    <span className="ui-path">{children}</span>
+  );
 
 export default function DocsPage() {
   return (
@@ -127,8 +140,12 @@ export default function DocsPage() {
             Guides for running sales and support on WhatsApp with Repeat Grow, from connecting
             your number to automating replies.
           </p>
+          <p className="docs-site">
+            Repeat Grow runs at <a href={SITE_URL}>{SITE_HOST}</a> · Log in at{" "}
+            <a href={`${SITE_URL}/login`}>{SITE_HOST}/login</a>
+          </p>
           <div className="hero-actions">
-            <Link href="/signup" className="btn btn-primary">Start free trial</Link>
+            <a href={`${SITE_URL}/signup`} className="btn btn-primary">Start free trial</a>
             <Link href="/docs/api" className="btn btn-ghost">
               <Code2 size={16} style={{ marginRight: 6 }} />
               API reference
@@ -152,21 +169,32 @@ export default function DocsPage() {
                 <span>{blurb}</span>
               </a>
             ))}
+            <a href="#faq" className="topic-card">
+              <span className="ico"><HelpCircle /></span>
+              <b>FAQ</b>
+              <span>Quick answers to common questions.</span>
+            </a>
+            <Link href="/docs/api" className="topic-card">
+              <span className="ico"><Code2 /></span>
+              <b>API reference</b>
+              <span>Connect your own apps and scripts.</span>
+            </Link>
           </div>
 
           <Section id="getting-started" n={1} title="Getting started" intro="Go from sign-up to your first WhatsApp reply.">
             <ol className="steps">
               <Step title="Create your account">
-                <Link href="/signup">Sign up</Link> and confirm your email address.
+                <a href={`${SITE_URL}/signup`}>Sign up at {SITE_HOST}</a> and confirm your email address. Log in any time at{" "}
+                <a href={`${SITE_URL}/login`}>{SITE_HOST}/login</a>.
               </Step>
               <Step title="Connect your WhatsApp number">
                 Link your WhatsApp Business number (see <a href="#connect-whatsapp">Connect WhatsApp</a>), or ask us to do it for you.
               </Step>
               <Step title="Bring in your contacts">
-                Import a CSV of your customers from <Ui>Contacts</Ui>.
+                Import a CSV of your customers from <Ui to="/contacts">Contacts</Ui>.
               </Step>
               <Step title="Invite your team">
-                Add teammates from <Ui>Settings → Team members</Ui> and start replying from the shared inbox.
+                Add teammates from <Ui to="/settings?tab=members">Settings → Team members</Ui> and start replying from the shared inbox.
               </Step>
             </ol>
             <p>
@@ -178,7 +206,7 @@ export default function DocsPage() {
           <Section id="connect-whatsapp" n={2} title="Connect WhatsApp" intro="Link a WhatsApp Business number from Meta to Repeat Grow.">
             <p>
               You need a WhatsApp Business Account on Meta and a phone number that isn&apos;t active
-              on the regular WhatsApp app. Then open <Ui>Settings → WhatsApp</Ui>.
+              on the regular WhatsApp app. Then open <Ui to="/settings?tab=whatsapp">Settings → WhatsApp</Ui>.
             </p>
             <ol className="steps">
               <Step title="Enter your Meta details">
@@ -199,7 +227,7 @@ export default function DocsPage() {
 
           <Section id="inbox" n={3} title="Shared inbox" intro="One WhatsApp number, your whole team.">
             <ul className="bullets">
-              <li>Every WhatsApp chat for your number lands in <Ui>Inbox</Ui>, visible to your whole team.</li>
+              <li>Every WhatsApp chat for your number lands in <Ui to="/inbox">Inbox</Ui>, visible to your whole team.</li>
               <li>Assign a conversation to a teammate and set its status to open, pending, or closed.</li>
               <li>Add internal notes that customers never see.</li>
               <li>Send text, images, video, documents, voice notes, and approved templates.</li>
@@ -210,66 +238,99 @@ export default function DocsPage() {
           <Section id="contacts" n={4} title="Contacts" intro="Keep every customer and their history in one place.">
             <ul className="bullets">
               <li>Contacts are created automatically when someone messages you.</li>
-              <li>Import a CSV from <Ui>Contacts</Ui>. Duplicate phone numbers are merged, not duplicated.</li>
-              <li>Organise contacts with tags and custom fields in <Ui>Settings → Fields &amp; tags</Ui>.</li>
+              <li>Import a CSV from <Ui to="/contacts">Contacts</Ui>. Duplicate phone numbers are merged, not duplicated.</li>
+              <li>Organise contacts with tags and custom fields in <Ui to="/settings?tab=fields">Settings → Fields &amp; tags</Ui>.</li>
               <li>Each contact keeps its full conversation and deal history.</li>
             </ul>
           </Section>
 
           <Section id="pipelines" n={5} title="Pipelines" intro="Track deals from first message to closed.">
             <p>
-              Track deals on Kanban boards in <Ui>Pipelines</Ui>. Create a pipeline with your own
+              Track deals on Kanban boards in <Ui to="/pipelines">Pipelines</Ui>. Create a pipeline with your own
               stages, add deals with a value, and drag them between stages. Each deal links to its
               contact and conversation, so the chat history is one click away.
             </p>
-            <p>Set your currency in <Ui>Settings → Deals &amp; currency</Ui>.</p>
+            <p>Set your currency in <Ui to="/settings?tab=deals">Settings → Deals &amp; currency</Ui>.</p>
           </Section>
 
-          <Section id="broadcasts" n={6} title="Templates & broadcasts" intro="Send an approved message to many customers at once.">
+          <Section id="templates" n={6} title="Message templates" intro="Create WhatsApp templates in Repeat Grow and submit them to Meta for approval, with no need to open Meta Business Manager.">
+            <p>
+              WhatsApp needs an approved template to message a customer who hasn&apos;t written to you
+              in the last 24 hours, and for every broadcast. Manage all of yours in{" "}
+              <Ui to="/settings?tab=templates">Settings → Templates</Ui>.
+            </p>
             <ol className="steps">
-              <Step title="Create a template">
-                In <Ui>Settings → Templates</Ui>, write your message and submit it to Meta. Use{" "}
-                <code className="ic">{"{{1}}"}</code>, <code className="ic">{"{{2}}"}</code> for variables like the customer&apos;s name.
+              <Step title="Start a new template">
+                Open <Ui to="/settings?tab=templates">Settings → Templates</Ui> and create a template. Give it
+                a name in lowercase with underscores (for example <code className="ic">order_update</code>) and pick a language.
               </Step>
-              <Step title="Wait for approval">
-                Meta usually approves templates within minutes, though it can take up to 24 hours.
+              <Step title="Choose a category">
+                <b>Marketing</b> for offers and promotions, <b>Utility</b> for order and account updates,
+                or <b>Authentication</b> for one-time codes. Meta checks that the content matches the category.
               </Step>
-              <Step title="Send the broadcast">
-                In <Ui>Broadcasts</Ui>, pick the template, choose recipients (for example by tag), and send.
-                Sent, delivered, read, replied, and failed counts update live.
+              <Step title="Write the message">
+                Add an optional header (text, image, video, or document), the body, and an optional footer.
+                Use <code className="ic">{"{{1}}"}</code>, <code className="ic">{"{{2}}"}</code> for variables like the customer&apos;s
+                name, and fill in a sample value for each so Meta can review it.
+              </Step>
+              <Step title="Add buttons (optional)">
+                Quick replies, a link to a website, a phone number to call, or a copy-code button for coupons and codes.
+              </Step>
+              <Step title="Submit to Meta">
+                Submit the template. Its status shows as pending, then changes to approved or rejected
+                automatically. Approval usually takes minutes and at most 24 hours.
               </Step>
             </ol>
+            <ul className="bullets">
+              <li>Already have templates in Meta? Click <b>Sync from Meta</b> to bring them into Repeat Grow.</li>
+              <li>You can edit or delete a template from the same page. Deleting removes it from Meta too.</li>
+              <li>Approved templates can be sent from the <Ui to="/inbox">Inbox</Ui>, in <Ui to="/broadcasts">Broadcasts</Ui>, in automations, and through the <Link href="/docs/api">API</Link>.</li>
+            </ul>
             <Tip warn>
-              Templates are often rejected for promotional wording in utility categories or for
+              Templates are often rejected for promotional wording in the Utility category or for
               unclear variables. Read our{" "}
-              <Link href="/blog/whatsapp-broadcast-template-rules">template rules guide</Link> before submitting.
+              <a href={`${SITE_URL}/blog/whatsapp-broadcast-template-rules`}>template rules guide</a> before submitting.
             </Tip>
           </Section>
 
-          <Section id="automations" n={7} title="Automations & flows" intro="Let Repeat Grow handle the repetitive work.">
+          <Section id="broadcasts" n={7} title="Broadcasts" intro="Send an approved template to many customers at once.">
+            <ol className="steps">
+              <Step title="Pick an approved template">
+                Open <Ui to="/broadcasts">Broadcasts</Ui> and choose the template to send.
+              </Step>
+              <Step title="Choose recipients">
+                Select who gets it, for example everyone with a certain tag, and fill in any variables.
+              </Step>
+              <Step title="Send and track">
+                Sent, delivered, read, replied, and failed counts update live.
+              </Step>
+            </ol>
+          </Section>
+
+          <Section id="automations" n={8} title="Automations & flows" intro="Let Repeat Grow handle the repetitive work.">
             <p>
-              <Ui>Automations</Ui> run actions when something happens, such as a new inbound
+              <Ui to="/automations">Automations</Ui> run actions when something happens, such as a new inbound
               message, a customer&apos;s first message, a keyword match, or a tag being added.
               Actions include sending a message, tagging, waiting, branching on conditions, and
               calling a webhook.
             </p>
             <p>
-              <Ui>Flows</Ui> (beta) is the visual builder for multi-step conversations like menus
+              <Ui to="/flows">Flows</Ui> (beta) is the visual builder for multi-step conversations like menus
               and lead-qualification questions.
             </p>
           </Section>
 
-          <Section id="ai-chatbot" n={8} title="AI chatbot" intro="Answer common questions instantly, day or night.">
+          <Section id="ai-chatbot" n={9} title="AI chatbot" intro="Answer common questions instantly, day or night.">
             <p>
-              In <Ui>Settings → AI chatbot</Ui>, add your business knowledge (FAQs, policies,
+              In <Ui to="/settings?tab=ai-chatbot">Settings → AI chatbot</Ui>, add your business knowledge (FAQs, policies,
               product details) and switch the chatbot on. It answers WhatsApp chats naturally from
               that knowledge and hands the chat to a human when the customer asks for one. If no
               teammate replies within two hours, it picks the chat back up.
             </p>
           </Section>
 
-          <Section id="team" n={9} title="Team members" intro="Invite teammates by link and control what they can do.">
-            <p>Invite teammates from <Ui>Settings → Team members</Ui>. Each person gets one role:</p>
+          <Section id="team" n={10} title="Team members" intro="Invite teammates by link and control what they can do.">
+            <p>Invite teammates from <Ui to="/settings?tab=members">Settings → Team members</Ui>. Each person gets one role:</p>
             <div className="docs-table-wrap">
               <table className="docs-table">
                 <thead>

@@ -87,6 +87,12 @@ export const DOCS_CSS = `
   font-weight: 600; color: var(--text);
   background: var(--accent-soft); border-radius: 4px; padding: 1px 6px;
 }
+.lp-page a.ui-link{ color: var(--accent-deep); text-decoration: none; transition: background .15s ease; }
+.lp-page a.ui-link::after{ content: " ↗"; font-weight: 500; font-size: .85em; }
+.lp-page a.ui-link:hover{ background: var(--accent-soft-strong); }
+.lp-page .docs-site{ margin-top: 12px; font-size: 14px; color: var(--text-dim); }
+.lp-page .docs-site a{ color: var(--accent-deep); font-weight: 600; }
+.lp-page .docs-site a:hover{ text-decoration: underline; }
 
 /* numbered steps */
 .lp-page ol.steps{ counter-reset: step; margin: 18px 0 0; padding: 0; list-style: none; }
