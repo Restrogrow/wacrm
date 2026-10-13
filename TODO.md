@@ -23,6 +23,48 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       `x-cron-secret` header (both verified returning 200).
       Still to do: document this setup in the README.
 
+## 🔴 Important — WhatsApp platform (from Meta docs review, 2026-10-13)
+
+- [ ] **#36 Save incoming media.** Inbound photos, voice notes and
+      documents are proxied from Meta by media ID at view time
+      (`src/app/api/whatsapp/media/[mediaId]/route.ts`), but Meta
+      expires media IDs after 7 days (since Oct 2025), so older
+      attachments stop loading. Download each file to Supabase Storage
+      when the webhook receives it and store that URL instead.
+- [ ] **#37 WhatsApp Flows (native forms).** Send Flow messages (lead
+      forms, bookings, surveys) and capture `interactive.nfm_reply`
+      responses into contact fields; today they show as
+      "[Interactive reply]" and the answers are lost.
+- [ ] **#38 Carousels.** Media-card and product-card carousel templates
+      in the template builder and broadcasts.
+- [ ] **#39 Number quality & messaging-limit alerts.** Handle
+      `phone_number_quality_update` / `account_update` limit changes,
+      show the number's quality rating and daily limit in Settings, and
+      warn the owner (email / in-app) before Meta restricts sending.
+- [ ] **#40 Catalog, orders and payments (India).** Connect the
+      WhatsApp product catalog; send single/multi-product messages;
+      receive `order` messages (cart sent from the catalog) into the
+      inbox and a deal; order-details / checkout-button templates with
+      UPI / Razorpay payment links and payment-status webhooks. Useful
+      for restaurants and shops. (Was #11.)
+- [ ] **#41 WhatsApp voice calls (Calling API).** Let customers call the
+      business number and agents answer in the browser (WebRTC / SIP),
+      with call logs on the conversation, call-permission requests, and
+      voicemail when nobody answers.
+- [ ] **#42 Usernames / BSUID follow-ups.** Core support shipped
+      (migration 038: contacts store `whatsapp_user_id`; sends fall back
+      to the BSUID via `recipient`). Still to do: broadcasts to
+      username-only contacts (broadcasts are phone-only today), handle
+      the `user_id_update` webhook when a BSUID changes, show the
+      username in the public API contact serializer, and support
+      parent BSUIDs if the portfolio is enrolled.
+- [ ] **#43 Read receipts & typing indicator.** Mark inbound messages
+      read when an agent opens the conversation and show "typing…"
+      while an agent or the chatbot composes a reply.
+- [ ] **#44 Shared contacts & order messages in the inbox.** Render
+      inbound `contacts` (vCards) and `order` messages instead of
+      "[Unsupported message type]".
+
 ## 🟠 Customer-facing gaps
 
 - [ ] **#33 Google users can't set a password.** The Settings password
@@ -48,9 +90,8 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 - [ ] **#10 Multiple WhatsApp numbers per account.** `whatsapp_config` is
       UNIQUE(account_id) (migration 017). Needs number selection in inbox,
       broadcasts, flows, automations, chatbot and the API.
-- [ ] **#11 Catalog, orders and payments:** WhatsApp product catalog /
-      multi-product messages, order messages, and payment links
-      (Razorpay / UPI) for restaurants and shops.
+- [ ] **#11 Catalog, orders and payments** — moved to the WhatsApp
+      platform section above (#40).
 - [ ] **#12 Conversation cost tracking:** show Meta's per-conversation
       charges (from the `pricing` object in status webhooks) per account,
       per broadcast and per month.

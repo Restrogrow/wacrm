@@ -27,6 +27,14 @@ and polish.
   email), and a complete / incomplete profile badge. The account page
   adds a Business details panel and a "Signed up via" column for each
   member.
+- **WhatsApp usernames (BSUID).** Meta now identifies senders by a
+  business-scoped user ID and hides the phone number of users who adopt
+  a username. Inbound messages are matched to contacts by BSUID first,
+  then phone; username-only contacts are created with an empty phone and
+  shown as "@username"; inbox replies, automations, flows, the chatbot
+  and reactions send to the BSUID (Meta's `recipient` field) when no
+  phone is known. **Migration required:** apply
+  `supabase/migrations/038_contacts_whatsapp_user_id.sql`.
 
 ### Changed
 
@@ -35,12 +43,21 @@ and polish.
   up).
 - `/login` shows an error when `/auth/callback` fails
   (`?error=auth-callback-failed`) instead of failing silently.
+- **INR is the default currency** for new accounts and deals (was USD),
+  and Indian Rupee is first in the currency picker. Existing USD
+  accounts are switched to INR. **Migration required:** apply
+  `supabase/migrations/037_default_currency_inr.sql`.
 
 ### Fixed
 
 - An auth `code` that lands on the homepage (Supabase falls back to the
   Site URL when a redirect isn't allow-listed) is now forwarded to
   `/auth/callback` instead of leaving the user signed out.
+- Taps on template quick-reply buttons (e.g. "Stop promotions",
+  "Yes, confirm") showed as "[Unsupported message type: button]" and
+  didn't trigger anything. They now appear as the button text, fire
+  keyword automations and the chatbot like typed text, and "Stop
+  promotions" opts the contact out.
 
 ## [0.4.0] — 2026-07-01
 
