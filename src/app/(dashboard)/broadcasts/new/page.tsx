@@ -12,6 +12,7 @@ import { Step3Personalize } from '@/components/broadcasts/step3-personalize';
 import { Step4ScheduleSend } from '@/components/broadcasts/step4-schedule-send';
 import { useBroadcastSending } from '@/hooks/use-broadcast-sending';
 import { Check } from 'lucide-react';
+import { planLimitMessage } from '@/lib/billing/plans';
 
 const steps = [
   { label: 'Template', key: 'template' },
@@ -120,7 +121,7 @@ export default function NewBroadcastPage() {
     });
 
     if (error) {
-      toast.error(`Failed to save draft: ${error.message}`);
+      toast.error(planLimitMessage(error) ?? `Failed to save draft: ${error.message}`);
       return;
     }
     toast.success('Draft saved');

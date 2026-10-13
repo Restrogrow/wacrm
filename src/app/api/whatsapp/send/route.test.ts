@@ -137,6 +137,11 @@ vi.mock('@/lib/flows/admin-client', () => ({
   }),
 }))
 
+// Billing has its own tests; the send flow assumes an active plan.
+vi.mock('@/lib/billing/server', () => ({
+  accountCanSend: async () => true,
+}));
+
 vi.mock('@/lib/whatsapp/encryption', () => ({
   decrypt: vi.fn(() => 'plaintext-token'),
   encrypt: vi.fn(() => 'enc-token'),

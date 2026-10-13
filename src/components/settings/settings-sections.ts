@@ -2,6 +2,7 @@ import {
   Bot,
   CalendarCheck,
   Coins,
+  CreditCard,
   FileText,
   KeyRound,
   LayoutGrid,
@@ -39,6 +40,7 @@ export const SETTINGS_SECTIONS = [
   'connected-apps',
   'shopify',
   'calendly',
+  'billing',
 ] as const;
 
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
@@ -68,6 +70,7 @@ export const SECTION_META: Record<SettingsSection, SectionMeta> = {
   'connected-apps': { id: 'connected-apps', label: 'Connected apps', icon: Plug, group: 'workspace' },
   shopify: { id: 'shopify', label: 'Shopify', icon: ShoppingBag, group: 'workspace' },
   calendly: { id: 'calendly', label: 'Calendly', icon: CalendarCheck, group: 'workspace' },
+  billing: { id: 'billing', label: 'Plan & billing', icon: CreditCard, group: 'workspace' },
 };
 
 export const RAIL_GROUPS: { label: string | null; group: SectionMeta['group'] }[] = [

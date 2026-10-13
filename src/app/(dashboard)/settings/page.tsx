@@ -8,6 +8,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { SettingsRail } from '@/components/settings/settings-rail';
 import { SettingsOverview } from '@/components/settings/settings-overview';
 import { ProfileForm } from '@/components/settings/profile-form';
+import { BusinessDetailsCard } from '@/components/settings/business-details-card';
 import { SecurityPanel } from '@/components/settings/security-panel';
 import { AppearancePanel } from '@/components/settings/appearance-panel';
 import { WhatsAppConfig } from '@/components/settings/whatsapp-config';
@@ -20,6 +21,7 @@ import { ConnectedAppsSettings } from '@/components/settings/connected-apps-sett
 import { AiChatbotSettings } from '@/components/settings/ai-chatbot-settings';
 import { ShopifySettings } from '@/components/settings/shopify-settings';
 import { CalendlySettings } from '@/components/settings/calendly-settings';
+import { BillingSettings } from '@/components/settings/billing-settings';
 import {
   resolveSection,
   type SettingsSection,
@@ -56,7 +58,12 @@ export default function SettingsPage() {
 
   const panel: Record<SettingsSection, ReactNode> = {
     overview: <SettingsOverview onSelect={go} />,
-    profile: <ProfileForm />,
+    profile: (
+      <div className="space-y-6">
+        <ProfileForm />
+        <BusinessDetailsCard />
+      </div>
+    ),
     security: <SecurityPanel />,
     appearance: <AppearancePanel />,
     whatsapp: <WhatsAppConfig />,
@@ -69,6 +76,7 @@ export default function SettingsPage() {
     'connected-apps': <ConnectedAppsSettings />,
     shopify: <ShopifySettings />,
     calendly: <CalendlySettings />,
+    billing: <BillingSettings />,
   };
 
   return (

@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { planLimitMessage } from '@/lib/billing/plans';
 
 interface CustomFieldsManagerProps {
   open: boolean;
@@ -115,7 +116,9 @@ export function CustomFieldsPanel() {
     setCreating(false);
 
     if (error) {
-      toast.error('Could not create field. You may not have permission.');
+      toast.error(
+        planLimitMessage(error) ?? 'Could not create field. You may not have permission.'
+      );
       return;
     }
     toast.success(`Created "${name}".`);

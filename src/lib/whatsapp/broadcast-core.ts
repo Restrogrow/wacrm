@@ -30,6 +30,8 @@ import { isMessageTemplate } from '@/lib/whatsapp/template-row-guard';
 import type { MessageTemplate } from '@/types';
 import { findOrCreateContact } from '@/lib/api/v1/contacts';
 import { loadOptedOutPhones, phoneKey } from '@/lib/contacts/opt-out';
+import { accountCanSend } from '@/lib/billing/server';
+import { PLAN_EXPIRED_MESSAGE, planLimitMessage } from '@/lib/billing/plans';
 
 /** Thrown by createBroadcast on a caller-visible failure; route maps it. */
 export class BroadcastError extends Error {
@@ -108,6 +110,11 @@ export async function createBroadcast(
       `A broadcast is capped at ${MAX_RECIPIENTS} recipients per request; split larger sends`,
       400
     );
+  }
+
+  // Trial or paid period over: the account is read-only.
+  if (!(await accountCanSend(accountId))) {
+    throw new BroadcastError('plan_expired', PLAN_EXPIRED_MESSAGE, 402);
   }
 
   // Config (fail fast + provides the audit trail owner already resolved
@@ -211,6 +218,8 @@ export async function createBroadcast(
     .select('id')
     .single();
   if (bErr || !broadcast) {
+    const limitMessage = planLimitMessage(bErr);
+    if (limitMessage) throw new BroadcastError('plan_limit', limitMessage, 402);
     console.error('[broadcast-core] create broadcast error:', bErr);
     throw new BroadcastError('internal', 'Failed to create broadcast', 500);
   }

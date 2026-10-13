@@ -14,6 +14,8 @@ import {
   isRecipientNotAllowedError,
 } from '@/lib/whatsapp/phone-utils'
 import { supabaseAdmin } from './admin-client'
+import { accountCanSend } from '@/lib/billing/server'
+import { PLAN_EXPIRED_MESSAGE } from '@/lib/billing/plans'
 
 // ------------------------------------------------------------
 // Flows-side Meta sender (interactive variants).
@@ -82,6 +84,11 @@ export async function engineSendText(
     )
   }
   const sanitized = target.to
+
+  // Trial or paid period over: the account is read-only.
+  if (!(await accountCanSend(args.accountId))) {
+    throw new Error(PLAN_EXPIRED_MESSAGE)
+  }
 
   const { data: config, error: configErr } = await db
     .from('whatsapp_config')
@@ -198,6 +205,11 @@ export async function engineSendMedia(
     )
   }
   const sanitized = target.to
+
+  // Trial or paid period over: the account is read-only.
+  if (!(await accountCanSend(args.accountId))) {
+    throw new Error(PLAN_EXPIRED_MESSAGE)
+  }
 
   const { data: config, error: configErr } = await db
     .from('whatsapp_config')
@@ -380,6 +392,11 @@ async function sendInteractiveViaMeta(
     )
   }
   const sanitized = target.to
+
+  // Trial or paid period over: the account is read-only.
+  if (!(await accountCanSend(input.accountId))) {
+    throw new Error(PLAN_EXPIRED_MESSAGE)
+  }
 
   const { data: config, error: configErr } = await db
     .from('whatsapp_config')

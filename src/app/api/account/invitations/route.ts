@@ -33,6 +33,7 @@ import {
   rateLimitResponse,
   RATE_LIMITS,
 } from "@/lib/rate-limit";
+import { planLimitMessage } from "@/lib/billing/plans";
 
 // Resolve the base URL we publish invite links under.
 //
@@ -230,6 +231,10 @@ export async function POST(request: Request) {
       .select("id, role, label, expires_at, created_at")
       .single();
 
+    const limitMessage = planLimitMessage(error);
+    if (limitMessage) {
+      return NextResponse.json({ error: limitMessage, code: "plan_limit" }, { status: 402 });
+    }
     if (error || !data) {
       console.error("[POST /api/account/invitations] insert error:", error);
       return NextResponse.json(

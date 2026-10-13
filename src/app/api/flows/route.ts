@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { getFlowTemplate } from '@/lib/flows/templates'
+import { planLimitMessage } from '@/lib/billing/plans'
 
 /**
  * GET /api/flows — list the caller's flows.
@@ -111,6 +112,10 @@ export async function POST(request: Request) {
       })
       .select()
       .single()
+    const limitMessage = planLimitMessage(flowErr)
+    if (limitMessage) {
+      return NextResponse.json({ error: limitMessage, code: 'plan_limit' }, { status: 402 })
+    }
     if (flowErr || !flow) {
       return NextResponse.json(
         { error: flowErr?.message ?? 'flow insert failed' },

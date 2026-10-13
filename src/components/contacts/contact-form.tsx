@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, AlertTriangle } from 'lucide-react';
+import { planLimitMessage } from '@/lib/billing/plans';
 
 interface ContactFormProps {
   open: boolean;
@@ -197,6 +198,11 @@ export function ContactForm({
       onOpenChange(false);
       onSaved();
     } catch (err: unknown) {
+      const limitMessage = planLimitMessage(err);
+      if (limitMessage) {
+        toast.error(limitMessage);
+        return;
+      }
       // The unique index (migration 022) rejects a duplicate phone that
       // slipped past the on-blur check (race, or a format that
       // normalizes equal). Surface it as the friendly duplicate notice

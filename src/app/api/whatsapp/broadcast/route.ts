@@ -16,6 +16,8 @@ import {
   rateLimitResponse,
   RATE_LIMITS,
 } from '@/lib/rate-limit'
+import { accountCanSend } from '@/lib/billing/server'
+import { PLAN_EXPIRED_MESSAGE } from '@/lib/billing/plans'
 
 interface BroadcastResult {
   phone: string
@@ -95,6 +97,11 @@ export async function POST(request: Request) {
         { error: 'Your profile is not linked to an account.' },
         { status: 403 },
       )
+    }
+
+    // Trial or paid period over: the account is read-only.
+    if (!(await accountCanSend(accountId))) {
+      return NextResponse.json({ error: PLAN_EXPIRED_MESSAGE, code: 'plan_expired' }, { status: 402 })
     }
 
     const body = await request.json()

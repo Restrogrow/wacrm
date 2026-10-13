@@ -20,6 +20,8 @@ import {
   signupProviderLabel,
 } from "@/lib/auth/business-profile";
 import { WhatsappDiagnosticsPanel } from "@/components/admin/whatsapp-diagnostics-panel";
+import { PlanEditor } from "@/components/admin/plan-editor";
+import { EFFECTIVE_PLAN_LABELS, effectivePlan, type AccountBilling } from "@/lib/billing/plans";
 
 export const metadata: Metadata = {
   title: "Account details",
@@ -43,6 +45,8 @@ interface AccountDetail {
   natureOfBusiness: string | null;
   teamSize: string | null;
   ownerUserId: string;
+  /** Null when the billing columns don't exist yet (migration 041). */
+  billing: (AccountBilling & { billing_note: string | null }) | null;
   members: MemberRow[];
   whatsapp: {
     status: string;
@@ -70,7 +74,7 @@ async function loadAccount(id: string): Promise<AccountDetail | null> {
   }
   if (!account) return null;
 
-  const [{ data: profiles }, { data: waConfig }] = await Promise.all([
+  const [{ data: profiles }, { data: waConfig }, { data: billing }] = await Promise.all([
     supabase
       .from("profiles")
       .select("user_id, full_name, email, mobile_number, account_role, created_at")
@@ -82,6 +86,12 @@ async function loadAccount(id: string): Promise<AccountDetail | null> {
         "status, signup_method, phone_number_id, waba_id, business_id, connected_at, registered_at, last_registration_error"
       )
       .eq("account_id", id)
+      .maybeSingle(),
+    // Separate query: errors (migration 041 missing) leave billing null.
+    supabase
+      .from("accounts")
+      .select("plan, trial_ends_at, plan_expires_at, billing_note")
+      .eq("id", id)
       .maybeSingle(),
   ]);
 
@@ -120,6 +130,7 @@ async function loadAccount(id: string): Promise<AccountDetail | null> {
     natureOfBusiness: account.nature_of_business,
     teamSize: account.team_size,
     ownerUserId: account.owner_user_id,
+    billing: billing ?? null,
     members,
     whatsapp: waConfig
       ? {
@@ -342,6 +353,26 @@ export default async function AdminAccountDetailPage({
           </Table>
         </div>
       </div>
+
+      {account.billing && (
+        <div className="mb-8">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+            Plan
+            <Badge
+              variant={effectivePlan(account.billing) === "expired" ? "destructive" : "outline"}
+            >
+              {EFFECTIVE_PLAN_LABELS[effectivePlan(account.billing)]}
+            </Badge>
+          </h2>
+          <PlanEditor
+            accountId={account.id}
+            plan={account.billing.plan}
+            trialEndsAt={account.billing.trial_ends_at}
+            planExpiresAt={account.billing.plan_expires_at}
+            billingNote={account.billing.billing_note}
+          />
+        </div>
+      )}
 
       {account.whatsapp && (
         <div>

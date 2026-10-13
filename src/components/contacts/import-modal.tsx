@@ -37,6 +37,7 @@ import {
   AlertTriangle,
   Tag,
 } from 'lucide-react';
+import { planLimitMessage } from '@/lib/billing/plans';
 
 const DEFAULT_TAG_COLOR = '#3b82f6';
 const PREVIEW_LIMIT = 5;
@@ -219,6 +220,7 @@ export function ImportModal({
       let imported = 0;
       let skipped = 0;
       let failed = 0;
+      let limitMessage: string | null = null;
 
       // 1) De-dupe within the file by normalized phone (keep first).
       const { unique, duplicates: inFileDupes } = dedupeByPhone(parsedRows);
@@ -306,6 +308,7 @@ export function ImportModal({
             } else if (isUniqueViolation(singleErr)) {
               skipped++;
             } else {
+              limitMessage ??= planLimitMessage(singleErr);
               failed++;
             }
           }
@@ -364,7 +367,9 @@ export function ImportModal({
       }
       if (failed > 0) {
         toast.error(
-          `${failed} contact${failed !== 1 ? 's' : ''} failed to import`
+          limitMessage
+            ? `${failed} contact${failed !== 1 ? 's' : ''} not imported. ${limitMessage}`
+            : `${failed} contact${failed !== 1 ? 's' : ''} failed to import`
         );
       }
     } catch (err: unknown) {

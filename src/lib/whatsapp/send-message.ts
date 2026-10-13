@@ -35,6 +35,8 @@ import {
 } from '@/lib/whatsapp/phone-utils';
 import type { MessageTemplate } from '@/types';
 import { isMessageTemplate } from '@/lib/whatsapp/template-row-guard';
+import { accountCanSend } from '@/lib/billing/server';
+import { PLAN_EXPIRED_MESSAGE } from '@/lib/billing/plans';
 
 export const MEDIA_KINDS = ['image', 'video', 'document', 'audio'] as const;
 export const VALID_MESSAGE_TYPES = [
@@ -213,6 +215,11 @@ export async function sendMessageToConversation(
     );
   }
   const sanitizedPhone = target.to;
+
+  // Trial or paid period over: the account is read-only.
+  if (!(await accountCanSend(accountId))) {
+    throw new SendMessageError('plan_expired', PLAN_EXPIRED_MESSAGE, 402);
+  }
 
   // WhatsApp config, account-scoped.
   const { data: config, error: configError } = await db

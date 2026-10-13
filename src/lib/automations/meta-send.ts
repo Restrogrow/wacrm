@@ -5,6 +5,8 @@ import {
   isRecipientNotAllowedError,
 } from '@/lib/whatsapp/phone-utils'
 import { supabaseAdmin } from './admin-client'
+import { accountCanSend } from '@/lib/billing/server'
+import { PLAN_EXPIRED_MESSAGE } from '@/lib/billing/plans'
 
 // ------------------------------------------------------------
 // Automation-side Meta sender.
@@ -87,6 +89,11 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
     )
   }
   const sanitized = target.to
+
+  // Trial or paid period over: the account is read-only.
+  if (!(await accountCanSend(input.accountId))) {
+    throw new Error(PLAN_EXPIRED_MESSAGE)
+  }
 
   const { data: config, error: configErr } = await db
     .from('whatsapp_config')

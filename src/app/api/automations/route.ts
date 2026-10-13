@@ -7,6 +7,7 @@ import {
   validateStepsForActivation,
   validateTriggerForActivation,
 } from '@/lib/automations/validate'
+import { planLimitMessage } from '@/lib/billing/plans'
 
 export async function GET() {
   const supabase = await createClient()
@@ -108,6 +109,14 @@ export async function POST(request: Request) {
     })
     .select()
     .single()
+
+  const limitMessage = planLimitMessage(insertErr)
+
+  if (limitMessage) {
+
+    return NextResponse.json({ error: limitMessage, code: 'plan_limit' }, { status: 402 })
+
+  }
 
   if (insertErr || !automation) {
     return NextResponse.json(
