@@ -245,6 +245,11 @@ export default function DocsPage() {
                 customer&apos;s first name.
               </li>
               <li>The contact panel shows the customer&apos;s details, tags, and deals beside the chat.</li>
+              <li>
+                The newest conversations load first. Scroll to the bottom and click <b>Load older conversations</b>{" "}
+                for more; in a chat, click <b>Load earlier messages</b> at the top to see older history. Search and
+                filters cover the conversations that are loaded.
+              </li>
             </ul>
           </Section>
 
@@ -334,7 +339,8 @@ export default function DocsPage() {
                 automatically. Cancel a scheduled broadcast from its page.
               </Step>
               <Step title="Track results">
-                Sent, delivered, read, replied, and failed counts update live.
+                Sent, delivered, read, replied, and failed counts update live. The Broadcasts page shows your
+                latest 25; click <b>Load more</b> for older ones.
               </Step>
             </ol>
             <Tip>

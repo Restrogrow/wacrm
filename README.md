@@ -26,6 +26,7 @@
 - [Integrations](#integrations)
 - [Public API and webhooks](#public-api-and-webhooks)
 - [Platform admin](#platform-admin)
+- [Operations and monitoring](#operations-and-monitoring)
 - [Blog](#blog)
 - [Tech stack](#tech-stack)
 - [Getting started (local development)](#getting-started-local-development)
@@ -65,6 +66,10 @@
 - WhatsApp Business app **coexistence**: one number used in both the
   WhatsApp Business app and Repeat Grow, with contacts, history and
   messages sent from the phone synced in.
+- **Fast on big inboxes:** conversations load 50 at a time (**Load older
+  conversations**) and threads load the latest 50 messages (**Load
+  earlier messages**, scroll position kept). Links to an older
+  conversation (`/inbox?c=<id>`) still open it.
 
 ### Contacts
 - Tags, custom fields, notes, deal history and the full conversation per
@@ -93,6 +98,7 @@
   by the server at the chosen time, in batches, so the browser doesn't
   need to stay open. Cancel from the broadcast page.
 - Live sent / delivered / read / replied / failed counts per broadcast.
+- The broadcasts list shows 25 at a time with **Load more**.
 
 ### Automations and flows
 - **Automations:** triggers (new message, first message, keyword, new
@@ -255,6 +261,32 @@ rate limited; marketing templates to opted-out contacts are refused.
   running" if a job hasn't succeeded recently) and the last 50 failed
   inbound webhooks (WhatsApp, Shopify, Calendly) with the account and
   error. Failed webhooks are kept for 30 days.
+
+---
+
+## Operations and monitoring
+
+Admin-only. Full runbook: **[docs/OPERATIONS.md](./docs/OPERATIONS.md)**
+(what alerts you, what each state means, what to do when something
+breaks, releases, testing).
+
+| What | Link |
+|---|---|
+| Admin dashboard | [repeatgrow.com/admin](https://repeatgrow.com/admin) |
+| System health | [repeatgrow.com/admin/system](https://repeatgrow.com/admin/system) |
+| Health check (monitors) | [repeatgrow.com/api/health](https://repeatgrow.com/api/health) |
+| Uptime alerts | [UptimeRobot](https://dashboard.uptimerobot.com) — HTTP monitor on `/api/health`, every 5 min |
+| Error alerts | [Sentry](https://sentry.io) — issue alert to `teamrepeatgrow@gmail.com` (see [Sentry setup](#sentry)) |
+| CI | [GitHub Actions](https://github.com/Restrogrow/wacrm/actions) |
+
+- **Background jobs** report a heartbeat every run (`system_heartbeats`);
+  `/admin/system` shows OK / Failing / Not running per job.
+- **Failed webhooks** (WhatsApp, Shopify, Calendly) are saved to
+  `webhook_failures` for 30 days and sent to Sentry, tagged
+  `webhook:<source>`; cron errors are tagged `job:<name>`.
+- Code: [`src/lib/ops/`](./src/lib/ops), [`src/app/api/health`](./src/app/api/health/route.ts),
+  [`src/app/admin/system`](./src/app/admin/system/page.tsx), migration
+  [`045_monitoring_and_indexes.sql`](./supabase/migrations/045_monitoring_and_indexes.sql).
 
 ### Health check and uptime monitoring
 
@@ -518,11 +550,14 @@ src/lib/billing/         Plans, limits, trial / read-only checks
 src/lib/broadcasts/      Scheduled broadcast sender
 src/lib/summary/         Daily summary email
 src/lib/admin/           Admin dashboard data
+src/lib/ops/             Health check, job heartbeats, webhook failure log
+src/app/admin/system/    System health page;  src/app/api/health/ health check
 src/lib/integrations/    Shared integration helpers (phone normalisation)
 src/app/blog/            Blog posts;  src/lib/blog.ts post list;  public/blog/ images
 supabase/migrations/     Database schema, in order
+e2e/                     Playwright end-to-end tests (playwright.config.ts)
 shopify/                 Shopify app config (shopify.app.toml) + App Store checklist
-docs/                    Public API, embedded signup, integrations plan, RestroGrow connect
+docs/                    Operations runbook, public API, embedded signup, integrations, RestroGrow connect
 ```
 
 ---
@@ -565,6 +600,10 @@ local build.
   domains); post-login redirects are same-origin only.
 - API keys are scoped and revocable; API and admin actions are rate
   limited; a Content Security Policy ships (report-only for now).
+- Cron endpoints check `x-cron-secret` in constant time. `/api/health`
+  returns states only — error text and env var names are shown on
+  `/admin/system` to platform admins only; the monitoring tables are
+  service-role only.
 
 Report vulnerabilities privately to
 [support@repeatgrow.com](mailto:support@repeatgrow.com). See also
@@ -574,6 +613,7 @@ Report vulnerabilities privately to
 
 ## More documentation
 
+- [docs/OPERATIONS.md](./docs/OPERATIONS.md) — **admin runbook**: monitoring, alerts, incidents, releases, testing
 - [CHANGELOG.md](./CHANGELOG.md) — what changed and which migrations it needs
 - [TODO.md](./TODO.md) — roadmap and known gaps
 - [docs/public-api.md](./docs/public-api.md) — API reference
