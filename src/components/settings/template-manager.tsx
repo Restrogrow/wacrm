@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { SettingsPanelHead } from './settings-panel-head';
 import { AiTemplateDialog } from './ai-template-dialog';
+import { CarouselEditor, emptyCarouselCard } from './carousel-editor';
 import {
   Dialog,
   DialogContent,
@@ -44,6 +45,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type {
+  CarouselCard,
   MessageTemplate,
   TemplateButton,
   TemplateSampleValues,
@@ -77,6 +79,9 @@ interface TemplateFormData {
   body_samples: string[];
   footer_text: string;
   buttons: TemplateButton[];
+  /** 'carousel' = media-card carousel (Marketing only). */
+  layout: 'standard' | 'carousel';
+  carousel_cards: CarouselCard[];
 }
 
 const emptyForm: TemplateFormData = {
@@ -91,6 +96,8 @@ const emptyForm: TemplateFormData = {
   body_samples: [],
   footer_text: '',
   buttons: [],
+  layout: 'standard',
+  carousel_cards: [],
 };
 
 const COMMON_LANGUAGE_CODES = [
@@ -216,6 +223,22 @@ export function TemplateManager() {
       sample_values.header = [form.header_sample.trim()];
     }
 
+    if (form.layout === 'carousel') {
+      return {
+        name: form.name.trim(),
+        category: 'Marketing' as const,
+        language: form.language.trim() || 'en_US',
+        body_text: form.body_text.trim(),
+        sample_values: Object.keys(sample_values).length > 0 ? { body: sample_values.body } : undefined,
+        carousel_cards: form.carousel_cards.map((c) => ({
+          ...c,
+          body_text: c.body_text.trim(),
+          sample_values: (c.sample_values ?? []).map((v) => v.trim()),
+          buttons: c.buttons.map((b) => ({ ...b, text: b.text.trim() })),
+        })),
+      };
+    }
+
     return {
       name: form.name.trim(),
       category: form.category,
@@ -249,6 +272,8 @@ export function TemplateManager() {
       body_samples: template.sample_values?.body ?? [],
       footer_text: template.footer_text ?? '',
       buttons: template.buttons ?? [],
+      layout: template.carousel_cards?.length ? 'carousel' : 'standard',
+      carousel_cards: template.carousel_cards ?? [],
     });
     setDialogOpen(true);
   }
@@ -593,6 +618,24 @@ export function TemplateManager() {
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {template.body_text}
                     </p>
+                    {template.carousel_cards?.length ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-medium text-muted-foreground">
+                          Carousel · {template.carousel_cards.length} cards
+                        </span>
+                        {template.carousel_cards.slice(0, 5).map((c, i) =>
+                          c.media_url && c.header_type === 'image' ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img key={i} src={c.media_url} alt="" className="size-7 rounded object-cover border border-border" />
+                          ) : (
+                            <span key={i} className="size-7 rounded border border-border bg-muted" />
+                          ),
+                        )}
+                        {template.carousel_cards.some((c) => !c.media_url) && (
+                          <span className="text-[11px] text-amber-600">Add card images to send</span>
+                        )}
+                      </div>
+                    ) : null}
                     {template.footer_text && (
                       <p className="text-xs text-muted-foreground italic">
                         {template.footer_text}
@@ -783,6 +826,43 @@ export function TemplateManager() {
             </div>
 
             <div className="space-y-2">
+              <Label className="text-muted-foreground">Template type</Label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={form.layout === 'standard' ? 'default' : 'outline'}
+                  onClick={() => setForm({ ...form, layout: 'standard' })}
+                >
+                  Standard
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={form.layout === 'carousel' ? 'default' : 'outline'}
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      layout: 'carousel',
+                      category: 'Marketing',
+                      carousel_cards: form.carousel_cards.length
+                        ? form.carousel_cards
+                        : [emptyCarouselCard(), emptyCarouselCard()],
+                    })
+                  }
+                >
+                  Carousel
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {form.layout === 'carousel'
+                  ? 'A message followed by 2–10 swipeable cards, each with an image or video and buttons. Marketing only.'
+                  : 'One message with an optional header, footer and buttons.'}
+              </p>
+            </div>
+
+            {form.layout === 'standard' && (
+            <div className="space-y-2">
               <Label className="text-muted-foreground">Header</Label>
               <Select
                 value={form.header_format}
@@ -908,6 +988,8 @@ export function TemplateManager() {
               )}
             </div>
 
+            )}
+
             <div className="space-y-2">
               <Label className="text-muted-foreground">Body Text</Label>
               <Textarea
@@ -952,6 +1034,8 @@ export function TemplateManager() {
               )}
             </div>
 
+            {form.layout === 'standard' && (
+            <>
             <div className="space-y-2">
               <Label className="text-muted-foreground">Footer (optional)</Label>
               <Input
@@ -1099,6 +1183,18 @@ export function TemplateManager() {
                 </div>
               )}
             </div>
+            </>
+            )}
+
+            {form.layout === 'carousel' && (
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Cards</Label>
+                <CarouselEditor
+                  cards={form.carousel_cards}
+                  onChange={(carousel_cards) => setForm((f) => ({ ...f, carousel_cards }))}
+                />
+              </div>
+            )}
           </div>
 
           <DialogFooter className="bg-popover border-border">

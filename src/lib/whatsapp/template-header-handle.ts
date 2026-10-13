@@ -17,6 +17,57 @@ import type { TemplatePayload } from '@/lib/whatsapp/template-validators'
 // Meta's image-header sample limits.
 const IMAGE_MAX_BYTES = 5 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png']
+const VIDEO_MAX_BYTES = 16 * 1024 * 1024
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/3gpp']
+
+/**
+ * Upload a public image/video URL as a template sample and return the
+ * Resumable-Upload handle. Used for every carousel card.
+ */
+export async function uploadHeaderSample(
+  url: string,
+  kind: 'image' | 'video',
+  accessToken: string,
+  label = 'Header',
+): Promise<string> {
+  const appId = process.env.META_APP_ID
+  if (!appId) {
+    throw new Error('Media templates need META_APP_ID set (used for Meta’s Resumable Upload).')
+  }
+  let res: Response
+  try {
+    res = await fetch(url)
+  } catch {
+    throw new Error(`${label}: could not fetch the media link. Make sure it is publicly reachable.`)
+  }
+  if (!res.ok) throw new Error(`${label}: media link returned ${res.status}. It must be publicly reachable.`)
+
+  const allowed = kind === 'image' ? ALLOWED_IMAGE_TYPES : ALLOWED_VIDEO_TYPES
+  const max = kind === 'image' ? IMAGE_MAX_BYTES : VIDEO_MAX_BYTES
+  const contentType = (res.headers.get('content-type') || '').split(';')[0].trim().toLowerCase()
+  if (contentType && !allowed.includes(contentType)) {
+    throw new Error(`${label}: must be ${kind === 'image' ? 'JPEG or PNG' : 'MP4'} (got ${contentType}).`)
+  }
+  const bytes = new Uint8Array(await res.arrayBuffer())
+  if (bytes.byteLength === 0) throw new Error(`${label}: the file is empty.`)
+  if (bytes.byteLength > max) {
+    throw new Error(`${label}: file is ${(bytes.byteLength / 1024 / 1024).toFixed(1)} MB — Meta's limit is ${max / 1024 / 1024} MB.`)
+  }
+  const mimeType = allowed.includes(contentType) ? contentType : allowed[0]
+  const ext = mimeType.split('/')[1].replace('jpeg', 'jpg').replace('3gpp', '3gp')
+  const { handle } = await uploadResumableMedia({ appId, accessToken, fileName: `${kind}.${ext}`, mimeType, bytes })
+  return handle
+}
+
+/** Make sure every carousel card has a sample handle (uploads the ones missing). */
+export async function ensureCarouselHandles(payload: TemplatePayload, accessToken: string): Promise<void> {
+  if (!payload.carousel_cards?.length) return
+  for (let i = 0; i < payload.carousel_cards.length; i++) {
+    const card = payload.carousel_cards[i]
+    if (card.header_handle || !card.media_url) continue
+    card.header_handle = await uploadHeaderSample(card.media_url, card.header_type, accessToken, `Card ${i + 1}`)
+  }
+}
 
 export async function ensureImageHeaderHandle(
   payload: TemplatePayload,

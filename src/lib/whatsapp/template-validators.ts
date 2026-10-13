@@ -16,10 +16,12 @@
  */
 
 import type {
+  CarouselCard,
   MessageTemplate,
   TemplateButton,
   TemplateSampleValues,
 } from '@/types';
+import { validateCarousel } from './carousel';
 
 export const TEMPLATE_LIMITS = {
   bodyMaxLength: 1024,
@@ -46,6 +48,8 @@ export interface TemplatePayload {
   footer_text?: string;
   buttons?: TemplateButton[];
   sample_values?: TemplateSampleValues;
+  /** Carousel templates: 2–10 cards (see lib/whatsapp/carousel.ts). */
+  carousel_cards?: CarouselCard[] | null;
 }
 
 export function validateTemplateName(name: string): void {
@@ -325,6 +329,9 @@ export function validateTemplatePayload(payload: TemplatePayload): {
   validateTemplateName(payload.name);
   if (!payload.language?.trim()) {
     throw new Error('Language is required.');
+  }
+  if (payload.carousel_cards?.length) {
+    validateCarousel(payload.carousel_cards, payload);
   }
   const bodyVars = validateBody(payload.body_text);
   validateFooter(payload.footer_text);

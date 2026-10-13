@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { parseMetaCarousel } from '@/lib/whatsapp/carousel'
 import { createClient } from '@/lib/supabase/server'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import { normalizeStatus } from '@/lib/whatsapp/template-status-normalize'
@@ -234,6 +235,9 @@ export async function POST() {
       const header = (t.components ?? []).find((c) => c.type === 'HEADER')
       const footer = (t.components ?? []).find((c) => c.type === 'FOOTER')
       const buttons = (t.components ?? []).find((c) => c.type === 'BUTTONS')
+      const carousel = (t.components ?? []).find((c) => c.type === 'CAROUSEL') as unknown as
+        | Parameters<typeof parseMetaCarousel>[0]
+        | undefined
 
       const parsedButtons = parseButtons(buttons?.buttons)
       const sampleValues = extractSampleValues(body, header)
@@ -263,6 +267,7 @@ export async function POST() {
         footer_text: footer?.text ?? null,
         buttons: parsedButtons.length ? parsedButtons : null,
         sample_values: sampleValues,
+        carousel_cards: parseMetaCarousel(carousel),
         status: normalizeStatus(t.status),
         meta_template_id: t.id,
         quality_score: normalizeQualityScore(t.quality_score),

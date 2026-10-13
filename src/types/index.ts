@@ -303,6 +303,24 @@ export interface TemplateSampleValues {
   header?: string[];
 }
 
+/**
+ * One card of a carousel template (Marketing only, 2–10 cards). Every
+ * card has the same header format and the same button types in the
+ * same order (Meta rule); labels / URLs can differ per card.
+ */
+export interface CarouselCard {
+  header_type: 'image' | 'video';
+  /** Public URL of the card's image/video — sample at creation, sent every time. */
+  media_url: string | null;
+  /** Resumable-upload handle for the creation sample (set on submit). */
+  header_handle?: string | null;
+  /** Card text, up to 160 characters. May use {{1}}… filled from sample_values. */
+  body_text: string;
+  sample_values?: string[];
+  /** 1–2 buttons: QUICK_REPLY, URL or PHONE_NUMBER. */
+  buttons: TemplateButton[];
+}
+
 export interface MessageTemplate {
   id: string;
   user_id: string;
@@ -317,6 +335,8 @@ export interface MessageTemplate {
   footer_text?: string;
   buttons?: TemplateButton[];
   sample_values?: TemplateSampleValues;
+  /** Set for carousel templates (then header/footer/buttons are unused). */
+  carousel_cards?: CarouselCard[] | null;
   status?: MessageTemplateStatus;
   meta_template_id?: string;
   rejection_reason?: string;

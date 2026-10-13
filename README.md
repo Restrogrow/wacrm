@@ -100,6 +100,16 @@
 - Create WhatsApp templates in the app (text/media headers, variables,
   buttons, AI drafting) and submit them to Meta; approval status syncs
   back automatically.
+- **Carousel templates** (Marketing): a personalised message followed
+  by 2–10 swipeable cards, each with an image or video, short text (≤160
+  characters) and 1–2 buttons (quick reply, website, call). Choose
+  **Template type → Carousel** in the template builder; every card uses
+  the same media type and button layout (Meta rule). Card media is
+  uploaded to Meta as a sample on submit and sent by link, so carousels
+  work in broadcasts, scheduled broadcasts, the inbox and automations.
+  Carousels synced from Meta need their card images re-added before
+  sending. Code: `src/lib/whatsapp/carousel.ts`,
+  `src/components/settings/carousel-editor.tsx` (migration 051).
 - Broadcast an approved template to all contacts, tags, a custom-field
   filter or a CSV, with per-recipient variables (contact fields or custom
   fields) and media headers.
@@ -496,6 +506,7 @@ is idempotent where possible. Recent ones:
 | `048_whatsapp_calls` | WhatsApp voice calls (`whatsapp_calls`, Realtime) |
 | `049_whatsapp_number_health` | Daily WhatsApp number health (quality, messaging limit, send status) |
 | `050_billing_reminders` | Trial-ending and plan-renewal reminder emails |
+| `051_carousel_templates` | Carousel templates (`message_templates.carousel_cards`) |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 

@@ -32,6 +32,7 @@
 
 import type { MessageTemplate, TemplateButton } from '@/types';
 import { extractVariableIndices } from './template-validators';
+import { buildCarouselSendComponent } from './carousel';
 
 export interface SendTimeParams {
   /** Values for body {{1}}, {{2}}, … indexed by variable position. */
@@ -59,7 +60,8 @@ export type MetaSendComponent =
       sub_type: 'url' | 'quick_reply' | 'copy_code';
       index: string;
       parameters: MetaSendParameter[];
-    };
+    }
+  | ReturnType<typeof buildCarouselSendComponent>;
 
 type MetaSendParameter =
   | { type: 'text'; text: string }
@@ -221,6 +223,13 @@ export function buildSendComponents(
   params: SendTimeParams = {},
 ): MetaSendComponent[] {
   const out: MetaSendComponent[] = [];
+  // Carousel: personalised main body + the same cards for everyone.
+  if (template.carousel_cards?.length) {
+    const body = buildBodyComponent(template, params);
+    if (body) out.push(body);
+    out.push(buildCarouselSendComponent(template.carousel_cards));
+    return out;
+  }
   const header = buildHeaderComponent(template, params);
   if (header) out.push(header);
   const body = buildBodyComponent(template, params);

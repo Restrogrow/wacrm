@@ -323,6 +323,12 @@ export default function DocsPage() {
                 automatically. Approval usually takes minutes and at most 24 hours.
               </Step>
             </ol>
+            <p>
+              <b>Carousels:</b> choose <b>Template type → Carousel</b> to send a message followed by 2–10 swipeable
+              cards — each with an image or video, a short line of text and up to two buttons (for example
+              &ldquo;Shop now&rdquo;). Great for showing several products in one broadcast. Every card uses the same kind
+              of media and the same buttons; carousels are Marketing templates.
+            </p>
             <Tip>
               <b>Faster: Create with AI.</b> Click <b>Create with AI</b> on the Templates page and paste
               the message you want to send. AI picks the name, category and language, turns names, dates

@@ -38,8 +38,9 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       forms, bookings, surveys) and capture `interactive.nfm_reply`
       responses into contact fields; today they show as
       "[Interactive reply]" and the answers are lost.
-- [ ] **#38 Carousels.** Media-card and product-card carousel templates
-      in the template builder and broadcasts.
+- [x] **#38 Carousels.** Media-card carousel templates shipped (migration
+      051) — builder, broadcasts, inbox, automations. Product-card
+      carousels (from a catalog) come with #40.
 - [x] **#39 Number quality & messaging-limit alerts.** Shipped (migration 049, Settings → WhatsApp → Number health). Handle
       `phone_number_quality_update` / `account_update` limit changes,
       show the number's quality rating and daily limit in Settings, and

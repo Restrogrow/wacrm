@@ -12,9 +12,12 @@
 
 import type { TemplatePayload } from './template-validators';
 import type { TemplateButton } from '@/types';
+import { buildCarouselCreateComponent } from './carousel';
 
 export interface MetaComponent {
-  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS';
+  type: 'HEADER' | 'BODY' | 'FOOTER' | 'BUTTONS' | 'CAROUSEL';
+  /** CAROUSEL only — see lib/whatsapp/carousel.ts. */
+  cards?: unknown[];
   format?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
   text?: string;
   buttons?: MetaButtonPayload[];
@@ -137,6 +140,17 @@ const CATEGORY_TO_META: Record<
 export function buildMetaTemplatePayload(
   payload: TemplatePayload,
 ): MetaTemplateSubmitPayload {
+  // Carousel: main BODY followed by the CAROUSEL of cards — no
+  // template-level header, footer or buttons.
+  if (payload.carousel_cards?.length) {
+    return {
+      name: payload.name,
+      category: CATEGORY_TO_META[payload.category],
+      language: payload.language,
+      components: [buildBodyComponent(payload), buildCarouselCreateComponent(payload.carousel_cards)],
+    };
+  }
+
   const components: MetaComponent[] = [];
   const header = buildHeaderComponent(payload);
   if (header) components.push(header);

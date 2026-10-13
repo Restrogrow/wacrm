@@ -15,7 +15,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { decrypt } from '@/lib/whatsapp/encryption';
 import { editMessageTemplate, submitMessageTemplate } from '@/lib/whatsapp/meta-api';
 import { buildMetaTemplatePayload } from '@/lib/whatsapp/template-components';
-import { ensureImageHeaderHandle } from '@/lib/whatsapp/template-header-handle';
+import { ensureCarouselHandles, ensureImageHeaderHandle } from '@/lib/whatsapp/template-header-handle';
 import { normalizeStatus } from '@/lib/whatsapp/template-status-normalize';
 import { validateTemplatePayload, type TemplatePayload } from '@/lib/whatsapp/template-validators';
 
@@ -97,6 +97,7 @@ async function ensureHeaderHandle(payload: TemplatePayload, accessToken: string)
   // URL, wrong type/size).
   try {
     await ensureImageHeaderHandle(payload, accessToken);
+    await ensureCarouselHandles(payload, accessToken);
   } catch (e) {
     throw new TemplateSubmitError(
       'bad_request',
@@ -129,6 +130,7 @@ function buildUpsertRow(
     footer_text: payload.footer_text ?? null,
     buttons: payload.buttons ?? null,
     sample_values: payload.sample_values ?? null,
+    carousel_cards: payload.carousel_cards?.length ? payload.carousel_cards : null,
     status: extras.status,
     meta_template_id: extras.metaTemplateId,
     submission_error: extras.submissionError,
@@ -257,6 +259,7 @@ export async function resubmitExistingTemplate(
       footer_text: payload.footer_text ?? null,
       buttons: payload.buttons ?? null,
       sample_values: payload.sample_values ?? null,
+      carousel_cards: payload.carousel_cards?.length ? payload.carousel_cards : null,
       status: 'PENDING',
       submission_error: null,
       rejection_reason: null,

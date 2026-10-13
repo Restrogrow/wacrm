@@ -13,6 +13,12 @@ and polish.
 
 ### Added
 
+- **Carousel templates.** Build Marketing templates with 2–10 swipeable
+  cards — image or video, short text and up to two buttons each — in
+  Settings → Templates (Template type → Carousel), and send them in
+  broadcasts, the inbox and automations. **Migration required:**
+  `supabase/migrations/051_carousel_templates.sql`.
+
 - **Trial and renewal reminder emails.** Owners are emailed 2 days before
   the free trial ends, on its last day and when it ends, and 3 days
   before a paid plan's paid-until date and when it passes — with plans,
