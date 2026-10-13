@@ -24,7 +24,8 @@ const steps = [
 export default function NewBroadcastPage() {
   const router = useRouter();
   const { accountId } = useAuth();
-  const { createAndSendBroadcast, isProcessing, progress } = useBroadcastSending();
+  const { createAndSendBroadcast, scheduleBroadcast, isProcessing, progress } =
+    useBroadcastSending();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [template, setTemplate] = useState<MessageTemplate | null>(null);
@@ -45,11 +46,11 @@ export default function NewBroadcastPage() {
   const [headerMediaUrl, setHeaderMediaUrl] = useState('');
   const [name, setName] = useState('');
 
-  async function handleSend() {
+  async function handleSend(scheduledAt?: string) {
     if (!template) return;
 
     try {
-      const broadcastId = await createAndSendBroadcast({
+      const payload = {
         name,
         template,
         audience: {
@@ -61,7 +62,11 @@ export default function NewBroadcastPage() {
         },
         variables,
         headerMediaUrl,
-      });
+      };
+      const broadcastId = scheduledAt
+        ? await scheduleBroadcast(payload, scheduledAt)
+        : await createAndSendBroadcast(payload);
+      if (scheduledAt) toast.success('Broadcast scheduled');
       router.push(`/broadcasts/${broadcastId}`);
     } catch (err) {
       // Previously swallowed with console.error — the wizard would

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { Contact, MessageTemplate } from '@/types';
+import { planLimitMessage } from '@/lib/billing/plans';
 
 export type CustomFieldOperator = 'is' | 'is_not' | 'contains';
 
@@ -50,6 +51,8 @@ interface BroadcastPayload {
 
 interface UseBroadcastSendingReturn {
   createAndSendBroadcast: (payload: BroadcastPayload) => Promise<string>;
+  /** Save a broadcast to be sent by the server at `scheduledAt` (ISO). */
+  scheduleBroadcast: (payload: BroadcastPayload, scheduledAt: string) => Promise<string>;
   isProcessing: boolean;
   progress: number;
 }
@@ -571,5 +574,104 @@ export function useBroadcastSending(): UseBroadcastSendingReturn {
     }
   }
 
-  return { createAndSendBroadcast, isProcessing, progress };
+  /**
+   * "Send later": resolve the audience and every recipient's template
+   * values now, store them (migration 043), and leave the sending to the
+   * server cron (lib/broadcasts/scheduled.ts) at `scheduledAt`.
+   */
+  async function scheduleBroadcast(
+    payload: BroadcastPayload,
+    scheduledAt: string,
+  ): Promise<string> {
+    setIsProcessing(true);
+    setProgress(0);
+    const supabase = createClient();
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) throw new Error('You are not signed in.');
+      if (!accountId) throw new Error('Your profile is not linked to an account.');
+      if (Number.isNaN(Date.parse(scheduledAt)) || Date.parse(scheduledAt) <= Date.now()) {
+        throw new Error('Pick a time in the future.');
+      }
+
+      setProgress(10);
+      const contacts = await resolveAudience(payload.audience);
+      if (contacts.length === 0) throw new Error('No contacts found for this audience.');
+
+      setProgress(30);
+      const customValueIndex = await fetchCustomValueIndex(
+        supabase,
+        contacts.map((c) => c.id),
+      );
+
+      const headerType = payload.template.header_type;
+      const isMediaHeader =
+        headerType === 'image' || headerType === 'video' || headerType === 'document';
+      const headerMediaUrl = payload.headerMediaUrl?.trim();
+
+      setProgress(50);
+      const { data: broadcast, error: broadcastError } = await supabase
+        .from('broadcasts')
+        .insert({
+          user_id: user.id,
+          account_id: accountId,
+          name: payload.name,
+          template_name: payload.template.name,
+          template_language: payload.template.language ?? 'en_US',
+          template_variables: payload.variables,
+          audience_filter: {
+            type: payload.audience.type,
+            tagIds: payload.audience.tagIds,
+            customField: payload.audience.customField,
+            excludeTagIds: payload.audience.excludeTagIds,
+          },
+          message_params: isMediaHeader && headerMediaUrl ? { headerMediaUrl } : null,
+          status: 'scheduled',
+          scheduled_at: new Date(scheduledAt).toISOString(),
+          total_recipients: contacts.length,
+          sent_count: 0,
+          delivered_count: 0,
+          read_count: 0,
+          replied_count: 0,
+          failed_count: 0,
+        })
+        .select()
+        .single();
+      if (broadcastError || !broadcast) {
+        throw new Error(
+          planLimitMessage(broadcastError) ??
+            `Failed to schedule broadcast: ${broadcastError?.message ?? 'unknown error'}`,
+        );
+      }
+
+      setProgress(70);
+      const rows = contacts.map((contact) => ({
+        broadcast_id: broadcast.id,
+        contact_id: contact.id,
+        status: 'pending' as const,
+        params: resolveVariables(payload.variables, contact, customValueIndex.get(contact.id)),
+      }));
+      for (let i = 0; i < rows.length; i += INSERT_BATCH_SIZE) {
+        const { error } = await supabase
+          .from('broadcast_recipients')
+          .insert(rows.slice(i, i + INSERT_BATCH_SIZE));
+        if (error) {
+          // Don't leave a half-built broadcast that the cron would send.
+          await supabase.from('broadcasts').delete().eq('id', broadcast.id);
+          throw new Error(`Failed to save recipients: ${error.message}`);
+        }
+      }
+
+      setProgress(100);
+      return broadcast.id;
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  return { createAndSendBroadcast, scheduleBroadcast, isProcessing, progress };
 }

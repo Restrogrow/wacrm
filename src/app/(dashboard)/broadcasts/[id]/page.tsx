@@ -263,6 +263,23 @@ export default function BroadcastDetailPage() {
   }
 
   const status = getBroadcastStatus(broadcast.status);
+  const isScheduled = broadcast.status === 'scheduled' && !!broadcast.scheduled_at;
+
+  // Back to a draft: the cron only sends status 'scheduled'.
+  async function handleCancelSchedule() {
+    if (!broadcast) return;
+    const { error } = await createClient()
+      .from('broadcasts')
+      .update({ status: 'draft', scheduled_at: null })
+      .eq('id', broadcast.id)
+      .eq('status', 'scheduled');
+    if (error) {
+      toast.error('Could not cancel — it may already be sending');
+      return;
+    }
+    setBroadcast({ ...broadcast, status: 'draft', scheduled_at: undefined });
+    toast.success('Schedule cancelled — saved as a draft');
+  }
 
   const funnelSteps: FunnelStep[] = [
     { label: 'Sent', value: broadcast.sent_count, color: 'bg-primary' },
@@ -299,6 +316,21 @@ export default function BroadcastDetailPage() {
               <span>
                 Created {new Date(broadcast.created_at).toLocaleDateString()}
               </span>
+              {isScheduled && (
+                <>
+                  <span>-</span>
+                  <span className="font-medium text-foreground">
+                    Sends{' '}
+                    {new Date(broadcast.scheduled_at!).toLocaleString(undefined, {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -307,6 +339,17 @@ export default function BroadcastDetailPage() {
             "Delete Pipeline" flow. Mid-send broadcasts can't be deleted
             because orphaning in-flight Meta messages would leave the
             funnel inconsistent. */}
+        <div className="flex items-center gap-2">
+        {isScheduled && !confirmDelete && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCancelSchedule}
+            className="border-border text-muted-foreground hover:bg-muted"
+          >
+            Cancel schedule
+          </Button>
+        )}
         {confirmDelete ? (
           <div className="flex items-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm">
             <span className="text-red-300">Delete this broadcast?</span>
@@ -345,6 +388,7 @@ export default function BroadcastDetailPage() {
             Delete
           </Button>
         )}
+        </div>
       </div>
 
       {/* Stats — 6 cards: Total / Sent / Delivered / Read / Replied / Failed */}

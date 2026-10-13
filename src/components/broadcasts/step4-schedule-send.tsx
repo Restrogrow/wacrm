@@ -14,7 +14,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Send, Loader2, Users, Save } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Users, Save, CalendarClock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AudienceConfig {
   type: string;
@@ -27,7 +28,8 @@ interface Step4Props {
   onNameChange: (name: string) => void;
   template: MessageTemplate;
   audience: AudienceConfig;
-  onSend: () => void;
+  /** `scheduledAt` (ISO) when the user chose "Schedule for later". */
+  onSend: (scheduledAt?: string) => void;
   onSaveDraft?: () => void;
   onBack: () => void;
   isProcessing: boolean;
@@ -46,6 +48,22 @@ export function Step4ScheduleSend({
   progress,
 }: Step4Props) {
   const [showConfirm, setShowConfirm] = useState(false);
+  const [when, setWhen] = useState<'now' | 'later'>('now');
+  // <input type="datetime-local"> value in the browser's local time.
+  const [scheduleLocal, setScheduleLocal] = useState('');
+  // Checked when the time is picked (Date.now() can't run during render).
+  const [scheduleInFuture, setScheduleInFuture] = useState(false);
+  const scheduledAt = scheduleLocal ? new Date(scheduleLocal) : null;
+  const scheduleValid = when === 'now' || (!!scheduledAt && scheduleInFuture);
+  const scheduleLabel = scheduledAt
+    ? scheduledAt.toLocaleString(undefined, {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    : '';
   const [estimatedReach, setEstimatedReach] = useState<number>(0);
   const [loadingReach, setLoadingReach] = useState(true);
 
@@ -142,13 +160,72 @@ export function Step4ScheduleSend({
         </div>
       </div>
 
+      {/* When to send */}
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-foreground">When</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {(
+            [
+              { id: 'now', label: 'Send now', hint: 'Starts sending right away.' },
+              {
+                id: 'later',
+                label: 'Schedule for later',
+                hint: 'Sent automatically at the time you pick.',
+              },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => setWhen(opt.id)}
+              disabled={isProcessing}
+              className={cn(
+                'rounded-xl border p-3 text-left transition-colors',
+                when === opt.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50',
+              )}
+            >
+              <p className="text-sm font-medium text-foreground">{opt.label}</p>
+              <p className="text-xs text-muted-foreground">{opt.hint}</p>
+            </button>
+          ))}
+        </div>
+        {when === 'later' && (
+          <div className="space-y-1.5">
+            <label htmlFor="broadcast-schedule" className="block text-xs text-muted-foreground">
+              Date and time (your local time)
+            </label>
+            <Input
+              id="broadcast-schedule"
+              type="datetime-local"
+              value={scheduleLocal}
+              onChange={(e) => {
+                const value = e.target.value;
+                const at = value ? new Date(value).getTime() : NaN;
+                setScheduleLocal(value);
+                setScheduleInFuture(!Number.isNaN(at) && at > Date.now() + 60_000);
+              }}
+              className="border-border bg-muted text-foreground sm:w-64"
+            />
+            <p className="text-xs text-muted-foreground">
+              The audience and personalised values are saved now, so contacts added later
+              won&apos;t be included. You can cancel a scheduled broadcast from its page.
+            </p>
+            {scheduleLocal && !scheduleValid && (
+              <p className="text-xs text-red-500">Pick a time at least a minute from now.</p>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Processing overlay */}
       {isProcessing && (
         <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <p className="text-sm font-medium text-foreground">Sending broadcast...</p>
+              <p className="text-sm font-medium text-foreground">
+                {when === 'later' ? 'Scheduling broadcast…' : 'Sending broadcast...'}
+              </p>
             </div>
             <span className="text-xs font-medium text-primary">{progress}%</span>
           </div>
@@ -189,23 +266,32 @@ export function Step4ScheduleSend({
           <DialogTrigger
             render={
               <Button
-                disabled={!name.trim() || isProcessing}
+                disabled={!name.trim() || isProcessing || !scheduleValid}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               />
             }
           >
-            <Send className="h-4 w-4" />
-            Send Broadcast
+            {when === 'later' ? <CalendarClock className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+            {when === 'later' ? 'Schedule Broadcast' : 'Send Broadcast'}
           </DialogTrigger>
           <DialogContent className="border-border bg-popover sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-popover-foreground">Confirm Broadcast</DialogTitle>
+              <DialogTitle className="text-popover-foreground">
+                {when === 'later' ? 'Confirm Schedule' : 'Confirm Broadcast'}
+              </DialogTitle>
               <DialogDescription className="text-muted-foreground">
-                You are about to send this broadcast to{' '}
+                {when === 'later' ? (
+                  <>
+                    This broadcast will be sent on{' '}
+                    <span className="font-medium text-popover-foreground">{scheduleLabel}</span> to{' '}
+                  </>
+                ) : (
+                  'You are about to send this broadcast to '
+                )}
                 <span className="font-medium text-popover-foreground">{estimatedReach.toLocaleString()}</span>{' '}
                 contacts using the{' '}
                 <span className="font-medium text-popover-foreground">{template.name}</span> template.
-                This action cannot be undone.
+                {when === 'later' ? ' You can cancel it before then.' : ' This action cannot be undone.'}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -219,12 +305,12 @@ export function Step4ScheduleSend({
               <Button
                 onClick={() => {
                   setShowConfirm(false);
-                  onSend();
+                  onSend(when === 'later' && scheduledAt ? scheduledAt.toISOString() : undefined);
                 }}
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                <Send className="h-4 w-4" />
-                Confirm & Send
+                {when === 'later' ? <CalendarClock className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+                {when === 'later' ? 'Confirm & Schedule' : 'Confirm & Send'}
               </Button>
             </DialogFooter>
           </DialogContent>
