@@ -1,235 +1,172 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { RefreshCw } from 'lucide-react';
 
-import { supabaseAdmin } from "@/lib/flows/admin-client";
+import { loadAdminDashboard } from '@/lib/admin/dashboard';
+import { formatDelta } from '@/lib/admin/time';
+import { AccountsTable } from '@/components/admin/accounts-table';
 import {
-  isBusinessProfileComplete,
-  signupProviderLabel,
-} from "@/lib/auth/business-profile";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  BarList,
+  DailyColumns,
+  StatTile,
+} from '@/components/admin/dashboard-widgets';
 
 export const metadata: Metadata = {
-  title: "Accounts",
+  title: 'Admin dashboard',
 };
 
-interface AccountRow {
-  id: string;
-  name: string;
-  created_at: string;
-  owner_user_id: string;
-  nature_of_business: string | null;
-  team_size: string | null;
-}
+// Always fresh: this is a live operations view.
+export const dynamic = 'force-dynamic';
 
-// How each user signed up ("google", "email", …) lives on auth.users,
-// which only the admin API exposes. Page through it once rather than
-// one lookup per owner.
-async function loadSignupProviders(
-  supabase: ReturnType<typeof supabaseAdmin>
-): Promise<Map<string, string | undefined>> {
-  const providers = new Map<string, string | undefined>();
-  for (let page = 1; ; page++) {
-    const { data, error } = await supabase.auth.admin.listUsers({
-      page,
-      perPage: 1000,
-    });
-    if (error) {
-      console.error("[admin/page] failed to list auth users:", error);
-      break;
-    }
-    for (const user of data.users) {
-      providers.set(user.id, user.app_metadata?.provider);
-    }
-    if (data.users.length < 1000) break;
-  }
-  return providers;
-}
-
-async function loadAccounts() {
-  const supabase = supabaseAdmin();
-
-  const { data: accounts, error } = await supabase
-    .from("accounts")
-    .select("id, name, created_at, owner_user_id, nature_of_business, team_size")
-    .order("created_at", { ascending: false })
-    .returns<AccountRow[]>();
-
-  if (error) {
-    console.error("[admin/page] failed to load accounts:", error);
-    return [];
-  }
-  if (!accounts || accounts.length === 0) {
-    return [];
-  }
-
-  const ownerIds = accounts.map((a) => a.owner_user_id);
-  const accountIds = accounts.map((a) => a.id);
-
-  const [
-    { data: owners },
-    { data: members },
-    { data: waConfigs },
-    signupProviderByUserId,
-  ] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("user_id, email, full_name, mobile_number")
-      .in("user_id", ownerIds),
-    supabase.from("profiles").select("account_id").in("account_id", accountIds),
-    supabase
-      .from("whatsapp_config")
-      .select("account_id, status")
-      .in("account_id", accountIds),
-    loadSignupProviders(supabase),
-  ]);
-
-  const ownerByUserId = new Map(
-    (owners ?? []).map((o) => [o.user_id, o] as const)
-  );
-  const memberCountByAccount = new Map<string, number>();
-  for (const m of members ?? []) {
-    memberCountByAccount.set(
-      m.account_id,
-      (memberCountByAccount.get(m.account_id) ?? 0) + 1
-    );
-  }
-  const waStatusByAccount = new Map(
-    (waConfigs ?? []).map((w) => [w.account_id, w.status] as const)
-  );
-
-  return accounts.map((account) => {
-    const owner = ownerByUserId.get(account.owner_user_id);
-    return {
-      id: account.id,
-      name: account.name,
-      createdAt: account.created_at,
-      ownerLabel: owner?.email || owner?.full_name || "—",
-      ownerName: owner?.email ? owner?.full_name : null,
-      ownerMobile: owner?.mobile_number ?? null,
-      natureOfBusiness: account.nature_of_business,
-      teamSize: account.team_size,
-      signupMethod: signupProviderLabel(
-        signupProviderByUserId.get(account.owner_user_id)
-      ),
-      profileComplete: isBusinessProfileComplete({
-        natureOfBusiness: account.nature_of_business,
-        teamSize: account.team_size,
-        mobileNumber: owner?.mobile_number ?? null,
-      }),
-      memberCount: memberCountByAccount.get(account.id) ?? 0,
-      whatsappStatus: waStatusByAccount.get(account.id) ?? "not set up",
-    };
-  });
-}
+const pct = (part: number, whole: number) =>
+  whole > 0 ? `${Math.round((part / whole) * 100)}%` : '—';
 
 export default async function PlatformAdminPage() {
-  const accounts = await loadAccounts();
+  const d = await loadAdminDashboard();
+  const s = d.signups;
+  const a = d.accounts;
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-10">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold tracking-tight">Accounts</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Every Repeat Grow account, across every customer. Internal —
-          not linked from anywhere in the app.
-        </p>
-      </div>
-
-      {accounts.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No accounts yet.</p>
-      ) : (
-        <div className="rounded-lg border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Account</TableHead>
-                <TableHead>Owner</TableHead>
-                <TableHead>Mobile</TableHead>
-                <TableHead>Business type</TableHead>
-                <TableHead>Team size</TableHead>
-                <TableHead>Signed up via</TableHead>
-                <TableHead>Profile</TableHead>
-                <TableHead>Members</TableHead>
-                <TableHead>WhatsApp</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="w-8" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {accounts.map((account) => (
-                <TableRow key={account.id} className="group">
-                  <TableCell className="font-medium">
-                    <Link
-                      href={`/admin/accounts/${account.id}`}
-                      className="hover:underline"
-                    >
-                      {account.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    <div>{account.ownerLabel}</div>
-                    {account.ownerName && (
-                      <div className="text-xs">{account.ownerName}</div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {account.ownerMobile || "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {account.natureOfBusiness || "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {account.teamSize || "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {account.signupMethod}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={account.profileComplete ? "outline" : "destructive"}
-                    >
-                      {account.profileComplete ? "complete" : "incomplete"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{account.memberCount}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        account.whatsappStatus === "connected"
-                          ? "default"
-                          : "outline"
-                      }
-                    >
-                      {account.whatsappStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(account.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/admin/accounts/${account.id}`}
-                      className="text-muted-foreground group-hover:text-foreground"
-                      aria-label={`View ${account.name}`}
-                    >
-                      <ChevronRight className="size-4" />
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">Admin dashboard</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Every Repeat Grow account at a glance. Days use India time (IST).
+            Updated{' '}
+            {new Date(d.generatedAt).toLocaleTimeString('en-IN', {
+              hour: 'numeric',
+              minute: '2-digit',
+              timeZone: 'Asia/Kolkata',
+            })}
+            .
+          </p>
         </div>
-      )}
+        <Link
+          href="/admin"
+          prefetch={false}
+          className="border-border text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 self-start rounded-md border px-3 py-1.5 text-sm"
+        >
+          <RefreshCw className="size-3.5" />
+          Refresh
+        </Link>
+      </header>
+
+      {/* ---------------- Sign-ups ---------------- */}
+      <section className="space-y-3">
+        <h2 className="text-foreground text-sm font-semibold">Sign-ups</h2>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatTile
+            label="Today"
+            value={s.today}
+            delta={formatDelta(s.today, s.yesterday)}
+            deltaLabel="vs yesterday"
+          />
+          <StatTile
+            label="Last 7 days"
+            value={s.last7}
+            delta={formatDelta(s.last7, s.prev7)}
+            deltaLabel="vs previous 7 days"
+          />
+          <StatTile
+            label="Last 30 days"
+            value={s.last30}
+            delta={formatDelta(s.last30, s.prev30)}
+            deltaLabel="vs previous 30 days"
+          />
+          <StatTile
+            label="All accounts"
+            value={s.total}
+            hint={`${s.usersTotal} users · ${s.usersToday} new today (incl. teammates)`}
+          />
+        </div>
+        <DailyColumns
+          title="New accounts per day — last 30 days"
+          series={d.daily}
+          unit="sign-up"
+        />
+      </section>
+
+      {/* ---------------- Health ---------------- */}
+      <section className="space-y-3">
+        <h2 className="text-foreground text-sm font-semibold">
+          Accounts &amp; activity
+        </h2>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatTile
+            label="WhatsApp connected"
+            value={a.whatsappConnected}
+            hint={`${pct(a.whatsappConnected, s.total)} of accounts`}
+          />
+          <StatTile
+            label="Active in last 7 days"
+            value={a.active7}
+            hint={`${pct(a.active7, s.total)} had a chat`}
+          />
+          <StatTile
+            label="Messages today"
+            value={d.messagesToday.inbound + d.messagesToday.outbound}
+            hint={`${d.messagesToday.inbound} received · ${d.messagesToday.outbound} sent`}
+          />
+          <StatTile
+            label="Logged in today"
+            value={a.loggedInToday}
+            hint="users"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {a.billingEnabled ? (
+            <>
+              <StatTile
+                label="Paying"
+                value={a.paying}
+                hint={`${pct(a.paying, s.total)} of accounts`}
+              />
+              <StatTile label="On free trial" value={a.trial} />
+              <StatTile
+                label="Trial ended (read-only)"
+                value={a.expired}
+                tone={a.expired > 0 ? 'danger' : 'default'}
+                hint="follow up to convert"
+              />
+            </>
+          ) : (
+            <StatTile
+              label="Plans"
+              value="—"
+              hint="Run migration 041 to track plans and trials"
+            />
+          )}
+          <StatTile
+            label="Integrations"
+            value={(a.shopify ?? 0) + (a.calendly ?? 0)}
+            hint={`Shopify ${a.shopify ?? '—'} · Calendly ${a.calendly ?? '—'}`}
+          />
+        </div>
+      </section>
+
+      {/* ---------------- Funnel & breakdowns ---------------- */}
+      <section className="grid gap-3 lg:grid-cols-2">
+        <BarList
+          title="Funnel (share of all sign-ups)"
+          items={d.funnel}
+          total={s.total || 1}
+        />
+        <BarList
+          title="Plan"
+          items={d.breakdowns.plan}
+          empty="Plans not set up yet"
+        />
+        <BarList title="Sign-up method" items={d.breakdowns.signupMethod} />
+        <BarList title="Nature of business" items={d.breakdowns.business} />
+        <BarList title="Team size" items={d.breakdowns.teamSize} />
+      </section>
+
+      {/* ---------------- Accounts ---------------- */}
+      <section className="space-y-3">
+        <h2 className="text-foreground text-sm font-semibold">Accounts</h2>
+        <AccountsTable rows={d.rows} />
+      </section>
     </div>
   );
 }
