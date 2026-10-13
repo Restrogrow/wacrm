@@ -1,9 +1,7 @@
 import { sendTextMessage, sendTemplateMessage } from '@/lib/whatsapp/meta-api'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import {
-  sanitizePhoneForMeta,
-  isValidE164,
-  phoneVariants,
+  resolveSendTarget,
   isRecipientNotAllowedError,
 } from '@/lib/whatsapp/phone-utils'
 import { supabaseAdmin } from './admin-client'
@@ -70,18 +68,25 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
   // new tenancy column.
   const { data: contact, error: contactErr } = await db
     .from('contacts')
-    .select('id, phone')
+    .select('*')
     .eq('id', input.contactId)
     .eq('account_id', input.accountId)
     .maybeSingle()
-  if (contactErr || !contact?.phone) {
+  if (contactErr || !contact) {
     throw new Error('contact not found for this account')
   }
 
-  const sanitized = sanitizePhoneForMeta(contact.phone)
-  if (!isValidE164(sanitized)) {
-    throw new Error(`contact phone invalid: ${contact.phone}`)
+  // The phone number, or the BSUID of a username user whose number
+  // Meta hides (see resolveSendTarget).
+  const target = resolveSendTarget(contact)
+  if (!target.ok) {
+    throw new Error(
+      target.reason === 'missing'
+        ? 'contact has no phone number or WhatsApp user ID'
+        : `contact phone invalid: ${contact.phone}`
+    )
   }
+  const sanitized = target.to
 
   const { data: config, error: configErr } = await db
     .from('whatsapp_config')
@@ -118,7 +123,7 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
   // Same phone-variant retry as /api/whatsapp/send — Meta sandbox and
   // numbers registered with/without a trunk 0 both require this to
   // reliably land a message.
-  const variants = phoneVariants(sanitized)
+  const variants = target.variants
   let workingPhone = sanitized
   let waMessageId = ''
   let lastError: unknown = null

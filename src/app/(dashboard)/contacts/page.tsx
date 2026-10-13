@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { contactPhoneLabel } from '@/lib/whatsapp/phone-utils';
 import { toast } from 'sonner';
 import type { Contact, Tag, ContactTag } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -609,7 +610,7 @@ export default function ContactsPage() {
                     ) : null}
                   </TableCell>
                   <TableCell className="text-muted-foreground font-mono text-xs">
-                    {contact.phone}
+                    {contactPhoneLabel(contact)}
                   </TableCell>
                   <TableCell className="text-muted-foreground hidden md:table-cell text-sm">
                     {contact.email || <span className="text-muted-foreground">-</span>}

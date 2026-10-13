@@ -9,7 +9,7 @@ import {
 } from './opt-out';
 
 describe('detectOptKeyword', () => {
-  it.each(['STOP', 'stop', ' Stop. ', 'Stop!!', 'UNSUBSCRIBE', 'opt out', 'Opt-Out', 'stop all', 'band karo', 'Mat bhejo 🙏'])(
+  it.each(['STOP', 'stop', ' Stop. ', 'Stop!!', 'UNSUBSCRIBE', 'opt out', 'Opt-Out', 'stop all', 'band karo', 'Mat bhejo 🙏', 'Stop promotions'])(
     'treats %j as an opt-out',
     (text) => expect(detectOptKeyword(text)).toBe('opt_out')
   );

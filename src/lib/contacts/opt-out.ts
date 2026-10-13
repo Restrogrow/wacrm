@@ -23,6 +23,8 @@ const OPT_OUT_PHRASES = new Set([
   'stop messages',
   'stop sending',
   'stop sending messages',
+  // Default quick-reply button on Meta's marketing templates.
+  'stop promotions',
   'unsubscribe',
   'unsub',
   'opt out',

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendReactionMessage } from '@/lib/whatsapp/meta-api';
 import { decrypt } from '@/lib/whatsapp/encryption';
-import { sanitizePhoneForMeta } from '@/lib/whatsapp/phone-utils';
+import { resolveSendTarget } from '@/lib/whatsapp/phone-utils';
 import {
   checkRateLimit,
   rateLimitResponse,
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
 
     const { data: conversation, error: convError } = await supabase
       .from('conversations')
-      .select('id, account_id, contact:contacts(phone)')
+      .select('id, account_id, contact:contacts(*)')
       .eq('id', targetMessage.conversation_id)
       .eq('account_id', accountId)
       .maybeSingle();
@@ -101,7 +101,9 @@ export async function POST(request: Request) {
     const contact = Array.isArray(conversation.contact)
       ? conversation.contact[0]
       : conversation.contact;
-    if (!contact?.phone) {
+    // Phone number, or the BSUID of a username user (resolveSendTarget).
+    const target = contact ? resolveSendTarget(contact) : null;
+    if (!target?.ok) {
       return NextResponse.json(
         { error: 'Contact phone number not found' },
         { status: 400 },
@@ -123,13 +125,12 @@ export async function POST(request: Request) {
     }
 
     const accessToken = decrypt(config.access_token);
-    const sanitizedPhone = sanitizePhoneForMeta(contact.phone);
 
     try {
       await sendReactionMessage({
         phoneNumberId: config.phone_number_id,
         accessToken,
-        to: sanitizedPhone,
+        to: target.to,
         targetMessageId: targetMessage.message_id,
         emoji,
       });

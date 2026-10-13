@@ -47,7 +47,13 @@ function supabaseAdmin() {
 
 interface WhatsAppMessage {
   id: string
-  from: string
+  /**
+   * Sender's phone number. Omitted when the user has a WhatsApp
+   * username and Meta can't share their number — `from_user_id` (the
+   * business-scoped user ID, BSUID) is always present instead.
+   */
+  from?: string
+  from_user_id?: string
   timestamp: string
   type: string
   text?: { body: string }
@@ -58,6 +64,12 @@ interface WhatsAppMessage {
   sticker?: { id: string; mime_type: string }
   location?: { latitude: number; longitude: number; name?: string; address?: string }
   reaction?: { message_id: string; emoji: string }
+  /**
+   * Set when the customer taps a quick-reply button on a TEMPLATE
+   * message (e.g. "Stop promotions", "Yes, confirm"). `payload` is the
+   * button's payload, or its text when none was set at send time.
+   */
+  button?: { payload?: string; text?: string }
   /**
    * Set when the customer taps a button or list row on an interactive
    * message we sent. `button_reply.id` / `list_reply.id` is whatever id
@@ -82,20 +94,25 @@ interface WhatsAppWebhookEntry {
         display_phone_number: string
         phone_number_id: string
       }
-      contacts?: Array<{
-        profile: { name: string }
-        wa_id: string
-      }>
+      contacts?: Array<WebhookContact>
       messages?: WhatsAppMessage[]
       statuses?: Array<{
         id: string
         status: string
         timestamp: string
-        recipient_id: string
+        recipient_id?: string
       }>
     }
     field: string
   }>
+}
+
+/** Sender profile. `wa_id` is omitted when the phone number is hidden
+ *  behind a username; `user_id` (BSUID) is always present. */
+interface WebhookContact {
+  profile?: { name?: string; username?: string }
+  wa_id?: string
+  user_id?: string
 }
 
 // Coexistence fields (history / smb_app_state_sync / smb_message_echoes)
@@ -332,7 +349,14 @@ async function processWebhook(body: { entry?: WhatsAppWebhookEntry[] }) {
 
       for (let i = 0; i < value.messages.length; i++) {
         const message = value.messages[i]
-        const contact = value.contacts[i] || value.contacts[0]
+        const contact =
+          value.contacts.find(
+            (c) =>
+              (message.from_user_id && c.user_id === message.from_user_id) ||
+              (message.from && c.wa_id === message.from)
+          ) ||
+          value.contacts[i] ||
+          value.contacts[0]
 
         await processMessage(
           message,
@@ -397,7 +421,7 @@ async function handleStatusUpdate(status: {
   id: string
   status: string
   timestamp: string
-  recipient_id: string
+  recipient_id?: string
 }) {
   // 1) Mirror onto messages (legacy behavior) — Meta's status values
   //    already match the CHECK constraint on messages.status. No
@@ -603,7 +627,7 @@ async function handleReaction(
 
 async function processMessage(
   message: WhatsAppMessage,
-  contact: { profile: { name: string }; wa_id: string },
+  contact: WebhookContact,
   // Tenancy. Resolved from the matched whatsapp_config row; every
   // contact / conversation / message row created downstream is
   // stamped with this so any member of the account can see it.
@@ -614,16 +638,22 @@ async function processMessage(
   configOwnerUserId: string,
   accessToken: string
 ) {
-  const senderPhone = normalizePhone(message.from)
-  const contactName = contact.profile.name
+  // A username user may hide their number: then only the BSUID
+  // arrives and the phone is empty. Meta sends the BSUID either way.
+  const senderPhone = normalizePhone(message.from ?? contact.wa_id ?? '')
+  const senderUserId = message.from_user_id ?? contact.user_id ?? null
+  if (!senderPhone && !senderUserId) {
+    console.error('[webhook] inbound message has no phone or BSUID; skipping', message.id)
+    return
+  }
 
   // Find or create contact
-  const contactOutcome = await findOrCreateContact(
-    accountId,
-    configOwnerUserId,
-    senderPhone,
-    contactName
-  )
+  const contactOutcome = await findOrCreateContact(accountId, configOwnerUserId, {
+    phone: senderPhone,
+    whatsappUserId: senderUserId,
+    username: contact.profile?.username ?? null,
+    name: contact.profile?.name ?? '',
+  })
   if (!contactOutcome) return
   const contactRecord = contactOutcome.contact
 
@@ -697,7 +727,16 @@ async function processMessage(
     ? message.type
     : message.type === 'sticker'
       ? 'image'   // stickers are images
-      : 'text'    // reaction, unknown → text fallback
+      : message.type === 'button'
+        ? 'interactive' // template quick-reply tap
+        : 'text'    // reaction, unknown → text fallback
+
+  // A template quick-reply tap is handled like typed text below:
+  // there's no Flows step waiting on its payload, and taps such as
+  // "Stop promotions" must reach the opt-out check.
+  const isTemplateButtonTap = message.type === 'button'
+  const isTypedText =
+    (message.type === 'text' && !interactiveReplyId) || isTemplateButtonTap
 
   // Determine whether this is the contact's very first inbound message
   // BEFORE we insert, so the count is accurate. Covers the case where
@@ -758,10 +797,9 @@ async function processMessage(
   // consumed, so flows, keyword automations and the AI chatbot don't
   // also reply to it.
   // ============================================================
-  const optKeyword =
-    message.type === 'text' && !interactiveReplyId
-      ? detectOptKeyword(contentText ?? message.text?.body)
-      : null
+  const optKeyword = isTypedText
+    ? detectOptKeyword(contentText ?? message.text?.body)
+    : null
   let optHandled = false
   if (optKeyword) {
     optHandled = await setContactOptOut(supabaseAdmin(), contactRecord.id, optKeyword === 'opt_out')
@@ -801,7 +839,7 @@ async function processMessage(
     contactId: contactRecord.id,
     conversationId: conversation.id,
     message:
-      interactiveReplyId
+      interactiveReplyId && !isTemplateButtonTap
         ? {
             kind: 'interactive_reply',
             reply_id: interactiveReplyId,
@@ -864,7 +902,7 @@ async function processMessage(
     contactId: contactRecord.id,
     conversationId: conversation.id,
     text: inboundText,
-    isText: message.type === 'text' && !interactiveReplyId,
+    isText: isTypedText,
     isMedia: ['image', 'audio', 'video', 'document'].includes(message.type),
     flowConsumed,
   })
@@ -1006,6 +1044,20 @@ async function parseMessageContent(
     case 'reaction':
       return { ...empty, contentText: message.reaction?.emoji || null }
 
+    case 'button': {
+      // The customer tapped a quick-reply button on a TEMPLATE message
+      // (broadcasts, automations). Unlike interactive replies these
+      // aren't tied to a Flows step, so processMessage routes the tap
+      // like typed text (keywords, opt-out, chatbot) while the payload
+      // is kept for reference in interactive_reply_id.
+      const text = message.button?.text || message.button?.payload || null
+      return {
+        ...empty,
+        contentText: text,
+        interactiveReplyId: message.button?.payload || text,
+      }
+    }
+
     case 'interactive': {
       // The customer tapped a reply button or a list row on a message
       // we previously sent. Meta delivers `interactive.button_reply` for
@@ -1043,31 +1095,77 @@ interface ContactOutcome {
   wasCreated: boolean
 }
 
+interface InboundSender {
+  /** Digits only; '' when Meta hides the number behind a username. */
+  phone: string
+  /** Business-scoped user ID (BSUID). Null only on old payloads. */
+  whatsappUserId: string | null
+  username: string | null
+  name: string
+}
+
+/** PostgREST / Postgres "column does not exist". */
+function isMissingColumnError(error: { code?: string }): boolean {
+  return error.code === 'PGRST204' || error.code === '42703'
+}
+
+async function findContactByWhatsappUserId(
+  accountId: string,
+  whatsappUserId: string
+): Promise<ContactRow | null> {
+  const { data, error } = await supabaseAdmin()
+    .from('contacts')
+    .select('*')
+    .eq('account_id', accountId)
+    .eq('whatsapp_user_id', whatsappUserId)
+    .maybeSingle()
+  // An error here (e.g. migration 038 not applied yet) just means we
+  // fall back to the phone lookup.
+  return error ? null : data
+}
+
 async function findOrCreateContact(
   accountId: string,
   configOwnerUserId: string,
-  phone: string,
-  name: string
+  sender: InboundSender
 ): Promise<ContactOutcome | null> {
-  // Find an existing contact for this account by phone. The shared
-  // helper pre-filters in SQL by the last-8-digit suffix (so we don't
-  // pull every contact on every inbound message) then applies the
-  // strict `phonesMatch` in JS on the small candidate set. The same
-  // helper backs the manual contact form and CSV import, so all three
-  // paths agree on what "same number" means (issue #212).
-  const existingContact = await findExistingContact(
-    supabaseAdmin(),
-    accountId,
-    phone,
-  )
+  const { phone, whatsappUserId, username, name } = sender
+
+  // Match by BSUID first — it's stable even when the phone is hidden —
+  // then by phone. The phone helper pre-filters in SQL by the
+  // last-8-digit suffix (so we don't pull every contact on every
+  // inbound message) then applies the strict `phonesMatch` in JS on the
+  // small candidate set. The same helper backs the manual contact form
+  // and CSV import, so all three paths agree on what "same number"
+  // means (issue #212).
+  const existingContact =
+    (whatsappUserId
+      ? await findContactByWhatsappUserId(accountId, whatsappUserId)
+      : null) ??
+    (phone ? await findExistingContact(supabaseAdmin(), accountId, phone) : null)
 
   if (existingContact) {
-    // Update name if it changed
-    if (name && name !== existingContact.name) {
-      await supabaseAdmin()
+    // Keep the row current: name changes, a newly seen BSUID/username,
+    // or a phone number Meta has now revealed for a username-only contact.
+    const updates: Record<string, string> = {}
+    if (name && name !== existingContact.name) updates.name = name
+    if (whatsappUserId && existingContact.whatsapp_user_id !== whatsappUserId) {
+      updates.whatsapp_user_id = whatsappUserId
+    }
+    if (username && existingContact.whatsapp_username !== username) {
+      updates.whatsapp_username = username
+    }
+    if (phone && !existingContact.phone) updates.phone = phone
+    if (Object.keys(updates).length > 0) {
+      const { error: updateError } = await supabaseAdmin()
         .from('contacts')
-        .update({ name, updated_at: new Date().toISOString() })
+        .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', existingContact.id)
+      if (updateError) {
+        console.error('[webhook] contact update failed:', updateError.message)
+      } else {
+        Object.assign(existingContact, updates)
+      }
     }
     return { contact: existingContact, wasCreated: false }
   }
@@ -1075,25 +1173,46 @@ async function findOrCreateContact(
   // Create new contact. account_id is the tenancy column;
   // user_id is the NOT NULL FK audit column (no inbound message
   // has a single "user who created" it — we attribute to the
-  // WhatsApp config owner as a stable default).
-  const { data: newContact, error: createError } = await supabaseAdmin()
+  // WhatsApp config owner as a stable default). A username-only
+  // contact is stored with phone = '' (outside the unique phone index).
+  const baseRow = {
+    account_id: accountId,
+    user_id: configOwnerUserId,
+    phone,
+    name: name || (username ? `@${username}` : phone) || 'WhatsApp user',
+  }
+  let { data: newContact, error: createError } = await supabaseAdmin()
     .from('contacts')
     .insert({
-      account_id: accountId,
-      user_id: configOwnerUserId,
-      phone,
-      name: name || phone,
+      ...baseRow,
+      ...(whatsappUserId ? { whatsapp_user_id: whatsappUserId } : {}),
+      ...(username ? { whatsapp_username: username } : {}),
     })
     .select()
     .single()
 
+  // Database without migration 038 yet: the BSUID columns don't exist.
+  // Retry without them rather than dropping the message (only possible
+  // when we have a phone to store).
+  if (createError && phone && isMissingColumnError(createError)) {
+    ;({ data: newContact, error: createError } = await supabaseAdmin()
+      .from('contacts')
+      .insert(baseRow)
+      .select()
+      .single())
+  }
+
   if (createError) {
     // Lost a race: a concurrent inbound delivery (or another path)
-    // created this contact between our lookup and insert, and the
-    // unique index (migration 022) rejected the duplicate. Re-resolve
+    // created this contact between our lookup and insert, and a unique
+    // index (022 phone / 038 BSUID) rejected the duplicate. Re-resolve
     // the existing row instead of dropping the message.
     if (isUniqueViolation(createError)) {
-      const raced = await findExistingContact(supabaseAdmin(), accountId, phone)
+      const raced =
+        (whatsappUserId
+          ? await findContactByWhatsappUserId(accountId, whatsappUserId)
+          : null) ??
+        (phone ? await findExistingContact(supabaseAdmin(), accountId, phone) : null)
       if (raced) return { contact: raced, wasCreated: false }
     }
     console.error('Error creating contact:', createError)

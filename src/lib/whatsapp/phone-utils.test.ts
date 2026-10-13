@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  isBsuid,
   isRecipientNotAllowedError,
   isValidE164,
+  metaRecipient,
   normalizePhone,
   phoneVariants,
   phonesMatch,
+  resolveSendTarget,
   sanitizePhoneForMeta,
 } from "./phone-utils";
 
@@ -160,5 +163,64 @@ describe("isRecipientNotAllowedError", () => {
       false,
     );
     expect(isRecipientNotAllowedError("")).toBe(false);
+  });
+});
+
+describe("isBsuid", () => {
+  it("accepts regular and parent BSUIDs", () => {
+    expect(isBsuid("US.13491208655302741918")).toBe(true);
+    expect(isBsuid("IN.ENT.11815799212886844830")).toBe(true);
+  });
+
+  it("rejects phone numbers and malformed values", () => {
+    expect(isBsuid("919876543210")).toBe(false);
+    expect(isBsuid("+91 98765 43210")).toBe(false);
+    expect(isBsuid("us.1234")).toBe(false);
+    expect(isBsuid("US.")).toBe(false);
+    expect(isBsuid(null)).toBe(false);
+  });
+});
+
+describe("metaRecipient", () => {
+  it("uses `to` for phone numbers and `recipient` for BSUIDs", () => {
+    expect(metaRecipient("919876543210")).toEqual({ to: "919876543210" });
+    expect(metaRecipient("IN.13491208655302741918")).toEqual({
+      recipient: "IN.13491208655302741918",
+    });
+  });
+});
+
+describe("resolveSendTarget", () => {
+  it("prefers the phone number, with retry variants", () => {
+    const t = resolveSendTarget({
+      phone: "+91 98765 43210",
+      whatsapp_user_id: "IN.13491208655302741918",
+    });
+    expect(t).toEqual({
+      ok: true,
+      to: "919876543210",
+      variants: phoneVariants("919876543210"),
+    });
+  });
+
+  it("falls back to the BSUID when the phone is hidden", () => {
+    expect(
+      resolveSendTarget({ phone: "", whatsapp_user_id: "IN.13491208655302741918" }),
+    ).toEqual({
+      ok: true,
+      to: "IN.13491208655302741918",
+      variants: ["IN.13491208655302741918"],
+    });
+  });
+
+  it("reports missing and invalid targets", () => {
+    expect(resolveSendTarget({ phone: "", whatsapp_user_id: null })).toEqual({
+      ok: false,
+      reason: "missing",
+    });
+    expect(resolveSendTarget({ phone: "12" })).toEqual({
+      ok: false,
+      reason: "invalid",
+    });
   });
 });

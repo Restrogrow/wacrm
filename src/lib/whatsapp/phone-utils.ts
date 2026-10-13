@@ -102,3 +102,64 @@ export function phoneVariants(sanitized: string): string[] {
 export function isRecipientNotAllowedError(message: string): boolean {
   return /131030|not in allowed list|not in the allowed list/i.test(message)
 }
+
+// ============================================================
+// Business-scoped user IDs (BSUIDs)
+//
+// WhatsApp users can adopt a username and hide their phone number.
+// Meta then omits `from` / `wa_id` from webhooks and identifies the
+// user only by a BSUID (`from_user_id` / `user_id`), e.g.
+// "IN.13491208655302741918" or a parent "IN.ENT.1181579921288684". We
+// store it on contacts.whatsapp_user_id (migration 038) and send to it
+// via Meta's `recipient` field when no phone number is known.
+// https://developers.facebook.com/documentation/business-messaging/whatsapp/business-scoped-user-ids/
+// ============================================================
+
+/** ISO country code, a period, then alphanumerics (parent IDs add "ENT."). */
+export function isBsuid(value: string | null | undefined): boolean {
+  return !!value && /^[A-Z]{2}\.(?:ENT\.)?[A-Za-z0-9]{1,128}$/.test(value)
+}
+
+/**
+ * The addressing field for a Cloud API send body: `to` for a phone
+ * number, `recipient` for a BSUID (Meta rejects a BSUID in `to`).
+ */
+export function metaRecipient(to: string): { to: string } | { recipient: string } {
+  return isBsuid(to) ? { recipient: to } : { to }
+}
+
+/**
+ * The phone line to show for a contact: the number, or "@username" /
+ * "Phone hidden" for a username user whose number Meta hides.
+ */
+export function contactPhoneLabel(contact: {
+  phone?: string | null
+  whatsapp_username?: string | null
+}): string {
+  if (contact.phone) return contact.phone
+  return contact.whatsapp_username ? `@${contact.whatsapp_username}` : 'Phone hidden'
+}
+
+export type SendTarget =
+  | { ok: true; to: string; variants: string[] }
+  | { ok: false; reason: 'missing' | 'invalid' }
+
+/**
+ * Who to send a message to: the contact's phone number (with the
+ * trunk-0 retry variants), or — when only a BSUID is known — the BSUID.
+ */
+export function resolveSendTarget(contact: {
+  phone?: string | null
+  whatsapp_user_id?: string | null
+}): SendTarget {
+  if (contact.phone) {
+    const sanitized = sanitizePhoneForMeta(contact.phone)
+    if (!isValidE164(sanitized)) return { ok: false, reason: 'invalid' }
+    return { ok: true, to: sanitized, variants: phoneVariants(sanitized) }
+  }
+  if (isBsuid(contact.whatsapp_user_id)) {
+    const bsuid = contact.whatsapp_user_id as string
+    return { ok: true, to: bsuid, variants: [bsuid] }
+  }
+  return { ok: false, reason: 'missing' }
+}

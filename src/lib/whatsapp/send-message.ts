@@ -30,9 +30,7 @@ import {
 import { decrypt, encrypt, isLegacyFormat } from '@/lib/whatsapp/encryption';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 import {
-  sanitizePhoneForMeta,
-  isValidE164,
-  phoneVariants,
+  resolveSendTarget,
   isRecipientNotAllowedError,
 } from '@/lib/whatsapp/phone-utils';
 import type { MessageTemplate } from '@/types';
@@ -202,22 +200,19 @@ export async function sendMessageToConversation(
   }
 
   const contact = conversation.contact;
-  if (!contact?.phone) {
+  // The phone number, or the BSUID of a username user whose number
+  // Meta hides (see resolveSendTarget).
+  const target = contact ? resolveSendTarget(contact) : null;
+  if (!target?.ok) {
     throw new SendMessageError(
       'bad_request',
-      'Contact phone number not found',
+      target?.reason === 'invalid'
+        ? 'Invalid phone number format'
+        : 'Contact phone number not found',
       400
     );
   }
-
-  const sanitizedPhone = sanitizePhoneForMeta(contact.phone);
-  if (!isValidE164(sanitizedPhone)) {
-    throw new SendMessageError(
-      'bad_request',
-      'Invalid phone number format',
-      400
-    );
-  }
+  const sanitizedPhone = target.to;
 
   // WhatsApp config, account-scoped.
   const { data: config, error: configError } = await db
@@ -345,7 +340,7 @@ export async function sendMessageToConversation(
   let waMessageId = '';
   let workingPhone = sanitizedPhone;
   try {
-    const variants = phoneVariants(sanitizedPhone);
+    const variants = target.variants;
     let lastError: unknown = null;
 
     for (const variant of variants) {
