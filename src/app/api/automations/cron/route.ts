@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/automations/admin-client'
 import { resumePendingExecution } from '@/lib/automations/engine'
 import type { AutomationContext } from '@/lib/automations/engine'
+import { processDueCheckouts } from '@/lib/shopify/process'
 
 /**
  * Drain due `automation_pending_executions` rows. Meant to be hit
@@ -34,10 +35,9 @@ export async function GET(request: Request) {
     .limit(50)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  if (!due || due.length === 0) return NextResponse.json({ processed: 0 })
 
   let processed = 0
-  for (const row of due) {
+  for (const row of due ?? []) {
     const { data: claim } = await admin
       .from('automation_pending_executions')
       .update({ status: 'running' })
@@ -64,5 +64,12 @@ export async function GET(request: Request) {
     processed++
   }
 
-  return NextResponse.json({ processed })
+  // Shopify abandoned-cart reminders ride on the same every-minute
+  // schedule, so no extra cron job is needed. Never let it fail the run.
+  const shopifyReminders = await processDueCheckouts().catch((err) => {
+    console.error('[cron] shopify abandoned checkouts failed:', err)
+    return 0
+  })
+
+  return NextResponse.json({ processed, shopify_reminders: shopifyReminders })
 }

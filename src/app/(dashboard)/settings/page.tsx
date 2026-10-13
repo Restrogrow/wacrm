@@ -18,6 +18,7 @@ import { MembersTab } from '@/components/settings/members-tab';
 import { ApiKeysSettings } from '@/components/settings/api-keys-settings';
 import { ConnectedAppsSettings } from '@/components/settings/connected-apps-settings';
 import { AiChatbotSettings } from '@/components/settings/ai-chatbot-settings';
+import { ShopifySettings } from '@/components/settings/shopify-settings';
 import {
   resolveSection,
   type SettingsSection,
@@ -65,6 +66,7 @@ export default function SettingsPage() {
     members: <MembersTab />,
     api: <ApiKeysSettings />,
     'connected-apps': <ConnectedAppsSettings />,
+    shopify: <ShopifySettings />,
   };
 
   return (
