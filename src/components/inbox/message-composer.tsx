@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   KeyboardEvent,
+  useMemo,
 } from "react";
 import {
   Send,
@@ -28,6 +29,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCan } from "@/hooks/use-can";
+import { useAuth } from "@/hooks/use-auth";
+import { createClient } from "@/lib/supabase/client";
+import {
+  matchReplies,
+  renderReply,
+  slashQuery,
+  type SavedReply,
+} from "@/lib/saved-replies";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -98,6 +107,27 @@ interface MessageComposerProps {
   onOpenTemplates: () => void;
   replyTo?: ReplyDraft | null;
   onClearReply?: () => void;
+  /** For {{name}} / {{full_name}} in saved replies. */
+  contactName?: string | null;
+}
+
+/** The account's saved replies (migration 042); empty if unavailable. */
+function useSavedReplies(): SavedReply[] {
+  const [replies, setReplies] = useState<SavedReply[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data } = await createClient()
+        .from("saved_replies")
+        .select("id, shortcut, title, body")
+        .order("shortcut");
+      if (!cancelled) setReplies((data ?? []) as SavedReply[]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return replies;
 }
 
 function formatDuration(seconds: number): string {
@@ -119,8 +149,20 @@ export function MessageComposer({
   onOpenTemplates,
   replyTo,
   onClearReply,
+  contactName,
 }: MessageComposerProps) {
   const [text, setText] = useState("");
+  const { profile } = useAuth();
+  const savedReplies = useSavedReplies();
+  const [replyIndex, setReplyIndex] = useState(0);
+  // Esc hides the picker for the current text; typing reopens it.
+  const [dismissedFor, setDismissedFor] = useState<string | null>(null);
+  const replyQuery = slashQuery(text);
+  const pickerOpen = replyQuery !== null && dismissedFor !== text;
+  const replyMatches = useMemo(
+    () => (pickerOpen && replyQuery !== null ? matchReplies(savedReplies, replyQuery) : []),
+    [pickerOpen, replyQuery, savedReplies]
+  );
   const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -205,19 +247,54 @@ export function MessageComposer({
     }
   }, [text, sending, sessionExpired, onSend, replyTo?.id]);
 
+  const insertSavedReply = useCallback(
+    (reply: SavedReply) => {
+      setText(renderReply(reply.body, { contactName, agentName: profile?.full_name }));
+      setReplyIndex(0);
+      requestAnimationFrame(() => {
+        adjustHeight();
+        const el = textareaRef.current;
+        if (el) {
+          el.focus();
+          el.setSelectionRange(el.value.length, el.value.length);
+        }
+      });
+    },
+    [contactName, profile?.full_name, adjustHeight]
+  );
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      if (pickerOpen && replyMatches.length > 0) {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          const step = e.key === "ArrowDown" ? 1 : -1;
+          setReplyIndex((i) => (i + step + replyMatches.length) % replyMatches.length);
+          return;
+        }
+        if (e.key === "Enter" || e.key === "Tab") {
+          e.preventDefault();
+          insertSavedReply(replyMatches[Math.min(replyIndex, replyMatches.length - 1)]);
+          return;
+        }
+      }
+      if (pickerOpen && e.key === "Escape") {
+        e.preventDefault();
+        setDismissedFor(text);
+        return;
+      }
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSend();
       }
     },
-    [handleSend]
+    [handleSend, pickerOpen, replyMatches, replyIndex, insertSavedReply, text]
   );
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setText(e.target.value);
+      setReplyIndex(0);
       adjustHeight();
     },
     [adjustHeight]
@@ -492,7 +569,16 @@ export function MessageComposer({
           </Button>
         </div>
       ) : (
-        <div className="flex items-end gap-2">
+        <div className="relative flex items-end gap-2">
+          {pickerOpen && !inputsDisabled && (
+            <SavedReplyPicker
+              matches={replyMatches}
+              hasAny={savedReplies.length > 0}
+              activeIndex={Math.min(replyIndex, Math.max(0, replyMatches.length - 1))}
+              onHover={setReplyIndex}
+              onPick={insertSavedReply}
+            />
+          )}
           {/* Attach menu — photo / video / document / voice. */}
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -589,6 +675,65 @@ export function MessageComposer({
           Type &apos;/&apos; for quick replies
         </p>
       )}
+    </div>
+  );
+}
+
+/** Saved-reply list shown above the composer while typing "/…". */
+function SavedReplyPicker({
+  matches,
+  hasAny,
+  activeIndex,
+  onHover,
+  onPick,
+}: {
+  matches: SavedReply[];
+  hasAny: boolean;
+  activeIndex: number;
+  onHover: (index: number) => void;
+  onPick: (reply: SavedReply) => void;
+}) {
+  return (
+    <div
+      role="listbox"
+      aria-label="Saved replies"
+      className="absolute bottom-full left-0 right-0 z-20 mb-2 max-h-72 overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-lg"
+    >
+      {matches.length === 0 ? (
+        <p className="px-3 py-2.5 text-xs text-muted-foreground">
+          {hasAny
+            ? "No saved reply matches."
+            : "No saved replies yet — an admin can add them in Settings → Saved replies."}
+        </p>
+      ) : (
+        matches.map((reply, i) => (
+          <button
+            key={reply.id}
+            type="button"
+            role="option"
+            aria-selected={i === activeIndex}
+            onMouseEnter={() => onHover(i)}
+            onMouseDown={(e) => {
+              // Keep focus in the textarea.
+              e.preventDefault();
+              onPick(reply);
+            }}
+            className={cn(
+              "flex w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left",
+              i === activeIndex ? "bg-muted" : "hover:bg-muted/60"
+            )}
+          >
+            <span className="text-xs">
+              <span className="font-mono font-semibold text-primary">/{reply.shortcut}</span>
+              {reply.title && <span className="ml-2 text-foreground">{reply.title}</span>}
+            </span>
+            <span className="line-clamp-2 text-xs text-muted-foreground">{reply.body}</span>
+          </button>
+        ))
+      )}
+      <p className="border-t border-border px-3 pt-1.5 pb-1 text-[10px] text-muted-foreground">
+        ↑↓ to choose · Enter to insert · Esc to close
+      </p>
     </div>
   );
 }

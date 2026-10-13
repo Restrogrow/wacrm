@@ -39,6 +39,7 @@ import {
   Search,
   Plus,
   Upload,
+  Download,
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -54,6 +55,7 @@ import { ContactForm } from '@/components/contacts/contact-form';
 import { ContactDetailView } from '@/components/contacts/contact-detail-view';
 import { ImportModal } from '@/components/contacts/import-modal';
 import { CustomFieldsManager } from '@/components/contacts/custom-fields-manager';
+import { exportContacts } from '@/lib/contacts/export-csv';
 import { useCan } from '@/hooks/use-can';
 import { GatedButton } from '@/components/ui/gated-button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -66,6 +68,26 @@ interface ContactWithTags extends Contact {
 
 export default function ContactsPage() {
   const supabase = createClient();
+  const [exporting, setExporting] = useState(false);
+
+  // CSV of every contact in the account (tags + custom fields included).
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const { csv, count } = await exportContacts(supabase);
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contacts-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Exported ${count} contact${count === 1 ? '' : 's'}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  }
   const canEdit = useCan('send-messages');
   const canEditSettings = useCan('edit-settings');
 
@@ -359,6 +381,17 @@ export default function ContactsPage() {
               Custom fields
             </Button>
           )}
+          <GatedButton
+            variant="outline"
+            canAct={canEdit}
+            gateReason="export contacts"
+            disabled={exporting || totalCount === 0}
+            onClick={handleExport}
+            className="border-border text-muted-foreground hover:bg-muted"
+          >
+            {exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+            Export
+          </GatedButton>
           <GatedButton
             variant="outline"
             canAct={canEdit}
