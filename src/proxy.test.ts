@@ -122,6 +122,17 @@ describe("proxy — stray auth code on the homepage", () => {
     expect(location.searchParams.get("next")).toBe("/dashboard");
   });
 
+  it("redirects to the public origin, not the internal bind address", async () => {
+    // Behind Hostinger's proxy the request URL is the internal 0.0.0.0:3000.
+    const res = await proxy(new NextRequest("https://0.0.0.0:3000/?code=abc123"));
+
+    const location = new URL(res.headers.get("location")!);
+    expect(location.host).not.toBe("0.0.0.0:3000");
+    expect(location.origin).toBe(
+      (process.env.NEXT_PUBLIC_SITE_URL || "https://repeatgrow.com").replace(/\/$/, ""),
+    );
+  });
+
   it("leaves `code` alone on other paths", async () => {
     const res = await proxy(new NextRequest("https://app.test/pricing?code=abc123"));
 

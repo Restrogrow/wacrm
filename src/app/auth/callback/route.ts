@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeNextPath } from "@/lib/auth/safe-next";
+import { publicOrigin } from "@/lib/public-origin";
 
 // Supabase's auth emails (password reset, signup confirmation, invites)
 // land here with a PKCE `code` query param. We exchange it for a session
@@ -8,10 +9,13 @@ import { safeNextPath } from "@/lib/auth/safe-next";
 // `redirectTo` call asked for via `next` — e.g. forgot-password sends
 // `next=/reset-password`.
 //
-// `next` must stay same-origin — see safeNextPath.
+// `next` must stay same-origin — see safeNextPath. Redirects use
+// publicOrigin(), not request.url, whose origin is the internal
+// 0.0.0.0:3000 address behind the production proxy.
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = publicOrigin();
   const code = searchParams.get("code");
   const next = safeNextPath(searchParams.get("next"));
 

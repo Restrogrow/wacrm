@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { SITE_URL } from '@/lib/seo'
 import { safeNextPath } from '@/lib/auth/safe-next'
+import { publicOrigin } from '@/lib/public-origin'
 
 // Google was indexing https://repeatgrow.com/ and https://www.repeatgrow.com/
 // as separate, un-deduplicated pages ("Duplicate without user-selected
@@ -36,8 +37,8 @@ export async function proxy(request: NextRequest) {
   // lands on `/` where nothing exchanges it, and the visitor is stuck on
   // the marketing page signed out. Hand it to /auth/callback instead.
   if (request.nextUrl.pathname === '/' && request.nextUrl.searchParams.has('code')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/auth/callback'
+    // Built on publicOrigin(), not nextUrl — see CANONICAL_HOST above.
+    const url = new URL('/auth/callback' + request.nextUrl.search, publicOrigin())
     if (!url.searchParams.has('next')) url.searchParams.set('next', '/dashboard')
     return NextResponse.redirect(url)
   }
