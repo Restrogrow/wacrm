@@ -9,6 +9,7 @@ import { processScheduledBroadcasts } from '@/lib/broadcasts/scheduled'
 import { processDailySummaries } from '@/lib/summary/daily'
 import { withHeartbeat } from '@/lib/ops/monitoring'
 import { processDueNumberHealth } from '@/lib/whatsapp/number-health'
+import { processBillingReminders } from '@/lib/billing/reminders'
 
 /**
  * Drain due `automation_pending_executions` rows. Meant to be hit
@@ -80,9 +81,16 @@ async function runCron() {
     return 0
   })
 
+  // Trial-ending / plan-renewal emails (daytime IST, once per stage).
+  const billingReminders = await withHeartbeat('billing-reminders', () => processBillingReminders()).catch((err) => {
+    console.error('[cron] billing reminders failed:', err)
+    return 0
+  })
+
   return {
     processed,
     number_health_checks: numberHealthChecks,
+    billing_reminders: billingReminders,
     scheduled_broadcast_sends: scheduledBroadcastSends,
     daily_summaries: dailySummaries,
     shopify_reminders: shopifyReminders,

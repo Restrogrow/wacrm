@@ -208,6 +208,13 @@ the business pays (UPI / bank transfer).
   SQLSTATE `PL001` with a user-facing message). Inbound WhatsApp
   messages, the API and integrations always create contacts, so no
   customer message is ever dropped.
+- **Reminder emails** to the owner (9 am–8 pm IST, each once): 2 days
+  before the trial ends, on its last day, and after it ends; for paid
+  plans 3 days before the paid-until date and after it. Each explains
+  read-only mode, lists the plans and how to pay, and links to Plan &
+  billing. Needs the SMTP env vars; tracked in
+  `accounts.billing_reminder_key` (migration 050,
+  `src/lib/billing/reminders.ts`).
 - **Settings → Plan & billing** shows the plan, usage meters and the
   plans; "Choose" opens WhatsApp (or email) to support with the account
   details. Admins set plan, trial end, paid-until and a note in
@@ -488,6 +495,7 @@ is idempotent where possible. Recent ones:
 | `047_account_deletion_requests` | Deletion requests that a platform admin approves or rejects |
 | `048_whatsapp_calls` | WhatsApp voice calls (`whatsapp_calls`, Realtime) |
 | `049_whatsapp_number_health` | Daily WhatsApp number health (quality, messaging limit, send status) |
+| `050_billing_reminders` | Trial-ending and plan-renewal reminder emails |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -500,7 +508,7 @@ Hostinger calls these every minute with the header
 
 | Endpoint | Runs |
 |---|---|
-| `GET /api/automations/cron` | Delayed automation steps, **scheduled broadcasts** (batched, leased), **Shopify abandoned-cart reminders**, **Calendly 24 h / 1 h reminders**, **daily summary emails**, **WhatsApp number health** (daily per account, 10 per run) |
+| `GET /api/automations/cron` | Delayed automation steps, **scheduled broadcasts** (batched, leased), **Shopify abandoned-cart reminders**, **Calendly 24 h / 1 h reminders**, **daily summary emails**, **WhatsApp number health** (daily per account, 10 per run), **trial / renewal reminder emails** |
 | `GET /api/flows/cron` | Flow waits and timeouts |
 
 Each job is idempotent (claims before sending), so overlapping or

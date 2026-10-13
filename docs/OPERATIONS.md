@@ -71,6 +71,7 @@ Code: `src/app/api/health/route.ts`, `src/lib/ops/health.ts`.
 | Calendly reminders | automations cron | 10 min |
 | Daily summary emails | automations cron | 10 min |
 | WhatsApp number health | automations cron (each account daily) | 10 min |
+| Trial & renewal reminder emails | automations cron (daytime IST) | 10 min |
 | Flows cron | `GET /api/flows/cron` | 30 min |
 
 Heartbeats are stored in `system_heartbeats`; failures in

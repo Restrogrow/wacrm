@@ -21,6 +21,7 @@ export const MONITORED_JOBS = {
   'calendly-reminders': { label: 'Calendly reminders', maxAgeMinutes: 10 },
   'daily-summaries': { label: 'Daily summary emails', maxAgeMinutes: 10 },
   'number-health': { label: 'WhatsApp number health', maxAgeMinutes: 10 },
+  'billing-reminders': { label: 'Trial & renewal reminder emails', maxAgeMinutes: 10 },
 } as const
 
 export type MonitoredJob = keyof typeof MONITORED_JOBS

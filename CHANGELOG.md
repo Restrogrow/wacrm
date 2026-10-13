@@ -13,6 +13,13 @@ and polish.
 
 ### Added
 
+- **Trial and renewal reminder emails.** Owners are emailed 2 days before
+  the free trial ends, on its last day and when it ends, and 3 days
+  before a paid plan's paid-until date and when it passes — with plans,
+  prices and how to pay. Sent during the day in India time, once per
+  stage. **Migration required:**
+  `supabase/migrations/050_billing_reminders.sql`.
+
 - **WhatsApp number health.** Settings → WhatsApp shows the number's
   quality rating, messaging limit, send status, display name and calling
   eligibility in plain words, with Check now. Checked daily; owners get

@@ -464,6 +464,10 @@ export default function DocsPage() {
                 <b> Choose</b> on a plan to message our team; we&apos;ll share payment details (UPI or bank transfer) and
                 activate it as soon as it&apos;s paid.
               </li>
+              <li>
+                We email the account owner 2 days before the trial ends, on the last day, and when it ends — and, on a
+                paid plan, 3 days before your paid-until date.
+              </li>
               <li>WhatsApp conversation fees are billed by Meta directly, separately from your plan.</li>
             </ul>
           </Section>

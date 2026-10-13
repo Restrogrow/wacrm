@@ -40,7 +40,7 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       "[Interactive reply]" and the answers are lost.
 - [ ] **#38 Carousels.** Media-card and product-card carousel templates
       in the template builder and broadcasts.
-- [ ] **#39 Number quality & messaging-limit alerts.** Handle
+- [x] **#39 Number quality & messaging-limit alerts.** Shipped (migration 049, Settings → WhatsApp → Number health). Handle
       `phone_number_quality_update` / `account_update` limit changes,
       show the number's quality rating and daily limit in Settings, and
       warn the owner (email / in-app) before Meta restricts sending.
@@ -92,7 +92,7 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 - [x] **#7 Scheduled broadcasts.** Done (migration 043): "Schedule for
       later" in the wizard; the server cron sends in batches; cancel from
       the broadcast page.
-- [ ] **#47 Trial-ending reminders** (decided: later). WhatsApp and/or
+- [x] **#47 Trial-ending reminders.** Shipped as emails (migration 050); WhatsApp reminders could follow. WhatsApp and/or
       email to the owner 2 days before, on the last day, and 1 day after
       the trial ends, with a "Choose a plan" link.
 - [ ] **#8 Notifications agents can't miss:** browser notifications +
@@ -127,7 +127,7 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 - [x] **#17 Error monitoring.** Done: Sentry (`src/instrumentation*.ts`),
       off until `NEXT_PUBLIC_SENTRY_DSN` is set; set up alert rules in
       Sentry.
-- [ ] **#18 End-to-end tests** (Playwright) for signup → connect WhatsApp
+- [x] **#18 End-to-end tests** (Playwright) — public, auth and health tests in CI; signed-in smoke tests with E2E_EMAIL. for signup → connect WhatsApp
       → send → broadcast → template, run in CI.
 - [ ] **#19 Block dry-run in production.** Ignore
       `WHATSAPP_TEMPLATES_DRY_RUN` when `NODE_ENV=production` (it already
@@ -144,7 +144,7 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 - [ ] **#23 Enforce the CSP.** `next.config.mjs` ships it as
       report-only. Fix violations, then enforce (add partner redirect
       origins such as restrogrow.com to `form-action` for Connect).
-- [ ] **#25 Self-serve account & data deletion** (privacy law + our
+- [x] **#25 Self-serve account & data deletion** — Settings → Your data (admin-approved deletion). (privacy law + our
       privacy policy).
 
 ### #24 Rename leftover `wacrm` identifiers to Repeat Grow
