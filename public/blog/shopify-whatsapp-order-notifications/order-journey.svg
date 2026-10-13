@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" role="img" aria-labelledby="t d">
+  <title id="t">The Shopify order journey on WhatsApp</title>
+  <desc id="d">Six messages along an order: cart abandoned reminder, order placed confirmation, COD confirmation with buttons, shipped with tracking link, out for delivery, and delivered with a review request.</desc>
+  <rect width="1200" height="675" fill="#f8fafc"/>
+  <text x="60" y="80" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="34" font-weight="700" fill="#0f172a">The order journey: 6 WhatsApp moments</text>
+  <text x="60" y="118" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="20" fill="#475569">Each one is an approved template sent automatically when Shopify reports the event</text>
+
+  <line x1="120" y1="330" x2="1080" y2="330" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round"/>
+
+  <g font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" text-anchor="middle">
+    <!-- 1 -->
+    <circle cx="120" cy="330" r="34" fill="#fbbf24"/>
+    <text x="120" y="340" font-size="26" font-weight="700" fill="#451a03">0</text>
+    <text x="120" y="408" font-size="20" font-weight="700" fill="#0f172a">Cart abandoned</text>
+    <text x="120" y="436" font-size="16" fill="#475569">Reminder + checkout</text>
+    <text x="120" y="458" font-size="16" fill="#475569">link (Marketing)</text>
+
+    <!-- 2 -->
+    <circle cx="312" cy="330" r="34" fill="#10b981"/>
+    <text x="312" y="340" font-size="26" font-weight="700" fill="#ffffff">1</text>
+    <text x="312" y="226" font-size="20" font-weight="700" fill="#0f172a">Order placed</text>
+    <text x="312" y="254" font-size="16" fill="#475569">Confirmation, total,</text>
+
+    <!-- 3 -->
+    <circle cx="504" cy="330" r="34" fill="#10b981"/>
+    <text x="504" y="340" font-size="26" font-weight="700" fill="#ffffff">2</text>
+    <text x="504" y="408" font-size="20" font-weight="700" fill="#0f172a">COD confirmation</text>
+    <text x="504" y="436" font-size="16" fill="#475569">Confirm / Cancel</text>
+    <text x="504" y="458" font-size="16" fill="#475569">quick-reply buttons</text>
+
+    <!-- 4 -->
+    <circle cx="696" cy="330" r="34" fill="#10b981"/>
+    <text x="696" y="340" font-size="26" font-weight="700" fill="#ffffff">3</text>
+    <text x="696" y="252" font-size="20" font-weight="700" fill="#0f172a">Shipped</text>
+    <text x="696" y="280" font-size="16" fill="#475569">Courier + tracking link</text>
+
+    <!-- 5 -->
+    <circle cx="888" cy="330" r="34" fill="#10b981"/>
+    <text x="888" y="340" font-size="26" font-weight="700" fill="#ffffff">4</text>
+    <text x="888" y="408" font-size="20" font-weight="700" fill="#0f172a">Out for delivery</text>
+    <text x="888" y="436" font-size="16" fill="#475569">"Keep your phone</text>
+    <text x="888" y="458" font-size="16" fill="#475569">handy today"</text>
+
+    <!-- 6 -->
+    <circle cx="1080" cy="330" r="34" fill="#059669"/>
+    <text x="1080" y="340" font-size="26" font-weight="700" fill="#ffffff">5</text>
+    <text x="1080" y="252" font-size="20" font-weight="700" fill="#0f172a">Delivered</text>
+    <text x="1080" y="280" font-size="16" fill="#475569">Thank you + review</text>
+  </g>
+  <text x="312" y="276" text-anchor="middle" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="16" fill="#475569">items, order status link</text>
+
+  <g font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+    <rect x="60" y="530" width="690" height="96" rx="16" fill="#ecfdf5" stroke="#a7f3d0"/>
+    <text x="88" y="568" font-size="19" font-weight="700" fill="#065f46">Utility templates (1–5)</text>
+    <text x="88" y="598" font-size="17" fill="#047857">Service updates the customer expects after buying.</text>
+    <rect x="770" y="530" width="370" height="96" rx="16" fill="#fffbeb" stroke="#fde68a"/>
+    <text x="798" y="568" font-size="19" font-weight="700" fill="#92400e">Marketing template (0)</text>
+    <text x="798" y="598" font-size="17" fill="#b45309">Needs opt-in; skips opt-outs.</text>
+  </g>
+</svg>

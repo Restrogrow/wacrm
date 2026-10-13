@@ -13,6 +13,12 @@ and polish.
 
 ### Added
 
+- **Blog redesign and two new articles.** `/blog` now has a featured post
+  and cards with cover images, categories, dates and reading times.
+  New guides: Shopify WhatsApp order notifications and WhatsApp
+  appointment reminders. Every post has a cover, table of contents, FAQ,
+  related posts, a per-post social image and Article/FAQ structured data.
+
 - **Saved replies.** Type "/" in the inbox message box to pick a saved
   reply (arrow keys + Enter); {{name}}, {{full_name}} and {{agent}} are
   filled in. Admins manage them in Settings → Saved replies.

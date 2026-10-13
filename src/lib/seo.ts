@@ -81,6 +81,10 @@ export function buildArticleSchema(article: {
   path: string;
   datePublished: string;
   dateModified?: string;
+  /** Absolute or site-relative image URL (e.g. the post's OG image). */
+  image?: string;
+  keywords?: string[];
+  section?: string;
 }) {
   return {
     "@context": "https://schema.org",
@@ -93,6 +97,11 @@ export function buildArticleSchema(article: {
     author: { "@id": SITE_URL },
     publisher: { "@id": SITE_URL },
     mainEntityOfPage: `${SITE_URL}${article.path}`,
+    ...(article.image
+      ? { image: article.image.startsWith("http") ? article.image : `${SITE_URL}${article.image}` }
+      : {}),
+    ...(article.keywords?.length ? { keywords: article.keywords.join(", ") } : {}),
+    ...(article.section ? { articleSection: article.section } : {}),
   };
 }
 
