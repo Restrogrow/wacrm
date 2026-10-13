@@ -27,7 +27,7 @@ Code: `src/lib/shopify/`, migration `039_shopify_integration.sql`.
 | Option | Keys |
 |---|---|
 | Connect with webhooks (any store) | **Customer:** webhook signing key from Shopify admin → Settings → Notifications → Webhooks. **Server:** none. |
-| Connect Shopify (one click) | **Server:** `SHOPIFY_API_KEY` (Client ID), `SHOPIFY_API_SECRET` (Client secret) from an app in the [Shopify Dev Dashboard](https://dev.shopify.com). App settings: redirect URL `https://repeatgrow.com/api/integrations/shopify/callback`, scopes `read_orders,read_fulfillments`, protected customer data (name, phone, email, address), compliance webhooks → `https://repeatgrow.com/api/integrations/shopify/webhooks`. App Store review needed before any store outside our org can use it. |
+| Connect Shopify (one click) | **Server:** `SHOPIFY_API_KEY` (Client ID), `SHOPIFY_API_SECRET` (Client secret) from an app in the [Shopify Dev Dashboard](https://dev.shopify.com). App settings: redirect URL `https://repeatgrow.com/api/integrations/shopify/callback`, scopes `read_orders,read_fulfillments`, protected customer data (name, phone, email, address), compliance webhooks → `https://repeatgrow.com/api/integrations/shopify/webhooks`. App config: [`shopify/shopify.app.toml`](../shopify/shopify.app.toml). Public distribution selected; App Store listing in draft — until it's approved, one-click works only on development stores. |
 
 ---
 

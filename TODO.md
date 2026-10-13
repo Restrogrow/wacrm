@@ -189,8 +189,9 @@ each needs a backwards-compatible rollout.
 - [ ] **#45 Shopify follow-ups.** Core integration shipped (Settings →
       Shopify, migration 039). Next: write COD "Confirm / Cancel" replies
       back to Shopify (tag or cancel the order; needs `write_orders`),
-      submit the Shopify app for App Store review so any store can use
-      one-click connect, uninstall the app via the Admin API on
+      finish the App Store submission (public distribution chosen,
+      listing in draft — checklist in `shopify/README.md`), uninstall
+      the app via the Admin API on
       Disconnect, support more than one store per account, refund
       messages (`refunds/create`), and ready-made template suggestions
       per event.

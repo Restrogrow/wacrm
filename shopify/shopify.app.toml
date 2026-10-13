@@ -1,0 +1,24 @@
+# Repeat Grow — Shopify app configuration (Shopify Dev Dashboard app
+# "Repeat Grow", public distribution). Source of truth for the app's
+# settings; deploy changes with the Shopify CLI (see shopify/README.md).
+# Contains no secrets — the client secret lives in SHOPIFY_API_SECRET.
+client_id = "8c7214736524cd94400c17d2232b2515"
+name = "Repeat Grow"
+application_url = "https://repeatgrow.com/api/integrations/shopify/install"
+embedded = false
+
+[access_scopes]
+scopes = "read_fulfillments,read_orders"
+use_legacy_install_flow = true
+
+[auth]
+redirect_urls = ["https://repeatgrow.com/api/integrations/shopify/callback"]
+
+[webhooks]
+api_version = "2026-10"
+
+  # Order/fulfillment/checkout webhooks are registered per store by the
+  # app on connect (src/lib/shopify/admin-api.ts) — don't add them here.
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri = "https://repeatgrow.com/api/integrations/shopify/webhooks"

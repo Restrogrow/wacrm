@@ -133,21 +133,20 @@ Two ways to connect a store, both in **Settings → Shopify**:
   cancellation, Fulfillment creation, Fulfillment update, Checkout
   creation, Checkout update; JSON) pointing at their unique URL
   `/api/integrations/shopify/webhooks/<token>`.
-- **Connect Shopify (OAuth):** needs a Shopify app. In the
-  [Shopify Dev Dashboard](https://dev.shopify.com) create an app with:
-  - redirect URL `https://repeatgrow.com/api/integrations/shopify/callback`
-  - scopes `read_orders,read_fulfillments`
-  - protected customer data access for name, phone, email and address
-    (required to receive customer details in order webhooks)
-  - compliance webhooks (customer data request, customer redact, shop
-    redact) → `https://repeatgrow.com/api/integrations/shopify/webhooks`
+- **Connect Shopify (OAuth):** uses Repeat Grow's Shopify app
+  (**public distribution**; App Store listing in draft). Its settings
+  live in [`shopify/shopify.app.toml`](./shopify/shopify.app.toml) and
+  are deployed with the Shopify CLI — see
+  [`shopify/README.md`](./shopify/README.md), which also has the App
+  Store submission checklist. Server env: `SHOPIFY_API_KEY` (Client ID)
+  and `SHOPIFY_API_SECRET` (Client secret).
 
-  Then set `SHOPIFY_API_KEY` (Client ID) and `SHOPIFY_API_SECRET`
-  (Client secret). On connect, Repeat Grow registers the webhooks via
-  the Admin API (API version 2026-10) with expiring offline tokens.
-  Installing on stores outside your organization requires public
-  distribution (Shopify App Store review); until then use custom
-  distribution install links or the webhook option.
+  On connect, Repeat Grow registers the order/fulfillment/checkout
+  webhooks via the Admin API (2026-10) with expiring offline tokens.
+  A merchant who installs from Shopify while logged out is sent to log
+  in or sign up, then the connection continues automatically. Until
+  the App Store review is approved, one-click connect works only on
+  development stores — use the webhook option for live stores.
 
 Apply `supabase/migrations/039_shopify_integration.sql` first. Planned
 integrations and the keys each needs: [docs/INTEGRATIONS.md](./docs/INTEGRATIONS.md).
@@ -175,6 +174,7 @@ src/lib/api/v1/     API envelope, pagination, serializers, OpenAPI spec
 src/lib/whatsapp/   Meta Cloud API client, webhooks, send pipeline
 src/components/     UI components
 supabase/           Database migrations
+shopify/            Shopify app configuration (shopify.app.toml) and App Store checklist
 docs/               Developer docs (public API, embedded signup, integrations)
 ```
 

@@ -26,7 +26,12 @@ and polish.
   inbox. Includes test sends, a recent-activity list, and Shopify's
   mandatory privacy webhooks. **Migration required:** apply
   `supabase/migrations/039_shopify_integration.sql`. Optional env:
-  `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`.
+  `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`. A merchant installing from
+  Shopify while logged out logs in or signs up (email, Google, or the
+  email-confirmation link) and the connection then continues
+  automatically. The Shopify app's configuration is versioned in
+  `shopify/shopify.app.toml` (public distribution, not embedded,
+  compliance webhooks).
 - **Sign in with Google** on `/login` and `/signup` (Supabase OAuth via
   `/auth/callback`). Invite links survive the Google round-trip. Setup
   steps are in the README under "Google sign-in".
