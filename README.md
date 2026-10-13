@@ -511,7 +511,11 @@ retried runs never send twice.
    subscribe **`calls`**.
 3. In the app: **Settings → WhatsApp → WhatsApp calling** → on (admins).
    This calls `POST /<PHONE_NUMBER_ID>/settings` with calling enabled,
-   the call button shown and callback permission on.
+   the call button shown and callback permission on. If Meta answers
+   "calling not enabled for this phone number", the card keeps the
+   switch (off) and shows why in plain words (messaging limit, Cloud
+   API-only number, `calls` webhook) instead of an error; the chat's
+   Call button says calling must be turned on first.
 4. Requirements from Meta: the number is on Cloud API and has a
    messaging limit of **2,000+**. Customer-initiated calls are free;
    business-initiated calls are billed per minute by Meta and need the

@@ -19,7 +19,9 @@ and polish.
   permission request when needed). Recent calls show in the contact
   panel. Turn it on in Settings → WhatsApp. **Migration required:**
   `supabase/migrations/048_whatsapp_calls.sql`; subscribe the `calls`
-  webhook field in the Meta App Dashboard.
+  webhook field in the Meta App Dashboard. If Meta won't enable calling
+  on the number yet, the settings card keeps the switch and explains
+  why (messaging limit, Cloud API-only number, webhook).
 
 - **Download my data and delete my account** (Settings → Your data), for
   India's DPDP Act and GDPR. Everyone can download their data as JSON

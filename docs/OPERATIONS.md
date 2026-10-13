@@ -145,6 +145,11 @@ stores that no longer exist).
 - **Calls never ring:** is the `calls` webhook field subscribed in the
   Meta App Dashboard, and calling turned on (Settings → WhatsApp)? Meta
   needs a 2,000+ messaging limit.
+- **"WhatsApp hasn't allowed calling on this number yet"** (amber note
+  in Settings → WhatsApp calling): Meta refused to enable calling. Check
+  WhatsApp Manager → Phone numbers → Messaging limit (needs 2K+), that
+  the number isn't also on the WhatsApp Business app, and the `calls`
+  webhook subscription. Meta's test number works for testing meanwhile.
 - **Rings but no audio:** usually the agent's network blocks WebRTC, or
   the microphone was blocked in the browser. Try another network/browser.
 - **"Hasn't allowed calls":** the customer must tap Allow on a call
