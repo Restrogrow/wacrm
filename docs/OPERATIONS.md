@@ -137,6 +137,20 @@ backups expire on their own schedule. Shopify OAuth stores should also
 uninstall the app from their Shopify admin (the webhook receiver ignores
 stores that no longer exist).
 
+## WhatsApp calls
+
+- Calls are in `whatsapp_calls` (status ringing → answering → connected
+  → ended / missed / rejected / failed). Recent calls:
+  `select created_at, direction, status, duration_seconds, error from whatsapp_calls order by created_at desc limit 20;`
+- **Calls never ring:** is the `calls` webhook field subscribed in the
+  Meta App Dashboard, and calling turned on (Settings → WhatsApp)? Meta
+  needs a 2,000+ messaging limit.
+- **Rings but no audio:** usually the agent's network blocks WebRTC, or
+  the microphone was blocked in the browser. Try another network/browser.
+- **"Hasn't allowed calls":** the customer must tap Allow on a call
+  permission request (or call you first).
+- Failed accepts are saved in `whatsapp_calls.error`.
+
 ## Releases
 
 1. Push to `main`. GitHub Actions runs lint, typecheck, unit tests, a

@@ -7,6 +7,7 @@ import { usePresence } from "@/hooks/use-presence";
 import { PresenceDot } from "@/components/presence/presence-dot";
 import { presenceLabel } from "@/lib/presence";
 import { cn } from "@/lib/utils";
+import { CallButton } from "@/components/calls/call-button";
 import type {
   Conversation,
   Message,
@@ -931,6 +932,12 @@ export function MessageThread({
               )}
             </button>
           )}
+
+          {/* WhatsApp voice call (Calling API). */}
+          <CallButton
+            conversationId={conversation.id}
+            label={contact?.name || (contact?.phone ? `+${contact.phone.replace(/^\+/, "")}` : "Customer")}
+          />
 
           {/* Manual refresh — forces a refetch of the messages + the
               conversation list (the parent bumps its resyncToken). Useful

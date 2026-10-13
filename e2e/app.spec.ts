@@ -57,3 +57,10 @@ test('privacy policy explains downloading and deleting data', async ({ page }) =
   await expect(page.getByText('Download my data').first()).toBeVisible()
   await expect(page.getByText('Delete my account').first()).toBeVisible()
 })
+
+test('calling endpoints need a signed-in user', async ({ request }) => {
+  const start = await request.post('/api/whatsapp/calls', { data: { conversation_id: 'x', sdp: 'v=0' } })
+  expect(start.status()).toBe(401)
+  const settings = await request.get('/api/whatsapp/calling-settings')
+  expect(settings.status()).toBe(401)
+})

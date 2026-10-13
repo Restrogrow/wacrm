@@ -66,6 +66,15 @@
 - WhatsApp Business app **coexistence**: one number used in both the
   WhatsApp Business app and Repeat Grow, with contacts, history and
   messages sent from the phone synced in.
+- **WhatsApp voice calls in the browser** (Meta Calling API, WebRTC):
+  customers call your WhatsApp number and every agent's browser rings
+  (incoming-call card + ringtone on any page); the first to **Answer**
+  takes it. Agents call customers with the **Call** button in the chat
+  header — if the customer hasn't allowed calls, it sends a WhatsApp
+  call permission request instead. Mute, hang up, live timer, and
+  **Recent calls** in the contact panel. Turn it on in **Settings →
+  WhatsApp → WhatsApp calling**. Nothing is recorded; audio goes browser
+  ↔ Meta directly. See [WhatsApp calling setup](#whatsapp-calling).
 - **Fast on big inboxes:** conversations load 50 at a time (**Load older
   conversations**) and threads load the latest 50 messages (**Load
   earlier messages**, scroll position kept). Links to an older
@@ -463,6 +472,7 @@ is idempotent where possible. Recent ones:
 | `045_monitoring_and_indexes` | Job heartbeats, webhook failure log, faster inbox / thread / contacts / broadcasts queries, contact search indexes |
 | `046_account_deletion` | Account deletion (`prepare_user_deletion`) and the anonymous `account_deletions` log |
 | `047_account_deletion_requests` | Deletion requests that a platform admin approves or rejects |
+| `048_whatsapp_calls` | WhatsApp voice calls (`whatsapp_calls`, Realtime) |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -491,7 +501,31 @@ retried runs never send twice.
   (Embedded Signup — see [docs/embedded-signup.md](./docs/embedded-signup.md)).
 - Meta webhook: `https://<your-domain>/api/whatsapp/webhook`, with the
   verify token shown in Settings → WhatsApp; subscribe the `messages`
-  field (plus template status fields). `META_APP_SECRET` must be set.
+  field (plus template status fields, and `calls` for voice calling).
+  `META_APP_SECRET` must be set.
+
+### WhatsApp calling
+
+1. Run migration `048_whatsapp_calls.sql`.
+2. Meta App Dashboard → WhatsApp → Configuration → Webhook fields:
+   subscribe **`calls`**.
+3. In the app: **Settings → WhatsApp → WhatsApp calling** → on (admins).
+   This calls `POST /<PHONE_NUMBER_ID>/settings` with calling enabled,
+   the call button shown and callback permission on.
+4. Requirements from Meta: the number is on Cloud API and has a
+   messaging limit of **2,000+**. Customer-initiated calls are free;
+   business-initiated calls are billed per minute by Meta and need the
+   customer's permission (1 request a day, 2 a week).
+5. Agents need a browser with WebRTC (Chrome, Edge, Safari, Firefox) and
+   must allow the microphone. Very strict office networks may block
+   WebRTC audio (only public STUN is used; no TURN server).
+
+How it works: the `calls` webhook stores each call in `whatsapp_calls`
+(with the customer's SDP offer); browsers get it through Realtime and
+answer with WebRTC (`pre_accept` + `accept`, first agent wins). Outbound
+calls send the browser's SDP offer (`action: connect`) and apply Meta's
+SDP answer from the webhook. Code: [`src/lib/whatsapp/calling.ts`](./src/lib/whatsapp/calling.ts),
+[`src/components/calls/`](./src/components/calls), [`src/app/api/whatsapp/calls/`](./src/app/api/whatsapp/calls/route.ts).
 
 ### Google sign-in
 1. Google Cloud → OAuth client (Web application), authorized redirect
@@ -588,6 +622,7 @@ src/lib/summary/         Daily summary email
 src/lib/admin/           Admin dashboard data
 src/lib/ops/             Health check, job heartbeats, webhook failure log
 src/lib/account/         Data export ("Download my data")
+src/components/calls/    Browser calling (call manager, call card, Call button)
 src/app/admin/system/    System health page;  src/app/api/health/ health check
 src/lib/integrations/    Shared integration helpers (phone normalisation)
 src/app/blog/            Blog posts;  src/lib/blog.ts post list;  public/blog/ images

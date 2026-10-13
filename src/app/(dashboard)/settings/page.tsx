@@ -12,6 +12,7 @@ import { BusinessDetailsCard } from '@/components/settings/business-details-card
 import { SecurityPanel } from '@/components/settings/security-panel';
 import { AppearancePanel } from '@/components/settings/appearance-panel';
 import { WhatsAppConfig } from '@/components/settings/whatsapp-config';
+import { CallingSettingsCard } from '@/components/settings/calling-settings-card';
 import { TemplateManager } from '@/components/settings/template-manager';
 import { SavedRepliesSettings } from '@/components/settings/saved-replies-settings';
 import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel';
@@ -70,7 +71,12 @@ export default function SettingsPage() {
     security: <SecurityPanel />,
     appearance: <AppearancePanel />,
     'your-data': <YourDataSettings />,
-    whatsapp: <WhatsAppConfig />,
+    whatsapp: (
+      <div className="space-y-6">
+        <WhatsAppConfig />
+        <CallingSettingsCard />
+      </div>
+    ),
     'ai-chatbot': <AiChatbotSettings />,
     templates: <TemplateManager />,
     'saved-replies': <SavedRepliesSettings />,

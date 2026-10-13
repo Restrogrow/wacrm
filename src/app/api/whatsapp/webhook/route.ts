@@ -17,6 +17,7 @@ import {
 import { engineSendText } from '@/lib/flows/meta-send'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import { recordWebhookFailure } from '@/lib/ops/monitoring'
+import { handleCallsWebhook, type CallWebhookValue } from '@/lib/whatsapp/calling'
 import {
   handleTemplateWebhookChange,
   isTemplateWebhookField,
@@ -78,9 +79,15 @@ interface WhatsAppMessage {
    * to advance the per-contact run.
    */
   interactive?: {
-    type: 'button_reply' | 'list_reply'
+    type: 'button_reply' | 'list_reply' | 'call_permission_reply'
     button_reply?: { id: string; title: string }
     list_reply?: { id: string; title: string; description?: string }
+    /** Customer answered a call permission request (Calling API). */
+    call_permission_reply?: {
+      response?: 'accept' | 'reject'
+      is_permanent?: boolean
+      expiration_timestamp?: string | number
+    }
   }
   /** Present when the customer swipe-replies to one of our messages. */
   context?: { id: string }
@@ -269,6 +276,13 @@ async function processWebhook(body: { entry?: WhatsAppWebhookEntry[] }) {
       // have a different value shape — route them through the
       // dedicated handler. Skip the messaging branches below so we
       // don't try to read message-shaped fields off a template event.
+      // WhatsApp voice calls (Calling API): incoming calls, SDP answers
+      // for agent-started calls, call statuses and hang-ups.
+      if (change.field === 'calls') {
+        await handleCallsWebhook(supabaseAdmin(), change.value as unknown as CallWebhookValue)
+        continue
+      }
+
       if (isTemplateWebhookField(change.field)) {
         await handleTemplateWebhookChange(
           { field: change.field, value: change.value as unknown },
@@ -1075,6 +1089,28 @@ async function parseMessageContent(
       // Use the human-readable title as contentText so the inbox bubble
       // renders the tap legibly ("Existing customer"), and stash the
       // stable id separately so the Flows engine can route on it.
+      const permission = message.interactive?.call_permission_reply
+      if (message.interactive?.type === 'call_permission_reply' && permission) {
+        const until = permission.expiration_timestamp
+          ? new Date(Number(permission.expiration_timestamp) * 1000).toLocaleDateString('en-IN', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })
+          : null
+        const text =
+          permission.response === 'accept'
+            ? permission.is_permanent
+              ? 'Allowed WhatsApp calls from you'
+              : `Allowed WhatsApp calls from you${until ? ` until ${until}` : ''}`
+            : 'Declined WhatsApp calls'
+        return {
+          ...empty,
+          contentText: text,
+          interactiveReplyId: `call_permission:${permission.response ?? 'unknown'}`,
+        }
+      }
+
       const reply =
         message.interactive?.button_reply ?? message.interactive?.list_reply
       if (reply?.id) {

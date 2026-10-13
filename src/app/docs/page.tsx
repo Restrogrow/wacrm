@@ -248,6 +248,13 @@ export default function DocsPage() {
               </li>
               <li>The contact panel shows the customer&apos;s details, tags, and deals beside the chat.</li>
               <li>
+                <b>WhatsApp calls:</b> when a customer calls your WhatsApp number, a call card rings on every
+                agent&apos;s screen — click <b>Answer</b> to talk in the browser (allow the microphone the first
+                time). Click the <b>phone icon</b> in a chat to call the customer; if they haven&apos;t allowed calls
+                yet, you can send them a permission request. An admin turns calling on in{" "}
+                <Ui to="/settings?tab=whatsapp">Settings → WhatsApp</Ui>.
+              </li>
+              <li>
                 The newest conversations load first. Scroll to the bottom and click <b>Load older conversations</b>{" "}
                 for more; in a chat, click <b>Load earlier messages</b> at the top to see older history. Search and
                 filters cover the conversations that are loaded.

@@ -163,6 +163,9 @@ export const RATE_LIMITS = {
   /** "Delete my account" attempts, per user. Bounds confirmation-text
    *  guessing from a hijacked session. */
   accountDelete: { limit: 5, windowMs: 60 * 60_000 },
+  /** Outgoing WhatsApp calls, per agent. A person can't usefully dial
+   *  more than a few a minute; this stops a stuck retry loop. */
+  callStart: { limit: 10, windowMs: 60_000 },
 } as const;
 
 /** Test-only helper. Clears the in-memory state so unit tests don't

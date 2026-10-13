@@ -13,6 +13,14 @@ and polish.
 
 ### Added
 
+- **WhatsApp voice calls in the browser.** Customers call your WhatsApp
+  number and every agent's browser rings — answer, mute and hang up
+  without a phone. Call customers from the chat header (sends a call
+  permission request when needed). Recent calls show in the contact
+  panel. Turn it on in Settings → WhatsApp. **Migration required:**
+  `supabase/migrations/048_whatsapp_calls.sql`; subscribe the `calls`
+  webhook field in the Meta App Dashboard.
+
 - **Download my data and delete my account** (Settings → Your data), for
   India's DPDP Act and GDPR. Everyone can download their data as JSON
   (owners and admins also get the business's data; secrets are never

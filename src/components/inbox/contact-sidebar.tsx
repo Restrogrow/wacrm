@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
+import { RecentCalls } from "@/components/calls/recent-calls";
 
 interface ContactSidebarProps {
   contact: Contact | null;
@@ -208,6 +209,11 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
 
           {/* Divider */}
           <div className="my-4 border-t border-border" />
+
+          {/* WhatsApp calls with this contact (hidden when there are none). */}
+          <div className="px-1 [&:has(ul)]:mb-4">
+            <RecentCalls contactId={contact.id} />
+          </div>
 
           {/* Active Deals */}
           <div>

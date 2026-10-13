@@ -50,10 +50,13 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       inbox and a deal; order-details / checkout-button templates with
       UPI / Razorpay payment links and payment-status webhooks. Useful
       for restaurants and shops. (Was #11.)
-- [ ] **#41 WhatsApp voice calls (Calling API).** Let customers call the
-      business number and agents answer in the browser (WebRTC / SIP),
-      with call logs on the conversation, call-permission requests, and
-      voicemail when nobody answers.
+- [x] **#41 WhatsApp voice calls (Calling API).** Shipped: customers
+      call the business number and agents answer in the browser
+      (WebRTC), agents call customers, call-permission requests, recent
+      calls in the contact panel (README → WhatsApp calling).
+- [ ] **#41b Calling follow-ups.** Voicemail when nobody answers, call
+      hours, a TURN server for strict networks, and call events inline
+      in the chat thread.
 - [ ] **#42 Usernames / BSUID follow-ups.** Core support shipped
       (migration 038: contacts store `whatsapp_user_id`; sends fall back
       to the BSUID via `recipient`). Still to do: broadcasts to
