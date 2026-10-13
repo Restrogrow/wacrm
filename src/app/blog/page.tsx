@@ -182,7 +182,7 @@ export default function BlogIndexPage() {
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
             href="/signup"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+            className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
           >
             Start free trial
           </Link>

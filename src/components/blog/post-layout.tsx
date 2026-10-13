@@ -158,7 +158,7 @@ export function BlogPostLayout({
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
             href="/signup"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+            className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
           >
             Start free trial
           </Link>

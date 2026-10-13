@@ -199,4 +199,16 @@ export default withSentryConfig(nextConfig, {
   widenClientFileUpload: true,
   sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
   telemetry: false,
+  // Smaller browser bundle (~80 KB less on every page): errors only, so
+  // performance tracing and the SDK's debug logging are dropped. Session
+  // Replay isn't used (see src/lib/sentry-options.ts), so its extras go too.
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+      removeTracing: true,
+      excludeReplayIframe: true,
+      excludeReplayShadowDOM: true,
+      excludeReplayCompressionWorker: true,
+    },
+  },
 });

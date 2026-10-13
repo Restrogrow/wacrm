@@ -13,6 +13,21 @@ and polish.
 
 ### Added
 
+- **System health and monitoring.** `GET /api/health` for uptime
+  monitors (503 when the database or the cron jobs stop working), and
+  `/admin/system` showing every background job's last run and error and
+  recent failed WhatsApp / Shopify / Calendly webhooks. Errors from jobs
+  and webhooks are tagged in Sentry. **Migration required:**
+  `supabase/migrations/045_monitoring_and_indexes.sql`.
+- **Pagination.** The inbox loads 50 conversations at a time ("Load older
+  conversations"), message threads load the latest 50 messages ("Load
+  earlier messages") and the broadcasts list pages by 25. Opening a link
+  to an older conversation still works.
+- **Faster queries.** New indexes for the inbox, message threads,
+  contacts and broadcasts lists, and trigram indexes for contact search
+  (migration 045).
+- **End-to-end tests** with Playwright, run in CI.
+
 - **Blog redesign and two new articles.** `/blog` now has a featured post
   and cards with cover images, categories, dates and reading times.
   New guides: Shopify WhatsApp order notifications and WhatsApp
@@ -119,6 +134,12 @@ and polish.
 
 ### Changed
 
+- Smaller page script: Sentry performance tracing is no longer bundled
+  (errors are still reported).
+- Better contrast on the pricing toggle, blog buttons and login links;
+  bigger show-password button.
+- The automations cron compares its secret in constant time, and one
+  failing task no longer stops the others.
 - **Owners can edit business details** (business name, mobile number,
   nature of business, team size) in Settings → Your profile.
 

@@ -9,7 +9,7 @@ export const LANDING_CSS = `
   --bg-elevated-2: #eef2f6;
   --text: #16212c;
   --text-muted: #4c5665;
-  --text-dim: #6b7686;
+  --text-dim: #5f6a7a;
   --accent: #0da968;
   --accent-2: #0b8f58;
   --accent-deep: #087a4a;
@@ -760,7 +760,7 @@ export const LANDING_CSS = `
   transition: background .15s ease, color .15s ease;
 }
 .lp-page .cycle-btn.is-active{
-  background: var(--accent);
+  background: var(--accent-deep);
   color: #fff;
 }
 .lp-page .cycle-btn .save-badge{
@@ -772,7 +772,7 @@ export const LANDING_CSS = `
   color: #fff;
 }
 .lp-page .cycle-btn:not(.is-active) .save-badge{
-  color: #7a5b00;
+  color: #4d3900;
   background: var(--amber);
 }
 .lp-page .pricing-grid-3{

@@ -219,7 +219,7 @@ const PRICING_BODY_HTML = `
       </div>
     </div>
 
-    <p class="how-caption" style="margin-top:32px;">Need something bigger, or a self-hosted deployment? <a href="mailto:support@repeatgrow.com?subject=Repeat%20Grow%20-%20Custom%20plan" style="color:var(--accent);">Email us</a> and we'll scope a custom plan.</p>
+    <p class="how-caption" style="margin-top:32px;">Need something bigger, or a self-hosted deployment? <a href="mailto:support@repeatgrow.com?subject=Repeat%20Grow%20-%20Custom%20plan" style="color:var(--accent-deep);text-decoration:underline;text-underline-offset:3px;">Email us</a> and we'll scope a custom plan.</p>
   </div>
 </section>
 

@@ -250,6 +250,30 @@ rate limited; marketing templates to opted-out contacts are refused.
   active, most members), last chat and last login per account.
 - **Account page:** business details, members (sign-in method, last
   sign-in), plan editor, WhatsApp connection and live diagnostics.
+- **System health** (`/admin/system`): database, required env vars,
+  every background job (last success, duration, last error — "Not
+  running" if a job hasn't succeeded recently) and the last 50 failed
+  inbound webhooks (WhatsApp, Shopify, Calendly) with the account and
+  error. Failed webhooks are kept for 30 days.
+
+### Health check and uptime monitoring
+
+`GET /api/health` is public and returns only states:
+
+```json
+{ "status": "ok", "checks": { "database": "ok", "database_latency_ms": 42,
+  "config": "ok", "jobs": "ok", "webhooks": "ok" } }
+```
+
+- **200** with `status` `ok` or `degraded` (a task inside the cron is
+  failing, an env var is missing, or webhooks failed in the last hour).
+- **503** with `status` `down`: the database is unreachable, or a cron
+  endpoint stopped running / keeps failing.
+
+Point a free monitor at it (UptimeRobot, Better Stack): an HTTP monitor
+on `https://repeatgrow.com/api/health` every 5 minutes alerts you when
+it returns 503. For "degraded" alerts too, use a keyword monitor that
+expects `"status":"ok"`.
 
 ---
 
@@ -370,6 +394,7 @@ is idempotent where possible. Recent ones:
 | `042_saved_replies` | Saved replies |
 | `043_scheduled_broadcasts` | Scheduled broadcast params and send lease |
 | `044_daily_summary` | Daily summary settings |
+| `045_monitoring_and_indexes` | Job heartbeats, webhook failure log, faster inbox / thread / contacts / broadcasts queries, contact search indexes |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -437,7 +462,20 @@ customer data access (name, phone, email, address).
 ### Sentry
 Set `NEXT_PUBLIC_SENTRY_DSN` and redeploy. Errors from the browser,
 server, edge, webhooks and cron are reported (no Session Replay, no
-default PII); set up an alert rule in Sentry. Code:
+default PII, no performance tracing — stripped at build time to keep the
+browser bundle small). Background-job errors are tagged `job:<name>` and
+webhook errors `webhook:<source>`.
+
+**Alerts** (sentry.io → Alerts → Create alert → Issues):
+
+1. "A new issue is created" → email you. Catches every new kind of error.
+2. "The issue is seen more than 10 times in 1 hour" → email. Catches
+   something that breaks repeatedly.
+3. Optional: filter on tag `webhook` or `job` for a separate rule so
+   webhook / cron failures go to WhatsApp or Slack via Sentry's
+   integrations.
+
+Code:
 `src/instrumentation.ts`, `src/instrumentation-client.ts`,
 `src/lib/sentry-options.ts`.
 
@@ -498,10 +536,19 @@ docs/                    Public API, embedded signup, integrations plan, RestroG
 | `npm run typecheck` | TypeScript check |
 | `npm run lint` | ESLint |
 | `npm test` | Unit tests (Vitest) |
+| `npm run test:e2e` | End-to-end tests (Playwright) against the production build — run `npm run build` first; `npx playwright install chromium` once |
 | `npm run format` | Prettier |
 
-CI (GitHub Actions) runs lint, typecheck, tests and a production build on
-every push to `main`.
+CI (GitHub Actions) runs lint, typecheck, unit tests, a production build
+and the end-to-end tests on every push to `main`.
+
+**End-to-end tests** (`e2e/`): marketing pages, blog (structured data,
+images, social images), robots.txt and sitemap, the sign-in guard on app
+pages, the login form, and `/api/health`, on desktop and mobile. Signed-in
+smoke tests (inbox, contacts, broadcasts, settings — read-only) run only
+when `E2E_EMAIL` and `E2E_PASSWORD` are set; use a dedicated test account.
+Set `E2E_BASE_URL` to test a running site (e.g. staging) instead of a
+local build.
 
 ---
 
