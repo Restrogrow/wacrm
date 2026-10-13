@@ -25,7 +25,15 @@ interface ConversationListProps {
   activeConversationId: string | null;
   onSelect: (conversation: Conversation) => void;
   conversations: Conversation[];
-  onConversationsLoaded: (conversations: Conversation[]) => void;
+  /**
+   * `replace` is the first page (initial load or a resync); the parent
+   * keeps any older pages it already has. `append` is a "load older"
+   * page.
+   */
+  onConversationsLoaded: (
+    conversations: Conversation[],
+    mode: "replace" | "append",
+  ) => void;
   /**
    * Increment to force the fetch effect below to refire. The parent
    * bumps this on realtime reconnect / tab visibility → visible so the
@@ -42,6 +50,9 @@ const STATUS_COLORS: Record<ConversationStatus, string> = {
 };
 
 type InboxFilter = ConversationStatus | "all" | "unread" | "recent";
+
+/** Conversations fetched per page (newest activity first). */
+export const CONVERSATIONS_PAGE_SIZE = 50;
 
 /** "Recent" shows conversations with a message in this window. */
 const RECENT_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -65,6 +76,8 @@ export function ConversationList({
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InboxFilter>("all");
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   // Clock for the "Recent" window — ticks each minute so conversations
   // age out of the filter without a reload.
   const [now, setNow] = useState(() => Date.now());
@@ -101,10 +114,13 @@ export function ConversationList({
     let cancelled = false;
 
     (async () => {
+      // One extra row tells us whether there's an older page.
       const { data, error } = await supabase
         .from("conversations")
         .select(CONVERSATION_SELECT)
-        .order("last_message_at", { ascending: false });
+        .order("last_message_at", { ascending: false, nullsFirst: false })
+        .order("id", { ascending: false })
+        .range(0, CONVERSATIONS_PAGE_SIZE);
 
       if (cancelled) return;
 
@@ -120,7 +136,12 @@ export function ConversationList({
         return;
       }
 
-      onConversationsLoadedRef.current(normalizeConversations(data ?? []));
+      const rows = data ?? [];
+      setHasMore(rows.length > CONVERSATIONS_PAGE_SIZE);
+      onConversationsLoadedRef.current(
+        normalizeConversations(rows.slice(0, CONVERSATIONS_PAGE_SIZE)),
+        "replace",
+      );
       setLoading(false);
     })();
 
@@ -131,6 +152,32 @@ export function ConversationList({
     // the realtime channel reconnects or the tab regains focus — catches
     // up on any events sent while the WS was disconnected or throttled.
   }, [resyncToken]);
+
+  // Older pages use an offset from what's already loaded. Rows that
+  // shift between pages (a conversation getting a new message) are
+  // de-duplicated by id in the parent.
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    const supabase = createClient();
+    const offset = conversations.length;
+    const { data, error } = await supabase
+      .from("conversations")
+      .select(CONVERSATION_SELECT)
+      .order("last_message_at", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false })
+      .range(offset, offset + CONVERSATIONS_PAGE_SIZE);
+    setLoadingMore(false);
+    if (error) {
+      console.error("Failed to load more conversations:", error.message);
+      return;
+    }
+    const rows = data ?? [];
+    setHasMore(rows.length > CONVERSATIONS_PAGE_SIZE);
+    onConversationsLoadedRef.current(
+      normalizeConversations(rows.slice(0, CONVERSATIONS_PAGE_SIZE)),
+      "append",
+    );
+  }, [conversations.length]);
 
   // Tag definitions for the filter picker — loaded once so labels/colours
   // stay stable regardless of which conversations happen to be loaded.
@@ -419,21 +466,42 @@ export function ConversationList({
           <div className="flex items-center justify-center py-12">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="px-4 py-12 text-center">
-            <p className="text-sm text-muted-foreground">No conversations found</p>
-          </div>
         ) : (
-          <div className="flex flex-col">
-            {filtered.map((conv) => (
-              <ConversationItem
-                key={conv.id}
-                conversation={conv}
-                isActive={conv.id === activeConversationId}
-                onSelect={handleSelect}
-              />
-            ))}
-          </div>
+          <>
+            {filtered.length === 0 ? (
+              <div className="px-4 py-12 text-center">
+                <p className="text-sm text-muted-foreground">No conversations found</p>
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                {filtered.map((conv) => (
+                  <ConversationItem
+                    key={conv.id}
+                    conversation={conv}
+                    isActive={conv.id === activeConversationId}
+                    onSelect={handleSelect}
+                  />
+                ))}
+              </div>
+            )}
+            {hasMore && (
+              <div className="px-3 py-4 text-center">
+                <button
+                  type="button"
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
+                >
+                  {loadingMore ? "Loading…" : "Load older conversations"}
+                </button>
+                {(search.trim() || filter !== "all" || selectedTagIds.length > 0 || selectedCompany) && (
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Search and filters cover loaded conversations — load older ones to include them.
+                  </p>
+                )}
+              </div>
+            )}
+          </>
         )}
       </ScrollArea>
     </div>

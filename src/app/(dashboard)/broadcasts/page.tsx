@@ -25,6 +25,9 @@ import { getBroadcastStatus } from '@/lib/broadcast-status';
  */
 const POLL_INTERVAL_MS = 5_000;
 
+/** Broadcasts shown per page; "Load more" adds another page. */
+const PAGE_SIZE = 25;
+
 function percent(numerator: number, denominator: number): number {
   if (!denominator) return 0;
   return Math.round((numerator / denominator) * 100);
@@ -62,6 +65,11 @@ export default function BroadcastsPage() {
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  // How many rows the list shows. A ref so the polling interval always
+  // refetches the current window, not the one from when it started.
+  const limitRef = useRef(PAGE_SIZE);
 
   // Used to kick off polling only while something is actively sending.
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -69,13 +77,17 @@ export default function BroadcastsPage() {
   async function fetchBroadcasts() {
     try {
       const supabase = createClient();
+      // One extra row tells us whether there's another page.
       const { data, error: fetchError } = await supabase
         .from('broadcasts')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(0, limitRef.current);
 
       if (fetchError) throw fetchError;
-      setBroadcasts(data ?? []);
+      const rows = data ?? [];
+      setHasMore(rows.length > limitRef.current);
+      setBroadcasts(rows.slice(0, limitRef.current));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load broadcasts');
     } finally {
@@ -86,6 +98,13 @@ export default function BroadcastsPage() {
   useEffect(() => {
     fetchBroadcasts();
   }, []);
+
+  async function loadMore() {
+    limitRef.current += PAGE_SIZE;
+    setLoadingMore(true);
+    await fetchBroadcasts();
+    setLoadingMore(false);
+  }
 
   const anySending = useMemo(
     () => broadcasts.some((b) => b.status === 'sending'),
@@ -281,6 +300,14 @@ export default function BroadcastsPage() {
               })}
             </TableBody>
           </Table>
+          {hasMore && (
+            <div className="border-t border-border p-3 text-center">
+              <Button variant="outline" size="sm" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
+                Load more
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

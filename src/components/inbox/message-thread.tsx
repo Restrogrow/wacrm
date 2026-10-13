@@ -62,11 +62,18 @@ function renderTemplateBody(body: string, params: string[]): string {
   });
 }
 
+/** Messages fetched per page (newest first, shown oldest → newest). */
+export const MESSAGES_PAGE_SIZE = 50;
+
 interface MessageThreadProps {
   conversation: Conversation | null;
   contact: Contact | null;
   messages: Message[];
-  onMessagesLoaded: (messages: Message[]) => void;
+  /**
+   * `replace` is the latest page (on open or a resync); the parent keeps
+   * older pages it already has. `prepend` is a "load earlier" page.
+   */
+  onMessagesLoaded: (messages: Message[], mode: "replace" | "prepend") => void;
   onNewMessage: (message: Message) => void;
   onUpdateMessage: (id: string, updates: Partial<Message>) => void;
   onStatusChange: (conversationId: string, status: ConversationStatus) => void;
@@ -246,6 +253,12 @@ export function MessageThread({
     return { expired, remaining };
   }, [messages]);
 
+  // Paging: whether older messages exist beyond what's loaded, and the
+  // scroll height to restore after prepending them.
+  const [hasEarlier, setHasEarlier] = useState(false);
+  const [loadingEarlier, setLoadingEarlier] = useState(false);
+  const keepScrollFromHeightRef = useRef<number | null>(null);
+
   // Store latest callback in a ref so fetchMessages doesn't need to
   // depend on `onMessagesLoaded` — otherwise parent re-renders cause
   // fetchMessages to change → useEffect re-fires → refetch → realtime
@@ -274,18 +287,25 @@ export function MessageThread({
     (async () => {
       setLoading(true);
 
+      // Latest page only (plus one row to know if there's more).
       const { data, error } = await supabase
         .from("messages")
         .select("*")
         .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false })
+        .range(0, MESSAGES_PAGE_SIZE);
 
       if (cancelled) return;
 
       if (error) {
         console.error("Failed to fetch messages:", error);
       } else {
-        onMessagesLoadedRef.current(data ?? []);
+        const rows = (data ?? []) as Message[];
+        setHasEarlier(rows.length > MESSAGES_PAGE_SIZE);
+        onMessagesLoadedRef.current(
+          rows.slice(0, MESSAGES_PAGE_SIZE).reverse(),
+          "replace",
+        );
       }
 
       if (!cancelled) setLoading(false);
@@ -430,13 +450,42 @@ export function MessageThread({
       });
   }, [conversationId, hasUnread]);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages. After "Load earlier" the
+  // scroll position is kept on the message the user was looking at.
   useEffect(() => {
     if (scrollRef.current) {
       const el = scrollRef.current;
-      el.scrollTop = el.scrollHeight;
+      const prevHeight = keepScrollFromHeightRef.current;
+      if (prevHeight !== null) {
+        keepScrollFromHeightRef.current = null;
+        el.scrollTop = el.scrollHeight - prevHeight + el.scrollTop;
+      } else {
+        el.scrollTop = el.scrollHeight;
+      }
     }
   }, [messages]);
+
+  const loadEarlier = useCallback(async () => {
+    const oldest = messages.find((m) => !m.id.startsWith("temp-"));
+    if (!conversationId || !oldest) return;
+    setLoadingEarlier(true);
+    const { data, error } = await createClient()
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .lt("created_at", oldest.created_at)
+      .order("created_at", { ascending: false })
+      .range(0, MESSAGES_PAGE_SIZE);
+    setLoadingEarlier(false);
+    if (error) {
+      console.error("Failed to load earlier messages:", error);
+      return;
+    }
+    const rows = (data ?? []) as Message[];
+    setHasEarlier(rows.length > MESSAGES_PAGE_SIZE);
+    if (scrollRef.current) keepScrollFromHeightRef.current = scrollRef.current.scrollHeight;
+    onMessagesLoadedRef.current(rows.slice(0, MESSAGES_PAGE_SIZE).reverse(), "prepend");
+  }, [conversationId, messages]);
 
   const handleSend = useCallback(
     async (text: string, replyToId?: string) => {
@@ -1012,6 +1061,18 @@ export function MessageThread({
           </div>
         ) : (
           <div className="space-y-4">
+            {hasEarlier && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={loadEarlier}
+                  disabled={loadingEarlier}
+                  className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
+                >
+                  {loadingEarlier ? "Loading…" : "Load earlier messages"}
+                </button>
+              </div>
+            )}
             {messageGroups.map((group) => (
               <div key={group.date}>
                 {/* Date separator */}

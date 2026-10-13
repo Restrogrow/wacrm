@@ -114,8 +114,8 @@ export default function InboxPage() {
   // conversations stuck on "No messages yet" until the user reloaded.
   // Also self-heals if a realtime event was missed: callers can invoke
   // this whenever they reference a conversation id they don't recognise.
-  const hydrateConversation = useCallback(async (convId: string) => {
-    if (hydratingConvIdsRef.current.has(convId)) return;
+  const hydrateConversation = useCallback(async (convId: string): Promise<Conversation | null> => {
+    if (hydratingConvIdsRef.current.has(convId)) return null;
     hydratingConvIdsRef.current.add(convId);
     try {
       const supabase = createClient();
@@ -133,9 +133,9 @@ export default function InboxPage() {
           hint: error.hint,
           code: error.code,
         });
-        return;
+        return null;
       }
-      if (!data) return;
+      if (!data) return null;
       const fetched = normalizeConversation(data);
       setConversations((prev) => {
         const existing = prev.find((c) => c.id === fetched.id);
@@ -153,6 +153,7 @@ export default function InboxPage() {
         }
         return [fetched, ...prev];
       });
+      return fetched;
     } finally {
       hydratingConvIdsRef.current.delete(convId);
     }
@@ -387,8 +388,21 @@ export default function InboxPage() {
   }, []);
 
   const handleConversationsLoaded = useCallback(
-    (loaded: Conversation[]) => {
-      setConversations(loaded);
+    (loaded: Conversation[], mode: "replace" | "append") => {
+      if (mode === "append") {
+        setConversations((prev) => {
+          const seen = new Set(prev.map((c) => c.id));
+          return [...prev, ...loaded.filter((c) => !seen.has(c.id))];
+        });
+        return;
+      }
+      // A refreshed first page replaces the top of the list but keeps
+      // older pages the user already loaded with "Load older".
+      setConversations((prev) => {
+        if (prev.length <= loaded.length) return loaded;
+        const fresh = new Set(loaded.map((c) => c.id));
+        return [...loaded, ...prev.slice(loaded.length).filter((c) => !fresh.has(c.id))];
+      });
       // Resolve a pending deep-link here rather than in an effect — this
       // is an event handler, so the setState calls below are allowed by
       // react-hooks/set-state-in-effect. Runs once per ?c=<id> URL value
@@ -411,6 +425,17 @@ export default function InboxPage() {
         // full page reload rehydrated state from scratch.
         if (activeConversation?.id === deepLinkConvId) return;
         const match = loaded.find((c) => c.id === deepLinkConvId);
+        if (!match) {
+          // The linked conversation is older than the first page —
+          // fetch it on its own and open it.
+          const linkedId = deepLinkConvId;
+          void hydrateConversation(linkedId).then((conv) => {
+            if (!conv || autoSelectedForDeepLinkRef.current !== linkedId) return;
+            setActiveConversation(conv);
+            setActiveContact(conv.contact ?? null);
+            setMessages([]);
+          });
+        }
         if (match) {
           setActiveConversation(match);
           setActiveContact(match.contact ?? null);
@@ -429,7 +454,7 @@ export default function InboxPage() {
         }
       }
     },
-    [deepLinkConvId, activeConversation?.id]
+    [deepLinkConvId, activeConversation?.id, hydrateConversation]
   );
 
   const handleSelectConversation = useCallback(
@@ -488,9 +513,30 @@ export default function InboxPage() {
   }, [router]);
 
 
-  const handleMessagesLoaded = useCallback((loaded: Message[]) => {
-    setMessages(loaded);
-  }, []);
+  const handleMessagesLoaded = useCallback(
+    (loaded: Message[], mode: "replace" | "prepend") => {
+      setMessages((prev) => {
+        const ids = new Set(loaded.map((m) => m.id));
+        if (mode === "prepend") {
+          return [...loaded, ...prev.filter((m) => !ids.has(m.id))];
+        }
+        // Latest page refreshed: keep earlier pages already loaded for
+        // this conversation (anything older than the new page).
+        const first = loaded[0];
+        const convId = first?.conversation_id;
+        const older = first
+          ? prev.filter(
+              (m) =>
+                m.conversation_id === convId &&
+                !ids.has(m.id) &&
+                m.created_at < first.created_at,
+            )
+          : [];
+        return [...older, ...loaded];
+      });
+    },
+    [],
+  );
 
   const handleNewMessage = useCallback((msg: Message) => {
     setMessages((prev) => {
