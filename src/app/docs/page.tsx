@@ -10,6 +10,7 @@ import {
   PlugZap,
   Radio,
   Rocket,
+  ShoppingBag,
   Users,
   UsersRound,
   Zap,
@@ -38,6 +39,7 @@ const TOPICS: { id: string; label: string; blurb: string; icon: LucideIcon }[] =
   { id: "broadcasts", label: "Broadcasts", blurb: "Message many customers at once.", icon: Radio },
   { id: "automations", label: "Automations & flows", blurb: "Reply and tag automatically.", icon: Zap },
   { id: "ai-chatbot", label: "AI chatbot", blurb: "Answer chats from your knowledge base.", icon: Bot },
+  { id: "shopify", label: "Shopify", blurb: "Order, shipping, and cart messages.", icon: ShoppingBag },
   { id: "team", label: "Team members", blurb: "Invite teammates and set roles.", icon: UsersRound },
 ];
 
@@ -351,7 +353,32 @@ export default function DocsPage() {
             </p>
           </Section>
 
-          <Section id="team" n={10} title="Team members" intro="Invite teammates by link and control what they can do.">
+          <Section id="shopify" n={10} title="Shopify" intro="Send order confirmations, shipping updates, and abandoned-cart reminders on WhatsApp automatically.">
+            <ol className="steps">
+              <Step title="Create your templates">
+                In <Ui to="/settings?tab=templates">Settings → Templates</Ui>, create a template for each message you want, such
+                as &ldquo;Hi {"{{1}}"}, thanks for order {"{{2}}"} of {"{{3}}"}&rdquo;. Use the <b>Utility</b> category for order
+                updates and <b>Marketing</b> for abandoned-cart reminders, and wait for Meta to approve them.
+              </Step>
+              <Step title="Connect your store">
+                Open <Ui to="/settings?tab=shopify">Settings → Shopify</Ui>. Either click <b>Connect Shopify</b> and approve
+                Repeat Grow in Shopify, or choose <b>Connect with webhooks</b>: paste the signing key from Shopify&apos;s
+                Settings → Notifications → Webhooks, then create the listed webhooks there with the URL Repeat Grow gives you.
+              </Step>
+              <Step title="Choose your messages">
+                For each event (order placed, COD order placed, shipped, out for delivery, delivered, cancelled, abandoned
+                cart), switch it on, pick the template, and choose what fills each {"{{1}}"}, {"{{2}}"}: customer name, order
+                number, total, items, tracking link, and more. Use <b>Send test</b> to see the real message on your phone.
+              </Step>
+            </ol>
+            <Tip>
+              Messages show up in your inbox, so replies (like a COD customer tapping &ldquo;Confirm&rdquo;) land with your
+              team and can trigger automations. Numbers saved without a country code get +91 by default; change it in
+              Settings → Shopify. Abandoned-cart reminders skip customers who opted out.
+            </Tip>
+          </Section>
+
+          <Section id="team" n={11} title="Team members" intro="Invite teammates by link and control what they can do.">
             <p>Invite teammates from <Ui to="/settings?tab=members">Settings → Team members</Ui>. Each person gets one role:</p>
             <div className="docs-table-wrap">
               <table className="docs-table">

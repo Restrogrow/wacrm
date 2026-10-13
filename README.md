@@ -34,6 +34,11 @@
 - **No-code automations and flows**: trigger on inbound messages, first
   messages, keywords, or tags. Steps include branches, waits, tags, and
   webhooks, all in a visual builder.
+- **Shopify**: automatic WhatsApp messages for order placed, COD order
+  placed, shipped, out for delivery, delivered, cancelled, and abandoned
+  carts. Connect with one click (Shopify app) or with webhooks created in
+  Shopify admin; each event maps to an approved template whose variables
+  are filled from the order.
 - **AI chatbot**: answers WhatsApp chats from your knowledge base and
   hands off to a human when the customer asks for one.
 - **Real-time dashboard**: response times, daily volume, pipeline value,
@@ -118,6 +123,38 @@ New Google users are routed to `/onboarding` (from the dashboard
 layout) until their account has a mobile number, nature of business,
 and team size. Invited teammates are never asked.
 
+### Shopify integration
+
+Two ways to connect a store, both in **Settings → Shopify**:
+
+- **Webhooks (works for any store, no setup on our side):** the merchant
+  pastes the signing key from Shopify admin → Settings → Notifications →
+  Webhooks, then creates the listed webhooks (Order creation, Order
+  cancellation, Fulfillment creation, Fulfillment update, Checkout
+  creation, Checkout update; JSON) pointing at their unique URL
+  `/api/integrations/shopify/webhooks/<token>`.
+- **Connect Shopify (OAuth):** needs a Shopify app. In the
+  [Shopify Dev Dashboard](https://dev.shopify.com) create an app with:
+  - redirect URL `https://repeatgrow.com/api/integrations/shopify/callback`
+  - scopes `read_orders,read_fulfillments`
+  - protected customer data access for name, phone, email and address
+    (required to receive customer details in order webhooks)
+  - compliance webhooks (customer data request, customer redact, shop
+    redact) → `https://repeatgrow.com/api/integrations/shopify/webhooks`
+
+  Then set `SHOPIFY_API_KEY` (Client ID) and `SHOPIFY_API_SECRET`
+  (Client secret). On connect, Repeat Grow registers the webhooks via
+  the Admin API (API version 2026-10) with expiring offline tokens.
+  Installing on stores outside your organization requires public
+  distribution (Shopify App Store review); until then use custom
+  distribution install links or the webhook option.
+
+Apply `supabase/migrations/039_shopify_integration.sql` first. Planned
+integrations and the keys each needs: [docs/INTEGRATIONS.md](./docs/INTEGRATIONS.md).
+Abandoned-cart reminders run from the existing every-minute
+`/api/automations/cron` job. Code: `src/lib/shopify/`,
+`src/app/api/integrations/shopify/`.
+
 ### Scripts
 
 | Command | What it does |
@@ -138,7 +175,7 @@ src/lib/api/v1/     API envelope, pagination, serializers, OpenAPI spec
 src/lib/whatsapp/   Meta Cloud API client, webhooks, send pipeline
 src/components/     UI components
 supabase/           Database migrations
-docs/               Developer docs (public API, embedded signup)
+docs/               Developer docs (public API, embedded signup, integrations)
 ```
 
 ## Deployment

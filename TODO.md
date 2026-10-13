@@ -181,8 +181,19 @@ each needs a backwards-compatible rollout.
       click/revenue tracking, inbox → won-deal funnel.
 - [ ] **#28 More ways in:** Click-to-WhatsApp ad leads (Facebook /
       Instagram), website chat widget, QR codes.
-- [ ] **#29 Integrations:** Shopify / WooCommerce order updates, Google
-      Sheets, Zapier / Make apps on top of the public API.
+- [ ] **#29 Integrations:** WooCommerce, Razorpay / Cashfree, Wix,
+      Dukaan, BigCommerce, Google Forms / Typeform / Tally, Google
+      Calendar / Calendly, Zoom / Google Meet, Zapier / Make / Pabbly
+      Connect, Google Sheets. Plan and keys: `docs/INTEGRATIONS.md`.
+      (Shopify shipped — see #45.)
+- [ ] **#45 Shopify follow-ups.** Core integration shipped (Settings →
+      Shopify, migration 039). Next: write COD "Confirm / Cancel" replies
+      back to Shopify (tag or cancel the order; needs `write_orders`),
+      submit the Shopify app for App Store review so any store can use
+      one-click connect, uninstall the app via the Admin API on
+      Disconnect, support more than one store per account, refund
+      messages (`refunds/create`), and ready-made template suggestions
+      per event.
 - [ ] **#30 Hindi interface and a mobile app** (or installable PWA with
       push notifications).
 - [ ] **#31 Marketing:** submit the directory listings (G2, Capterra,

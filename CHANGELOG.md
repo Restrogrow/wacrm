@@ -13,6 +13,20 @@ and polish.
 
 ### Added
 
+- **Shopify → WhatsApp order messages** (Settings → Shopify). Connect a
+  store with one click (OAuth via Repeat Grow's Shopify app; webhooks
+  are registered automatically) or with webhooks created in Shopify
+  admin. Map approved templates to: order placed, COD order placed,
+  shipped (with tracking), out for delivery, delivered, cancelled, and
+  abandoned cart (sent by the every-minute cron after a configurable
+  idle time; skips opted-out customers). Template variables are filled
+  from the order (customer name, order number, total, items, tracking
+  link, checkout link, …), Indian numbers without +91 are fixed, sends
+  are de-duplicated across Shopify retries, and messages appear in the
+  inbox. Includes test sends, a recent-activity list, and Shopify's
+  mandatory privacy webhooks. **Migration required:** apply
+  `supabase/migrations/039_shopify_integration.sql`. Optional env:
+  `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`.
 - **Sign in with Google** on `/login` and `/signup` (Supabase OAuth via
   `/auth/callback`). Invite links survive the Google round-trip. Setup
   steps are in the README under "Google sign-in".
