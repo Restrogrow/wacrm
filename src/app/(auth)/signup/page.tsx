@@ -4,6 +4,11 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { AuthDivider, GoogleButton } from "@/components/auth/google-button";
+import {
+  NATURE_OF_BUSINESS_OPTIONS,
+  TEAM_SIZE_OPTIONS,
+} from "@/lib/auth/business-profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,20 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MessageSquare, CheckCircle, UsersRound, Eye, EyeOff } from "lucide-react";
-
-const NATURE_OF_BUSINESS_OPTIONS = [
-  "Retail & E-commerce",
-  "Services & Consulting",
-  "Healthcare",
-  "Education",
-  "Real Estate",
-  "Hospitality & Travel",
-  "Finance & Insurance",
-  "Manufacturing",
-  "Other",
-];
-
-const TEAM_SIZE_OPTIONS = ["Just me", "2-5", "6-20", "21-50", "50+"];
 
 // `useSearchParams` opts the component out of static prerendering
 // unless wrapped in Suspense — same pattern as /login.
@@ -238,6 +229,15 @@ function SignupPageInner() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <GoogleButton
+            next={
+              inviteToken
+                ? `/join/${encodeURIComponent(inviteToken)}`
+                : "/dashboard"
+            }
+          />
+          <AuthDivider label="or sign up with email" />
+
           <form onSubmit={handleSignup} className="flex flex-col gap-3.5">
             {error && (
               <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">

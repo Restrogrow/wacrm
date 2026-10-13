@@ -3,6 +3,10 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
 import { supabaseAdmin } from "@/lib/flows/admin-client";
+import {
+  isBusinessProfileComplete,
+  signupProviderLabel,
+} from "@/lib/auth/business-profile";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -22,6 +26,32 @@ interface AccountRow {
   name: string;
   created_at: string;
   owner_user_id: string;
+  nature_of_business: string | null;
+  team_size: string | null;
+}
+
+// How each user signed up ("google", "email", …) lives on auth.users,
+// which only the admin API exposes. Page through it once rather than
+// one lookup per owner.
+async function loadSignupProviders(
+  supabase: ReturnType<typeof supabaseAdmin>
+): Promise<Map<string, string | undefined>> {
+  const providers = new Map<string, string | undefined>();
+  for (let page = 1; ; page++) {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page,
+      perPage: 1000,
+    });
+    if (error) {
+      console.error("[admin/page] failed to list auth users:", error);
+      break;
+    }
+    for (const user of data.users) {
+      providers.set(user.id, user.app_metadata?.provider);
+    }
+    if (data.users.length < 1000) break;
+  }
+  return providers;
 }
 
 async function loadAccounts() {
@@ -29,7 +59,7 @@ async function loadAccounts() {
 
   const { data: accounts, error } = await supabase
     .from("accounts")
-    .select("id, name, created_at, owner_user_id")
+    .select("id, name, created_at, owner_user_id, nature_of_business, team_size")
     .order("created_at", { ascending: false })
     .returns<AccountRow[]>();
 
@@ -44,18 +74,23 @@ async function loadAccounts() {
   const ownerIds = accounts.map((a) => a.owner_user_id);
   const accountIds = accounts.map((a) => a.id);
 
-  const [{ data: owners }, { data: members }, { data: waConfigs }] =
-    await Promise.all([
-      supabase
-        .from("profiles")
-        .select("user_id, email, full_name")
-        .in("user_id", ownerIds),
-      supabase.from("profiles").select("account_id").in("account_id", accountIds),
-      supabase
-        .from("whatsapp_config")
-        .select("account_id, status")
-        .in("account_id", accountIds),
-    ]);
+  const [
+    { data: owners },
+    { data: members },
+    { data: waConfigs },
+    signupProviderByUserId,
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("user_id, email, full_name, mobile_number")
+      .in("user_id", ownerIds),
+    supabase.from("profiles").select("account_id").in("account_id", accountIds),
+    supabase
+      .from("whatsapp_config")
+      .select("account_id, status")
+      .in("account_id", accountIds),
+    loadSignupProviders(supabase),
+  ]);
 
   const ownerByUserId = new Map(
     (owners ?? []).map((o) => [o.user_id, o] as const)
@@ -78,6 +113,18 @@ async function loadAccounts() {
       name: account.name,
       createdAt: account.created_at,
       ownerLabel: owner?.email || owner?.full_name || "—",
+      ownerName: owner?.email ? owner?.full_name : null,
+      ownerMobile: owner?.mobile_number ?? null,
+      natureOfBusiness: account.nature_of_business,
+      teamSize: account.team_size,
+      signupMethod: signupProviderLabel(
+        signupProviderByUserId.get(account.owner_user_id)
+      ),
+      profileComplete: isBusinessProfileComplete({
+        natureOfBusiness: account.nature_of_business,
+        teamSize: account.team_size,
+        mobileNumber: owner?.mobile_number ?? null,
+      }),
       memberCount: memberCountByAccount.get(account.id) ?? 0,
       whatsappStatus: waStatusByAccount.get(account.id) ?? "not set up",
     };
@@ -88,7 +135,7 @@ export default async function PlatformAdminPage() {
   const accounts = await loadAccounts();
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
+    <div className="mx-auto max-w-7xl px-6 py-10">
       <div className="mb-6">
         <h1 className="text-xl font-bold tracking-tight">Accounts</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -106,6 +153,11 @@ export default async function PlatformAdminPage() {
               <TableRow>
                 <TableHead>Account</TableHead>
                 <TableHead>Owner</TableHead>
+                <TableHead>Mobile</TableHead>
+                <TableHead>Business type</TableHead>
+                <TableHead>Team size</TableHead>
+                <TableHead>Signed up via</TableHead>
+                <TableHead>Profile</TableHead>
                 <TableHead>Members</TableHead>
                 <TableHead>WhatsApp</TableHead>
                 <TableHead>Created</TableHead>
@@ -124,7 +176,29 @@ export default async function PlatformAdminPage() {
                     </Link>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {account.ownerLabel}
+                    <div>{account.ownerLabel}</div>
+                    {account.ownerName && (
+                      <div className="text-xs">{account.ownerName}</div>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {account.ownerMobile || "—"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {account.natureOfBusiness || "—"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {account.teamSize || "—"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {account.signupMethod}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={account.profileComplete ? "outline" : "destructive"}
+                    >
+                      {account.profileComplete ? "complete" : "incomplete"}
+                    </Badge>
                   </TableCell>
                   <TableCell>{account.memberCount}</TableCell>
                   <TableCell>

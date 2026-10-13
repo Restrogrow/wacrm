@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { safeNextPath } from "@/lib/auth/safe-next";
+import { AuthDivider, GoogleButton } from "@/components/auth/google-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +43,13 @@ function LoginPageInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    // /auth/callback bounces back here when an OAuth or email-link
+    // code exchange fails.
+    searchParams.get("error") === "auth-callback-failed"
+      ? "Sign-in failed. Please try again."
+      : null,
+  );
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
@@ -91,6 +98,15 @@ function LoginPageInner() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <GoogleButton
+            next={
+              inviteToken
+                ? `/join/${encodeURIComponent(inviteToken)}`
+                : nextPath
+            }
+          />
+          <AuthDivider />
+
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             {error && (
               <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">

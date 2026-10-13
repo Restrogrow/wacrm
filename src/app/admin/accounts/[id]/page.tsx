@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Users, Phone, Calendar, Mail } from "lucide-react";
+import { ArrowLeft, Users, Phone, Calendar, Mail, Building2 } from "lucide-react";
 
 import { supabaseAdmin } from "@/lib/flows/admin-client";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,10 @@ import {
 } from "@/components/ui/table";
 import { ROLE_META } from "@/components/settings/role-meta";
 import { isAccountRole } from "@/lib/auth/roles";
+import {
+  isBusinessProfileComplete,
+  signupProviderLabel,
+} from "@/lib/auth/business-profile";
 import { WhatsappDiagnosticsPanel } from "@/components/admin/whatsapp-diagnostics-panel";
 
 export const metadata: Metadata = {
@@ -29,6 +33,7 @@ interface MemberRow {
   role: string;
   joinedAt: string;
   lastSignInAt: string | null;
+  signupMethod: string;
 }
 
 interface AccountDetail {
@@ -37,6 +42,7 @@ interface AccountDetail {
   createdAt: string;
   natureOfBusiness: string | null;
   teamSize: string | null;
+  ownerUserId: string;
   members: MemberRow[];
   whatsapp: {
     status: string;
@@ -55,7 +61,7 @@ async function loadAccount(id: string): Promise<AccountDetail | null> {
 
   const { data: account, error: accountError } = await supabase
     .from("accounts")
-    .select("id, name, created_at, nature_of_business, team_size")
+    .select("id, name, created_at, owner_user_id, nature_of_business, team_size")
     .eq("id", id)
     .maybeSingle();
 
@@ -79,14 +85,20 @@ async function loadAccount(id: string): Promise<AccountDetail | null> {
       .maybeSingle(),
   ]);
 
-  // Last sign-in isn't on `profiles` — it lives on auth.users, which only
-  // the admin API exposes. One lookup per member; accounts rarely have
-  // more than a handful, so this stays cheap.
-  const authByUserId = new Map<string, string | null>();
+  // Last sign-in and signup provider aren't on `profiles` — they live on
+  // auth.users, which only the admin API exposes. One lookup per member;
+  // accounts rarely have more than a handful, so this stays cheap.
+  const authByUserId = new Map<
+    string,
+    { lastSignInAt: string | null; provider: string | undefined }
+  >();
   await Promise.all(
     (profiles ?? []).map(async (p) => {
       const { data } = await supabase.auth.admin.getUserById(p.user_id);
-      authByUserId.set(p.user_id, data.user?.last_sign_in_at ?? null);
+      authByUserId.set(p.user_id, {
+        lastSignInAt: data.user?.last_sign_in_at ?? null,
+        provider: data.user?.app_metadata?.provider,
+      });
     })
   );
 
@@ -97,7 +109,8 @@ async function loadAccount(id: string): Promise<AccountDetail | null> {
     mobileNumber: p.mobile_number,
     role: p.account_role ?? "viewer",
     joinedAt: p.created_at,
-    lastSignInAt: authByUserId.get(p.user_id) ?? null,
+    lastSignInAt: authByUserId.get(p.user_id)?.lastSignInAt ?? null,
+    signupMethod: signupProviderLabel(authByUserId.get(p.user_id)?.provider),
   }));
 
   return {
@@ -106,6 +119,7 @@ async function loadAccount(id: string): Promise<AccountDetail | null> {
     createdAt: account.created_at,
     natureOfBusiness: account.nature_of_business,
     teamSize: account.team_size,
+    ownerUserId: account.owner_user_id,
     members,
     whatsapp: waConfig
       ? {
@@ -153,6 +167,13 @@ export default async function AdminAccountDetailPage({
   if (!account) {
     notFound();
   }
+
+  const owner = account.members.find((m) => m.userId === account.ownerUserId);
+  const profileComplete = isBusinessProfileComplete({
+    natureOfBusiness: account.natureOfBusiness,
+    teamSize: account.teamSize,
+    mobileNumber: owner?.mobileNumber ?? null,
+  });
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -207,11 +228,60 @@ export default async function AdminAccountDetailPage({
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="size-4" />
-            <span className="text-xs">Signup method</span>
+            <span className="text-xs">WhatsApp signup</span>
           </div>
           <p className="mt-2 text-sm font-medium text-foreground capitalize">
             {account.whatsapp?.signupMethod ?? "—"}
           </p>
+        </div>
+      </div>
+
+      <div className="mb-8">
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Building2 className="size-4" />
+          Business details
+          <Badge variant={profileComplete ? "outline" : "destructive"}>
+            {profileComplete ? "complete" : "incomplete"}
+          </Badge>
+        </h2>
+        <div className="grid grid-cols-1 gap-4 rounded-lg border border-border bg-card p-4 sm:grid-cols-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Business name</p>
+            <p className="mt-1 text-sm text-foreground">{account.name}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Nature of business</p>
+            <p className="mt-1 text-sm text-foreground">
+              {account.natureOfBusiness || "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Team size</p>
+            <p className="mt-1 text-sm text-foreground">
+              {account.teamSize || "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Owner</p>
+            <p className="mt-1 text-sm text-foreground">
+              {owner?.fullName || "—"}
+            </p>
+            {owner?.email && (
+              <p className="text-xs text-muted-foreground">{owner.email}</p>
+            )}
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Owner mobile</p>
+            <p className="mt-1 text-sm text-foreground">
+              {owner?.mobileNumber || "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Owner signed up via</p>
+            <p className="mt-1 text-sm text-foreground">
+              {owner?.signupMethod ?? "—"}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -227,6 +297,7 @@ export default async function AdminAccountDetailPage({
                 <TableHead>Email</TableHead>
                 <TableHead>Mobile</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Signed up via</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead>Last sign-in</TableHead>
               </TableRow>
@@ -254,6 +325,9 @@ export default async function AdminAccountDetailPage({
                         <meta.icon className="size-3" />
                         {meta.label}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {member.signupMethod}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDate(member.joinedAt)}

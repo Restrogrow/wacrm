@@ -112,6 +112,23 @@ describe("proxy — refreshed auth cookies survive redirects", () => {
   });
 });
 
+describe("proxy — stray auth code on the homepage", () => {
+  it("forwards /?code=… to /auth/callback with a dashboard next", async () => {
+    const res = await proxy(new NextRequest("https://app.test/?code=abc123"));
+
+    const location = new URL(res.headers.get("location")!);
+    expect(location.pathname).toBe("/auth/callback");
+    expect(location.searchParams.get("code")).toBe("abc123");
+    expect(location.searchParams.get("next")).toBe("/dashboard");
+  });
+
+  it("leaves `code` alone on other paths", async () => {
+    const res = await proxy(new NextRequest("https://app.test/pricing?code=abc123"));
+
+    expect(res.headers.get("location")).toBeNull();
+  });
+});
+
 describe("proxy — canonical host redirect", () => {
   it("redirects www.repeatgrow.com to the apex domain, preserving path and query", async () => {
     const res = await proxy(

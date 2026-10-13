@@ -30,6 +30,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(target, 308)
   }
 
+  // Supabase falls back to the project's Site URL (the homepage) when an
+  // auth redirect — Google OAuth, signup confirmation — asks to return
+  // somewhere not on its Redirect URLs allow-list. The PKCE `code` then
+  // lands on `/` where nothing exchanges it, and the visitor is stuck on
+  // the marketing page signed out. Hand it to /auth/callback instead.
+  if (request.nextUrl.pathname === '/' && request.nextUrl.searchParams.has('code')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/callback'
+    if (!url.searchParams.has('next')) url.searchParams.set('next', '/dashboard')
+    return NextResponse.redirect(url)
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -102,7 +114,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Protected pages - redirect to login if not authenticated
-  const protectedPaths = ['/dashboard', '/inbox', '/contacts', '/pipelines', '/broadcasts', '/automations', '/flows', '/notifications', '/settings', '/admin']
+  const protectedPaths = ['/dashboard', '/inbox', '/contacts', '/pipelines', '/broadcasts', '/automations', '/flows', '/notifications', '/settings', '/admin', '/onboarding']
   if (!user && protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
