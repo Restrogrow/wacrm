@@ -186,6 +186,11 @@ each needs a backwards-compatible rollout.
       Calendar / Calendly, Zoom / Google Meet, Zapier / Make / Pabbly
       Connect, Google Sheets. Plan and keys: `docs/INTEGRATIONS.md`.
       (Shopify shipped — see #45.)
+- [ ] **#46 Calendly follow-ups.** Token integration shipped (Settings
+      → Calendly, migration 040). Next: Cal.com (free webhooks, same
+      engine), Google Calendar reminders, one-click Calendly OAuth,
+      organization-wide subscriptions for team accounts, and configurable
+      reminder times.
 - [ ] **#45 Shopify follow-ups.** Core integration shipped (Settings →
       Shopify, migration 039). Next: write COD "Confirm / Cancel" replies
       back to Shopify (tag or cancel the order; needs `write_orders`),

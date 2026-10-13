@@ -29,6 +29,22 @@ Code: `src/lib/shopify/`, migration `039_shopify_integration.sql`.
 | Connect with webhooks (any store) | **Customer:** webhook signing key from Shopify admin → Settings → Notifications → Webhooks. **Server:** none. |
 | Connect Shopify (one click) | **Server:** `SHOPIFY_API_KEY` (Client ID), `SHOPIFY_API_SECRET` (Client secret) from an app in the [Shopify Dev Dashboard](https://dev.shopify.com). App settings: redirect URL `https://repeatgrow.com/api/integrations/shopify/callback`, scopes `read_orders,read_fulfillments`, protected customer data (name, phone, email, address), compliance webhooks → `https://repeatgrow.com/api/integrations/shopify/webhooks`. App config: [`shopify/shopify.app.toml`](../shopify/shopify.app.toml). Public distribution selected; App Store listing in draft — until it's approved, one-click works only on development stores. |
 
+### Calendly
+
+Booking confirmed, rescheduled, cancelled, no-show follow-up, and
+reminders 24 h and 1 h before the meeting (sent by the every-minute
+cron; skipped for last-minute bookings). Settings → Calendly. Code:
+`src/lib/calendly/`, migration `040_calendly_integration.sql`.
+
+| Keys | |
+|---|---|
+| **Customer** | A Calendly **personal access token** (Calendly → Integrations → API & Webhooks → Personal access tokens). Repeat Grow creates the webhook subscription (`invitee.created`, `invitee.canceled`, `invitee_no_show.created`) with its own signing key and verifies `Calendly-Webhook-Signature`. Needs a **paid Calendly plan** (webhooks are paid-only). |
+| **Server** | None. (A one-click OAuth version later would add `CALENDLY_CLIENT_ID`, `CALENDLY_CLIENT_SECRET`.) |
+
+The invitee's phone comes from a booking question (type **Phone
+number**, e.g. "WhatsApp number"), the SMS-reminder number, or an
+outbound-call location — Calendly doesn't collect one by default.
+
 ---
 
 ## 🛒 E-commerce (planned)
@@ -131,13 +147,8 @@ send a WhatsApp welcome/confirmation, optionally create a deal.
 Booking confirmed → WhatsApp confirmation; reminders 24 h and 1 h
 before (cron) to cut no-shows; reschedule/cancel notices.
 
-### Calendly
-- **Customer keys:** a **Personal Access Token** (Integrations → API &
-  Webhooks). Webhooks need a paid Calendly plan (Standard or higher).
-  We create the webhook with a **signing key** and verify
-  `Calendly-Webhook-Signature`.
-- **Server keys (one-click OAuth instead):** `CALENDLY_CLIENT_ID`,
-  `CALENDLY_CLIENT_SECRET`, `CALENDLY_WEBHOOK_SIGNING_KEY`.
+Calendly is live — see the top of this file. Cal.com (free webhooks)
+is a cheap follow-up on the same engine.
 
 ### Google Calendar
 - **Server keys:** a Google OAuth client from Google Cloud Console →
@@ -197,7 +208,7 @@ exists: the public REST API (`/api/v1`) and signed outbound webhooks.
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Our own billing | Needed for TODO #1 |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Calendar, Meet, Sheets | Planned |
 | `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_WEBHOOK_SECRET_TOKEN` | Zoom | Planned |
-| `CALENDLY_CLIENT_ID`, `CALENDLY_CLIENT_SECRET`, `CALENDLY_WEBHOOK_SIGNING_KEY` | Calendly one-click | Optional (token route needs none) |
+| `CALENDLY_CLIENT_ID`, `CALENDLY_CLIENT_SECRET` | Calendly one-click OAuth (not built; the live token version needs none) | Optional |
 | `TYPEFORM_CLIENT_ID`, `TYPEFORM_CLIENT_SECRET` | Typeform one-click | Optional |
 | `WIX_APP_ID`, `WIX_APP_SECRET`, `WIX_WEBHOOK_PUBLIC_KEY` | Wix app route | Optional |
 | `BIGCOMMERCE_CLIENT_ID`, `BIGCOMMERCE_CLIENT_SECRET` | BigCommerce app route | Optional |
@@ -206,7 +217,7 @@ exists: the public REST API (`/api/v1`) and signed outbound webhooks.
 
 1. **Razorpay** (customer payment links + our own billing)
 2. **WooCommerce** (reuses the Shopify engine: events → templates)
-3. **Calendly + Google Calendar** reminders (no-shows)
+3. **Google Calendar / Cal.com** reminders (Calendly ✅ done — same engine)
 4. **Zapier / Make / Pabbly** apps (covers Dukaan, Wix, forms, Sheets
    for everyone else)
 5. Typeform / Tally / Google Forms, Zoom / Meet, Cashfree, Wix,

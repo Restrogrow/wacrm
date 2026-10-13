@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   Bot,
+  CalendarCheck,
   Code2,
   FileText,
   GitBranch,
@@ -40,6 +41,7 @@ const TOPICS: { id: string; label: string; blurb: string; icon: LucideIcon }[] =
   { id: "automations", label: "Automations & flows", blurb: "Reply and tag automatically.", icon: Zap },
   { id: "ai-chatbot", label: "AI chatbot", blurb: "Answer chats from your knowledge base.", icon: Bot },
   { id: "shopify", label: "Shopify", blurb: "Order, shipping, and cart messages.", icon: ShoppingBag },
+  { id: "calendly", label: "Calendly", blurb: "Booking confirmations and reminders.", icon: CalendarCheck },
   { id: "team", label: "Team members", blurb: "Invite teammates and set roles.", icon: UsersRound },
 ];
 
@@ -378,7 +380,29 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="team" n={11} title="Team members" intro="Invite teammates by link and control what they can do.">
+          <Section id="calendly" n={11} title="Calendly" intro="Confirm bookings and send reminders on WhatsApp so fewer people miss their meetings.">
+            <ol className="steps">
+              <Step title="Collect a phone number">
+                Calendly doesn&apos;t ask for one by default. In each Calendly event type, add a booking question of
+                type <b>Phone number</b> (for example &ldquo;WhatsApp number&rdquo;) or turn on text reminders.
+              </Step>
+              <Step title="Connect Calendly">
+                In Calendly, open Integrations → API &amp; Webhooks and generate a <b>personal access token</b>. Paste it
+                in <Ui to="/settings?tab=calendly">Settings → Calendly</Ui>. Calendly webhooks need a paid Calendly plan.
+              </Step>
+              <Step title="Choose your messages">
+                Create <b>Utility</b> templates in Settings → Templates, then pick one for each event: booking confirmed,
+                rescheduled, cancelled, no-show, and reminders 24 hours and 1 hour before. Fill {"{{1}}"}, {"{{2}}"} with
+                the invitee&apos;s name, meeting name, date, time, and meeting link, and use <b>Send test</b> to check it.
+              </Step>
+            </ol>
+            <Tip>
+              Dates and times use the invitee&apos;s own time zone. Reminders aren&apos;t sent for meetings booked at the
+              last minute or already cancelled, and replies land in your inbox.
+            </Tip>
+          </Section>
+
+          <Section id="team" n={12} title="Team members" intro="Invite teammates by link and control what they can do.">
             <p>Invite teammates from <Ui to="/settings?tab=members">Settings → Team members</Ui>. Each person gets one role:</p>
             <div className="docs-table-wrap">
               <table className="docs-table">

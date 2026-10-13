@@ -13,6 +13,19 @@ and polish.
 
 ### Added
 
+- **Calendly → WhatsApp booking messages** (Settings → Calendly).
+  Connect with a Calendly personal access token; Repeat Grow creates the
+  webhook subscription with its own signing key. Map approved templates
+  to: booking confirmed, rescheduled, cancelled, no-show follow-up, and
+  reminders 24 h and 1 h before the meeting (sent by the every-minute
+  cron, skipped for last-minute bookings and cancelled meetings).
+  Variables include the invitee's name, meeting name, date and time in
+  their time zone, meeting link, host, and reschedule/cancel links.
+  Phone numbers come from a "Phone number" booking question, the
+  SMS-reminder number, or an outbound-call location. Includes test
+  sends and a recent-activity list. Needs a paid Calendly plan.
+  **Migration required:** apply
+  `supabase/migrations/040_calendly_integration.sql`.
 - **Shopify → WhatsApp order messages** (Settings → Shopify). Connect a
   store with one click (OAuth via Repeat Grow's Shopify app; webhooks
   are registered automatically) or with webhooks created in Shopify

@@ -39,6 +39,9 @@
   carts. Connect with one click (Shopify app) or with webhooks created in
   Shopify admin; each event maps to an approved template whose variables
   are filled from the order.
+- **Calendly**: WhatsApp booking confirmations, reschedule and
+  cancellation notices, no-show follow-ups, and reminders 24 h and 1 h
+  before each meeting. Connect with a Calendly personal access token.
 - **AI chatbot**: answers WhatsApp chats from your knowledge base and
   hands off to a human when the customer asks for one.
 - **Real-time dashboard**: response times, daily volume, pipeline value,
@@ -153,6 +156,25 @@ integrations and the keys each needs: [docs/INTEGRATIONS.md](./docs/INTEGRATIONS
 Abandoned-cart reminders run from the existing every-minute
 `/api/automations/cron` job. Code: `src/lib/shopify/`,
 `src/app/api/integrations/shopify/`.
+
+### Calendly integration
+
+**Settings → Calendly.** The business pastes a Calendly personal access
+token (Calendly → Integrations → API & Webhooks); Repeat Grow creates a
+webhook subscription (`invitee.created`, `invitee.canceled`,
+`invitee_no_show.created`) to `/api/integrations/calendly/webhooks/<token>`
+with its own signing key, verified via `Calendly-Webhook-Signature`.
+Needs a paid Calendly plan. No server env vars.
+
+Each event maps to an approved template whose variables come from the
+booking (invitee name, meeting name, date and time in the invitee's
+time zone, meeting link, host, reschedule/cancel links, booking page).
+Bookings are stored so the every-minute `/api/automations/cron` job can
+send the 24 h and 1 h reminders. The invitee's phone comes from a
+"Phone number" booking question, the SMS-reminder number, or an
+outbound-call location. Apply
+`supabase/migrations/040_calendly_integration.sql` first. Code:
+`src/lib/calendly/`, `src/app/api/integrations/calendly/`.
 
 ### Scripts
 
