@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Loader2, KeyRound } from 'lucide-react';
 
+import type { User } from '@supabase/supabase-js';
+
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -19,9 +21,29 @@ import {
 
 const MIN_PASSWORD = 8;
 
+/**
+ * Does this account sign in with a password? Google sign-ups don't
+ * have one until they set it here (recorded as user_metadata.has_password,
+ * since Supabase doesn't add an "email" identity for it).
+ */
+function hasPasswordLogin(user: User | null): boolean {
+  if (!user) return true;
+  const providers: unknown[] = Array.isArray(user.app_metadata?.providers)
+    ? user.app_metadata.providers
+    : [user.app_metadata?.provider];
+  return (
+    providers.includes('email') ||
+    (user.identities ?? []).some((i) => i.provider === 'email') ||
+    user.user_metadata?.has_password === true
+  );
+}
+
 export function PasswordForm() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const supabase = createClient();
+  const [justSet, setJustSet] = useState(false);
+  // Google-only accounts set a first password without a current one.
+  const settingFirst = !hasPasswordLogin(user) && !justSet;
 
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -47,21 +69,24 @@ export function PasswordForm() {
     setSaving(true);
 
     try {
-      // Supabase doesn't expose a "verify password without issuing a
-      // session" API, so we re-authenticate with the provided current
-      // password. If it matches, the session refreshes silently; if it
-      // doesn't, we abort before calling updateUser.
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: profile.email,
-        password: current,
-      });
-      if (signInError) {
-        toast.error('Current password is incorrect');
-        return;
+      if (!settingFirst) {
+        // Supabase doesn't expose a "verify password without issuing a
+        // session" API, so we re-authenticate with the provided current
+        // password. If it matches, the session refreshes silently; if it
+        // doesn't, we abort before calling updateUser.
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: profile.email,
+          password: current,
+        });
+        if (signInError) {
+          toast.error('Current password is incorrect');
+          return;
+        }
       }
 
       const { error: updateError } = await supabase.auth.updateUser({
         password: next,
+        data: { has_password: true },
       });
       if (updateError) {
         toast.error(`Password update failed: ${updateError.message}`);
@@ -71,7 +96,12 @@ export function PasswordForm() {
       setCurrent('');
       setNext('');
       setConfirm('');
-      toast.success('Password updated');
+      if (settingFirst) {
+        setJustSet(true);
+        toast.success('Password set — you can now also sign in with your email and password');
+      } else {
+        toast.success('Password updated');
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       toast.error(msg);
@@ -88,27 +118,30 @@ export function PasswordForm() {
           Password
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          Use at least {MIN_PASSWORD} characters. You will stay signed in on
-          this device after changing it.
+          {settingFirst
+            ? `You signed up with Google. Set a password (at least ${MIN_PASSWORD} characters) to also sign in with your email.`
+            : `Use at least ${MIN_PASSWORD} characters. You will stay signed in on this device after changing it.`}
         </CardDescription>
       </CardHeader>
 
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="current-password" className="text-foreground">
-              Current password
-            </Label>
-            <Input
-              id="current-password"
-              type="password"
-              value={current}
-              onChange={(e) => setCurrent(e.target.value)}
-              autoComplete="current-password"
-              disabled={saving}
-              required
-            />
-          </div>
+          {!settingFirst && (
+            <div className="space-y-2">
+              <Label htmlFor="current-password" className="text-foreground">
+                Current password
+              </Label>
+              <Input
+                id="current-password"
+                type="password"
+                value={current}
+                onChange={(e) => setCurrent(e.target.value)}
+                autoComplete="current-password"
+                disabled={saving}
+                required
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
@@ -152,13 +185,15 @@ export function PasswordForm() {
           <div className="flex justify-end">
             <Button
               type="submit"
-              disabled={saving || !current || !next || !confirm}
+              disabled={saving || (!settingFirst && !current) || !next || !confirm}
             >
               {saving ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
                   Updating…
                 </>
+              ) : settingFirst ? (
+                'Set password'
               ) : (
                 'Update password'
               )}
