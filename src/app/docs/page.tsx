@@ -239,6 +239,11 @@ export default function DocsPage() {
               <li>Assign a conversation to a teammate and set its status to open, pending, or closed.</li>
               <li>Add internal notes that customers never see.</li>
               <li>Send text, images, video, documents, voice notes, and approved templates.</li>
+              <li>
+                Type <b>/</b> in the message box to insert a <b>saved reply</b>. Admins add them in{" "}
+                <Ui to="/settings?tab=saved-replies">Settings → Saved replies</Ui>; {"{{name}}"} fills in the
+                customer&apos;s first name.
+              </li>
               <li>The contact panel shows the customer&apos;s details, tags, and deals beside the chat.</li>
             </ul>
           </Section>
@@ -252,6 +257,7 @@ export default function DocsPage() {
                 share it later.
               </li>
               <li>Import a CSV from <Ui to="/contacts">Contacts</Ui>. Duplicate phone numbers are merged, not duplicated.</li>
+              <li>Click <b>Export</b> on the Contacts page to download every contact (with tags and custom fields) as a CSV.</li>
               <li>Organise contacts with tags and custom fields in <Ui to="/settings?tab=fields">Settings → Fields &amp; tags</Ui>.</li>
               <li>Each contact keeps its full conversation and deal history.</li>
             </ul>
@@ -323,7 +329,11 @@ export default function DocsPage() {
               <Step title="Choose recipients">
                 Select who gets it, for example everyone with a certain tag, and fill in any variables.
               </Step>
-              <Step title="Send and track">
+              <Step title="Send now or schedule">
+                Send right away, or choose <b>Schedule for later</b> and pick a date and time; it goes out
+                automatically. Cancel a scheduled broadcast from its page.
+              </Step>
+              <Step title="Track results">
                 Sent, delivered, read, replied, and failed counts update live.
               </Step>
             </ol>

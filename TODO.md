@@ -83,15 +83,20 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       "continue to <project-ref>.supabase.co". A Supabase custom auth
       domain would show repeatgrow.com instead.
 
-- [ ] **#6 Saved replies** in the inbox (type "/" to insert), shared per
-      account, with variables like the contact's name.
-- [ ] **#7 Scheduled broadcasts** ("send Friday 6 pm"); the type exists in
-      `src/types` but there's no UI or scheduler.
+- [x] **#6 Saved replies.** Done (migration 042): type "/" in the inbox;
+      managed in Settings → Saved replies; {{name}}, {{full_name}},
+      {{agent}} variables.
+- [x] **#7 Scheduled broadcasts.** Done (migration 043): "Schedule for
+      later" in the wizard; the server cron sends in batches; cancel from
+      the broadcast page.
+- [ ] **#47 Trial-ending reminders** (decided: later). WhatsApp and/or
+      email to the owner 2 days before, on the last day, and 1 day after
+      the trial ends, with a "Choose a plan" link.
 - [ ] **#8 Notifications agents can't miss:** browser notifications +
       sound, email digests, and mobile push for new messages and
       assignments (today notifications only show inside the app).
-- [ ] **#9 Contact export** to CSV (import exists, export doesn't);
-      needed for data-protection requests too.
+- [x] **#9 Contact export.** Done: Export on the Contacts page (CSV
+      with tags and custom fields, formula-safe).
 - [ ] **#10 Multiple WhatsApp numbers per account.** `whatsapp_config` is
       UNIQUE(account_id) (migration 017). Needs number selection in inbox,
       broadcasts, flows, automations, chatbot and the API.
@@ -116,8 +121,9 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 - [ ] **#16 Shared rate limiting.** `src/lib/rate-limit.ts` is in-memory
       per process; move to Redis/Upstash before running more than one
       instance.
-- [ ] **#17 Error monitoring** (Sentry or similar) for the webhook,
-      chatbot, broadcasts, Gemini and Meta calls, with alerts.
+- [x] **#17 Error monitoring.** Done: Sentry (`src/instrumentation*.ts`),
+      off until `NEXT_PUBLIC_SENTRY_DSN` is set; set up alert rules in
+      Sentry.
 - [ ] **#18 End-to-end tests** (Playwright) for signup → connect WhatsApp
       → send → broadcast → template, run in CI.
 - [ ] **#19 Block dry-run in production.** Ignore
@@ -170,7 +176,9 @@ each needs a backwards-compatible rollout.
 - [ ] **#26 Smarter AI:** chatbot creates leads/deals and tags
       customers; reply suggestions and chat summaries for agents;
       knowledge base from a website URL or PDF instead of pasted text.
-- [ ] **#32 Daily WhatsApp summary.** Every day at 12 pm, send the
+- [ ] **#32 Daily WhatsApp summary.** Email version done (migration
+      044, Settings → Daily summary, owner picks on/off, hour, recipients).
+      Still to do: the WhatsApp version. Original note: every day at 12 pm, send the
       business owner a WhatsApp message with the day's numbers: messages
       sent and received, new contacts, conversations opened / closed /
       pending, average first-response time, broadcasts sent (delivered,

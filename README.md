@@ -24,6 +24,9 @@
   Supports WhatsApp usernames: customers who hide their number are
   matched and messaged by their business-scoped user ID (BSUID) and
   shown as "@username".
+- **Saved replies**: type "/" in the inbox to insert a team reply
+  ({{name}} etc. filled in); managed in Settings → Saved replies.
+- **Contact export**: CSV of all contacts with tags and custom fields.
 - **Sales pipelines**: Kanban boards with deals linked to conversations.
   Amounts default to Indian Rupees (₹); each account can pick its
   currency in Settings.
@@ -31,6 +34,11 @@
   tracking and per-recipient variables. Customers who reply STOP or tap
   a template's "Stop promotions" button are opted out automatically.
   Template quick-reply taps also trigger automations and the chatbot.
+  **Schedule for later**: the server sends at the chosen time, in
+  batches, so the browser doesn't have to stay open.
+- **Daily summary email**: each owner picks on/off, the hour (IST) and
+  recipients; messages, new chats and contacts, chats waiting,
+  broadcasts, deals and opt-outs. Needs the `SMTP_*` env vars.
 - **No-code automations and flows**: trigger on inbound messages, first
   messages, keywords, or tags. Steps include branches, waits, tags, and
   webhooks, all in a visual builder.
@@ -186,6 +194,17 @@ WhatsApp/email to support with the account details.
 
 Apply `supabase/migrations/041_plans_and_trials.sql` (existing accounts
 get a one-time 14-day trial).
+
+### Error monitoring (Sentry)
+
+Set `NEXT_PUBLIC_SENTRY_DSN` (sentry.io → Project settings → Client
+keys) to send browser, server and edge errors — webhooks, cron, API
+routes, integrations — to Sentry (`src/instrumentation.ts`,
+`src/instrumentation-client.ts`, settings in `src/lib/sentry-options.ts`).
+No Session Replay and no default PII. Optional `SENTRY_AUTH_TOKEN`,
+`SENTRY_ORG`, `SENTRY_PROJECT` upload source maps at build time for
+readable stack traces. Configure alerts (e.g. email on new issues) in
+Sentry.
 
 ### Calendly integration
 

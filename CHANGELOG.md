@@ -13,6 +13,26 @@ and polish.
 
 ### Added
 
+- **Saved replies.** Type "/" in the inbox message box to pick a saved
+  reply (arrow keys + Enter); {{name}}, {{full_name}} and {{agent}} are
+  filled in. Admins manage them in Settings → Saved replies.
+  **Migration required:** `supabase/migrations/042_saved_replies.sql`.
+- **Scheduled broadcasts.** "Schedule for later" in the broadcast
+  wizard; the server sends at that time in batches (no open browser
+  needed), skipping opted-out contacts and respecting the plan. Cancel
+  from the broadcast page (back to a draft). **Migration required:**
+  `supabase/migrations/043_scheduled_broadcasts.sql`.
+- **Contact export.** Export on the Contacts page downloads a CSV of
+  every contact with tags and custom fields (spreadsheet-formula safe).
+- **Daily summary email** (Settings → Daily summary). Owners choose
+  on/off, the hour (IST) and up to 5 recipients; morning emails cover
+  yesterday, afternoon/evening ones today so far. Includes messages
+  received/sent, new conversations and contacts, chats waiting,
+  broadcasts, deals created/won and opt-outs; "Send a test now".
+  **Migration required:** `supabase/migrations/044_daily_summary.sql`.
+  Env: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`.
+- **Sentry error monitoring**, off until `NEXT_PUBLIC_SENTRY_DSN` is set.
+
 - **Admin dashboard** (`/admin`). Sign-ups today, last 7 and 30 days
   (with change vs the previous period) and a 30-day daily chart in India
   time; WhatsApp-connected, active-in-7-days, messages today and
