@@ -18,6 +18,7 @@ import { engineSendText } from '@/lib/flows/meta-send'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import { recordWebhookFailure } from '@/lib/ops/monitoring'
 import { handleCallsWebhook, type CallWebhookValue } from '@/lib/whatsapp/calling'
+import { handleFormReply } from '@/lib/whatsapp/forms'
 import {
   handleTemplateWebhookChange,
   isTemplateWebhookField,
@@ -79,7 +80,9 @@ interface WhatsAppMessage {
    * to advance the per-contact run.
    */
   interactive?: {
-    type: 'button_reply' | 'list_reply' | 'call_permission_reply'
+    type: 'button_reply' | 'list_reply' | 'call_permission_reply' | 'nfm_reply'
+    /** Customer submitted a WhatsApp form (Flow). */
+    nfm_reply?: { name?: string; body?: string; response_json?: string }
     button_reply?: { id: string; title: string }
     list_reply?: { id: string; title: string; description?: string }
     /** Customer answered a call permission request (Calling API). */
@@ -809,6 +812,29 @@ async function processMessage(
     console.error('Error updating conversation:', convError)
   }
 
+  // WhatsApp form submitted: save the answers, copy mapped ones onto
+  // the contact, and replace the bubble text with the labelled answers.
+  if (message.type === 'interactive' && message.interactive?.type === 'nfm_reply') {
+    try {
+      const summary = await handleFormReply(supabaseAdmin(), {
+        accountId,
+        contactId: contactRecord.id,
+        conversationId: conversation.id,
+        messageId: message.id,
+        responseJson: message.interactive.nfm_reply?.response_json,
+      })
+      if (summary) {
+        await supabaseAdmin().from('messages').update({ content_text: summary }).eq('message_id', message.id)
+        await supabaseAdmin()
+          .from('conversations')
+          .update({ last_message_text: summary.split('\n')[0] })
+          .eq('id', conversation.id)
+      }
+    } catch (err) {
+      console.error('[webhook] form reply handling failed:', err)
+    }
+  }
+
   // If this contact was a recent broadcast recipient, flag the reply
   // so the broadcast's `replied_count` advances (via the aggregate
   // trigger installed in migration 003).
@@ -1108,6 +1134,16 @@ async function parseMessageContent(
           ...empty,
           contentText: text,
           interactiveReplyId: `call_permission:${permission.response ?? 'unknown'}`,
+        }
+      }
+
+      // A submitted WhatsApp form (Flow). The readable summary with field
+      // labels is written after the insert by handleFormReply.
+      if (message.interactive?.type === 'nfm_reply') {
+        return {
+          ...empty,
+          contentText: '📝 Form submitted',
+          interactiveReplyId: 'form_submitted',
         }
       }
 

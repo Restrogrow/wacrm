@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   Bot,
+  ClipboardList,
   CalendarCheck,
   Code2,
   CreditCard,
@@ -39,6 +40,7 @@ const TOPICS: { id: string; label: string; blurb: string; icon: LucideIcon }[] =
   { id: "contacts", label: "Contacts", blurb: "Import, tag, and organise customers.", icon: Users },
   { id: "pipelines", label: "Pipelines", blurb: "Track deals on Kanban boards.", icon: GitBranch },
   { id: "templates", label: "Message templates", blurb: "Create and submit templates to Meta.", icon: FileText },
+  { id: "forms", label: "WhatsApp forms", blurb: "Collect details inside WhatsApp.", icon: ClipboardList },
   { id: "broadcasts", label: "Broadcasts", blurb: "Message many customers at once.", icon: Radio },
   { id: "automations", label: "Automations & flows", blurb: "Reply and tag automatically.", icon: Zap },
   { id: "ai-chatbot", label: "AI chatbot", blurb: "Answer chats from your knowledge base.", icon: Bot },
@@ -347,7 +349,24 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="broadcasts" n={7} title="Broadcasts" intro="Send an approved template to many customers at once.">
+          <Section id="forms" n={7} title="WhatsApp forms" intro="Collect leads, booking requests or feedback in a form that opens inside WhatsApp.">
+            <ol className="steps">
+              <Step title="Build the form">
+                In <Ui to="/settings?tab=forms">Settings → WhatsApp forms</Ui>, click <b>New form</b>, add fields (text,
+                email, phone, dropdown, date, consent…) and choose which answers to save to the contact&apos;s name, email or
+                custom fields. Click <b>Publish</b>.
+              </Step>
+              <Step title="Send it from a chat">
+                Open a conversation and click the <b>clipboard icon</b> at the top. Works within 24 hours of the
+                customer&apos;s last message.
+              </Step>
+              <Step title="See the answers">
+                Answers appear in the chat and on the form&apos;s <b>Responses</b> list, where you can download them as a CSV.
+              </Step>
+            </ol>
+          </Section>
+
+          <Section id="broadcasts" n={8} title="Broadcasts" intro="Send an approved template to many customers at once.">
             <ol className="steps">
               <Step title="Pick an approved template">
                 Open <Ui to="/broadcasts">Broadcasts</Ui> and choose the template to send.
@@ -372,7 +391,7 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="automations" n={8} title="Automations & flows" intro="Let Repeat Grow handle the repetitive work.">
+          <Section id="automations" n={9} title="Automations & flows" intro="Let Repeat Grow handle the repetitive work.">
             <p>
               <Ui to="/automations">Automations</Ui> run actions when something happens, such as a new inbound
               message, a customer&apos;s first message, a keyword match, or a tag being added.
@@ -385,7 +404,7 @@ export default function DocsPage() {
             </p>
           </Section>
 
-          <Section id="ai-chatbot" n={9} title="AI chatbot" intro="Answer common questions instantly, day or night.">
+          <Section id="ai-chatbot" n={10} title="AI chatbot" intro="Answer common questions instantly, day or night.">
             <p>
               In <Ui to="/settings?tab=ai-chatbot">Settings → AI chatbot</Ui>, add your business knowledge (FAQs, policies,
               product details) and switch the chatbot on. It answers WhatsApp chats naturally from
@@ -394,7 +413,7 @@ export default function DocsPage() {
             </p>
           </Section>
 
-          <Section id="shopify" n={10} title="Shopify" intro="Send order confirmations, shipping updates, and abandoned-cart reminders on WhatsApp automatically.">
+          <Section id="shopify" n={11} title="Shopify" intro="Send order confirmations, shipping updates, and abandoned-cart reminders on WhatsApp automatically.">
             <ol className="steps">
               <Step title="Create your templates">
                 In <Ui to="/settings?tab=templates">Settings → Templates</Ui>, create a template for each message you want, such
@@ -419,7 +438,7 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="calendly" n={11} title="Calendly" intro="Confirm bookings and send reminders on WhatsApp so fewer people miss their meetings.">
+          <Section id="calendly" n={12} title="Calendly" intro="Confirm bookings and send reminders on WhatsApp so fewer people miss their meetings.">
             <ol className="steps">
               <Step title="Collect a phone number">
                 Calendly doesn&apos;t ask for one by default. In each Calendly event type, add a booking question of
@@ -441,7 +460,7 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="team" n={12} title="Team members" intro="Invite teammates by link and control what they can do.">
+          <Section id="team" n={13} title="Team members" intro="Invite teammates by link and control what they can do.">
             <p>Invite teammates from <Ui to="/settings?tab=members">Settings → Team members</Ui>. Each person gets one role:</p>
             <div className="docs-table-wrap">
               <table className="docs-table">
@@ -458,7 +477,7 @@ export default function DocsPage() {
             </div>
           </Section>
 
-          <Section id="plans" n={13} title="Plans & free trial" intro="Try everything free for 7 days, then pick the plan that fits.">
+          <Section id="plans" n={14} title="Plans & free trial" intro="Try everything free for 7 days, then pick the plan that fits.">
             <ul className="bullets">
               <li>New accounts get a <b>7-day free trial</b> with Growth features. The bar at the top shows the days left.</li>
               <li>
@@ -478,7 +497,7 @@ export default function DocsPage() {
             </ul>
           </Section>
 
-          <Section id="your-data" n={14} title="Your data & privacy" intro="Get a copy of your data or delete your account, any time.">
+          <Section id="your-data" n={15} title="Your data & privacy" intro="Get a copy of your data or delete your account, any time.">
             <ul className="bullets">
               <li>
                 Go to <Ui to="/settings?tab=your-data">Settings → Your data</Ui>.

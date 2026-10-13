@@ -34,10 +34,10 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       expires media IDs after 7 days (since Oct 2025), so older
       attachments stop loading. Download each file to Supabase Storage
       when the webhook receives it and store that URL instead.
-- [ ] **#37 WhatsApp Flows (native forms).** Send Flow messages (lead
-      forms, bookings, surveys) and capture `interactive.nfm_reply`
-      responses into contact fields; today they show as
-      "[Interactive reply]" and the answers are lost.
+- [x] **#37 WhatsApp Flows (native forms).** Shipped as WhatsApp forms
+      (migration 052): builder, send from chat, answers saved to
+      contacts. Follow-ups: send from automations, multi-screen flows,
+      data endpoints.
 - [x] **#38 Carousels.** Media-card carousel templates shipped (migration
       051) — builder, broadcasts, inbox, automations. Product-card
       carousels (from a catalog) come with #40.

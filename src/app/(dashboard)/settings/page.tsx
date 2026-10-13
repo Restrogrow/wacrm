@@ -15,6 +15,7 @@ import { WhatsAppConfig } from '@/components/settings/whatsapp-config';
 import { CallingSettingsCard } from '@/components/settings/calling-settings-card';
 import { NumberHealthCard } from '@/components/settings/number-health-card';
 import { TemplateManager } from '@/components/settings/template-manager';
+import { FormsSettings } from '@/components/settings/forms-settings';
 import { SavedRepliesSettings } from '@/components/settings/saved-replies-settings';
 import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel';
 import { DealsSettings } from '@/components/settings/deals-settings';
@@ -81,6 +82,7 @@ export default function SettingsPage() {
     ),
     'ai-chatbot': <AiChatbotSettings />,
     templates: <TemplateManager />,
+    forms: <FormsSettings />,
     'saved-replies': <SavedRepliesSettings />,
     fields: <FieldsAndTagsPanel />,
     deals: <DealsSettings />,

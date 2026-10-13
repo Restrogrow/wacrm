@@ -13,6 +13,12 @@ and polish.
 
 ### Added
 
+- **WhatsApp forms.** Build forms in Settings → WhatsApp forms and send
+  them from any chat; customers fill them in inside WhatsApp. Answers
+  appear in the chat, can be saved to the contact (name, email, custom
+  fields) and are listed per form with a CSV download. **Migration
+  required:** `supabase/migrations/052_whatsapp_forms.sql`.
+
 - **Carousel templates.** Build Marketing templates with 2–10 swipeable
   cards — image or video, short text and up to two buttons each — in
   Settings → Templates (Template type → Carousel), and send them in

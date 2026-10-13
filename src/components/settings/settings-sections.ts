@@ -1,5 +1,6 @@
 import {
   Bot,
+  ClipboardList,
   CalendarCheck,
   Coins,
   CreditCard,
@@ -37,6 +38,7 @@ export const SETTINGS_SECTIONS = [
   'whatsapp',
   'ai-chatbot',
   'templates',
+  'forms',
   'saved-replies',
   'fields',
   'deals',
@@ -70,6 +72,7 @@ export const SECTION_META: Record<SettingsSection, SectionMeta> = {
   whatsapp: { id: 'whatsapp', label: 'WhatsApp', icon: PlugZap, group: 'workspace' },
   'ai-chatbot': { id: 'ai-chatbot', label: 'AI chatbot', icon: Bot, group: 'workspace' },
   templates: { id: 'templates', label: 'Templates', icon: FileText, group: 'workspace' },
+  forms: { id: 'forms', label: 'WhatsApp forms', icon: ClipboardList, group: 'workspace' },
   'saved-replies': { id: 'saved-replies', label: 'Saved replies', icon: MessageSquareText, group: 'workspace' },
   fields: { id: 'fields', label: 'Fields & tags', icon: Tags, group: 'workspace' },
   deals: { id: 'deals', label: 'Deals & currency', icon: Coins, group: 'workspace' },

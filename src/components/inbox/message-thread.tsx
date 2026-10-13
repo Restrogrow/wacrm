@@ -8,6 +8,7 @@ import { PresenceDot } from "@/components/presence/presence-dot";
 import { presenceLabel } from "@/lib/presence";
 import { cn } from "@/lib/utils";
 import { CallButton } from "@/components/calls/call-button";
+import { SendFormButton } from "@/components/inbox/send-form-button";
 import type {
   Conversation,
   Message,
@@ -932,6 +933,9 @@ export function MessageThread({
               )}
             </button>
           )}
+
+          {/* Send a WhatsApp form (Flows). */}
+          <SendFormButton conversationId={conversation.id} />
 
           {/* WhatsApp voice call (Calling API). */}
           <CallButton

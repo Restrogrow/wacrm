@@ -119,6 +119,23 @@
 - Live sent / delivered / read / replied / failed counts per broadcast.
 - The broadcasts list shows 25 at a time with **Load more**.
 
+### WhatsApp forms (Meta Flows)
+- **Settings → WhatsApp forms:** build a form from simple fields —
+  short / long text, email, phone, number, dropdown, date, consent
+  checkbox — with a title, intro and submit button. Publishing turns it
+  into a single-screen Flow JSON and creates + publishes it on Meta
+  (published Flows can't be edited, so saving changes publishes a new
+  version and retires the old one).
+- **Send from a chat:** clipboard icon in the chat header (within the
+  24-hour window). The customer fills it in without leaving WhatsApp.
+- **Answers** arrive on the `nfm_reply` webhook (matched by the
+  `rgform:<form id>:…` flow token): shown in the chat with labels,
+  saved to `whatsapp_form_responses`, optionally copied to the
+  contact's name, email or custom fields, and listed per form with a
+  CSV download.
+- Code: `src/lib/whatsapp/forms.ts`, `src/components/settings/forms-settings.tsx`,
+  `src/app/api/whatsapp/forms/` (migration 052).
+
 ### Automations and flows
 - **Automations:** triggers (new message, first message, keyword, new
   contact, tag added, …) and steps (send message or template, tag, wait,
@@ -507,6 +524,7 @@ is idempotent where possible. Recent ones:
 | `049_whatsapp_number_health` | Daily WhatsApp number health (quality, messaging limit, send status) |
 | `050_billing_reminders` | Trial-ending and plan-renewal reminder emails |
 | `051_carousel_templates` | Carousel templates (`message_templates.carousel_cards`) |
+| `052_whatsapp_forms` | WhatsApp forms (Meta Flows) and their responses |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
