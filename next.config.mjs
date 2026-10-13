@@ -76,6 +76,28 @@ const SECURITY_HEADERS = [
 ];
 
 /** @type {import("next").NextConfig} */
+// Per-user / auth routes that must never be cached by a shared cache.
+const PRIVATE_SECTIONS = [
+  "dashboard",
+  "inbox",
+  "contacts",
+  "pipelines",
+  "broadcasts",
+  "automations",
+  "flows",
+  "notifications",
+  "settings",
+  "admin",
+  "onboarding",
+  "login",
+  "signup",
+  "forgot-password",
+  "reset-password",
+  "auth",
+  "join",
+  "connect",
+].join("|");
+
 const nextConfig = {
   turbopack: {
     root: process.cwd(),
@@ -105,12 +127,14 @@ const nextConfig = {
    *     chunk-hash drift self-heals within ~5 min with no user-
    *     visible latency.
    *
-   *   Note: dynamic dashboard routes (/inbox, /contacts, /pipelines,
-   *   /broadcasts, etc.) are server-rendered per request — Next.js
-   *   and Supabase auth already prevent them from being served
-   *   from a shared cache. The s-maxage here is a ceiling; Next.js
-   *   and auth middleware still set `private` / `no-store` for
-   *   per-user responses.
+   *   - App + auth pages (/dashboard, /inbox, /settings, /login, …)
+   *     and every RSC navigation payload (`RSC` header or `_rsc`
+   *     query) — private, no-store. A Cache-Control set here
+   *     OVERRIDES Next's own private header, so the public rule must
+   *     not match them: signed-in pages would be shareable, and a
+   *     cached RSC payload served for a full page load shows the raw
+   *     "0:{…}" text (seen in production after a deploy, at
+   *     /dashboard?_rsc=…). Later rules win for the same header key.
    *
    * Security headers are appended via a separate catch-all rule
    * below — Next.js merges headers from every matching rule, so
@@ -125,6 +149,10 @@ const nextConfig = {
       },
       {
         source: "/:path((?!_next/static|_next/image|api).*)",
+        missing: [
+          { type: "header", key: "rsc" },
+          { type: "query", key: "_rsc" },
+        ],
         headers: [
           {
             key: "Cache-Control",
@@ -132,6 +160,20 @@ const nextConfig = {
               "public, max-age=0, s-maxage=300, stale-while-revalidate=86400",
           },
         ],
+      },
+      {
+        source: `/:section(${PRIVATE_SECTIONS})/:rest*`,
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "header", key: "rsc" }],
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "query", key: "_rsc" }],
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
       {
         // Security headers on every response, including /_next/static
