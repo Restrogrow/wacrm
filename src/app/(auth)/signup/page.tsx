@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { safeNextPath } from "@/lib/auth/safe-next";
 import { AuthDivider, GoogleButton } from "@/components/auth/google-button";
 import {
   NATURE_OF_BUSINESS_OPTIONS,
@@ -46,6 +47,10 @@ function SignupPageInner() {
   // points back at /join/<token> so the user lands on the redeem
   // step after verifying instead of being dropped on /dashboard.
   const inviteToken = searchParams.get("invite");
+  // Where to go once signed up (e.g. resuming "Connect Shopify" for a
+  // merchant who arrived from the Shopify App Store). Same-origin only.
+  const hasNext = searchParams.has("next");
+  const nextPath = safeNextPath(searchParams.get("next"));
   // Invited teammates join an existing business, so they only need
   // name + email + password. The business fields describe the account
   // they're joining (already set up by the owner) — and handle_new_user
@@ -136,9 +141,13 @@ function SignupPageInner() {
     // email back at the join page so the user can accept after
     // verifying. Without a token, Supabase uses its default
     // redirect (the app root).
+    // With a `next`, the confirmation link goes through /auth/callback,
+    // which signs them in and continues there.
     const emailRedirectTo = inviteToken
       ? `${window.location.origin}/join/${encodeURIComponent(inviteToken)}`
-      : undefined;
+      : hasNext
+        ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`
+        : undefined;
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -233,7 +242,7 @@ function SignupPageInner() {
             next={
               inviteToken
                 ? `/join/${encodeURIComponent(inviteToken)}`
-                : "/dashboard"
+                : nextPath
             }
           />
           <AuthDivider label="or sign up with email" />
@@ -502,7 +511,9 @@ function SignupPageInner() {
               href={
                 inviteToken
                   ? `/login?invite=${encodeURIComponent(inviteToken)}`
-                  : "/login"
+                  : hasNext
+                    ? `/login?next=${encodeURIComponent(nextPath)}`
+                    : "/login"
               }
               className="text-primary hover:text-primary/80"
             >

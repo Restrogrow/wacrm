@@ -32,7 +32,14 @@ export async function GET(request: Request) {
   try {
     await requireRole('admin');
   } catch {
-    return NextResponse.redirect(new URL('/login', appBaseUrl()));
+    // Not signed in — typically a merchant arriving from the Shopify App
+    // Store. Sign in (or sign up) first, then come straight back here
+    // to finish connecting; `next` survives login, signup, Google and
+    // the email-confirmation link.
+    const { search } = new URL(request.url);
+    const login = new URL('/login', appBaseUrl());
+    login.searchParams.set('next', `/api/integrations/shopify/install${search}`);
+    return NextResponse.redirect(login);
   }
 
   const creds = shopifyAppCredentials();

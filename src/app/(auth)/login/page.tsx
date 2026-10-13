@@ -72,6 +72,10 @@ function LoginPageInner() {
 
     if (inviteToken) {
       router.push(`/join/${encodeURIComponent(inviteToken)}`);
+    } else if (nextPath.startsWith("/api/")) {
+      // e.g. resuming "Connect Shopify": an API route that redirects to
+      // another site needs a full navigation, not a client transition.
+      window.location.assign(nextPath);
     } else {
       router.push(nextPath);
     }
@@ -181,7 +185,9 @@ function LoginPageInner() {
               href={
                 inviteToken
                   ? `/signup?invite=${encodeURIComponent(inviteToken)}`
-                  : "/signup"
+                  : searchParams.get("next")
+                    ? `/signup?next=${encodeURIComponent(nextPath)}`
+                    : "/signup"
               }
               className="text-primary hover:text-primary/80"
             >
