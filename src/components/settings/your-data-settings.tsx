@@ -9,13 +9,15 @@
 //   * owners and admins also export the business's data;
 //   * an owner deleting their account deletes the whole business, so
 //     they must remove teammates / transfer ownership first.
+// Deleting files a request; the Repeat Grow team approves it on /admin
+// before anything is deleted. The user can cancel while it's pending.
 // API: /api/account/export, /api/account/delete.
 // ============================================================
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { AlertTriangle, Download, Loader2, Trash2 } from 'lucide-react';
+import { AlertTriangle, Clock, Download, Loader2, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,8 +31,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
-import { createClient } from '@/lib/supabase/client';
 import { SettingsPanelHead } from './settings-panel-head';
 
 interface DeleteInfo {
@@ -38,7 +40,9 @@ interface DeleteInfo {
   account_name: string;
   other_members: number;
   can_delete: boolean;
+  available: boolean;
   confirm_with: string | null;
+  pending_request: { id: string; requested_at: string; reason: string | null } | null;
 }
 
 export function YourDataSettings() {
@@ -47,7 +51,9 @@ export function YourDataSettings() {
   const [info, setInfo] = useState<DeleteInfo | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const [reason, setReason] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,21 +103,36 @@ export function YourDataSettings() {
       const res = await fetch('/api/account/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirm: confirmText }),
+        body: JSON.stringify({ confirm: confirmText, reason }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(body?.error ?? 'Could not delete your account.');
-        setDeleting(false);
+        toast.error(body?.error ?? 'Could not send your request.');
         return;
       }
-      await createClient().auth.signOut().catch(() => {});
-      // Full page load so no signed-in client state survives.
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.href = '/?account_deleted=1';
+      setInfo((prev) => (prev ? { ...prev, pending_request: body.pending_request } : prev));
+      setDialogOpen(false);
+      toast.success('Request sent. We will email you once it has been reviewed.');
     } catch {
-      toast.error('Could not delete your account.');
+      toast.error('Could not send your request.');
+    } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleCancelRequest() {
+    setCancelling(true);
+    try {
+      const res = await fetch('/api/account/delete', { method: 'DELETE' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        toast.error(body?.error ?? 'Could not cancel the request.');
+        return;
+      }
+      setInfo((prev) => (prev ? { ...prev, pending_request: null } : prev));
+      toast.success('Deletion request cancelled.');
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -173,7 +194,34 @@ export function YourDataSettings() {
             </div>
           </div>
 
-          {info && !info.can_delete ? (
+          {info?.pending_request ? (
+            <div className="flex flex-col gap-3 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <p className="flex items-start gap-2 text-foreground">
+                <Clock className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <span>
+                  Deletion requested on{' '}
+                  {new Date(info.pending_request.requested_at).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                  . Our team will review it and email you. Nothing is deleted until then.
+                </span>
+              </p>
+              <Button variant="outline" size="sm" onClick={handleCancelRequest} disabled={cancelling}>
+                {cancelling ? <Loader2 className="size-4 animate-spin" /> : null}
+                Cancel request
+              </Button>
+            </div>
+          ) : null}
+
+          {info && !info.available && !info.pending_request ? (
+            <p className="rounded-lg border border-border p-3 text-sm text-muted-foreground">
+              To delete your account, email support@repeatgrow.com from your account email.
+            </p>
+          ) : null}
+
+          {info && info.available && !info.can_delete && !info.pending_request ? (
             <p className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-foreground">
               Your business still has {info.other_members} teammate{info.other_members === 1 ? '' : 's'}.
               Remove them or transfer ownership in{' '}
@@ -184,17 +232,23 @@ export function YourDataSettings() {
             </p>
           ) : null}
 
-          <Button
-            onClick={() => {
-              setConfirmText('');
-              setDialogOpen(true);
-            }}
-            disabled={!info || !info.can_delete}
-            className="bg-red-600 text-white hover:bg-red-700"
-          >
-            <Trash2 className="size-4" />
-            Delete my account
-          </Button>
+          {!info?.pending_request && (
+            <Button
+              onClick={() => {
+                setConfirmText('');
+                setReason('');
+                setDialogOpen(true);
+              }}
+              disabled={!info || !info.can_delete}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              <Trash2 className="size-4" />
+              Delete my account
+            </Button>
+          )}
+          <p className="text-xs text-muted-foreground">
+            For your safety, the Repeat Grow team reviews every deletion before anything is removed.
+          </p>
         </CardContent>
       </Card>
 
@@ -207,8 +261,8 @@ export function YourDataSettings() {
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
               {info?.is_owner
-                ? `This permanently deletes ${info.account_name} and all of its data. It can't be undone.`
-                : "This permanently deletes your login. It can't be undone."}
+                ? `Once our team approves it, this permanently deletes ${info.account_name} and all of its data. It can't be undone.`
+                : "Once our team approves it, this permanently deletes your login. It can't be undone."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -222,6 +276,16 @@ export function YourDataSettings() {
               autoComplete="off"
               placeholder={info?.confirm_with ?? ''}
             />
+            <Label htmlFor="delete-reason" className="pt-2 text-sm">
+              Why are you leaving? <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <Textarea
+              id="delete-reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={2}
+              maxLength={1000}
+            />
           </div>
           <DialogFooter className="bg-popover border-border">
             <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={deleting}>
@@ -233,7 +297,7 @@ export function YourDataSettings() {
               className="bg-red-600 text-white hover:bg-red-700"
             >
               {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
-              {deleting ? 'Deleting…' : 'Delete permanently'}
+              {deleting ? 'Sending…' : 'Request deletion'}
             </Button>
           </DialogFooter>
         </DialogContent>

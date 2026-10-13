@@ -103,9 +103,23 @@ Customers handle these themselves in **Settings → Your data**:
 
 - **Download my data** — JSON export. Owners/admins get the whole
   business; teammates get their own data.
-- **Delete my account** — owners delete the whole business (only once
-  no teammates remain); teammates delete just their login and their
-  business rows are reassigned to the owner.
+- **Delete my account** — files a **request**; nothing is deleted until
+  a platform admin approves it. You get an email (to `ADMIN_ALERT_EMAIL`,
+  default support@repeatgrow.com, comma-separated for several) and the
+  request appears at the top of `/admin`.
+
+### Approving or rejecting a deletion
+
+1. Open `/admin` → **Account deletion requests**. Each shows the email,
+   owner or teammate, the business, when, and their reason.
+2. Check the account (link) — e.g. unpaid dues, or a teammate asking
+   to delete someone else's business.
+3. **Approve** (type DELETE): an owner's business and all its data are
+   deleted, or a teammate's login is deleted and their rows go to the
+   owner. Refused if an owner still has teammates.
+4. **Reject**: the account is kept; your note is emailed to them.
+5. The user can cancel while it's pending. Respond within a reasonable
+   time — the DPDP Act expects deletion requests to be honoured.
 
 If someone emails a request instead, point them to Settings → Your data.
 If they can't sign in, verify the request comes from the account's email

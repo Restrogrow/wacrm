@@ -16,10 +16,15 @@ and polish.
 - **Download my data and delete my account** (Settings → Your data), for
   India's DPDP Act and GDPR. Everyone can download their data as JSON
   (owners and admins also get the business's data; secrets are never
-  included) and delete their account by typing their email. A teammate's
-  deletion keeps the business's data; an owner's deletion deletes the
-  business once no teammates remain. Privacy Policy updated.
-  **Migration required:** `supabase/migrations/046_account_deletion.sql`.
+  included) and request account deletion by typing their email.
+  **Deletion only happens after a platform admin approves the request on
+  /admin** (approve / reject with a note; the user is emailed and can
+  cancel while it's pending). A teammate's deletion keeps the business's
+  data; an owner's deletion deletes the business once no teammates
+  remain. Privacy Policy updated. **Migrations required:**
+  `supabase/migrations/046_account_deletion.sql` and
+  `supabase/migrations/047_account_deletion_requests.sql`. Optional env:
+  `ADMIN_ALERT_EMAIL` (who gets request emails).
 
 - **System health and monitoring.** `GET /api/health` for uptime
   monitors (503 when the database or the cron jobs stop working), and

@@ -467,8 +467,10 @@ export default function DocsPage() {
                 included.
               </li>
               <li>
-                <b>Delete my account</b> asks you to type your email to confirm. A teammate&apos;s deletion removes only
-                their login; anything they created stays with the business.
+                <b>Delete my account</b> asks you to type your email to confirm and sends a request to the Repeat Grow
+                team. Nothing is deleted until we approve it, and we email you either way. You can cancel the request
+                while it&apos;s waiting. A teammate&apos;s deletion removes only their login; anything they created stays
+                with the business.
               </li>
               <li>
                 If you <b>own</b> the business, deleting your account permanently deletes the business and all of its

@@ -1,18 +1,12 @@
 // ============================================================
-// /api/account/delete — "Delete my account"
+// /api/account/delete — "Delete my account" (request only)
 //
-//   GET  — what deleting would do for the caller (owner vs teammate,
-//          teammates still in the account, the email to confirm with).
-//   POST — { confirm: "<your email>" } deletes the caller's login.
-//
-// Owner:    deletes the whole business account and all its data.
-//           Refused while teammates are still in it.
-// Teammate: deletes only their login; business data they created is
-//           handed to the owner (migration 046 prepare_user_deletion).
-//
-// Order matters: integrations are disconnected first (best effort),
-// then prepare_user_deletion removes / reassigns rows, then the auth
-// user is deleted. If the last step fails the user can simply retry.
+//   GET    — what deleting would mean for the caller, and any open
+//            request.
+//   POST   — { confirm: "<your email>", reason? } files a deletion
+//            request. Nothing is deleted here: a platform admin
+//            approves it on /admin (lib/account/deletion.ts).
+//   DELETE — cancel your open request.
 // ============================================================
 
 import { NextResponse } from 'next/server'
@@ -20,18 +14,21 @@ import { NextResponse } from 'next/server'
 import { getCurrentAccount, toErrorResponse } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
-import { decrypt } from '@/lib/whatsapp/encryption'
-import { deleteWebhookSubscription, friendlyCalendlyError } from '@/lib/calendly/api'
+import { isMissingObject, notifyAdminsOfRequest, otherMemberCount } from '@/lib/account/deletion'
 
 export const dynamic = 'force-dynamic'
 
-async function otherMemberCount(accountId: string, userId: string): Promise<number> {
-  const { count } = await supabaseAdmin()
-    .from('profiles')
-    .select('user_id', { count: 'exact', head: true })
-    .eq('account_id', accountId)
-    .neq('user_id', userId)
-  return count ?? 0
+const NOT_SET_UP = 'Account deletion is not set up yet. Please email support@repeatgrow.com.'
+
+async function pendingRequest(userId: string) {
+  const { data, error } = await supabaseAdmin()
+    .from('account_deletion_requests')
+    .select('id, requested_at, reason')
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+    .maybeSingle()
+  if (error && isMissingObject(error)) return { request: null, available: false }
+  return { request: data ?? null, available: !error }
 }
 
 export async function GET() {
@@ -42,12 +39,15 @@ export async function GET() {
     } = await ctx.supabase.auth.getUser()
     const isOwner = ctx.role === 'owner'
     const others = isOwner ? await otherMemberCount(ctx.accountId, ctx.userId) : 0
+    const { request, available } = await pendingRequest(ctx.userId)
     return NextResponse.json({
       is_owner: isOwner,
       account_name: ctx.account.name,
       other_members: others,
-      can_delete: !isOwner || others === 0,
+      can_delete: available && (!isOwner || others === 0),
+      available,
       confirm_with: user?.email ?? null,
+      pending_request: request,
     })
   } catch (err) {
     return toErrorResponse(err)
@@ -66,19 +66,15 @@ export async function POST(request: Request) {
     } = await ctx.supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const body = (await request.json().catch(() => null)) as { confirm?: unknown } | null
+    const body = (await request.json().catch(() => null)) as { confirm?: unknown; reason?: unknown } | null
     const confirm = typeof body?.confirm === 'string' ? body.confirm.trim().toLowerCase() : ''
     const expected = (user.email ?? '').trim().toLowerCase()
     if (!expected || confirm !== expected) {
-      return NextResponse.json(
-        { error: 'Type your email address exactly to confirm.' },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: 'Type your email address exactly to confirm.' }, { status: 400 })
     }
+    const reason = typeof body?.reason === 'string' ? body.reason.trim().slice(0, 1000) || null : null
 
-    const admin = supabaseAdmin()
     const isOwner = ctx.role === 'owner'
-
     if (isOwner) {
       const others = await otherMemberCount(ctx.accountId, ctx.userId)
       if (others > 0) {
@@ -89,61 +85,58 @@ export async function POST(request: Request) {
           { status: 409 },
         )
       }
-      await disconnectIntegrations(ctx.accountId)
     }
 
-    const { error: prepError } = await admin.rpc('prepare_user_deletion', { p_user_id: ctx.userId })
-    if (prepError) {
-      if (prepError.code === 'PL002') {
-        return NextResponse.json({ error: prepError.message }, { status: 409 })
-      }
-      if (prepError.code === 'PGRST202' || /prepare_user_deletion/.test(prepError.message)) {
-        return NextResponse.json(
-          { error: 'Account deletion is not set up yet. Please contact support@repeatgrow.com.' },
-          { status: 503 },
-        )
-      }
-      console.error('[account/delete] prepare failed:', prepError.message)
-      return NextResponse.json({ error: 'Could not delete your account. Please try again.' }, { status: 500 })
+    const existing = await pendingRequest(ctx.userId)
+    if (!existing.available) return NextResponse.json({ error: NOT_SET_UP }, { status: 503 })
+    if (existing.request) {
+      return NextResponse.json({ ok: true, pending_request: existing.request })
     }
 
-    const { error: deleteError } = await admin.auth.admin.deleteUser(ctx.userId)
-    if (deleteError) {
-      console.error('[account/delete] auth delete failed:', deleteError.message)
-      return NextResponse.json(
-        { error: 'Your data was removed but signing you out failed. Please try again.' },
-        { status: 500 },
-      )
+    const { data: created, error } = await supabaseAdmin()
+      .from('account_deletion_requests')
+      .insert({
+        user_id: ctx.userId,
+        account_id: ctx.accountId,
+        is_owner: isOwner,
+        email: user.email ?? null,
+        business_name: ctx.account.name,
+        reason,
+      })
+      .select('id, requested_at, reason')
+      .single()
+    if (error) {
+      console.error('[account/delete] request not saved:', error.message)
+      return NextResponse.json({ error: 'Could not send your request. Please try again.' }, { status: 500 })
     }
 
-    // Clear the session cookies; the client also signs out and redirects.
-    await ctx.supabase.auth.signOut().catch(() => {})
+    await notifyAdminsOfRequest({
+      email: user.email ?? null,
+      businessName: ctx.account.name,
+      isOwner,
+      reason,
+    })
 
-    return NextResponse.json({ ok: true, deleted_business: isOwner })
+    return NextResponse.json({ ok: true, pending_request: created })
   } catch (err) {
     return toErrorResponse(err)
   }
 }
 
-/**
- * Stop integrations from sending to an account that's about to be
- * deleted. Best effort — deletion goes ahead even if this fails.
- */
-async function disconnectIntegrations(accountId: string) {
-  const admin = supabaseAdmin()
+export async function DELETE() {
   try {
-    const { data: conn } = await admin
-      .from('calendly_connections')
-      .select('access_token, webhook_subscription_uri')
-      .eq('account_id', accountId)
-      .maybeSingle()
-    if (conn?.webhook_subscription_uri && conn.access_token) {
-      await deleteWebhookSubscription(decrypt(conn.access_token), conn.webhook_subscription_uri)
+    const ctx = await getCurrentAccount()
+    const { error } = await supabaseAdmin()
+      .from('account_deletion_requests')
+      .update({ status: 'cancelled', decided_at: new Date().toISOString() })
+      .eq('user_id', ctx.userId)
+      .eq('status', 'pending')
+    if (error) {
+      if (isMissingObject(error)) return NextResponse.json({ error: NOT_SET_UP }, { status: 503 })
+      return NextResponse.json({ error: 'Could not cancel the request.' }, { status: 500 })
     }
+    return NextResponse.json({ ok: true })
   } catch (err) {
-    console.warn('[account/delete] calendly subscription not removed:', friendlyCalendlyError(err))
+    return toErrorResponse(err)
   }
-  // Shopify: OAuth stores keep sending webhooks until the merchant
-  // uninstalls the app; the receiver ignores shops with no active store,
-  // and the store row is deleted with the account.
 }

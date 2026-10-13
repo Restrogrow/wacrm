@@ -5,6 +5,8 @@ import { Activity, RefreshCw } from 'lucide-react';
 import { loadAdminDashboard } from '@/lib/admin/dashboard';
 import { formatDelta } from '@/lib/admin/time';
 import { AccountsTable } from '@/components/admin/accounts-table';
+import { DeletionRequests } from '@/components/admin/deletion-requests';
+import { loadDeletionRequests } from '@/lib/admin/deletion-requests';
 import {
   BarList,
   DailyColumns,
@@ -22,7 +24,7 @@ const pct = (part: number, whole: number) =>
   whole > 0 ? `${Math.round((part / whole) * 100)}%` : '—';
 
 export default async function PlatformAdminPage() {
-  const d = await loadAdminDashboard();
+  const [d, deletions] = await Promise.all([loadAdminDashboard(), loadDeletionRequests()]);
   const s = d.signups;
   const a = d.accounts;
 
@@ -61,6 +63,21 @@ export default async function PlatformAdminPage() {
           </Link>
         </div>
       </header>
+
+      {/* ---------------- Deletion requests ---------------- */}
+      {(deletions.pending.length > 0 || !deletions.available) && (
+        <section id="deletion-requests" className="space-y-3">
+          <h2 className="text-foreground text-sm font-semibold">
+            Account deletion requests
+            {deletions.pending.length > 0 && (
+              <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-400">
+                {deletions.pending.length} waiting
+              </span>
+            )}
+          </h2>
+          <DeletionRequests data={deletions} />
+        </section>
+      )}
 
       {/* ---------------- Sign-ups ---------------- */}
       <section className="space-y-3">
@@ -177,6 +194,14 @@ export default async function PlatformAdminPage() {
         <h2 className="text-foreground text-sm font-semibold">Accounts</h2>
         <AccountsTable rows={d.rows} />
       </section>
+
+      {/* Deletion history when nothing is waiting (pending ones show at the top). */}
+      {deletions.available && deletions.pending.length === 0 && (
+        <section id="deletion-requests" className="space-y-3">
+          <h2 className="text-foreground text-sm font-semibold">Account deletion requests</h2>
+          <DeletionRequests data={deletions} />
+        </section>
+      )}
     </div>
   );
 }

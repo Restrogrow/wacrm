@@ -125,11 +125,11 @@ export default function PrivacyPolicyPage() {
           <p className="mt-3">
             We retain account and message data for as long as a Customer&apos;s
             account is active, or as needed to provide the service. When an
-            account owner deletes their account in Settings &rarr; Your data,
-            the business account and its data (contacts, conversations,
-            messages, deals, broadcasts, templates, automations and
-            integration settings) are deleted from our live database straight
-            away. Copies in encrypted backups are removed as those backups
+            account owner asks to delete their account in Settings &rarr; Your
+            data and our team confirms the request, the business account and
+            its data (contacts, conversations, messages, deals, broadcasts,
+            templates, automations and integration settings) are deleted from
+            our live database. Copies in encrypted backups are removed as those backups
             expire. We may keep a minimal, anonymous record that a deletion
             took place, and data we are required by law to retain.
           </p>
@@ -149,8 +149,10 @@ export default function PrivacyPolicyPage() {
               file. Owners and admins also get their business&apos;s data.
             </li>
             <li>
-              <b>Delete my account</b> deletes your login. If you own the
-              business account, the business and all of its data are deleted.
+              <b>Delete my account</b> sends us a deletion request. Once our
+              team confirms it, your login is deleted; if you own the business
+              account, the business and all of its data are deleted. We email
+              you when it&apos;s done.
             </li>
             <li>Your name and details can be changed in Settings &rarr; Your profile.</li>
           </ul>

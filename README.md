@@ -139,17 +139,28 @@
     integration settings. Business tables are read with the caller's
     RLS-scoped client; columns that look like tokens, secrets, key hashes
     or passwords are never exported.
-  - **Delete my account:** confirm by typing your email
-    (`POST /api/account/delete`). A teammate's deletion removes only their
-    login — business rows they created are reassigned to the owner first.
-    An owner's deletion deletes the whole business (blocked while
-    teammates remain) and disconnects Calendly. An anonymous record (ids
-    and counts only) goes to `account_deletions`.
+  - **Delete my account (needs platform-admin approval):** the user
+    confirms by typing their email and can add a reason
+    (`POST /api/account/delete`). That only files a request in
+    `account_deletion_requests` and emails `ADMIN_ALERT_EMAIL` (default
+    support@repeatgrow.com); nothing is deleted. A platform admin
+    approves or rejects it on [`/admin`](https://repeatgrow.com/admin#deletion-requests)
+    (approve needs typing DELETE); the user is emailed either way and can
+    cancel while it's pending.
+  - On approval: a teammate's deletion removes only their login —
+    business rows they created are reassigned to the owner first. An
+    owner's deletion deletes the whole business (refused while teammates
+    remain) and disconnects Calendly. An anonymous record (ids and counts
+    only) goes to `account_deletions`; the request's email and business
+    name are cleared.
   - Code: [`src/lib/account/data-export.ts`](./src/lib/account/data-export.ts),
     [`src/app/api/account/export`](./src/app/api/account/export/route.ts),
     [`src/app/api/account/delete`](./src/app/api/account/delete/route.ts),
+    [`src/lib/account/deletion.ts`](./src/lib/account/deletion.ts),
+    [`src/app/api/admin/deletion-requests`](./src/app/api/admin/deletion-requests/%5Bid%5D/route.ts),
     [`your-data-settings.tsx`](./src/components/settings/your-data-settings.tsx),
-    migration [`046_account_deletion.sql`](./supabase/migrations/046_account_deletion.sql).
+    migrations [`046_account_deletion.sql`](./supabase/migrations/046_account_deletion.sql)
+    and [`047_account_deletion_requests.sql`](./supabase/migrations/047_account_deletion_requests.sql).
 
 ---
 
@@ -275,6 +286,9 @@ rate limited; marketing templates to opted-out contacts are refused.
   active, most members), last chat and last login per account.
 - **Account page:** business details, members (sign-in method, last
   sign-in), plan editor, WhatsApp connection and live diagnostics.
+- **Account deletion requests:** shown at the top of the dashboard while
+  any are waiting (history at the bottom). Approve (type DELETE) or
+  reject with a note; the user is emailed.
 - **System health** (`/admin/system`): database, required env vars,
   every background job (last success, duration, last error — "Not
   running" if a job hasn't succeeded recently) and the last 50 failed
@@ -415,7 +429,8 @@ baked in at build time — **redeploy after changing them**.
 | `GEMINI_KEY` (`GEMINI_MODEL`) | Optional | AI chatbot, AI flows, AI templates |
 | `CHATBOT_TIMEZONE` | Optional | Chatbot's "are you open now?" time zone (default `Asia/Kolkata`) |
 | `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET` | Optional | Shopify one-click connect (Client ID / secret) |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Optional | Outgoing email (daily summary) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Optional | Outgoing email (daily summary, deletion request emails) |
+| `ADMIN_ALERT_EMAIL` | Optional | Who is emailed about account deletion requests (comma-separated; default support@repeatgrow.com) |
 | `NEXT_PUBLIC_SENTRY_DSN` | Optional | Turns on Sentry error monitoring |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Optional | Upload source maps to Sentry at build time |
 | `WHATSAPP_TEMPLATES_DRY_RUN` | Dev only | Skip the Meta call when submitting templates (never in production) |
@@ -446,7 +461,8 @@ is idempotent where possible. Recent ones:
 | `043_scheduled_broadcasts` | Scheduled broadcast params and send lease |
 | `044_daily_summary` | Daily summary settings |
 | `045_monitoring_and_indexes` | Job heartbeats, webhook failure log, faster inbox / thread / contacts / broadcasts queries, contact search indexes |
-| `046_account_deletion` | Self-service account deletion (`prepare_user_deletion`) and the anonymous `account_deletions` log |
+| `046_account_deletion` | Account deletion (`prepare_user_deletion`) and the anonymous `account_deletions` log |
+| `047_account_deletion_requests` | Deletion requests that a platform admin approves or rejects |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -621,9 +637,10 @@ local build.
   domains); post-login redirects are same-origin only.
 - API keys are scoped and revocable; API and admin actions are rate
   limited; a Content Security Policy ships (report-only for now).
-- Users can download and delete their own data (Settings → Your data);
-  exports never include secrets, deletes are confirmed by typing the
-  email, and both are rate limited.
+- Users can download their own data and request deletion (Settings →
+  Your data); exports never include secrets, deletion requests are
+  confirmed by typing the email and only take effect when a platform
+  admin approves them, and both are rate limited.
 - Cron endpoints check `x-cron-secret` in constant time. `/api/health`
   returns states only — error text and env var names are shown on
   `/admin/system` to platform admins only; the monitoring tables are

@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const rpc = vi.fn()
-const deleteUser = vi.fn()
-const signOut = vi.fn()
+// Fake service-role client: profiles count, deletion request lookups/inserts.
 let memberCount = 0
+let pending: Record<string, unknown> | null = null
+let tableMissing = false
+const inserted: Record<string, unknown>[] = []
+const updates: Record<string, unknown>[] = []
+const deleteUser = vi.fn()
+const rpc = vi.fn()
+const notifyAdmins = vi.fn()
 let role: 'owner' | 'admin' | 'agent' = 'owner'
 
 vi.mock('@/lib/auth/account', () => ({
@@ -13,10 +18,7 @@ vi.mock('@/lib/auth/account', () => ({
     role,
     account: { id: 'acc1', name: 'Priya Stores' },
     supabase: {
-      auth: {
-        getUser: async () => ({ data: { user: { id: 'u1', email: 'Owner@Example.com' } } }),
-        signOut: (...a: unknown[]) => signOut(...a),
-      },
+      auth: { getUser: async () => ({ data: { user: { id: 'u1', email: 'Owner@Example.com' } } }) },
     },
   }),
   toErrorResponse: (err: unknown) => new Response(String(err), { status: 500 }),
@@ -26,12 +28,26 @@ vi.mock('@/lib/flows/admin-client', () => ({
   supabaseAdmin: () => ({
     rpc: (...a: unknown[]) => rpc(...a),
     auth: { admin: { deleteUser: (...a: unknown[]) => deleteUser(...a) } },
-    from: () => {
-      const b = {
+    from: (table: string) => {
+      const missing = { data: null, error: { code: '42P01', message: 'relation does not exist' } }
+      const b: Record<string, unknown> = {
         select: () => b,
         eq: () => b,
         neq: async () => ({ count: memberCount }),
-        maybeSingle: async () => ({ data: null }),
+        maybeSingle: async () => (tableMissing ? missing : { data: pending, error: null }),
+        insert: (row: Record<string, unknown>) => {
+          inserted.push(row)
+          return {
+            select: () => ({
+              single: async () => ({ data: { id: 'r1', requested_at: '2026-10-14T00:00:00Z', reason: row.reason }, error: null }),
+            }),
+          }
+        },
+        update: (row: Record<string, unknown>) => {
+          updates.push({ table, ...row })
+          const u = { eq: () => u, then: (r: (v: unknown) => void) => r(tableMissing ? missing : { error: null }) }
+          return u
+        },
       }
       return b
     },
@@ -44,41 +60,47 @@ vi.mock('@/lib/rate-limit', () => ({
   RATE_LIMITS: { accountDelete: {}, dataExport: {} },
 }))
 
-vi.mock('@/lib/calendly/api', () => ({
-  deleteWebhookSubscription: vi.fn(),
-  friendlyCalendlyError: () => '',
-}))
+vi.mock('@/lib/account/deletion', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/account/deletion')>('@/lib/account/deletion')
+  return {
+    isMissingObject: actual.isMissingObject,
+    otherMemberCount: async () => memberCount,
+    notifyAdminsOfRequest: (...a: unknown[]) => notifyAdmins(...a),
+  }
+})
 
-import { GET, POST } from './route'
+import { DELETE, GET, POST } from './route'
 
 function post(body: unknown) {
-  return POST(
-    new Request('http://localhost/api/account/delete', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
-  )
+  return POST(new Request('http://localhost/api/account/delete', { method: 'POST', body: JSON.stringify(body) }))
 }
 
 beforeEach(() => {
   memberCount = 0
+  pending = null
+  tableMissing = false
   role = 'owner'
-  rpc.mockReset().mockResolvedValue({ data: {}, error: null })
-  deleteUser.mockReset().mockResolvedValue({ error: null })
-  signOut.mockReset().mockResolvedValue({})
+  inserted.length = 0
+  updates.length = 0
+  deleteUser.mockReset()
+  rpc.mockReset()
+  notifyAdmins.mockReset()
 })
 
 describe('GET /api/account/delete', () => {
   it('blocks owners who still have teammates', async () => {
     memberCount = 2
-    const body = await (await GET()).json()
-    expect(body).toMatchObject({ is_owner: true, other_members: 2, can_delete: false })
+    expect(await (await GET()).json()).toMatchObject({ is_owner: true, other_members: 2, can_delete: false })
   })
 
-  it('lets teammates delete', async () => {
-    role = 'agent'
-    const body = await (await GET()).json()
-    expect(body).toMatchObject({ is_owner: false, can_delete: true, confirm_with: 'Owner@Example.com' })
+  it('shows an open request', async () => {
+    pending = { id: 'r1', requested_at: '2026-10-14T00:00:00Z', reason: null }
+    expect(await (await GET()).json()).toMatchObject({ pending_request: { id: 'r1' }, available: true })
+  })
+
+  it('reports when the migration has not been run', async () => {
+    tableMissing = true
+    expect(await (await GET()).json()).toMatchObject({ available: false, can_delete: false })
   })
 })
 
@@ -86,45 +108,42 @@ describe('POST /api/account/delete', () => {
   it('requires the email to be typed exactly (case-insensitive)', async () => {
     const res = await post({ confirm: 'wrong@example.com' })
     expect(res.status).toBe(400)
-    expect(rpc).not.toHaveBeenCalled()
-    expect(deleteUser).not.toHaveBeenCalled()
+    expect(inserted).toHaveLength(0)
   })
 
   it('refuses an owner with teammates', async () => {
     memberCount = 1
-    const res = await post({ confirm: 'owner@example.com' })
-    expect(res.status).toBe(409)
-    expect(rpc).not.toHaveBeenCalled()
+    expect((await post({ confirm: 'owner@example.com' })).status).toBe(409)
+    expect(inserted).toHaveLength(0)
   })
 
-  it('prepares the data, then deletes the login', async () => {
-    const res = await post({ confirm: ' owner@example.com ' })
+  it('only files a request — never deletes anything', async () => {
+    const res = await post({ confirm: ' owner@example.com ', reason: 'Closing the shop' })
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ ok: true, deleted_business: true })
-    expect(rpc).toHaveBeenCalledWith('prepare_user_deletion', { p_user_id: 'u1' })
-    expect(deleteUser).toHaveBeenCalledWith('u1')
-    expect(rpc.mock.invocationCallOrder[0]).toBeLessThan(deleteUser.mock.invocationCallOrder[0])
+    expect(await res.json()).toMatchObject({ ok: true, pending_request: { id: 'r1' } })
+    expect(inserted[0]).toMatchObject({ user_id: 'u1', account_id: 'acc1', is_owner: true, reason: 'Closing the shop' })
+    expect(rpc).not.toHaveBeenCalled()
+    expect(deleteUser).not.toHaveBeenCalled()
+    expect(notifyAdmins).toHaveBeenCalledOnce()
   })
 
-  it('does not delete the login when preparing fails', async () => {
-    rpc.mockResolvedValue({ data: null, error: { code: 'XX000', message: 'boom' } })
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  it('returns the existing request instead of filing a second one', async () => {
+    pending = { id: 'r0', requested_at: '2026-10-13T00:00:00Z', reason: null }
     const res = await post({ confirm: 'owner@example.com' })
-    errSpy.mockRestore()
-    expect(res.status).toBe(500)
-    expect(deleteUser).not.toHaveBeenCalled()
+    expect(await res.json()).toMatchObject({ pending_request: { id: 'r0' } })
+    expect(inserted).toHaveLength(0)
   })
 
   it('says so when the migration has not been run', async () => {
-    rpc.mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'Could not find the function public.prepare_user_deletion' } })
-    const res = await post({ confirm: 'owner@example.com' })
-    expect(res.status).toBe(503)
-    expect(deleteUser).not.toHaveBeenCalled()
+    tableMissing = true
+    expect((await post({ confirm: 'owner@example.com' })).status).toBe(503)
   })
+})
 
-  it('reports teammates deleting as not deleting the business', async () => {
-    role = 'agent'
-    const res = await post({ confirm: 'owner@example.com' })
-    expect(await res.json()).toEqual({ ok: true, deleted_business: false })
+describe('DELETE /api/account/delete', () => {
+  it('cancels the open request', async () => {
+    const res = await DELETE()
+    expect(res.status).toBe(200)
+    expect(updates[0]).toMatchObject({ table: 'account_deletion_requests', status: 'cancelled' })
   })
 })
