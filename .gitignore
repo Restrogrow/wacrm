@@ -49,3 +49,8 @@ check-*.js
 get-anon-key.js
 combined.sql
 login-page.html
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/

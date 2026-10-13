@@ -51,3 +51,21 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # End-to-end tests against the production build (next start).
+      # With the dummy Supabase config above, pages that need the
+      # database fail closed, which the tests expect; signed-in tests
+      # skip because E2E_EMAIL / E2E_PASSWORD aren't set here.
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
