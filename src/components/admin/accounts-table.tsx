@@ -238,6 +238,7 @@ export function AccountsTable({ rows }: { rows: AdminAccountRow[] }) {
                     >
                       {r.whatsappStatus}
                     </Badge>
+                    {r.numberHealth && <NumberHealthHint health={r.numberHealth} />}
                   </TableCell>
                   <TableCell className="text-muted-foreground whitespace-nowrap">
                     {relative(r.lastActivityAt)}
@@ -264,5 +265,37 @@ export function AccountsTable({ rows }: { rows: AdminAccountRow[] }) {
         </Table>
       </div>
     </div>
+  );
+}
+
+/** Quality dot + messaging limit under the WhatsApp status. */
+function NumberHealthHint({
+  health,
+}: {
+  health: NonNullable<AdminAccountRow['numberHealth']>;
+}) {
+  const q = (health.quality ?? '').toUpperCase();
+  const s = (health.canSend ?? '').toUpperCase();
+  const tone =
+    s === 'BLOCKED' || q === 'RED'
+      ? 'bg-red-500'
+      : s === 'LIMITED' || q === 'YELLOW'
+        ? 'bg-amber-500'
+        : q === 'GREEN'
+          ? 'bg-emerald-500'
+          : 'bg-muted-foreground/40';
+  const limit = (health.limit ?? '').toUpperCase().replace(/^TIER_/, '');
+  const label = [
+    q ? `quality ${q.toLowerCase()}` : null,
+    limit ? (limit === 'UNLIMITED' ? 'unlimited' : `${limit}/day`) : null,
+    s && s !== 'AVAILABLE' ? s.toLowerCase() : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <span className="text-muted-foreground mt-1 flex items-center gap-1.5 text-xs whitespace-nowrap">
+      <span className={`size-1.5 rounded-full ${tone}`} aria-hidden />
+      {label || 'not rated'}
+    </span>
   );
 }

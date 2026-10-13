@@ -124,6 +124,17 @@
 ### Notifications and reporting
 - Real-time dashboard: response times, daily volume, pipeline value,
   activity feed; in-app notifications.
+- **WhatsApp number health** (**Settings → WhatsApp → Number health**):
+  quality rating (high / medium / low), messaging limit (customers a
+  day), whether Meta lets the number send (with Meta's reasons),
+  display-name status and whether calling is allowed — each explained
+  in plain words, with **Check now**. Checked daily for every account
+  inside the automations cron; the owner is emailed when the number
+  becomes at risk (quality drop, limited / blocked, name declined —
+  once per change), a warning bar shows across the app, and `/admin`
+  shows each account's quality and limit. Reads
+  `whatsapp_business_manager_messaging_limit` (falls back to the
+  deprecated `messaging_limit_tier`) and `health_status`.
 - **Daily summary email** (**Settings → Daily summary**): each owner
   picks on/off, the hour (India time) and up to 5 recipients. Morning
   emails cover yesterday, afternoon/evening ones today so far: messages
@@ -295,6 +306,9 @@ rate limited; marketing templates to opted-out contacts are refused.
   active, most members), last chat and last login per account.
 - **Account page:** business details, members (sign-in method, last
   sign-in), plan editor, WhatsApp connection and live diagnostics.
+- **Accounts table** also shows each account's WhatsApp number health
+  under its WhatsApp status (quality dot, messaging limit, limited /
+  blocked).
 - **Account deletion requests:** shown at the top of the dashboard while
   any are waiting (history at the bottom). Approve (type DELETE) or
   reject with a note; the user is emailed.
@@ -473,6 +487,7 @@ is idempotent where possible. Recent ones:
 | `046_account_deletion` | Account deletion (`prepare_user_deletion`) and the anonymous `account_deletions` log |
 | `047_account_deletion_requests` | Deletion requests that a platform admin approves or rejects |
 | `048_whatsapp_calls` | WhatsApp voice calls (`whatsapp_calls`, Realtime) |
+| `049_whatsapp_number_health` | Daily WhatsApp number health (quality, messaging limit, send status) |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -485,7 +500,7 @@ Hostinger calls these every minute with the header
 
 | Endpoint | Runs |
 |---|---|
-| `GET /api/automations/cron` | Delayed automation steps, **scheduled broadcasts** (batched, leased), **Shopify abandoned-cart reminders**, **Calendly 24 h / 1 h reminders**, **daily summary emails** |
+| `GET /api/automations/cron` | Delayed automation steps, **scheduled broadcasts** (batched, leased), **Shopify abandoned-cart reminders**, **Calendly 24 h / 1 h reminders**, **daily summary emails**, **WhatsApp number health** (daily per account, 10 per run) |
 | `GET /api/flows/cron` | Flow waits and timeouts |
 
 Each job is idempotent (claims before sending), so overlapping or

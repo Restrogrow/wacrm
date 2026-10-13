@@ -166,6 +166,9 @@ export const RATE_LIMITS = {
   /** Outgoing WhatsApp calls, per agent. A person can't usefully dial
    *  more than a few a minute; this stops a stuck retry loop. */
   callStart: { limit: 10, windowMs: 60_000 },
+  /** "Check now" on WhatsApp number health, per account. Each check
+   *  makes three Graph API calls. */
+  numberHealthCheck: { limit: 6, windowMs: 60 * 60_000 },
 } as const;
 
 /** Test-only helper. Clears the in-memory state so unit tests don't

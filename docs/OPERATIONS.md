@@ -70,6 +70,7 @@ Code: `src/app/api/health/route.ts`, `src/lib/ops/health.ts`.
 | Shopify abandoned carts | automations cron | 10 min |
 | Calendly reminders | automations cron | 10 min |
 | Daily summary emails | automations cron | 10 min |
+| WhatsApp number health | automations cron (each account daily) | 10 min |
 | Flows cron | `GET /api/flows/cron` | 30 min |
 
 Heartbeats are stored in `system_heartbeats`; failures in
@@ -136,6 +137,18 @@ Deleted data disappears from the live database immediately; Supabase
 backups expire on their own schedule. Shopify OAuth stores should also
 uninstall the app from their Shopify admin (the webhook receiver ignores
 stores that no longer exist).
+
+## WhatsApp number health
+
+- Stored per account in `whatsapp_number_health`, refreshed daily (10
+  accounts per cron run) or by **Check now** in Settings → WhatsApp.
+- `/admin` accounts table: quality dot + messaging limit under each
+  WhatsApp status. Red / yellow or "limited" / "blocked" means the
+  customer needs help: fewer broadcasts, opted-in contacts only,
+  relevant templates, honour STOP.
+- Owners are emailed once per change (`last_alert_key`); a warning bar
+  shows in their app until it recovers.
+- `check_error` holds why the last check failed (e.g. an expired token).
 
 ## WhatsApp calls
 

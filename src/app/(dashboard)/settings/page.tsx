@@ -13,6 +13,7 @@ import { SecurityPanel } from '@/components/settings/security-panel';
 import { AppearancePanel } from '@/components/settings/appearance-panel';
 import { WhatsAppConfig } from '@/components/settings/whatsapp-config';
 import { CallingSettingsCard } from '@/components/settings/calling-settings-card';
+import { NumberHealthCard } from '@/components/settings/number-health-card';
 import { TemplateManager } from '@/components/settings/template-manager';
 import { SavedRepliesSettings } from '@/components/settings/saved-replies-settings';
 import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel';
@@ -74,6 +75,7 @@ export default function SettingsPage() {
     whatsapp: (
       <div className="space-y-6">
         <WhatsAppConfig />
+        <NumberHealthCard />
         <CallingSettingsCard />
       </div>
     ),

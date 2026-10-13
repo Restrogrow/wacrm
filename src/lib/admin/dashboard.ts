@@ -42,6 +42,8 @@ export interface AdminAccountRow {
   plan: EffectivePlan | null;
   memberCount: number;
   whatsappStatus: string;
+  /** Daily WhatsApp number health (migration 049); null if never checked. */
+  numberHealth: { quality: string | null; limit: string | null; canSend: string | null } | null;
   lastActivityAt: string | null;
   lastSignInAt: string | null;
 }
@@ -150,6 +152,7 @@ export async function loadAdminDashboard(
     { count: outboundToday },
     shopify,
     calendly,
+    { data: healthRows },
   ] = await Promise.all([
     db
       .from('accounts')
@@ -186,6 +189,10 @@ export async function loadAdminDashboard(
     db
       .from('calendly_connections')
       .select('id', { count: 'exact', head: true }),
+    // Fails soft (null data) until migration 049 is run.
+    db
+      .from('whatsapp_number_health')
+      .select('account_id, quality_rating, messaging_limit, can_send'),
   ]);
 
   if (accountsErr)
@@ -203,6 +210,16 @@ export async function loadAdminDashboard(
   const userById = new Map(users.map((u) => [u.id, u]));
   const waByAccount = new Map(
     (waConfigs ?? []).map((w) => [w.account_id as string, w.status as string])
+  );
+  const healthByAccount = new Map(
+    (healthRows ?? []).map((h) => [
+      h.account_id as string,
+      {
+        quality: (h.quality_rating as string | null) ?? null,
+        limit: (h.messaging_limit as string | null) ?? null,
+        canSend: (h.can_send as string | null) ?? null,
+      },
+    ])
   );
   const billingEnabled = !billingErr && !!billingRows;
   const planByAccount = new Map<string, EffectivePlan>(
@@ -240,6 +257,7 @@ export async function loadAdminDashboard(
       plan: planByAccount.get(a.id) ?? null,
       memberCount: memberCount.get(a.id) ?? 0,
       whatsappStatus: waByAccount.get(a.id) ?? 'not set up',
+      numberHealth: healthByAccount.get(a.id) ?? null,
       lastActivityAt: lastActivity.get(a.id) ?? null,
       lastSignInAt: authUser?.last_sign_in_at ?? null,
     };

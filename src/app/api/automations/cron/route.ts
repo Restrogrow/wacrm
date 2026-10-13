@@ -8,6 +8,7 @@ import { processDueCalendlyReminders } from '@/lib/calendly/process'
 import { processScheduledBroadcasts } from '@/lib/broadcasts/scheduled'
 import { processDailySummaries } from '@/lib/summary/daily'
 import { withHeartbeat } from '@/lib/ops/monitoring'
+import { processDueNumberHealth } from '@/lib/whatsapp/number-health'
 
 /**
  * Drain due `automation_pending_executions` rows. Meant to be hit
@@ -73,8 +74,15 @@ async function runCron() {
     return 0
   })
 
+  // Daily WhatsApp number health check, a few accounts per run.
+  const numberHealthChecks = await withHeartbeat('number-health', processDueNumberHealth).catch((err) => {
+    console.error('[cron] number health failed:', err)
+    return 0
+  })
+
   return {
     processed,
+    number_health_checks: numberHealthChecks,
     scheduled_broadcast_sends: scheduledBroadcastSends,
     daily_summaries: dailySummaries,
     shopify_reminders: shopifyReminders,

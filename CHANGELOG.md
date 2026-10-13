@@ -13,6 +13,13 @@ and polish.
 
 ### Added
 
+- **WhatsApp number health.** Settings → WhatsApp shows the number's
+  quality rating, messaging limit, send status, display name and calling
+  eligibility in plain words, with Check now. Checked daily; owners get
+  an email and an in-app warning when quality drops or Meta limits the
+  number, and /admin shows each account's health. **Migration
+  required:** `supabase/migrations/049_whatsapp_number_health.sql`.
+
 - **WhatsApp voice calls in the browser.** Customers call your WhatsApp
   number and every agent's browser rings — answer, mute and hang up
   without a phone. Call customers from the chat header (sends a call

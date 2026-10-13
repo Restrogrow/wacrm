@@ -229,6 +229,12 @@ export default function DocsPage() {
                 If the number shows <em>Not registered</em>, enter its 6-digit two-step verification PIN.
               </Step>
             </ol>
+            <p>
+              <b>Number health:</b> <Ui to="/settings?tab=whatsapp">Settings → WhatsApp</Ui> shows your number&apos;s
+              quality rating, messaging limit (how many customers you can start chats with a day), whether it can
+              send, and whether calling is allowed. It&apos;s checked daily; the owner gets an email and a warning
+              shows in the app if quality drops.
+            </p>
             <Tip>
               Prefer not to do this yourself? We set it up for you, including Meta business
               verification. Email <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
