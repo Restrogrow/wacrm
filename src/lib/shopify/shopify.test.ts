@@ -12,7 +12,7 @@ import {
   shipmentStatusEvent,
   summarizeItems,
 } from './events';
-import { normalizeShopifyPhone } from './phone';
+import { normalizeIntegrationPhone } from '@/lib/integrations/phone';
 import {
   isValidShopDomain,
   normalizeShopDomain,
@@ -73,41 +73,41 @@ describe('shop domains', () => {
   });
 });
 
-describe('normalizeShopifyPhone', () => {
+describe('normalizeIntegrationPhone', () => {
   it('adds +91 to Indian national numbers', () => {
-    expect(normalizeShopifyPhone('98765 43210', 'IN', '91')).toBe(
+    expect(normalizeIntegrationPhone('98765 43210', 'IN', '91')).toBe(
       '919876543210'
     );
-    expect(normalizeShopifyPhone('098765-43210', 'IN', '91')).toBe(
+    expect(normalizeIntegrationPhone('098765-43210', 'IN', '91')).toBe(
       '919876543210'
     );
-    expect(normalizeShopifyPhone('919876543210', 'IN', '91')).toBe(
+    expect(normalizeIntegrationPhone('919876543210', 'IN', '91')).toBe(
       '919876543210'
     );
   });
 
   it('keeps numbers that are already international', () => {
-    expect(normalizeShopifyPhone('+44 7700 900123', 'IN', '91')).toBe(
+    expect(normalizeIntegrationPhone('+44 7700 900123', 'IN', '91')).toBe(
       '447700900123'
     );
-    expect(normalizeShopifyPhone('0044 7700 900123', null, '91')).toBe(
+    expect(normalizeIntegrationPhone('0044 7700 900123', null, '91')).toBe(
       '447700900123'
     );
   });
 
   it('uses the store default when the address has no country', () => {
-    expect(normalizeShopifyPhone('9876543210', null, '91')).toBe(
+    expect(normalizeIntegrationPhone('9876543210', null, '91')).toBe(
       '919876543210'
     );
-    expect(normalizeShopifyPhone('07700 900123', 'GB', '91')).toBe(
+    expect(normalizeIntegrationPhone('07700 900123', 'GB', '91')).toBe(
       '447700900123'
     );
   });
 
   it('returns null for unusable input', () => {
-    expect(normalizeShopifyPhone('', 'IN', '91')).toBeNull();
-    expect(normalizeShopifyPhone('12', 'IN', '91')).toBeNull();
-    expect(normalizeShopifyPhone(null, 'IN', '91')).toBeNull();
+    expect(normalizeIntegrationPhone('', 'IN', '91')).toBeNull();
+    expect(normalizeIntegrationPhone('12', 'IN', '91')).toBeNull();
+    expect(normalizeIntegrationPhone(null, 'IN', '91')).toBeNull();
   });
 });
 

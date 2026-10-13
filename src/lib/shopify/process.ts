@@ -47,7 +47,7 @@ import {
   type ShopifyEvent,
   type ShopifyVariable,
 } from './events';
-import { normalizeShopifyPhone } from './phone';
+import { normalizeIntegrationPhone } from '@/lib/integrations/phone';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Json = Record<string, any>;
@@ -137,7 +137,7 @@ export async function sendShopifyEvent(
   }
   if (!rule) return { status: 'no_rule' };
 
-  const phone = normalizeShopifyPhone(
+  const phone = normalizeIntegrationPhone(
     req.rawPhone,
     req.countryCode,
     store.default_country_code

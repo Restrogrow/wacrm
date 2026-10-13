@@ -10,42 +10,30 @@
 // API: /api/integrations/shopify (see lib/shopify/process.ts).
 // ============================================================
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import {
-  Check,
-  Copy,
-  Loader2,
-  Save,
-  Send,
-  ShoppingBag,
-  Unplug,
-} from 'lucide-react';
+import { Check, Copy, Loader2, Save, ShoppingBag, Unplug } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useAuth } from '@/hooks/use-auth';
-import { createClient } from '@/lib/supabase/client';
 import {
   EVENT_META,
   SHOPIFY_EVENTS,
   SHOPIFY_VARIABLES,
-  countBodyVariables,
   type ShopifyEvent,
   type ShopifyVariable,
 } from '@/lib/shopify/events';
+import {
+  IntegrationActivity,
+  MessageRulesEditor,
+  fmtActivityTime,
+  useApprovedTemplates,
+} from './integration-message-rules';
 import { SettingsPanelHead } from './settings-panel-head';
 
 interface StoreInfo {
@@ -85,16 +73,6 @@ interface Topic {
   drives: string;
 }
 
-interface TemplateOption {
-  name: string;
-  language: string;
-  category: string;
-  body_text: string;
-}
-
-const templateKey = (name: string | null, language: string | null) =>
-  name ? `${name}::${language || 'en_US'}` : '';
-
 function emptyRule(event: ShopifyEvent): Rule {
   return {
     event,
@@ -104,16 +82,6 @@ function emptyRule(event: ShopifyEvent): Rule {
     body_variables: [],
     delay_minutes: 60,
   };
-}
-
-function fmtTime(iso: string | null): string {
-  if (!iso) return 'never';
-  return new Date(iso).toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
 }
 
 function CopyField({ value }: { value: string }) {
@@ -156,7 +124,7 @@ export function ShopifySettings() {
       ) as Record<ShopifyEvent, Rule>
   );
   const [activity, setActivity] = useState<ActivityRow[]>([]);
-  const [templates, setTemplates] = useState<TemplateOption[]>([]);
+  const templates = useApprovedTemplates();
 
   const [shopInput, setShopInput] = useState('');
   const [secretInput, setSecretInput] = useState('');
@@ -199,14 +167,6 @@ export function ShopifySettings() {
 
   useEffect(() => {
     void load();
-    void (async () => {
-      const { data } = await createClient()
-        .from('message_templates')
-        .select('name, language, category, body_text')
-        .eq('status', 'APPROVED')
-        .order('name');
-      setTemplates((data ?? []) as TemplateOption[]);
-    })();
   }, [load]);
 
   // Result of the OAuth round-trip (/api/integrations/shopify/callback).
@@ -216,11 +176,6 @@ export function ShopifySettings() {
     if (searchParams.get('shopify') === 'connected')
       toast.success('Shopify store connected');
   }, [searchParams]);
-
-  const templateByKey = useMemo(
-    () => new Map(templates.map((t) => [templateKey(t.name, t.language), t])),
-    [templates]
-  );
 
   const readOnly = !canEditSettings;
 
@@ -386,7 +341,7 @@ export function ShopifySettings() {
                   </div>
                   <p className="text-muted-foreground mt-1 text-xs">
                     {store.shop_domain} · last event{' '}
-                    {fmtTime(store.last_event_at)}
+                    {fmtActivityTime(store.last_event_at)}
                   </p>
                 </div>
               </div>
@@ -611,174 +566,39 @@ export function ShopifySettings() {
           )}
         </div>
 
-        {templates.length === 0 && (
-          <p className="text-muted-foreground mb-3 text-sm">
-            You don&apos;t have any approved templates yet.
-          </p>
-        )}
-
-        <div className="space-y-3">
-          {SHOPIFY_EVENTS.map((event) => {
-            const rule = rules[event];
-            const meta = EVENT_META[event];
-            const template = templateByKey.get(
-              templateKey(rule.template_name, rule.template_language)
-            );
-            const varCount = countBodyVariables(template?.body_text);
-            const preview = template?.body_text.replace(
-              /\{\{\s*(\d+)\s*\}\}/g,
-              (_m, n) => {
-                const key = rule.body_variables[Number(n) - 1];
-                return (
-                  SHOPIFY_VARIABLES.find((v) => v.key === key)?.example ??
-                  `{{${n}}}`
-                );
-              }
-            );
-            return (
-              <Card key={event}>
-                <CardContent className="space-y-3 py-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-foreground text-sm font-medium">
-                        {meta.label}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {meta.description}
-                      </p>
-                    </div>
-                    <Switch
-                      checked={rule.enabled}
-                      disabled={readOnly}
-                      onCheckedChange={(checked) =>
-                        updateRule(event, { enabled: checked })
-                      }
-                      aria-label={`Send ${meta.label} message`}
-                    />
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-muted-foreground text-xs">
-                        Template
-                      </Label>
-                      <Select
-                        value={templateKey(
-                          rule.template_name,
-                          rule.template_language
-                        )}
-                        onValueChange={(value) => {
-                          const t = templateByKey.get(value ?? '');
-                          updateRule(event, {
-                            template_name: t?.name ?? null,
-                            template_language: t?.language ?? null,
-                            body_variables: Array.from(
-                              { length: countBodyVariables(t?.body_text) },
-                              (_, i) =>
-                                rule.body_variables[i] ??
-                                SHOPIFY_VARIABLES[i]?.key ??
-                                'customer_name'
-                            ),
-                          });
-                        }}
-                        disabled={readOnly}
-                      >
-                        <SelectTrigger className="bg-muted w-full">
-                          <SelectValue placeholder="Choose a template" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {templates.map((t) => (
-                            <SelectItem
-                              key={templateKey(t.name, t.language)}
-                              value={templateKey(t.name, t.language)}
-                            >
-                              {t.name} ({t.language}) · {t.category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {event === 'abandoned_checkout' && (
-                      <div className="flex flex-col gap-1">
-                        <Label className="text-muted-foreground text-xs">
-                          Send after (minutes idle)
-                        </Label>
-                        <Input
-                          type="number"
-                          min={15}
-                          max={10080}
-                          value={rule.delay_minutes}
-                          disabled={readOnly}
-                          onChange={(e) =>
-                            updateRule(event, {
-                              delay_minutes: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {varCount > 0 && (
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {Array.from({ length: varCount }, (_, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="text-muted-foreground w-10 shrink-0 font-mono text-xs">
-                            {`{{${i + 1}}}`}
-                          </span>
-                          <Select
-                            value={rule.body_variables[i] ?? ''}
-                            onValueChange={(value) => {
-                              const vars = [...rule.body_variables];
-                              vars[i] = (value ??
-                                'customer_name') as ShopifyVariable;
-                              updateRule(event, { body_variables: vars });
-                            }}
-                            disabled={readOnly}
-                          >
-                            <SelectTrigger className="bg-muted w-full">
-                              <SelectValue placeholder="Choose a value" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {SHOPIFY_VARIABLES.map((v) => (
-                                <SelectItem key={v.key} value={v.key}>
-                                  {v.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {preview && (
-                    <p className="bg-muted/60 text-foreground rounded-md px-3 py-2 text-xs whitespace-pre-wrap">
-                      {preview}
-                    </p>
-                  )}
-
-                  {connected && !readOnly && rule.template_name && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => sendTest(event)}
-                      disabled={busy === `test:${event}`}
-                    >
-                      {busy === `test:${event}` ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <Send className="size-4" />
-                      )}
-                      Send test
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        <MessageRulesEditor
+          events={SHOPIFY_EVENTS}
+          meta={EVENT_META}
+          variables={SHOPIFY_VARIABLES}
+          rules={rules}
+          templates={templates}
+          readOnly={readOnly}
+          canTest={!!connected && !readOnly}
+          testingEvent={
+            busy?.startsWith('test:') ? (busy.slice(5) as ShopifyEvent) : null
+          }
+          onChange={updateRule}
+          onTest={sendTest}
+          renderExtra={(event, rule) =>
+            event === 'abandoned_checkout' ? (
+              <div className="flex flex-col gap-1">
+                <Label className="text-muted-foreground text-xs">
+                  Send after (minutes idle)
+                </Label>
+                <Input
+                  type="number"
+                  min={15}
+                  max={10080}
+                  value={rule.delay_minutes}
+                  disabled={readOnly}
+                  onChange={(e) =>
+                    updateRule(event, { delay_minutes: Number(e.target.value) })
+                  }
+                />
+              </div>
+            ) : null
+          }
+        />
 
         {!readOnly && (
           <div className="mt-4 flex justify-end">
@@ -795,52 +615,18 @@ export function ShopifySettings() {
       </div>
 
       {/* ---------------- Activity ---------------- */}
-      {activity.length > 0 && (
-        <div>
-          <h3 className="text-foreground mb-2 text-sm font-semibold">
-            Recent messages
-          </h3>
-          <Card>
-            <CardContent className="p-0">
-              <ul className="divide-border divide-y">
-                {activity.map((row) => (
-                  <li
-                    key={row.id}
-                    className="flex flex-col gap-1 px-4 py-2.5 sm:flex-row sm:items-center sm:gap-3"
-                  >
-                    <Badge
-                      variant={
-                        row.status === 'sent'
-                          ? 'default'
-                          : row.status === 'failed'
-                            ? 'destructive'
-                            : 'outline'
-                      }
-                      className="w-fit"
-                    >
-                      {row.status}
-                    </Badge>
-                    <span className="text-foreground text-sm">
-                      {row.event
-                        ? (EVENT_META[row.event]?.label ?? row.event)
-                        : row.topic}
-                      {row.order_name ? ` · ${row.order_name}` : ''}
-                      {row.topic === 'test' ? ' · test' : ''}
-                    </span>
-                    <span className="text-muted-foreground min-w-0 flex-1 truncate text-xs">
-                      {row.phone ? `+${row.phone}` : ''}
-                      {row.detail ? ` — ${row.detail}` : ''}
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {fmtTime(row.created_at)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <IntegrationActivity
+        items={activity.map((row) => ({
+          id: row.id,
+          status: row.status,
+          label: `${row.event ? (EVENT_META[row.event]?.label ?? row.event) : row.topic}${
+            row.order_name ? ` · ${row.order_name}` : ''
+          }${row.topic === 'test' ? ' · test' : ''}`,
+          phone: row.phone,
+          detail: row.detail,
+          created_at: row.created_at,
+        }))}
+      />
     </section>
   );
 }

@@ -1,10 +1,11 @@
 // ============================================================
-// Shopify phone numbers → WhatsApp (E.164 digits) — pure.
+// Customer phone numbers from integrations (Shopify orders, Calendly
+// bookings, …) → WhatsApp E.164 digits — pure.
 //
-// Shopify stores whatever the customer typed. Indian checkouts in
-// particular often hold "98765 43210" or "098765 43210" with no +91,
-// which Meta rejects. We add the calling code from the address's
-// country (or the store's default) when the number is national.
+// Customers type numbers however they like. Indian ones in particular
+// often arrive as "98765 43210" or "098765 43210" with no +91, which
+// Meta rejects. We add the calling code from the customer's country
+// (or the connection's default) when the number is national.
 // ============================================================
 
 import { isValidE164 } from '@/lib/whatsapp/phone-utils';
@@ -55,7 +56,7 @@ export function callingCodeFor(
  * `countryCode` is the ISO code from the order address (e.g. "IN");
  * `defaultCallingCode` is the store setting used when that's missing.
  */
-export function normalizeShopifyPhone(
+export function normalizeIntegrationPhone(
   raw: string | null | undefined,
   countryCode: string | null | undefined,
   defaultCallingCode: string
