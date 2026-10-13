@@ -6,6 +6,8 @@ import {
   FileText,
   KeyRound,
   LayoutGrid,
+  Mail,
+  MessageSquareText,
   Palette,
   Plug,
   PlugZap,
@@ -33,6 +35,7 @@ export const SETTINGS_SECTIONS = [
   'whatsapp',
   'ai-chatbot',
   'templates',
+  'saved-replies',
   'fields',
   'deals',
   'members',
@@ -41,6 +44,7 @@ export const SETTINGS_SECTIONS = [
   'shopify',
   'calendly',
   'billing',
+  'daily-summary',
 ] as const;
 
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
@@ -63,6 +67,7 @@ export const SECTION_META: Record<SettingsSection, SectionMeta> = {
   whatsapp: { id: 'whatsapp', label: 'WhatsApp', icon: PlugZap, group: 'workspace' },
   'ai-chatbot': { id: 'ai-chatbot', label: 'AI chatbot', icon: Bot, group: 'workspace' },
   templates: { id: 'templates', label: 'Templates', icon: FileText, group: 'workspace' },
+  'saved-replies': { id: 'saved-replies', label: 'Saved replies', icon: MessageSquareText, group: 'workspace' },
   fields: { id: 'fields', label: 'Fields & tags', icon: Tags, group: 'workspace' },
   deals: { id: 'deals', label: 'Deals & currency', icon: Coins, group: 'workspace' },
   members: { id: 'members', label: 'Team members', icon: UsersRound, group: 'workspace' },
@@ -71,6 +76,7 @@ export const SECTION_META: Record<SettingsSection, SectionMeta> = {
   shopify: { id: 'shopify', label: 'Shopify', icon: ShoppingBag, group: 'workspace' },
   calendly: { id: 'calendly', label: 'Calendly', icon: CalendarCheck, group: 'workspace' },
   billing: { id: 'billing', label: 'Plan & billing', icon: CreditCard, group: 'workspace' },
+  'daily-summary': { id: 'daily-summary', label: 'Daily summary', icon: Mail, group: 'workspace' },
 };
 
 export const RAIL_GROUPS: { label: string | null; group: SectionMeta['group'] }[] = [

@@ -13,6 +13,7 @@ import { SecurityPanel } from '@/components/settings/security-panel';
 import { AppearancePanel } from '@/components/settings/appearance-panel';
 import { WhatsAppConfig } from '@/components/settings/whatsapp-config';
 import { TemplateManager } from '@/components/settings/template-manager';
+import { SavedRepliesSettings } from '@/components/settings/saved-replies-settings';
 import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel';
 import { DealsSettings } from '@/components/settings/deals-settings';
 import { MembersTab } from '@/components/settings/members-tab';
@@ -22,6 +23,7 @@ import { AiChatbotSettings } from '@/components/settings/ai-chatbot-settings';
 import { ShopifySettings } from '@/components/settings/shopify-settings';
 import { CalendlySettings } from '@/components/settings/calendly-settings';
 import { BillingSettings } from '@/components/settings/billing-settings';
+import { DailySummarySettings } from '@/components/settings/daily-summary-settings';
 import {
   resolveSection,
   type SettingsSection,
@@ -69,6 +71,7 @@ export default function SettingsPage() {
     whatsapp: <WhatsAppConfig />,
     'ai-chatbot': <AiChatbotSettings />,
     templates: <TemplateManager />,
+    'saved-replies': <SavedRepliesSettings />,
     fields: <FieldsAndTagsPanel />,
     deals: <DealsSettings />,
     members: <MembersTab />,
@@ -77,6 +80,7 @@ export default function SettingsPage() {
     shopify: <ShopifySettings />,
     calendly: <CalendlySettings />,
     billing: <BillingSettings />,
+    'daily-summary': <DailySummarySettings />,
   };
 
   return (

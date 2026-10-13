@@ -4,6 +4,8 @@ import { resumePendingExecution } from '@/lib/automations/engine'
 import type { AutomationContext } from '@/lib/automations/engine'
 import { processDueCheckouts } from '@/lib/shopify/process'
 import { processDueCalendlyReminders } from '@/lib/calendly/process'
+import { processScheduledBroadcasts } from '@/lib/broadcasts/scheduled'
+import { processDailySummaries } from '@/lib/summary/daily'
 
 /**
  * Drain due `automation_pending_executions` rows. Meant to be hit
@@ -77,8 +79,20 @@ export async function GET(request: Request) {
     return 0
   })
 
+  const scheduledBroadcastSends = await processScheduledBroadcasts().catch((err) => {
+    console.error('[cron] scheduled broadcasts failed:', err)
+    return 0
+  })
+
+  const dailySummaries = await processDailySummaries().catch((err) => {
+    console.error('[cron] daily summaries failed:', err)
+    return 0
+  })
+
   return NextResponse.json({
     processed,
+    scheduled_broadcast_sends: scheduledBroadcastSends,
+    daily_summaries: dailySummaries,
     shopify_reminders: shopifyReminders,
     calendly_reminders: calendlyReminders,
   })
