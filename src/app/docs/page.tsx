@@ -4,6 +4,7 @@ import {
   Bot,
   CalendarCheck,
   Code2,
+  CreditCard,
   FileText,
   GitBranch,
   HelpCircle,
@@ -43,6 +44,7 @@ const TOPICS: { id: string; label: string; blurb: string; icon: LucideIcon }[] =
   { id: "shopify", label: "Shopify", blurb: "Order, shipping, and cart messages.", icon: ShoppingBag },
   { id: "calendly", label: "Calendly", blurb: "Booking confirmations and reminders.", icon: CalendarCheck },
   { id: "team", label: "Team members", blurb: "Invite teammates and set roles.", icon: UsersRound },
+  { id: "plans", label: "Plans & free trial", blurb: "Trial, limits, and upgrading.", icon: CreditCard },
 ];
 
 const TOC = [...TOPICS.map(({ id, label }) => ({ id, label })), { id: "faq", label: "FAQ" }];
@@ -417,6 +419,22 @@ export default function DocsPage() {
                 </tbody>
               </table>
             </div>
+          </Section>
+
+          <Section id="plans" n={13} title="Plans & free trial" intro="Try everything free for 7 days, then pick the plan that fits.">
+            <ul className="bullets">
+              <li>New accounts get a <b>7-day free trial</b> with Growth features. The bar at the top shows the days left.</li>
+              <li>
+                When the trial ends your account becomes <b>read-only</b>: you can still see every chat and new messages
+                still arrive, but sending is paused until you choose a plan.
+              </li>
+              <li>
+                See your plan, usage, and limits in <Ui to="/settings?tab=billing">Settings → Plan &amp; billing</Ui>. Click
+                <b> Choose</b> on a plan to message our team; we&apos;ll share payment details (UPI or bank transfer) and
+                activate it as soon as it&apos;s paid.
+              </li>
+              <li>WhatsApp conversation fees are billed by Meta directly, separately from your plan.</li>
+            </ul>
           </Section>
 
           <section id="faq" className="docs-section faq">

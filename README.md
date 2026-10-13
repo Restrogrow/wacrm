@@ -51,11 +51,17 @@
   number, nature of business, team size) before entering the app.
 - **Team accounts**: invite teammates by link, with role-based access
   (owner / admin / agent / viewer).
-- **Platform admin** (`/admin`, internal): every account with its
-  owner, mobile number, business type, team size, signup method
-  (Google / email), profile completeness, members, and WhatsApp status.
-- **Public REST API and webhooks**: scoped, revocable API keys plus
-  signed outbound events. See [Public API](#public-api).
+- **Plans & free trial**: Starter / Growth / Enterprise with the limits
+  on /pricing, enforced by the database; new accounts get a 7-day trial,
+  then become read-only (sending paused) until a plan is active. Usage
+  and plans live in Settings → Plan & billing.
+- **Platform admin** (`/admin`, internal): a live dashboard — sign-ups
+  today / 7 / 30 days with change vs the previous period and a 30-day
+  chart (India time), WhatsApp connections, active accounts, messages
+  today, logins, paying / trial / expired counts, integrations, a
+  sign-up → details → WhatsApp → active → paying funnel, breakdowns by
+  plan, sign-up method, business type and team size — plus a searchable,
+  filterable accounts table and per-account pages with a plan editor.
 
 ## Public API
 
@@ -156,6 +162,30 @@ integrations and the keys each needs: [docs/INTEGRATIONS.md](./docs/INTEGRATIONS
 Abandoned-cart reminders run from the existing every-minute
 `/api/automations/cron` job. Code: `src/lib/shopify/`,
 `src/app/api/integrations/shopify/`.
+
+### Plans, trial and limits
+
+No payment gateway yet. `accounts.plan` is `trial`, `starter`, `growth`
+or `enterprise`, with `trial_ends_at` (new accounts: 7 days) and
+`plan_expires_at` (paid-until; empty = no end). A platform admin sets
+them in `/admin` → account → **Plan** after the business pays (UPI /
+bank transfer); "Choose plan" in Settings → Plan & billing opens
+WhatsApp/email to support with the account details.
+
+- **Trial** gets Growth limits. When the trial or paid period ends the
+  account is **read-only**: inbound messages still arrive, but every
+  send path (inbox, API, broadcasts, automations, flows, chatbot,
+  Shopify, Calendly) stops with a "trial ended" message
+  (`src/lib/billing/server.ts`).
+- **Limits** (`src/lib/billing/plans.ts`, mirrored in the database's
+  `plan_limit()`): contacts (dashboard adds and CSV imports only —
+  inbound WhatsApp, API and integrations always create contacts),
+  broadcasts per month, automations + flows, custom fields, and team
+  members including pending invites. BEFORE INSERT triggers raise
+  SQLSTATE `PL001` with a message shown to the user as-is.
+
+Apply `supabase/migrations/041_plans_and_trials.sql` (existing accounts
+get a one-time 14-day trial).
 
 ### Calendly integration
 

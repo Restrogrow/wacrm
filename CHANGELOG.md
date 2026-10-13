@@ -13,6 +13,29 @@ and polish.
 
 ### Added
 
+- **Admin dashboard** (`/admin`). Sign-ups today, last 7 and 30 days
+  (with change vs the previous period) and a 30-day daily chart in India
+  time; WhatsApp-connected, active-in-7-days, messages today and
+  logged-in-today counts; paying / trial / trial-ended accounts;
+  Shopify and Calendly connections; an activation funnel; breakdowns by
+  plan, sign-up method, nature of business and team size; and an
+  accounts table with search (business, owner, email, phone), filters
+  (plan, WhatsApp, sign-up method) and sorting (newest, recently active,
+  most members), showing last chat and last login per account.
+
+- **Plans, free trial and plan limits** (Settings → Plan & billing).
+  New accounts get a 7-day free trial with Growth limits; a banner shows
+  the days left. When the trial (or a paid period) ends, the account is
+  read-only: messages still arrive, but sending is paused everywhere
+  until a plan is active. Plan limits from /pricing — contacts, monthly
+  broadcasts, automations + flows, custom fields, team members — are
+  enforced by database triggers, with usage meters and clear "upgrade"
+  messages. No payment gateway yet: "Choose plan" opens WhatsApp/email
+  to support, and platform admins activate plans (with a paid-until date
+  and note) in `/admin`. Existing accounts get a one-time 14-day trial.
+  **Migration required:** apply
+  `supabase/migrations/041_plans_and_trials.sql`.
+
 - **Calendly → WhatsApp booking messages** (Settings → Calendly).
   Connect with a Calendly personal access token; Repeat Grow creates the
   webhook subscription with its own signing key. Map approved templates
@@ -70,6 +93,9 @@ and polish.
 
 ### Changed
 
+- **Owners can edit business details** (business name, mobile number,
+  nature of business, team size) in Settings → Your profile.
+
 - The admin account page's "Signup method" card is renamed "WhatsApp
   signup" (it shows how WhatsApp was connected, not how the user signed
   up).
@@ -81,6 +107,10 @@ and polish.
   `supabase/migrations/037_default_currency_inr.sql`.
 
 ### Fixed
+
+- **Google sign-up users can set a password.** Settings → Login &
+  security shows "Set password" (no current password) for accounts that
+  signed up with Google.
 
 - An auth `code` that lands on the homepage (Supabase falls back to the
   Site URL when a redirect isn't allow-listed) is now forwarded to

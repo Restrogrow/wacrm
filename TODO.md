@@ -6,17 +6,20 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 
 ## 🔴 Do first — the website promises these
 
-- [ ] **#1 Billing.** Pricing page lists ₹499 / ₹999 / ₹1,999 plans but
-      "Choose plan" only opens an email. Add Razorpay (or Stripe)
-      subscriptions: checkout, renewals, invoices with GST, failed-payment
-      handling, plan changes, and a Billing section in Settings.
-- [ ] **#2 Enforce plan limits.** Nothing checks the published limits
-      (contacts, broadcasts/month, automation flows, custom fields, team
-      members). Add a `plan` on `accounts`, a limits table, server-side
-      checks on create/send, and usage meters + upgrade prompts in the UI.
-- [ ] **#3 Free trial.** "Start Free Trial" has no trial: add trial
-      start/end on the account, reminders before it ends, and what happens
-      after (read-only or downgrade).
+- [ ] **#1 Billing — payment gateway.** Plans, Settings → Plan & billing
+      and manual activation from /admin are done (migration 041); "Choose"
+      opens WhatsApp/email to support and plans are activated by hand
+      after UPI / bank transfer. Still to do: a gateway (Razorpay
+      subscriptions: checkout, renewals, invoices, failed payments) and
+      GST invoices once GST-registered.
+- [x] **#2 Enforce plan limits.** Done (migration 041): database
+      triggers enforce contacts (dashboard adds/imports), broadcasts per
+      month, automations + flows, custom fields and team members, with
+      usage meters in Settings → Plan & billing.
+- [x] **#3 Free trial.** Done (migration 041): 7-day trial with Growth
+      limits for new accounts (existing accounts got 14 days), a banner
+      with days left, then read-only (sending paused). Follow-up: email
+      reminders before the trial ends.
 - [x] **#5 Background jobs (cron).** Done 2026-10-13:
       `AUTOMATION_CRON_SECRET` is set and Hostinger runs
       `/api/automations/cron` and `/api/flows/cron` every minute with the
@@ -67,11 +70,13 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 
 ## 🟠 Customer-facing gaps
 
-- [ ] **#33 Google users can't set a password.** The Settings password
+- [x] **#33 Google users can't set a password.** Done: the form offers
+      "Set password" for Google-only accounts. Was: The Settings password
       form re-authenticates with the current password
       (`src/components/settings/password-form.tsx`); Google sign-ups
       have none. Let them set a first password without it.
-- [ ] **#34 Edit business details in Settings.** Mobile number, nature
+- [x] **#34 Edit business details in Settings.** Done: owner-only
+      Business details card under Settings → Your profile. Was: Mobile number, nature
       of business, and team size can only be entered at signup or on
       `/onboarding`; owners can't change them afterwards.
 - [ ] **#35 Google consent screen branding.** Google shows
