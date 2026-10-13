@@ -31,8 +31,14 @@
   hands off to a human when the customer asks for one.
 - **Real-time dashboard**: response times, daily volume, pipeline value,
   and an activity feed.
+- **Sign up with email or Google**: Google sign-ups are asked for the
+  same business details as the signup form (business name, mobile
+  number, nature of business, team size) before entering the app.
 - **Team accounts**: invite teammates by link, with role-based access
   (owner / admin / agent / viewer).
+- **Platform admin** (`/admin`, internal): every account with its
+  owner, mobile number, business type, team size, signup method
+  (Google / email), profile completeness, members, and WhatsApp status.
 - **Public REST API and webhooks**: scoped, revocable API keys plus
   signed outbound events. See [Public API](#public-api).
 
@@ -78,6 +84,32 @@ Apply the database schema by running the SQL files in
 [`supabase/migrations`](./supabase/migrations) in order against your
 Supabase project. `.env.local.example` documents every environment
 variable.
+
+### Google sign-in
+
+1. In Google Cloud, create an OAuth client (type **Web application**)
+   with this authorized redirect URI:
+   `https://<your-project-ref>.supabase.co/auth/v1/callback`. Publish
+   the OAuth consent screen to **Production**, or only listed test
+   users can sign in.
+2. In Supabase → **Authentication → Providers → Google**, enable it
+   and paste the client ID and secret.
+3. In Supabase → **Authentication → URL Configuration**, set **Site
+   URL** to `https://repeatgrow.com` and add these **Redirect URLs**:
+
+   ```
+   http://localhost:3000/**
+   https://repeatgrow.com/**
+   ```
+
+   If the app's address isn't on this list, Supabase sends the user to
+   the Site URL instead. The proxy forwards a stray `/?code=…` to
+   `/auth/callback` so the sign-in still completes on that host, but
+   a local sign-in that lands on production can't finish there.
+
+New Google users are routed to `/onboarding` (from the dashboard
+layout) until their account has a mobile number, nature of business,
+and team size. Invited teammates are never asked.
 
 ### Scripts
 

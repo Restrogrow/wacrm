@@ -9,6 +9,39 @@ Versions follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Pre-1.0, `MINOR` bumps cover new modules; `PATCH` bumps cover bug fixes
 and polish.
 
+## [Unreleased]
+
+### Added
+
+- **Sign in with Google** on `/login` and `/signup` (Supabase OAuth via
+  `/auth/callback`). Invite links survive the Google round-trip. Setup
+  steps are in the README under "Google sign-in".
+- **`/onboarding` business-details step.** Account owners missing a
+  mobile number, nature of business, or team size (Google sign-ups, and
+  accounts created before migration 029) are asked for them, plus a
+  business name, before entering the app. Saved by
+  `POST /api/account/onboarding` (owner only) into the same columns the
+  signup form uses. No migration required.
+- **Platform admin (`/admin`) shows more account details:** owner
+  mobile, nature of business, team size, signup method (Google /
+  email), and a complete / incomplete profile badge. The account page
+  adds a Business details panel and a "Signed up via" column for each
+  member.
+
+### Changed
+
+- The admin account page's "Signup method" card is renamed "WhatsApp
+  signup" (it shows how WhatsApp was connected, not how the user signed
+  up).
+- `/login` shows an error when `/auth/callback` fails
+  (`?error=auth-callback-failed`) instead of failing silently.
+
+### Fixed
+
+- An auth `code` that lands on the homepage (Supabase falls back to the
+  Site URL when a redirect isn't allow-listed) is now forwarded to
+  `/auth/callback` instead of leaving the user signed out.
+
 ## [0.4.0] — 2026-07-01
 
 Completes the public API (#245): **outbound event webhooks** so

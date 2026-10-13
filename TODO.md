@@ -25,6 +25,17 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 
 ## 🟠 Customer-facing gaps
 
+- [ ] **#33 Google users can't set a password.** The Settings password
+      form re-authenticates with the current password
+      (`src/components/settings/password-form.tsx`); Google sign-ups
+      have none. Let them set a first password without it.
+- [ ] **#34 Edit business details in Settings.** Mobile number, nature
+      of business, and team size can only be entered at signup or on
+      `/onboarding`; owners can't change them afterwards.
+- [ ] **#35 Google consent screen branding.** Google shows
+      "continue to <project-ref>.supabase.co". A Supabase custom auth
+      domain would show repeatgrow.com instead.
+
 - [ ] **#6 Saved replies** in the inbox (type "/" to insert), shared per
       account, with variables like the contact's name.
 - [ ] **#7 Scheduled broadcasts** ("send Friday 6 pm"); the type exists in

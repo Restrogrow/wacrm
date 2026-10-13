@@ -184,7 +184,9 @@ export default function DocsPage() {
           <Section id="getting-started" n={1} title="Getting started" intro="Go from sign-up to your first WhatsApp reply.">
             <ol className="steps">
               <Step title="Create your account">
-                <a href={`${SITE_URL}/signup`}>Sign up at {SITE_HOST}</a> and confirm your email address. Log in any time at{" "}
+                <a href={`${SITE_URL}/signup`}>Sign up at {SITE_HOST}</a> with your email address (then confirm it), or click{" "}
+                <b>Continue with Google</b>. If you use Google, we&apos;ll ask for your business name, mobile number, business
+                type, and team size before you enter the app. Log in any time at{" "}
                 <a href={`${SITE_URL}/login`}>{SITE_HOST}/login</a>.
               </Step>
               <Step title="Connect your WhatsApp number">
