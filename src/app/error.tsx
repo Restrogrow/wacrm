@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
 import { isStaleBuildError, reloadOnceForStaleBuild } from "@/lib/stale-build";
@@ -19,6 +20,7 @@ export default function Error({
     // record of the failure until one is. Keep it a plain console.error
     // rather than swallowing it.
     console.error("[app error boundary]", error);
+    if (!isStaleBuildError(error)) Sentry.captureException(error);
     // Old JS from before a deploy — a reload picks up the new build.
     if (stale) reloadOnceForStaleBuild();
   }, [error, stale]);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 import "./globals.css";
 import { isStaleBuildError, reloadOnceForStaleBuild } from "@/lib/stale-build";
 
@@ -21,6 +22,7 @@ export default function GlobalError({
     console.error("[global error boundary]", error);
     // Old JS from before a deploy — a reload picks up the new build.
     if (stale) reloadOnceForStaleBuild();
+    else Sentry.captureException(error);
   }, [error, stale]);
 
   return (

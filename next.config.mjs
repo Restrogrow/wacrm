@@ -1,3 +1,5 @@
+import { withSentryConfig } from "@sentry/nextjs/config";
+
 /**
  * Plain JS (not .ts) deliberately. Next.js transpiles next.config.ts
  * through SWC before loading it; on hosts whose glibc is too old for
@@ -63,7 +65,7 @@ const SECURITY_HEADERS = [
       // the Embedded Signup button's client-side FB SDK calls
       // connect.facebook.net (app config) and www.facebook.com
       // (login telemetry) directly from the browser.
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://connect.facebook.net https://www.facebook.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://connect.facebook.net https://www.facebook.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io",
       // The FB SDK's cross-domain messaging bridge runs in a hidden
       // iframe on facebook.com — without this, default-src 'self'
       // blocks it once CSP is enforced.
@@ -186,4 +188,15 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry: error monitoring (src/instrumentation*.ts). Source maps are
+// uploaded only when SENTRY_AUTH_TOKEN (+ SENTRY_ORG / SENTRY_PROJECT)
+// are set at build time; otherwise this just passes the config through.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+  telemetry: false,
+});
