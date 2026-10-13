@@ -18,6 +18,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { supabaseAdmin } from '@/lib/flows/admin-client';
+import { recordWebhookFailure } from '@/lib/ops/monitoring';
 import { isUniqueViolation } from '@/lib/contacts/dedupe';
 import { normalizeIntegrationPhone } from '@/lib/integrations/phone';
 import { resolveConversationByPhone } from '@/lib/whatsapp/resolve-conversation';
@@ -277,6 +278,10 @@ export async function handleCalendlyWebhook(
     }
   } catch (err) {
     console.error(`[calendly] ${event} handling failed:`, err);
+    await recordWebhookFailure('calendly', err, {
+      accountId: conn.account_id,
+      context: { event },
+    });
   }
 }
 

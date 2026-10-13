@@ -22,6 +22,7 @@
 // ============================================================
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { recordWebhookFailure } from '@/lib/ops/monitoring';
 
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 import { isUniqueViolation } from '@/lib/contacts/dedupe';
@@ -301,6 +302,10 @@ export async function handleShopifyWebhook(
       `[shopify] ${topic} handling failed for ${store.shop_domain}:`,
       err
     );
+    await recordWebhookFailure('shopify', err, {
+      accountId: store.account_id,
+      context: { topic, shop: store.shop_domain, delivery_id: deliveryId },
+    });
   }
 }
 

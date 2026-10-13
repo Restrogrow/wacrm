@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/automations/admin-client'
 import { resumePendingExecution } from '@/lib/automations/engine'
@@ -6,6 +7,7 @@ import { processDueCheckouts } from '@/lib/shopify/process'
 import { processDueCalendlyReminders } from '@/lib/calendly/process'
 import { processScheduledBroadcasts } from '@/lib/broadcasts/scheduled'
 import { processDailySummaries } from '@/lib/summary/daily'
+import { withHeartbeat } from '@/lib/ops/monitoring'
 
 /**
  * Drain due `automation_pending_executions` rows. Meant to be hit
@@ -23,11 +25,65 @@ export async function GET(request: Request) {
   if (!expected) {
     return NextResponse.json({ error: 'cron not configured' }, { status: 503 })
   }
-  const supplied = request.headers.get('x-cron-secret')
-  if (supplied !== expected) {
+  // Constant-time compare, same as /api/flows/cron.
+  const suppliedBuf = Buffer.from(request.headers.get('x-cron-secret') ?? '')
+  const expectedBuf = Buffer.from(expected)
+  if (suppliedBuf.length !== expectedBuf.length || !timingSafeEqual(suppliedBuf, expectedBuf)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Each task records a heartbeat (see /api/health and /admin/system);
+  // the run as a whole records `automations-cron`.
+  try {
+    const summary = await withHeartbeat('automations-cron', runCron)
+    return NextResponse.json(summary)
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'cron failed' },
+      { status: 500 },
+    )
+  }
+}
+
+async function runCron() {
+  const processed = await withHeartbeat('automation-steps', processPendingSteps).catch((err) => {
+    console.error('[cron] delayed automation steps failed:', err)
+    return 0
+  })
+
+  // Shopify abandoned-cart reminders and Calendly booking reminders ride
+  // on the same every-minute schedule, so no extra cron job is needed.
+  // Never let them fail the run.
+  const shopifyReminders = await withHeartbeat('shopify-reminders', processDueCheckouts).catch((err) => {
+    console.error('[cron] shopify abandoned checkouts failed:', err)
+    return 0
+  })
+  const calendlyReminders = await withHeartbeat('calendly-reminders', processDueCalendlyReminders).catch((err) => {
+    console.error('[cron] calendly reminders failed:', err)
+    return 0
+  })
+
+  const scheduledBroadcastSends = await withHeartbeat('scheduled-broadcasts', processScheduledBroadcasts).catch((err) => {
+    console.error('[cron] scheduled broadcasts failed:', err)
+    return 0
+  })
+
+  const dailySummaries = await withHeartbeat('daily-summaries', processDailySummaries).catch((err) => {
+    console.error('[cron] daily summaries failed:', err)
+    return 0
+  })
+
+  return {
+    processed,
+    scheduled_broadcast_sends: scheduledBroadcastSends,
+    daily_summaries: dailySummaries,
+    shopify_reminders: shopifyReminders,
+    calendly_reminders: calendlyReminders,
+  }
+}
+
+/** Drain due delayed automation steps. Returns how many ran. */
+async function processPendingSteps(): Promise<number> {
   const admin = supabaseAdmin()
   const { data: due, error } = await admin
     .from('automation_pending_executions')
@@ -37,7 +93,7 @@ export async function GET(request: Request) {
     .order('run_at', { ascending: true })
     .limit(50)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) throw new Error(error.message)
 
   let processed = 0
   for (const row of due ?? []) {
@@ -67,33 +123,5 @@ export async function GET(request: Request) {
     processed++
   }
 
-  // Shopify abandoned-cart reminders and Calendly booking reminders ride
-  // on the same every-minute schedule, so no extra cron job is needed.
-  // Never let them fail the run.
-  const shopifyReminders = await processDueCheckouts().catch((err) => {
-    console.error('[cron] shopify abandoned checkouts failed:', err)
-    return 0
-  })
-  const calendlyReminders = await processDueCalendlyReminders().catch((err) => {
-    console.error('[cron] calendly reminders failed:', err)
-    return 0
-  })
-
-  const scheduledBroadcastSends = await processScheduledBroadcasts().catch((err) => {
-    console.error('[cron] scheduled broadcasts failed:', err)
-    return 0
-  })
-
-  const dailySummaries = await processDailySummaries().catch((err) => {
-    console.error('[cron] daily summaries failed:', err)
-    return 0
-  })
-
-  return NextResponse.json({
-    processed,
-    scheduled_broadcast_sends: scheduledBroadcastSends,
-    daily_summaries: dailySummaries,
-    shopify_reminders: shopifyReminders,
-    calendly_reminders: calendlyReminders,
-  })
+  return processed
 }

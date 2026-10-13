@@ -16,6 +16,7 @@ import {
 } from '@/lib/contacts/opt-out'
 import { engineSendText } from '@/lib/flows/meta-send'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
+import { recordWebhookFailure } from '@/lib/ops/monitoring'
 import {
   handleTemplateWebhookChange,
   isTemplateWebhookField,
@@ -249,6 +250,9 @@ export async function POST(request: Request) {
       await processWebhook(body)
     } catch (error) {
       console.error('Error processing webhook:', error)
+      await recordWebhookFailure('whatsapp', error, {
+        context: { entries: Array.isArray(body?.entry) ? body.entry.length : 0 },
+      })
     }
   })
 
@@ -767,6 +771,12 @@ async function processMessage(
 
   if (msgError) {
     console.error('Error inserting message:', msgError)
+    if (!isUniqueViolation(msgError)) {
+      await recordWebhookFailure('whatsapp', new Error(`Inbound message not saved: ${msgError.message}`), {
+        accountId: (conversation as { account_id?: string }).account_id ?? null,
+        context: { wamid: message.id, conversation_id: conversation.id },
+      })
+    }
     return
   }
 

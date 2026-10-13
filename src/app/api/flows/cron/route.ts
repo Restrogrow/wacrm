@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { resolveFallbackPolicy } from '@/lib/flows/fallback'
+import { withHeartbeat } from '@/lib/ops/monitoring'
 
 /**
  * Sweep abandoned active flow runs.
@@ -45,6 +46,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  try {
+    const swept = await withHeartbeat('flows-cron', sweepTimedOutRuns)
+    return NextResponse.json({ swept })
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'cron failed' },
+      { status: 500 },
+    )
+  }
+}
+
+/** Mark abandoned active runs as timed out. Returns how many. */
+async function sweepTimedOutRuns(): Promise<number> {
   const admin = supabaseAdmin()
   const now = new Date()
 
@@ -60,9 +74,9 @@ export async function GET(request: Request) {
 
   if (error) {
     console.error('[flows-cron] active-run scan failed:', error.message)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    throw new Error(error.message)
   }
-  if (!runs?.length) return NextResponse.json({ swept: 0 })
+  if (!runs?.length) return 0
 
   type Row = {
     id: string
@@ -108,5 +122,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ swept })
+  return swept
 }
