@@ -240,6 +240,11 @@ export default function DocsPage() {
           <Section id="contacts" n={4} title="Contacts" intro="Keep every customer and their history in one place.">
             <ul className="bullets">
               <li>Contacts are created automatically when someone messages you.</li>
+              <li>
+                Customers who use a WhatsApp username and hide their number appear as <b>@username</b> (or
+                &ldquo;Phone hidden&rdquo;). You can still chat with them as normal; their number fills in if they
+                share it later.
+              </li>
               <li>Import a CSV from <Ui to="/contacts">Contacts</Ui>. Duplicate phone numbers are merged, not duplicated.</li>
               <li>Organise contacts with tags and custom fields in <Ui to="/settings?tab=fields">Settings → Fields &amp; tags</Ui>.</li>
               <li>Each contact keeps its full conversation and deal history.</li>
@@ -252,7 +257,10 @@ export default function DocsPage() {
               stages, add deals with a value, and drag them between stages. Each deal links to its
               contact and conversation, so the chat history is one click away.
             </p>
-            <p>Set your currency in <Ui to="/settings?tab=deals">Settings → Deals &amp; currency</Ui>.</p>
+            <p>
+              Amounts are in Indian Rupees (₹) by default. Change your currency in{" "}
+              <Ui to="/settings?tab=deals">Settings → Deals &amp; currency</Ui>.
+            </p>
           </Section>
 
           <Section id="templates" n={6} title="Message templates" intro="Create WhatsApp templates in Repeat Grow and submit them to Meta for approval, with no need to open Meta Business Manager.">
@@ -314,7 +322,8 @@ export default function DocsPage() {
               </Step>
             </ol>
             <Tip>
-              Customers who reply <b>STOP</b> (or UNSUBSCRIBE) are unsubscribed automatically, get a short
+              Customers who reply <b>STOP</b> (or UNSUBSCRIBE), or tap a template&apos;s <b>Stop promotions</b>{" "}
+              button, are unsubscribed automatically, get a short
               confirmation, and are skipped by every broadcast. They show an <b>Opted out</b> badge in
               Contacts. Replying <b>START</b> subscribes them again.
             </Tip>

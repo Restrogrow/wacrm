@@ -21,9 +21,16 @@
   agents on one number, with per-conversation assignment, status, and
   internal notes.
 - **Contacts**: tags, custom fields, CSV import, and deduplication.
+  Supports WhatsApp usernames: customers who hide their number are
+  matched and messaged by their business-scoped user ID (BSUID) and
+  shown as "@username".
 - **Sales pipelines**: Kanban boards with deals linked to conversations.
+  Amounts default to Indian Rupees (₹); each account can pick its
+  currency in Settings.
 - **Broadcasts**: send Meta-approved templates, with delivery and read
-  tracking and per-recipient variables.
+  tracking and per-recipient variables. Customers who reply STOP or tap
+  a template's "Stop promotions" button are opted out automatically.
+  Template quick-reply taps also trigger automations and the chatbot.
 - **No-code automations and flows**: trigger on inbound messages, first
   messages, keywords, or tags. Steps include branches, waits, tags, and
   webhooks, all in a visual builder.

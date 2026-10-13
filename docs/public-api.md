@@ -181,6 +181,12 @@ List contacts, newest first. Scope: `contacts:read`. Paginated (see
 [Pagination](#pagination)). Optional filters: `?search=` (matches name
 or phone) and `?tag=<tagId>`.
 
+`phone` can be an empty string: a customer who uses a WhatsApp username
+can hide their number, and Meta then identifies them only by a
+business-scoped user ID. Such contacts can be messaged from the inbox,
+automations and flows, but not yet through `POST /api/v1/messages`,
+which addresses recipients by phone number.
+
 ```json
 {
   "data": [
