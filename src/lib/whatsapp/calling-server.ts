@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 
 import { requireRole, toErrorResponse, type AccountContext } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
-import { CallingError } from '@/lib/whatsapp/calling'
+import { CallingError, isCallingNotEnabledError } from '@/lib/whatsapp/calling'
 
 /** Agents and above can place and answer calls. */
 export async function requireCallingAgent(): Promise<AccountContext> {
@@ -35,6 +35,15 @@ export async function customerForConversation(accountId: string, conversationId:
 }
 
 export function callingErrorResponse(err: unknown): NextResponse {
+  if (isCallingNotEnabledError(err)) {
+    return NextResponse.json(
+      {
+        error: 'WhatsApp calling isn’t on for this number yet. An admin can turn it on in Settings → WhatsApp → WhatsApp calling.',
+        code: 'calling_disabled',
+      },
+      { status: 400 },
+    )
+  }
   if (err instanceof CallingError) {
     return NextResponse.json({ error: err.message, code: err.code, meta_code: err.metaCode }, { status: err.status })
   }

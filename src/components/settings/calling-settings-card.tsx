@@ -14,6 +14,8 @@ import { useAuth } from '@/hooks/use-auth';
 
 interface CallingSettings {
   status: 'ENABLED' | 'DISABLED';
+  /** Set when Meta hasn't allowed calling on this number yet. */
+  notice?: string;
 }
 
 export function CallingSettingsCard() {
@@ -47,7 +49,10 @@ export function CallingSettingsCard() {
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) {
-        toast.error(body?.error ?? 'Could not change calling.');
+        const message = body?.error ?? 'Could not change calling.';
+        // Keep Meta's reason on the card, not just in a toast.
+        if (body?.code === 'not_allowed') setSettings({ status: 'DISABLED', notice: message });
+        else toast.error(message);
         return;
       }
       setSettings(body);
@@ -77,18 +82,30 @@ export function CallingSettingsCard() {
               </p>
             </div>
           </div>
-          {settings ? (
-            <Switch
-              checked={on}
-              disabled={!canEditSettings || saving}
-              onCheckedChange={(v) => void toggle(v)}
-              aria-label="WhatsApp calling"
-            />
-          ) : !error ? (
+          {settings || error ? (
+            <div className="flex shrink-0 items-center gap-2">
+              {saving && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+              <span className="text-xs font-medium text-muted-foreground">{on ? 'On' : 'Off'}</span>
+              <Switch
+                checked={on}
+                disabled={!canEditSettings || saving}
+                onCheckedChange={(v) => void toggle(v)}
+                aria-label="WhatsApp calling"
+              />
+            </div>
+          ) : (
             <Loader2 className="size-4 animate-spin text-muted-foreground" />
-          ) : null}
+          )}
         </div>
-        {error && <p className="text-sm text-muted-foreground">{error}</p>}
+        {settings?.notice && (
+          <p className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-foreground">
+            {settings.notice}
+          </p>
+        )}
+        {error && !settings && <p className="text-sm text-muted-foreground">{error}</p>}
+        {!canEditSettings && (
+          <p className="text-xs text-muted-foreground">Only owners and admins can change this.</p>
+        )}
         <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
           <li>Needs a WhatsApp messaging limit of at least 2,000 customers a day.</li>
           <li>To call a customer, they must allow it first — the Call button sends them a request.</li>

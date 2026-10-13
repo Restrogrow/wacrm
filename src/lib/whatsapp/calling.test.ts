@@ -152,3 +152,12 @@ describe('parsePermission', () => {
     expect(p.canRequest).toBe(true)
   })
 })
+
+describe('isCallingNotEnabledError', () => {
+  it('recognises Meta’s “calling not enabled” error', async () => {
+    const { CallingError, isCallingNotEnabledError } = await import('./calling')
+    expect(isCallingNotEnabledError(new CallingError('WhatsApp Cloud API calling not enabled for this phone number.', 400))).toBe(true)
+    expect(isCallingNotEnabledError(new CallingError('Invalid parameter', 400))).toBe(false)
+    expect(isCallingNotEnabledError(new Error('calling not enabled'))).toBe(false)
+  })
+})

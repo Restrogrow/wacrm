@@ -1,26 +1,42 @@
 // ============================================================
 // /api/whatsapp/calling-settings — WhatsApp calling on the number.
 //
-//   GET  → { status: 'ENABLED' | 'DISABLED', ... } from Meta
+//   GET  → { status: 'ENABLED' | 'DISABLED', notice? } from Meta
 //   POST { enabled: boolean } → turns calling on (call button shown,
 //        callback permission on) or off. Admins and above.
 //
-// Meta requires a messaging limit of 2,000+ to enable calling; its
-// error is passed through as-is.
+// Meta requires a messaging limit of 2,000+ (and a Cloud API-only
+// number) to enable calling. When it refuses, the status is reported
+// as DISABLED with a plain-language notice instead of an error, so
+// the admin still sees the switch.
 // ============================================================
 
 import { NextResponse } from 'next/server'
 
 import { requireRole } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
-import { getCallingSettings, loadCallingConfig, setCallingEnabled } from '@/lib/whatsapp/calling'
+import {
+  CALLING_NOT_ALLOWED_HELP,
+  CallingError,
+  getCallingSettings,
+  isCallingNotEnabledError,
+  loadCallingConfig,
+  setCallingEnabled,
+} from '@/lib/whatsapp/calling'
 import { callingErrorResponse } from '@/lib/whatsapp/calling-server'
 
 export async function GET() {
   try {
     const ctx = await requireRole('agent')
     const cfg = await loadCallingConfig(supabaseAdmin(), ctx.accountId)
-    return NextResponse.json(await getCallingSettings(cfg))
+    try {
+      return NextResponse.json(await getCallingSettings(cfg))
+    } catch (err) {
+      if (isCallingNotEnabledError(err)) {
+        return NextResponse.json({ status: 'DISABLED', notice: CALLING_NOT_ALLOWED_HELP })
+      }
+      throw err
+    }
   } catch (err) {
     return callingErrorResponse(err)
   }
@@ -34,7 +50,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "'enabled' must be true or false" }, { status: 400 })
     }
     const cfg = await loadCallingConfig(supabaseAdmin(), ctx.accountId)
-    await setCallingEnabled(cfg, body.enabled)
+    try {
+      await setCallingEnabled(cfg, body.enabled)
+    } catch (err) {
+      if (isCallingNotEnabledError(err)) throw new CallingError(CALLING_NOT_ALLOWED_HELP, 400, 'not_allowed')
+      throw err
+    }
     return NextResponse.json(await getCallingSettings(cfg))
   } catch (err) {
     return callingErrorResponse(err)

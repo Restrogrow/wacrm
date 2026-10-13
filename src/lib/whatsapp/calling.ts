@@ -187,6 +187,15 @@ export interface CallingSettings {
   callbackPermissionStatus: string | null
 }
 
+/** Meta's "calling not enabled for this phone number" family of errors. */
+export function isCallingNotEnabledError(err: unknown): boolean {
+  return err instanceof CallingError && /calling (is )?not (enabled|available)|not eligible/i.test(err.message)
+}
+
+/** What to tell an admin when Meta won't switch calling on. */
+export const CALLING_NOT_ALLOWED_HELP =
+  'WhatsApp hasn’t allowed calling on this number yet. Meta requires a messaging limit of at least 2,000 customers a day (check WhatsApp Manager → Phone numbers), the number must use only the Cloud API (not also the WhatsApp Business app), and the calls webhook field must be subscribed in your Meta app.'
+
 export async function getCallingSettings(cfg: CallingConfig): Promise<CallingSettings> {
   const res = await graph<{
     calling?: { status?: string; call_icon_visibility?: string; callback_permission_status?: string }
