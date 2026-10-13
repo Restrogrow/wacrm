@@ -1,11 +1,13 @@
 # Repeat Grow
 
-> WhatsApp CRM for sales and support teams, built on the official
-> WhatsApp Business API. Shared inbox, contacts, sales pipelines,
-> broadcasts, no-code automations, an AI chatbot, and a public REST API.
+> WhatsApp CRM for Indian businesses, built on the official WhatsApp
+> Business API (Meta Cloud API). A shared team inbox, contacts,
+> pipelines, broadcasts, no-code automations and flows, an AI chatbot,
+> Shopify and Calendly integrations, plans with a free trial, and a
+> public REST API.
 
 **Website:** [repeatgrow.com](https://repeatgrow.com) ·
-**App login:** [repeatgrow.com/login](https://repeatgrow.com/login) ·
+**App:** [repeatgrow.com/login](https://repeatgrow.com/login) ·
 **Help Center:** [repeatgrow.com/docs](https://repeatgrow.com/docs) ·
 **API reference:** [repeatgrow.com/docs/api](https://repeatgrow.com/docs/api) ·
 **Support:** [support@repeatgrow.com](mailto:support@repeatgrow.com)
@@ -15,265 +17,526 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth-3ecf8e?logo=supabase)](https://supabase.com)
 [![OpenAPI 3.1](https://img.shields.io/badge/OpenAPI-3.1-6ba539?logo=openapiinitiative)](https://repeatgrow.com/api/v1/openapi.json)
 
+---
+
+## Contents
+
+- [Features](#features)
+- [Plans, trial and limits](#plans-trial-and-limits)
+- [Integrations](#integrations)
+- [Public API and webhooks](#public-api-and-webhooks)
+- [Platform admin](#platform-admin)
+- [Blog](#blog)
+- [Tech stack](#tech-stack)
+- [Getting started (local development)](#getting-started-local-development)
+- [Environment variables](#environment-variables)
+- [Database migrations](#database-migrations)
+- [Background jobs (cron)](#background-jobs-cron)
+- [Setup guides](#setup-guides)
+- [Deployment](#deployment)
+- [Project layout](#project-layout)
+- [Scripts and testing](#scripts-and-testing)
+- [Security](#security)
+- [More documentation](#more-documentation)
+- [License](#license)
+
+---
+
 ## Features
 
-- **Shared inbox** on the official WhatsApp Business API: several
-  agents on one number, with per-conversation assignment, status, and
-  internal notes.
-- **Contacts**: tags, custom fields, CSV import, and deduplication.
-  Supports WhatsApp usernames: customers who hide their number are
-  matched and messaged by their business-scoped user ID (BSUID) and
-  shown as "@username".
-- **Saved replies**: type "/" in the inbox to insert a team reply
-  ({{name}} etc. filled in); managed in Settings → Saved replies.
-- **Contact export**: CSV of all contacts with tags and custom fields.
-- **Sales pipelines**: Kanban boards with deals linked to conversations.
-  Amounts default to Indian Rupees (₹); each account can pick its
-  currency in Settings.
-- **Broadcasts**: send Meta-approved templates, with delivery and read
-  tracking and per-recipient variables. Customers who reply STOP or tap
-  a template's "Stop promotions" button are opted out automatically.
-  Template quick-reply taps also trigger automations and the chatbot.
-  **Schedule for later**: the server sends at the chosen time, in
-  batches, so the browser doesn't have to stay open.
-- **Daily summary email**: each owner picks on/off, the hour (IST) and
-  recipients; messages, new chats and contacts, chats waiting,
-  broadcasts, deals and opt-outs. Needs the `SMTP_*` env vars.
-- **No-code automations and flows**: trigger on inbound messages, first
-  messages, keywords, or tags. Steps include branches, waits, tags, and
-  webhooks, all in a visual builder.
-- **Shopify**: automatic WhatsApp messages for order placed, COD order
-  placed, shipped, out for delivery, delivered, cancelled, and abandoned
-  carts. Connect with one click (Shopify app) or with webhooks created in
-  Shopify admin; each event maps to an approved template whose variables
-  are filled from the order.
-- **Calendly**: WhatsApp booking confirmations, reschedule and
-  cancellation notices, no-show follow-ups, and reminders 24 h and 1 h
-  before each meeting. Connect with a Calendly personal access token.
-- **AI chatbot**: answers WhatsApp chats from your knowledge base and
-  hands off to a human when the customer asks for one.
-- **Real-time dashboard**: response times, daily volume, pipeline value,
-  and an activity feed.
-- **Sign up with email or Google**: Google sign-ups are asked for the
-  same business details as the signup form (business name, mobile
-  number, nature of business, team size) before entering the app.
-- **Team accounts**: invite teammates by link, with role-based access
-  (owner / admin / agent / viewer).
-- **Plans & free trial**: Starter / Growth / Enterprise with the limits
-  on /pricing, enforced by the database; new accounts get a 7-day trial,
-  then become read-only (sending paused) until a plan is active. Usage
-  and plans live in Settings → Plan & billing.
-- **Platform admin** (`/admin`, internal): a live dashboard — sign-ups
-  today / 7 / 30 days with change vs the previous period and a 30-day
-  chart (India time), WhatsApp connections, active accounts, messages
-  today, logins, paying / trial / expired counts, integrations, a
-  sign-up → details → WhatsApp → active → paying funnel, breakdowns by
-  plan, sign-up method, business type and team size — plus a searchable,
-  filterable accounts table and per-account pages with a plan editor.
+### Shared inbox
+- Every WhatsApp chat for the business number in one inbox, shared by
+  the whole team, with live updates.
+- Assign conversations, set status (open / pending / closed), add
+  internal notes customers never see.
+- Send text, images, video, documents, voice notes (recorded in the
+  browser as Ogg/Opus), reactions, swipe-replies and approved templates.
+  The 24-hour customer-service window is tracked; outside it only
+  templates can be sent.
+- **Saved replies:** type `/` in the message box to pick a team reply
+  (↑↓, Enter); `{{name}}`, `{{full_name}}` and `{{agent}}` are filled in.
+  Admins manage them in **Settings → Saved replies**.
+- Taps on template quick-reply buttons ("Yes, confirm", "Stop
+  promotions") appear as the button text and trigger keyword
+  automations and the chatbot like typed messages.
+- **WhatsApp usernames (BSUID):** customers who hide their phone number
+  behind a username are matched and messaged by their business-scoped
+  user ID and shown as `@username`.
+- WhatsApp Business app **coexistence**: one number used in both the
+  WhatsApp Business app and Repeat Grow, with contacts, history and
+  messages sent from the phone synced in.
 
-## Public API
+### Contacts
+- Tags, custom fields, notes, deal history and the full conversation per
+  contact.
+- **CSV import** with phone-number deduplication (trunk-prefix aware) and
+  **CSV export** of every contact with tags, custom fields and opt-out
+  status (spreadsheet-formula safe, UTF-8).
+- **Opt-outs:** customers who reply STOP / UNSUBSCRIBE (or Hindi phrases
+  like "band karo") or tap a template's "Stop promotions" button are
+  opted out, get a confirmation, and are skipped by broadcasts and
+  marketing templates until they reply START.
 
-Repeat Grow exposes a REST API at `https://repeatgrow.com/api/v1` for
-sending messages, managing contacts, reading conversations, launching
-broadcasts, and subscribing to webhooks.
+### Pipelines and deals
+- Kanban pipelines with custom stages; deals linked to contacts and
+  conversations; won/lost tracking and pipeline analytics.
+- Currency per account, **Indian Rupees (₹) by default**.
+
+### Broadcasts and templates
+- Create WhatsApp templates in the app (text/media headers, variables,
+  buttons, AI drafting) and submit them to Meta; approval status syncs
+  back automatically.
+- Broadcast an approved template to all contacts, tags, a custom-field
+  filter or a CSV, with per-recipient variables (contact fields or custom
+  fields) and media headers.
+- **Send now** or **Schedule for later**: scheduled broadcasts are sent
+  by the server at the chosen time, in batches, so the browser doesn't
+  need to stay open. Cancel from the broadcast page.
+- Live sent / delivered / read / replied / failed counts per broadcast.
+
+### Automations and flows
+- **Automations:** triggers (new message, first message, keyword, new
+  contact, tag added, …) and steps (send message or template, tag, wait,
+  branch, create deal, webhook).
+- **Flows:** visual chatbot builder with buttons, lists, media, links,
+  waits and branches; can be generated with AI from a description.
+
+### AI chatbot
+- Answers WhatsApp chats from the business's knowledge base (Google
+  Gemini), knows opening hours, and hands off to a human when asked;
+  picks the chat back up if no teammate replies within two hours.
+
+### Notifications and reporting
+- Real-time dashboard: response times, daily volume, pipeline value,
+  activity feed; in-app notifications.
+- **Daily summary email** (**Settings → Daily summary**): each owner
+  picks on/off, the hour (India time) and up to 5 recipients. Morning
+  emails cover yesterday, afternoon/evening ones today so far: messages
+  received and sent, new conversations and contacts, chats waiting for a
+  reply, broadcasts, deals created and won, opt-outs.
+
+### Accounts, sign-in and team
+- Sign up with **email** or **Google**. Google sign-ups complete the same
+  business details as the email form (business name, mobile number,
+  nature of business, team size) on an onboarding step; owners can edit
+  them later in **Settings → Your profile**. Google users can set a
+  password later in **Settings → Login & security**.
+- Team members by invite link with roles: **owner / admin / agent /
+  viewer**; ownership transfer.
+- API keys and "Connect RepeatGrow" partner connections (e.g.
+  RestroGrow) managed in Settings.
+
+---
+
+## Plans, trial and limits
+
+No payment gateway yet: plans are activated by a platform admin after
+the business pays (UPI / bank transfer).
+
+| | Starter | Growth | Enterprise |
+|---|---|---|---|
+| Price (monthly / yearly) | ₹499 / ₹5,389 | ₹999 / ₹10,789 | ₹1,999 / ₹21,589 |
+| Contacts (dashboard adds + imports) | 2,000 | 50,000 | Unlimited |
+| Broadcasts per month | 60 | 250 | Unlimited |
+| Automations + flows | 5 | 25 | Unlimited |
+| Custom fields | 5 | 25 | Unlimited |
+| Team members (incl. pending invites) | 5 | 25 | Unlimited |
+
+- **Free trial:** new accounts get **7 days** with Growth limits; a bar
+  at the top of the app shows the days left.
+- **After the trial (or a paid period) ends, the account is read-only:**
+  inbound messages still arrive, but every send path — inbox, API,
+  broadcasts, automations, flows, chatbot, Shopify, Calendly — stops
+  with a "trial ended" message.
+- **Limits are enforced in the database** (BEFORE INSERT triggers raising
+  SQLSTATE `PL001` with a user-facing message). Inbound WhatsApp
+  messages, the API and integrations always create contacts, so no
+  customer message is ever dropped.
+- **Settings → Plan & billing** shows the plan, usage meters and the
+  plans; "Choose" opens WhatsApp (or email) to support with the account
+  details. Admins set plan, trial end, paid-until and a note in
+  `/admin` → account → **Plan**.
+- Code: `src/lib/billing/` (`plans.ts` mirrors the database's
+  `plan_limit()` — change both together), migration
+  `041_plans_and_trials.sql`. WhatsApp conversation fees are billed by
+  Meta directly.
+
+---
+
+## Integrations
+
+| Integration | Status | What it does |
+|---|---|---|
+| **Shopify** | Live | Order placed, COD order placed, shipped (tracking), out for delivery, delivered, cancelled, abandoned cart |
+| **Calendly** | Live | Booking confirmed / rescheduled / cancelled, no-show follow-up, reminders 24 h and 1 h before |
+| **Connect RepeatGrow** | Live | Partner apps (RestroGrow) connect with one click and send WhatsApp via the API |
+| WooCommerce, Razorpay, Cashfree, Wix, BigCommerce, forms, Google Calendar, Zoom/Meet, Zapier/Make/Pabbly, Google Sheets | Planned | See [docs/INTEGRATIONS.md](./docs/INTEGRATIONS.md) for the plan and the keys each needs |
+
+Both live integrations share one engine: each event maps to an approved
+WhatsApp template, and the template's `{{1}}`, `{{2}}`… are filled from
+event data chosen in Settings, with a live preview, **Send test**, and a
+"Recent messages" log. Messages appear in the inbox; deliveries and sends
+are de-duplicated; customer phone numbers are normalised (+91 default,
+per-connection country code).
+
+### Shopify (Settings → Shopify)
+- **Connect Shopify (one click, OAuth):** Repeat Grow's Shopify app
+  (public distribution, App Store review pending). Webhooks are
+  registered automatically via the Admin API (2026-10) with expiring
+  offline tokens; a merchant installing while logged out signs in or up
+  and the connection continues. Until approval, one-click works on
+  development stores.
+- **Connect with webhooks (any store):** paste the signing key from
+  Shopify admin → Settings → Notifications → Webhooks and create the
+  listed webhooks pointing at the account's unique URL.
+- Abandoned-cart reminders are sent by the cron after a configurable
+  idle time and skip opted-out customers.
+- App configuration: [`shopify/shopify.app.toml`](./shopify/shopify.app.toml)
+  and [`shopify/README.md`](./shopify/README.md) (deploying config,
+  App Store checklist). Code: `src/lib/shopify/`,
+  `src/app/api/integrations/shopify/`.
+
+### Calendly (Settings → Calendly)
+- The business pastes a Calendly **personal access token**; Repeat Grow
+  creates the webhook subscription (`invitee.created`,
+  `invitee.canceled`, `invitee_no_show.created`) with its own signing
+  key. Needs a paid Calendly plan.
+- Dates and times use the invitee's time zone; reminders skip
+  last-minute bookings and cancelled meetings. The phone number comes
+  from a "Phone number" booking question, the SMS-reminder number, or an
+  outbound-call location.
+- Code: `src/lib/calendly/`, `src/app/api/integrations/calendly/`.
+
+---
+
+## Public API and webhooks
+
+REST API at `https://repeatgrow.com/api/v1`: send messages and templates,
+manage contacts, read conversations, list templates, launch broadcasts,
+and subscribe to signed outbound webhooks (`message.received`,
+`message.status_updated`, `conversation.created`).
 
 | Resource | Where |
-| --- | --- |
+|---|---|
 | Guide with examples (curl, Node.js, Python) | [repeatgrow.com/docs/api](https://repeatgrow.com/docs/api) |
-| OpenAPI 3.1 spec (import into Postman, Insomnia, or codegen) | [repeatgrow.com/api/v1/openapi.json](https://repeatgrow.com/api/v1/openapi.json) |
-| Full reference in this repo | [docs/public-api.md](./docs/public-api.md) |
+| OpenAPI 3.1 spec | [repeatgrow.com/api/v1/openapi.json](https://repeatgrow.com/api/v1/openapi.json) |
+| Full reference | [docs/public-api.md](./docs/public-api.md) |
 
 ```bash
 curl -X POST https://repeatgrow.com/api/v1/messages \
   -H "Authorization: Bearer $REPEATGROW_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{ "to": "+14155550123", "text": "Hi 👋" }'
+  -d '{ "to": "+919876543210", "text": "Hi 👋" }'
 ```
 
-Create keys at [repeatgrow.com/settings?tab=api](https://repeatgrow.com/settings?tab=api)
-(**Settings → API keys**).
+Create scoped, revocable keys in **Settings → API keys**. Requests are
+rate limited; marketing templates to opted-out contacts are refused.
 
-## Local development
+---
 
-Requirements: Node.js 20+, a [Supabase](https://supabase.com) project,
-and a Meta app with WhatsApp Business API access.
+## Platform admin
+
+`/admin` (platform admins only, listed in the `platform_admins` table):
+
+- **Dashboard:** sign-ups today / last 7 / last 30 days with change vs
+  the previous period and a 30-day chart (India time); WhatsApp
+  connected, active in the last 7 days, messages today, logged in today;
+  paying / on trial / trial ended; Shopify and Calendly connections;
+  an activation funnel (signed up → details complete → WhatsApp
+  connected → active → paying); breakdowns by plan, sign-up method,
+  business type and team size.
+- **Accounts table:** search (business, owner, email, phone), filters
+  (plan, WhatsApp status, sign-up method), sorting (newest, recently
+  active, most members), last chat and last login per account.
+- **Account page:** business details, members (sign-in method, last
+  sign-in), plan editor, WhatsApp connection and live diagnostics.
+
+---
+
+## Blog
+
+`/blog` is the public, SEO-focused blog: a featured post, a card grid and
+a guides section. Each article has a cover image, a table of contents,
+an FAQ, a call to action and related posts, and emits BreadcrumbList,
+BlogPosting and FAQPage structured data. Posts are listed in the sitemap
+automatically.
+
+Current articles:
+
+- Shopify WhatsApp order notifications (e-commerce, COD confirmation)
+- WhatsApp appointment reminders (Calendly, fewer no-shows)
+- WhatsApp Business API verification guide
+- WhatsApp template rules explained
+
+**Adding a post:**
+
+1. Add an entry at the top of `BLOG_POSTS` in `src/lib/blog.ts` (slug,
+   title, description, category, dates, reading time, cover, keywords).
+2. Put images in `public/blog/<slug>/` (`cover.svg` at 1200×630; in-article
+   figures at 1200×675).
+3. Create `src/app/blog/<slug>/page.tsx` rendering `<BlogPostLayout>` from
+   `src/components/blog/post-layout.tsx` (`BlogFigure` and
+   `TemplateExample` are available for the body), plus an
+   `opengraph-image.tsx` copied from an existing post.
+
+---
+
+## Tech stack
+
+- **App:** Next.js 16 (App Router, Turbopack in dev, webpack for
+  production builds), React 19, TypeScript, Tailwind CSS v4.
+- **Data & auth:** Supabase (Postgres with row-level security, Auth with
+  email + Google, Storage, Realtime).
+- **WhatsApp:** Meta Cloud API (official WhatsApp Business API),
+  Embedded Signup, coexistence.
+- **AI:** Google Gemini (chatbot, AI flows, AI template drafts).
+- **Email:** SMTP via nodemailer (daily summary); Supabase Auth emails
+  through Google Workspace SMTP.
+- **Monitoring:** Sentry (`@sentry/nextjs`).
+- **Tests:** Vitest.
+
+---
+
+## Getting started (local development)
+
+Requirements: Node.js 20.19+ (or 22.12+), a [Supabase](https://supabase.com)
+project, and a Meta app with WhatsApp Business API access.
 
 ```bash
 git clone https://github.com/Restrogrow/wacrm.git repeatgrow
 cd repeatgrow
 npm install
-cp .env.local.example .env.local   # fill in Supabase + Meta credentials
+cp .env.local.example .env.local   # fill in at least the Required variables
 npm run dev
 ```
 
-Open <http://localhost:3000>. Signed-out visitors see the marketing
-site; `/login` signs you in to the app.
+1. Run every SQL file in [`supabase/migrations`](./supabase/migrations)
+   **in order** in the Supabase SQL Editor (see
+   [Database migrations](#database-migrations)).
+2. Open <http://localhost:3000>. Signed-out visitors see the marketing
+   site; `/login` signs in to the app.
+3. Sign up, then connect WhatsApp in **Settings → WhatsApp**.
+4. To make yourself a platform admin, insert your user id into
+   `platform_admins` (migration 030).
 
-Apply the database schema by running the SQL files in
-[`supabase/migrations`](./supabase/migrations) in order against your
-Supabase project. `.env.local.example` documents every environment
-variable.
+---
+
+## Environment variables
+
+Set in `.env.local` locally and in Hostinger hPanel in production.
+`.env.local.example` documents each one. `NEXT_PUBLIC_*` values are
+baked in at build time — **redeploy after changing them**.
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (browser) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Server-only key for webhooks, cron, admin, integrations |
+| `ENCRYPTION_KEY` | Yes | 64-char hex key; encrypts WhatsApp tokens and integration secrets (AES-256-GCM) |
+| `META_APP_SECRET` | Yes | Verifies the signature on every WhatsApp webhook |
+| `NEXT_PUBLIC_SITE_URL` | Yes (prod) | Public origin, `https://repeatgrow.com` (local: `http://localhost:3000`); used for redirects, OAuth callbacks and webhook URLs |
+| `AUTOMATION_CRON_SECRET` | Yes (prod) | Shared secret for the cron endpoints (`x-cron-secret` header) |
+| `META_APP_ID`, `NEXT_PUBLIC_META_APP_ID`, `NEXT_PUBLIC_META_CONFIG_ID` | Optional | WhatsApp Embedded Signup ("Connect with Facebook") |
+| `GEMINI_KEY` (`GEMINI_MODEL`) | Optional | AI chatbot, AI flows, AI templates |
+| `CHATBOT_TIMEZONE` | Optional | Chatbot's "are you open now?" time zone (default `Asia/Kolkata`) |
+| `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET` | Optional | Shopify one-click connect (Client ID / secret) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Optional | Outgoing email (daily summary) |
+| `NEXT_PUBLIC_SENTRY_DSN` | Optional | Turns on Sentry error monitoring |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Optional | Upload source maps to Sentry at build time |
+| `WHATSAPP_TEMPLATES_DRY_RUN` | Dev only | Skip the Meta call when submitting templates (never in production) |
+
+---
+
+## Database migrations
+
+Run in order in the Supabase SQL Editor (`supabase/migrations/`). Each
+is idempotent where possible. Recent ones:
+
+| Migration | Adds |
+|---|---|
+| `001`–`028` | Core schema: contacts, conversations, messages, pipelines, broadcasts, templates, automations, flows, multi-user accounts and roles, API keys, webhooks |
+| `029_signup_business_fields` | Business name, mobile, nature of business, team size |
+| `030_platform_admins` | `/admin` access list |
+| `031_embedded_signup`, `032_coexistence` | WhatsApp Embedded Signup and Business app coexistence |
+| `033_template_account_scoping` | Templates per account |
+| `034_ai_chatbot` | AI chatbot settings |
+| `035_connect_clients` | "Connect RepeatGrow" partner OAuth |
+| `036_contact_opt_out` | STOP / START opt-outs |
+| `037_default_currency_inr` | INR as default currency |
+| `038_contacts_whatsapp_user_id` | WhatsApp usernames (BSUID) on contacts |
+| `039_shopify_integration` | Shopify stores, rules, orders, checkouts, events |
+| `040_calendly_integration` | Calendly connections, rules, bookings, events |
+| `041_plans_and_trials` | Plans, trial dates, plan-limit triggers |
+| `042_saved_replies` | Saved replies |
+| `043_scheduled_broadcasts` | Scheduled broadcast params and send lease |
+| `044_daily_summary` | Daily summary settings |
+
+[CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
+
+---
+
+## Background jobs (cron)
+
+Hostinger calls these every minute with the header
+`x-cron-secret: $AUTOMATION_CRON_SECRET`:
+
+| Endpoint | Runs |
+|---|---|
+| `GET /api/automations/cron` | Delayed automation steps, **scheduled broadcasts** (batched, leased), **Shopify abandoned-cart reminders**, **Calendly 24 h / 1 h reminders**, **daily summary emails** |
+| `GET /api/flows/cron` | Flow waits and timeouts |
+
+Each job is idempotent (claims before sending), so overlapping or
+retried runs never send twice.
+
+---
+
+## Setup guides
+
+### WhatsApp (Meta)
+- In **Settings → WhatsApp**, paste the Phone Number ID, WhatsApp
+  Business Account ID and access token, or use **Connect with Facebook**
+  (Embedded Signup — see [docs/embedded-signup.md](./docs/embedded-signup.md)).
+- Meta webhook: `https://<your-domain>/api/whatsapp/webhook`, with the
+  verify token shown in Settings → WhatsApp; subscribe the `messages`
+  field (plus template status fields). `META_APP_SECRET` must be set.
 
 ### Google sign-in
+1. Google Cloud → OAuth client (Web application), authorized redirect
+   URI `https://<project-ref>.supabase.co/auth/v1/callback`; publish the
+   consent screen to Production.
+2. Supabase → Authentication → Providers → Google: enable, paste client
+   ID and secret.
+3. Supabase → Authentication → URL Configuration: Site URL
+   `https://repeatgrow.com`; Redirect URLs `http://localhost:3000/**`
+   and `https://repeatgrow.com/**`.
 
-1. In Google Cloud, create an OAuth client (type **Web application**)
-   with this authorized redirect URI:
-   `https://<your-project-ref>.supabase.co/auth/v1/callback`. Publish
-   the OAuth consent screen to **Production**, or only listed test
-   users can sign in.
-2. In Supabase → **Authentication → Providers → Google**, enable it
-   and paste the client ID and secret.
-3. In Supabase → **Authentication → URL Configuration**, set **Site
-   URL** to `https://repeatgrow.com` and add these **Redirect URLs**:
+New Google users go through `/onboarding` until their business details
+are complete. A stray `/?code=…` (when Supabase falls back to the Site
+URL) is forwarded to `/auth/callback`.
 
-   ```
-   http://localhost:3000/**
-   https://repeatgrow.com/**
-   ```
+### Auth emails (Supabase SMTP)
+Supabase → Authentication → Emails → SMTP: host `smtp.gmail.com`, port
+`465`, user `support@repeatgrow.com`, password = a Google Workspace App
+Password. Add SPF, DKIM and DMARC records for repeatgrow.com.
 
-   If the app's address isn't on this list, Supabase sends the user to
-   the Site URL instead. The proxy forwards a stray `/?code=…` to
-   `/auth/callback` so the sign-in still completes on that host, but
-   a local sign-in that lands on production can't finish there.
+### App email (daily summary)
+Set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`,
+`SMTP_USER=support@repeatgrow.com`, `SMTP_PASS=<App Password>`,
+`SMTP_FROM="Repeat Grow <support@repeatgrow.com>"`, restart, then use
+**Send a test now** in Settings → Daily summary.
 
-New Google users are routed to `/onboarding` (from the dashboard
-layout) until their account has a mobile number, nature of business,
-and team size. Invited teammates are never asked.
+### Shopify app
+Configure in the [Shopify Dev Dashboard](https://dev.shopify.com) or
+deploy [`shopify/shopify.app.toml`](./shopify/shopify.app.toml) with the
+Shopify CLI. Redirect URL `/api/integrations/shopify/callback`, App URL
+`/api/integrations/shopify/install`, scopes
+`read_orders,read_fulfillments`, compliance webhooks
+`/api/integrations/shopify/webhooks`, not embedded. Request protected
+customer data access (name, phone, email, address).
 
-### Shopify integration
+### Sentry
+Set `NEXT_PUBLIC_SENTRY_DSN` and redeploy. Errors from the browser,
+server, edge, webhooks and cron are reported (no Session Replay, no
+default PII); set up an alert rule in Sentry. Code:
+`src/instrumentation.ts`, `src/instrumentation-client.ts`,
+`src/lib/sentry-options.ts`.
 
-Two ways to connect a store, both in **Settings → Shopify**:
-
-- **Webhooks (works for any store, no setup on our side):** the merchant
-  pastes the signing key from Shopify admin → Settings → Notifications →
-  Webhooks, then creates the listed webhooks (Order creation, Order
-  cancellation, Fulfillment creation, Fulfillment update, Checkout
-  creation, Checkout update; JSON) pointing at their unique URL
-  `/api/integrations/shopify/webhooks/<token>`.
-- **Connect Shopify (OAuth):** uses Repeat Grow's Shopify app
-  (**public distribution**; App Store listing in draft). Its settings
-  live in [`shopify/shopify.app.toml`](./shopify/shopify.app.toml) and
-  are deployed with the Shopify CLI — see
-  [`shopify/README.md`](./shopify/README.md), which also has the App
-  Store submission checklist. Server env: `SHOPIFY_API_KEY` (Client ID)
-  and `SHOPIFY_API_SECRET` (Client secret).
-
-  On connect, Repeat Grow registers the order/fulfillment/checkout
-  webhooks via the Admin API (2026-10) with expiring offline tokens.
-  A merchant who installs from Shopify while logged out is sent to log
-  in or sign up, then the connection continues automatically. Until
-  the App Store review is approved, one-click connect works only on
-  development stores — use the webhook option for live stores.
-
-Apply `supabase/migrations/039_shopify_integration.sql` first. Planned
-integrations and the keys each needs: [docs/INTEGRATIONS.md](./docs/INTEGRATIONS.md).
-Abandoned-cart reminders run from the existing every-minute
-`/api/automations/cron` job. Code: `src/lib/shopify/`,
-`src/app/api/integrations/shopify/`.
-
-### Plans, trial and limits
-
-No payment gateway yet. `accounts.plan` is `trial`, `starter`, `growth`
-or `enterprise`, with `trial_ends_at` (new accounts: 7 days) and
-`plan_expires_at` (paid-until; empty = no end). A platform admin sets
-them in `/admin` → account → **Plan** after the business pays (UPI /
-bank transfer); "Choose plan" in Settings → Plan & billing opens
-WhatsApp/email to support with the account details.
-
-- **Trial** gets Growth limits. When the trial or paid period ends the
-  account is **read-only**: inbound messages still arrive, but every
-  send path (inbox, API, broadcasts, automations, flows, chatbot,
-  Shopify, Calendly) stops with a "trial ended" message
-  (`src/lib/billing/server.ts`).
-- **Limits** (`src/lib/billing/plans.ts`, mirrored in the database's
-  `plan_limit()`): contacts (dashboard adds and CSV imports only —
-  inbound WhatsApp, API and integrations always create contacts),
-  broadcasts per month, automations + flows, custom fields, and team
-  members including pending invites. BEFORE INSERT triggers raise
-  SQLSTATE `PL001` with a message shown to the user as-is.
-
-Apply `supabase/migrations/041_plans_and_trials.sql` (existing accounts
-get a one-time 14-day trial).
-
-### Error monitoring (Sentry)
-
-Set `NEXT_PUBLIC_SENTRY_DSN` (sentry.io → Project settings → Client
-keys) to send browser, server and edge errors — webhooks, cron, API
-routes, integrations — to Sentry (`src/instrumentation.ts`,
-`src/instrumentation-client.ts`, settings in `src/lib/sentry-options.ts`).
-No Session Replay and no default PII. Optional `SENTRY_AUTH_TOKEN`,
-`SENTRY_ORG`, `SENTRY_PROJECT` upload source maps at build time for
-readable stack traces. Configure alerts (e.g. email on new issues) in
-Sentry.
-
-### Calendly integration
-
-**Settings → Calendly.** The business pastes a Calendly personal access
-token (Calendly → Integrations → API & Webhooks); Repeat Grow creates a
-webhook subscription (`invitee.created`, `invitee.canceled`,
-`invitee_no_show.created`) to `/api/integrations/calendly/webhooks/<token>`
-with its own signing key, verified via `Calendly-Webhook-Signature`.
-Needs a paid Calendly plan. No server env vars.
-
-Each event maps to an approved template whose variables come from the
-booking (invitee name, meeting name, date and time in the invitee's
-time zone, meeting link, host, reschedule/cancel links, booking page).
-Bookings are stored so the every-minute `/api/automations/cron` job can
-send the 24 h and 1 h reminders. The invitee's phone comes from a
-"Phone number" booking question, the SMS-reminder number, or an
-outbound-call location. Apply
-`supabase/migrations/040_calendly_integration.sql` first. Code:
-`src/lib/calendly/`, `src/app/api/integrations/calendly/`.
-
-### Scripts
-
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Start the dev server |
-| `npm run build` / `npm start` | Production build and serve |
-| `npm run typecheck` | TypeScript check |
-| `npm run lint` | ESLint |
-| `npm test` | Unit tests (Vitest) |
-
-## Project layout
-
-```
-src/app/            Next.js App Router: marketing pages, /docs, the app, and API routes
-src/app/api/v1/     Public REST API (+ openapi.json)
-src/app/docs/       Help Center and API reference pages
-src/lib/api/v1/     API envelope, pagination, serializers, OpenAPI spec
-src/lib/whatsapp/   Meta Cloud API client, webhooks, send pipeline
-src/components/     UI components
-supabase/           Database migrations
-shopify/            Shopify app configuration (shopify.app.toml) and App Store checklist
-docs/               Developer docs (public API, embedded signup, integrations)
-```
+---
 
 ## Deployment
 
 Production runs on [Hostinger](https://www.hostinger.com/web-apps-hosting)
-Managed Node.js. Pushing to `main` builds and deploys. Environment
-variables are set in hPanel. The app runs on any Node.js host, such as
-Vercel, Railway, or a VPS.
+Managed Node.js: **pushing to `main` builds and deploys**. Environment
+variables live in hPanel.
 
-Set `NEXT_PUBLIC_SITE_URL=https://repeatgrow.com` in production. The
-WhatsApp webhook must be reachable over HTTPS.
+- Set `NEXT_PUBLIC_SITE_URL=https://repeatgrow.com` (the app also
+  upgrades any public `http` origin to `https`).
+- The WhatsApp, Shopify and Calendly webhooks must be reachable over
+  HTTPS.
+- App and auth pages and RSC payloads are sent `Cache-Control: private,
+  no-store`; marketing pages are cached briefly at the CDN.
+- `next.config.mjs` is plain JS on purpose (Hostinger's older glibc
+  forces the WASM SWC build).
 
-## Stack
+The app also runs on any Node.js host (Vercel, Railway, a VPS).
 
-- **App**: Next.js 16 (App Router), React 19, TypeScript, Tailwind v4.
-- **Data**: Supabase (Postgres, Auth, Storage, row-level security).
-- **WhatsApp**: Meta Cloud API (official WhatsApp Business API).
-- **AI**: Google Gemini for the AI chatbot and AI flow builder (`GEMINI_KEY`).
+---
+
+## Project layout
+
+```
+src/app/                 App Router: marketing pages, /docs, the app, admin, API routes
+src/app/(auth)/          Login, signup, onboarding, password reset
+src/app/(dashboard)/     Inbox, contacts, pipelines, broadcasts, automations, flows, settings
+src/app/admin/           Platform admin dashboard and account pages
+src/app/api/v1/          Public REST API (+ openapi.json)
+src/app/api/integrations Shopify and Calendly connect + webhook routes
+src/components/          UI (inbox, contacts, broadcasts, settings, admin, …)
+src/lib/whatsapp/        Meta Cloud API client, webhook handling, send pipeline
+src/lib/automations/     Automation engine;  src/lib/flows/ flow engine
+src/lib/shopify/         Shopify events, OAuth, webhook processing
+src/lib/calendly/        Calendly events, API client, reminders
+src/lib/billing/         Plans, limits, trial / read-only checks
+src/lib/broadcasts/      Scheduled broadcast sender
+src/lib/summary/         Daily summary email
+src/lib/admin/           Admin dashboard data
+src/lib/integrations/    Shared integration helpers (phone normalisation)
+src/app/blog/            Blog posts;  src/lib/blog.ts post list;  public/blog/ images
+supabase/migrations/     Database schema, in order
+shopify/                 Shopify app config (shopify.app.toml) + App Store checklist
+docs/                    Public API, embedded signup, integrations plan, RestroGrow connect
+```
+
+---
+
+## Scripts and testing
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Dev server (Turbopack) at localhost:3000 |
+| `npm run build` / `npm start` | Production build (webpack) and serve |
+| `npm run typecheck` | TypeScript check |
+| `npm run lint` | ESLint |
+| `npm test` | Unit tests (Vitest) |
+| `npm run format` | Prettier |
+
+CI (GitHub Actions) runs lint, typecheck, tests and a production build on
+every push to `main`.
+
+---
 
 ## Security
 
-WhatsApp tokens are encrypted with AES-256-GCM. Every table has
-row-level security. Webhooks are verified with HMAC, and responses carry
-a Content Security Policy. API requests are rate limited. Report
-vulnerabilities privately to
+- WhatsApp tokens, integration tokens and signing keys are encrypted
+  with AES-256-GCM (`ENCRYPTION_KEY`).
+- Row-level security on every table; integration tables are
+  service-role only.
+- Webhooks are signature-verified: Meta (HMAC-SHA256), Shopify
+  (`X-Shopify-Hmac-Sha256`), Calendly (`Calendly-Webhook-Signature`,
+  replay window); outbound webhooks are signed.
+- OAuth redirects are validated (state nonce, HMAC, anchored shop
+  domains); post-login redirects are same-origin only.
+- API keys are scoped and revocable; API and admin actions are rate
+  limited; a Content Security Policy ships (report-only for now).
+
+Report vulnerabilities privately to
 [support@repeatgrow.com](mailto:support@repeatgrow.com). See also
 [repeatgrow.com/security](https://repeatgrow.com/security).
+
+---
+
+## More documentation
+
+- [CHANGELOG.md](./CHANGELOG.md) — what changed and which migrations it needs
+- [TODO.md](./TODO.md) — roadmap and known gaps
+- [docs/public-api.md](./docs/public-api.md) — API reference
+- [docs/INTEGRATIONS.md](./docs/INTEGRATIONS.md) — integrations plan and keys
+- [docs/embedded-signup.md](./docs/embedded-signup.md) — WhatsApp Embedded Signup
+- [docs/RESTROGROW_CONNECT.md](./docs/RESTROGROW_CONNECT.md) — Connect RepeatGrow ↔ RestroGrow
+- [shopify/README.md](./shopify/README.md) — Shopify app config and App Store checklist
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+---
 
 ## License
 
