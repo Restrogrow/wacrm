@@ -9,6 +9,19 @@ import { SITE_URL } from '@/lib/seo'
 // visitor to an unreachable host. NEXT_PUBLIC_SITE_URL is
 // http://localhost:3000 in development and https://repeatgrow.com in
 // production; SITE_URL is the fallback.
+//
+// A public host is always upgraded to https: production once had
+// NEXT_PUBLIC_SITE_URL=http://repeatgrow.com, and OAuth providers
+// (Shopify) reject a redirect_uri that isn't the exact https URL. The
+// CDN rewrites http Location headers, which hid it for plain redirects.
 export function publicOrigin(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || SITE_URL).replace(/\/$/, '')
+  const raw = (process.env.NEXT_PUBLIC_SITE_URL || SITE_URL).trim().replace(/\/+$/, '')
+  try {
+    const url = new URL(raw)
+    const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(url.hostname)
+    if (url.protocol === 'http:' && !isLocal) url.protocol = 'https:'
+    return url.origin
+  } catch {
+    return SITE_URL.replace(/\/+$/, '')
+  }
 }
