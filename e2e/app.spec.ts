@@ -44,3 +44,16 @@ test('health endpoint reports status without leaking details', async ({ request 
   // Only states: no error messages or env var names.
   expect(JSON.stringify(body)).not.toMatch(/SERVICE_ROLE|ENCRYPTION_KEY|Missing/)
 })
+
+test('data export and account deletion need a signed-in user', async ({ request }) => {
+  const exp = await request.get('/api/account/export')
+  expect([401, 403]).toContain(exp.status())
+  const del = await request.post('/api/account/delete', { data: { confirm: 'x@example.com' } })
+  expect([401, 403]).toContain(del.status())
+})
+
+test('privacy policy explains downloading and deleting data', async ({ page }) => {
+  await page.goto('/privacy')
+  await expect(page.getByText('Download my data').first()).toBeVisible()
+  await expect(page.getByText('Delete my account').first()).toBeVisible()
+})

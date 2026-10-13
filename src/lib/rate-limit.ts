@@ -157,6 +157,12 @@ export const RATE_LIMITS = {
    *  Gemini request (two with a repair), so cap it well above a person
    *  iterating on wording but below a stuck retry loop. */
   aiTemplateDraft: { limit: 10, windowMs: 60_000 },
+  /** "Download my data", per user. A full business export reads every
+   *  table, so a handful per hour is plenty. */
+  dataExport: { limit: 5, windowMs: 60 * 60_000 },
+  /** "Delete my account" attempts, per user. Bounds confirmation-text
+   *  guessing from a hijacked session. */
+  accountDelete: { limit: 5, windowMs: 60 * 60_000 },
 } as const;
 
 /** Test-only helper. Clears the in-memory state so unit tests don't

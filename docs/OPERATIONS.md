@@ -97,6 +97,32 @@ Heartbeats are stored in `system_heartbeats`; failures in
 7. After a fix, `/admin/system` turns green on the next cron run (within
    a minute).
 
+## Data requests (DPDP Act / GDPR)
+
+Customers handle these themselves in **Settings → Your data**:
+
+- **Download my data** — JSON export. Owners/admins get the whole
+  business; teammates get their own data.
+- **Delete my account** — owners delete the whole business (only once
+  no teammates remain); teammates delete just their login and their
+  business rows are reassigned to the owner.
+
+If someone emails a request instead, point them to Settings → Your data.
+If they can't sign in, verify the request comes from the account's email
+address before acting on it.
+
+Deletions are logged anonymously:
+
+```sql
+select created_at, was_owner, deleted_account, reassigned_rows
+from account_deletions order by created_at desc limit 50;
+```
+
+Deleted data disappears from the live database immediately; Supabase
+backups expire on their own schedule. Shopify OAuth stores should also
+uninstall the app from their Shopify admin (the webhook receiver ignores
+stores that no longer exist).
+
 ## Releases
 
 1. Push to `main`. GitHub Actions runs lint, typecheck, unit tests, a

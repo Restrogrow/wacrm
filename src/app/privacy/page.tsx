@@ -29,7 +29,7 @@ export default function PrivacyPolicyPage() {
       </Link>
 
       <h1 className="mt-6 text-3xl font-bold tracking-tight">Privacy Policy</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Last updated: August 25, 2026</p>
+      <p className="mt-2 text-sm text-muted-foreground">Last updated: October 14, 2026</p>
 
       <div className="mt-10 space-y-8 text-sm leading-relaxed text-foreground/90">
         <section>
@@ -124,21 +124,40 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-lg font-semibold text-foreground">5. Data Retention</h2>
           <p className="mt-3">
             We retain account and message data for as long as a Customer&apos;s
-            account is active, or as needed to provide the service. Data is
-            deleted or anonymized within a reasonable period after an
-            account is closed, except where retention is required by law.
+            account is active, or as needed to provide the service. When an
+            account owner deletes their account in Settings &rarr; Your data,
+            the business account and its data (contacts, conversations,
+            messages, deals, broadcasts, templates, automations and
+            integration settings) are deleted from our live database straight
+            away. Copies in encrypted backups are removed as those backups
+            expire. We may keep a minimal, anonymous record that a deletion
+            took place, and data we are required by law to retain.
           </p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold text-foreground">6. Your Rights</h2>
           <p className="mt-3">
-            Depending on your location, you may have the right to access,
-            correct, or request deletion of your personal data. If you are
-            an end user messaging a business that uses Repeat Grow, please
-            contact that business directly, as they control the data. If
-            you are a Repeat Grow Customer, contact us using the details
-            below.
+            You have the right to access, correct and delete your personal
+            data, including under India&apos;s Digital Personal Data Protection
+            Act, 2023. Repeat Grow Customers and their team members can do
+            this themselves in Settings &rarr; Your data:
+          </p>
+          <ul className="mt-3 list-disc space-y-1 pl-6">
+            <li>
+              <b>Download my data</b> gives you a copy of your data as a JSON
+              file. Owners and admins also get their business&apos;s data.
+            </li>
+            <li>
+              <b>Delete my account</b> deletes your login. If you own the
+              business account, the business and all of its data are deleted.
+            </li>
+            <li>Your name and details can be changed in Settings &rarr; Your profile.</li>
+          </ul>
+          <p className="mt-3">
+            If you are an end user messaging a business that uses Repeat Grow,
+            please contact that business directly, as they control the data.
+            For anything else, contact us using the details below.
           </p>
         </section>
 

@@ -39,3 +39,9 @@ test('settings loads', async ({ page }) => {
   await page.goto('/settings')
   await expect(page).toHaveURL(/\/settings/)
 })
+
+test('your data page offers download and delete (not clicked)', async ({ page }) => {
+  await page.goto('/settings?tab=your-data')
+  await expect(page.getByRole('button', { name: 'Download my data' })).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('button', { name: 'Delete my account' })).toBeVisible()
+})

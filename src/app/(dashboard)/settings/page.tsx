@@ -24,6 +24,7 @@ import { ShopifySettings } from '@/components/settings/shopify-settings';
 import { CalendlySettings } from '@/components/settings/calendly-settings';
 import { BillingSettings } from '@/components/settings/billing-settings';
 import { DailySummarySettings } from '@/components/settings/daily-summary-settings';
+import { YourDataSettings } from '@/components/settings/your-data-settings';
 import {
   resolveSection,
   type SettingsSection,
@@ -68,6 +69,7 @@ export default function SettingsPage() {
     ),
     security: <SecurityPanel />,
     appearance: <AppearancePanel />,
+    'your-data': <YourDataSettings />,
     whatsapp: <WhatsAppConfig />,
     'ai-chatbot': <AiChatbotSettings />,
     templates: <TemplateManager />,

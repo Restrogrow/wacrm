@@ -131,6 +131,25 @@
   viewer**; ownership transfer.
 - API keys and "Connect RepeatGrow" partner connections (e.g.
   RestroGrow) managed in Settings.
+- **Your data (DPDP Act / GDPR)** — **Settings → Your data**:
+  - **Download my data:** a JSON file (`GET /api/account/export`,
+    streamed). Everyone gets their profile, sign-in details and
+    notifications; owners and admins also get the business's contacts,
+    chats, messages, deals, broadcasts, templates, automations, flows and
+    integration settings. Business tables are read with the caller's
+    RLS-scoped client; columns that look like tokens, secrets, key hashes
+    or passwords are never exported.
+  - **Delete my account:** confirm by typing your email
+    (`POST /api/account/delete`). A teammate's deletion removes only their
+    login — business rows they created are reassigned to the owner first.
+    An owner's deletion deletes the whole business (blocked while
+    teammates remain) and disconnects Calendly. An anonymous record (ids
+    and counts only) goes to `account_deletions`.
+  - Code: [`src/lib/account/data-export.ts`](./src/lib/account/data-export.ts),
+    [`src/app/api/account/export`](./src/app/api/account/export/route.ts),
+    [`src/app/api/account/delete`](./src/app/api/account/delete/route.ts),
+    [`your-data-settings.tsx`](./src/components/settings/your-data-settings.tsx),
+    migration [`046_account_deletion.sql`](./supabase/migrations/046_account_deletion.sql).
 
 ---
 
@@ -427,6 +446,7 @@ is idempotent where possible. Recent ones:
 | `043_scheduled_broadcasts` | Scheduled broadcast params and send lease |
 | `044_daily_summary` | Daily summary settings |
 | `045_monitoring_and_indexes` | Job heartbeats, webhook failure log, faster inbox / thread / contacts / broadcasts queries, contact search indexes |
+| `046_account_deletion` | Self-service account deletion (`prepare_user_deletion`) and the anonymous `account_deletions` log |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -551,6 +571,7 @@ src/lib/broadcasts/      Scheduled broadcast sender
 src/lib/summary/         Daily summary email
 src/lib/admin/           Admin dashboard data
 src/lib/ops/             Health check, job heartbeats, webhook failure log
+src/lib/account/         Data export ("Download my data")
 src/app/admin/system/    System health page;  src/app/api/health/ health check
 src/lib/integrations/    Shared integration helpers (phone normalisation)
 src/app/blog/            Blog posts;  src/lib/blog.ts post list;  public/blog/ images
@@ -600,6 +621,9 @@ local build.
   domains); post-login redirects are same-origin only.
 - API keys are scoped and revocable; API and admin actions are rate
   limited; a Content Security Policy ships (report-only for now).
+- Users can download and delete their own data (Settings → Your data);
+  exports never include secrets, deletes are confirmed by typing the
+  email, and both are rate limited.
 - Cron endpoints check `x-cron-secret` in constant time. `/api/health`
   returns states only — error text and env var names are shown on
   `/admin/system` to platform admins only; the monitoring tables are

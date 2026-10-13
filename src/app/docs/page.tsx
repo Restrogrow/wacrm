@@ -5,6 +5,7 @@ import {
   CalendarCheck,
   Code2,
   CreditCard,
+  Download,
   FileText,
   GitBranch,
   HelpCircle,
@@ -45,6 +46,7 @@ const TOPICS: { id: string; label: string; blurb: string; icon: LucideIcon }[] =
   { id: "calendly", label: "Calendly", blurb: "Booking confirmations and reminders.", icon: CalendarCheck },
   { id: "team", label: "Team members", blurb: "Invite teammates and set roles.", icon: UsersRound },
   { id: "plans", label: "Plans & free trial", blurb: "Trial, limits, and upgrading.", icon: CreditCard },
+  { id: "your-data", label: "Your data & privacy", blurb: "Download your data or delete your account.", icon: Download },
 ];
 
 const TOC = [...TOPICS.map(({ id, label }) => ({ id, label })), { id: "faq", label: "FAQ" }];
@@ -450,6 +452,33 @@ export default function DocsPage() {
                 activate it as soon as it&apos;s paid.
               </li>
               <li>WhatsApp conversation fees are billed by Meta directly, separately from your plan.</li>
+            </ul>
+          </Section>
+
+          <Section id="your-data" n={14} title="Your data & privacy" intro="Get a copy of your data or delete your account, any time.">
+            <ul className="bullets">
+              <li>
+                Go to <Ui to="/settings?tab=your-data">Settings → Your data</Ui>.
+              </li>
+              <li>
+                <b>Download my data</b> saves a JSON file with your profile and sign-in details. Owners and admins also
+                get the business&apos;s data: contacts, tags, chats and messages, deals, broadcasts, templates,
+                automations, flows and integration settings. Passwords, access tokens and secret keys are never
+                included.
+              </li>
+              <li>
+                <b>Delete my account</b> asks you to type your email to confirm. A teammate&apos;s deletion removes only
+                their login; anything they created stays with the business.
+              </li>
+              <li>
+                If you <b>own</b> the business, deleting your account permanently deletes the business and all of its
+                data, and disconnects WhatsApp, Shopify and Calendly. Remove your teammates or transfer ownership in{" "}
+                <Ui to="/settings?tab=members">Team members</Ui> first. Download your data before you delete — it
+                can&apos;t be undone.
+              </li>
+              <li>
+                Uninstall the Repeat Grow app from your Shopify admin too, if you connected it with one click.
+              </li>
             </ul>
           </Section>
 
