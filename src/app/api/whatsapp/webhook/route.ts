@@ -1,4 +1,5 @@
 import { NextResponse, after } from 'next/server'
+import { recordWebhookRejection, webhookBlocked } from '@/lib/rate-limit'
 import { createClient } from '@supabase/supabase-js'
 import { decrypt, encrypt, isLegacyFormat } from '@/lib/whatsapp/encryption'
 import { getMediaUrl } from '@/lib/whatsapp/meta-api'
@@ -229,6 +230,11 @@ export async function GET(request: Request) {
 
 // POST - Receive messages
 export async function POST(request: Request) {
+  // An IP that keeps sending bad signatures is blocked for a while;
+  // genuine Meta deliveries are never limited.
+  const blocked = webhookBlocked(request, 'whatsapp')
+  if (blocked) return blocked
+
   // Read raw body first so we can HMAC-verify the exact bytes Meta
   // signed. request.json() would re-encode and break the signature.
   const rawBody = await request.text()
@@ -239,6 +245,7 @@ export async function POST(request: Request) {
     // loudly if a misconfiguration causes signatures to stop matching,
     // rather than silently eating events.
     console.warn('[webhook] rejected request with invalid signature')
+    recordWebhookRejection(request, 'whatsapp')
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 

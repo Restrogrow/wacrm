@@ -8,6 +8,7 @@
 // ============================================================
 
 import { NextResponse, after } from 'next/server';
+import { recordWebhookRejection, webhookBlocked } from '@/lib/rate-limit';
 
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 import { decrypt } from '@/lib/whatsapp/encryption';
@@ -24,6 +25,8 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  const blocked = webhookBlocked(request, 'shopify');
+  if (blocked) return blocked;
   const { token } = await params;
   const rawBody = await request.text();
 
@@ -35,6 +38,7 @@ export async function POST(
     .maybeSingle<ShopifyStore & { webhook_secret: string | null }>();
 
   if (!row || !row.webhook_secret) {
+    recordWebhookRejection(request, 'shopify');
     return NextResponse.json({ error: 'Unknown webhook URL' }, { status: 404 });
   }
 
@@ -51,6 +55,7 @@ export async function POST(
       secret
     )
   ) {
+    recordWebhookRejection(request, 'shopify');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 

@@ -7,6 +7,7 @@
 // ============================================================
 
 import { NextResponse } from 'next/server'
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
@@ -18,6 +19,9 @@ import { CallingError } from '@/lib/whatsapp/calling'
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const ctx = await requireRole('agent')
+
+    const sendLimit = checkRateLimit(`send:${ctx.userId}`, RATE_LIMITS.send)
+    if (!sendLimit.success) return rateLimitResponse(sendLimit)
     const { id } = await params
     const body = (await request.json().catch(() => null)) as { conversation_id?: unknown; body?: unknown; cta?: unknown } | null
     if (typeof body?.conversation_id !== 'string') {

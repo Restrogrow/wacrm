@@ -737,6 +737,7 @@ docs/                    Operations runbook, public API, embedded signup, integr
 | `npm run typecheck` | TypeScript check |
 | `npm run lint` | ESLint |
 | `npm test` | Unit tests (Vitest) |
+| `npm run security:check` | Live check that an anonymous visitor can't read any table (read-only) |
 | `npm run test:e2e` | End-to-end tests (Playwright) against the production build — run `npm run build` first; `npx playwright install chromium` once |
 | `npm run format` | Prettier |
 
@@ -755,6 +756,24 @@ local build.
 
 ## Security
 
+- **Account isolation is tested on every push:**
+  - `src/lib/security/rls-migrations.test.ts` replays every migration
+    and fails if any table lacks row-level security or any policy isn't
+    scoped to the account / user (only the three public media buckets
+    are allowlisted, because WhatsApp downloads media by URL).
+  - `src/lib/security/api-auth.test.ts` fails if any API route doesn't
+    check who is calling (member, admin, API key, cron secret or webhook
+    signature) — public routes are an explicit, reasoned allowlist.
+  - `npm run security:check` signs in as nobody (public anon key) and
+    tries to read every table on a real project — it must see 0 rows.
+- **Rate limits:** public `/api/health` per IP; webhooks block an IP
+  after repeated bad signatures / unknown URLs (genuine Meta, Shopify
+  and Calendly deliveries are never limited); AI generation per user;
+  form, order, catalog and call-permission sends per user — on top of
+  the existing message, broadcast, API-key, invite and admin limits.
+  Login, sign-up and password-reset limits are Supabase Auth's
+  (Authentication → Rate Limits; turn on CAPTCHA there for extra
+  protection).
 - WhatsApp tokens, integration tokens and signing keys are encrypted
   with AES-256-GCM (`ENCRYPTION_KEY`).
 - Row-level security on every table; integration tables are

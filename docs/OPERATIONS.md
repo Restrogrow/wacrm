@@ -185,6 +185,19 @@ permission. If a push is rejected for that reason, run
 `gh auth refresh -h github.com -s workflow` and `gh auth setup-git`
 once.
 
+## Security checks
+
+- Every push runs the isolation tests (RLS on every table, every policy
+  account-scoped, every API route authenticated).
+- After running a new migration on production, run
+  `npm run security:check` — it reads every table with the public anon
+  key and must report "No table is readable without signing in".
+- Login / sign-up / password-reset rate limits and CAPTCHA live in the
+  Supabase dashboard (Authentication → Rate Limits / Attack Protection).
+- A webhook sender that keeps failing signature checks gets 429s for 10
+  minutes; look for `[webhook] rejected request with invalid signature`
+  in the logs.
+
 ## Testing
 
 | Command | What |

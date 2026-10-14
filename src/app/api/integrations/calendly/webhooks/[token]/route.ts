@@ -8,6 +8,7 @@
 // ============================================================
 
 import { NextResponse, after } from 'next/server';
+import { recordWebhookRejection, webhookBlocked } from '@/lib/rate-limit';
 
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 import { decrypt } from '@/lib/whatsapp/encryption';
@@ -24,6 +25,9 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  const blocked = webhookBlocked(request, 'calendly');
+  if (blocked) return blocked;
+
   const { token } = await params;
   const rawBody = await request.text();
 
@@ -33,6 +37,7 @@ export async function POST(
     .eq('ingest_token', token)
     .maybeSingle<CalendlyConnection & { signing_key: string }>();
   if (!row) {
+    recordWebhookRejection(request, 'calendly');
     return NextResponse.json({ error: 'Unknown webhook URL' }, { status: 404 });
   }
 
@@ -52,6 +57,7 @@ export async function POST(
       signingKey
     )
   ) {
+    recordWebhookRejection(request, 'calendly');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 

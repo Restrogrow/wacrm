@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import {
   chatbotTimeZone,
@@ -15,7 +16,10 @@ import type { ChatMessage } from '@/lib/ai/gemini'
  */
 export async function POST(request: Request) {
   try {
-    await requireRole('admin')
+    const ctx = await requireRole('admin')
+    // Each call is a paid AI request — cap per user.
+    const aiLimit = checkRateLimit(`ai:${ctx.userId}`, RATE_LIMITS.aiGenerate)
+    if (!aiLimit.success) return rateLimitResponse(aiLimit)
     const body = (await request.json().catch(() => null)) as {
       settings?: Record<string, unknown>
       messages?: Array<{ role?: string; content?: string }>

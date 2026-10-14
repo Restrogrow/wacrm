@@ -112,6 +112,42 @@ export function rateLimitResponse(result: RateLimitResult): NextResponse {
   );
 }
 
+/**
+ * Best-effort client IP: leftmost `x-forwarded-for` entry (set by the
+ * reverse proxy — Hostinger, Cloudflare, Vercel), then `x-real-ip`,
+ * else "unknown" (local dev, where the limit is effectively global).
+ */
+export function getClientIp(request: Request): string {
+  const xff = request.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  const xri = request.headers.get('x-real-ip');
+  if (xri) return xri.trim();
+  return 'unknown';
+}
+
+/** True if this key has already used its whole budget (does not count a request). */
+export function isRateLimited(key: string): boolean {
+  const entry = buckets.get(key);
+  return !!entry && entry.resetAt > Date.now() && entry.count >= RATE_LIMITS.webhookRejections.limit;
+}
+
+/**
+ * Webhook abuse guard. Real deliveries from Meta / Shopify / Calendly
+ * are never limited — only an IP that keeps sending requests with bad
+ * signatures or unknown URLs. Call `webhookBlocked` first (cheap, no
+ * DB) and `recordWebhookRejection` whenever a request is rejected.
+ */
+export function webhookBlocked(request: Request, source: string): NextResponse | null {
+  const key = `webhook-reject:${source}:${getClientIp(request)}`;
+  if (!isRateLimited(key)) return null;
+  const entry = buckets.get(key)!;
+  return rateLimitResponse({ success: false, remaining: 0, reset: entry.resetAt, limit: RATE_LIMITS.webhookRejections.limit });
+}
+
+export function recordWebhookRejection(request: Request, source: string): void {
+  checkRateLimit(`webhook-reject:${source}:${getClientIp(request)}`, RATE_LIMITS.webhookRejections);
+}
+
 /** Preconfigured budgets, tweak here not at call sites. */
 export const RATE_LIMITS = {
   /** Individual message send. 60/min per user = one per second
@@ -169,6 +205,15 @@ export const RATE_LIMITS = {
   /** "Check now" on WhatsApp number health, per account. Each check
    *  makes three Graph API calls. */
   numberHealthCheck: { limit: 6, windowMs: 60 * 60_000 },
+  /** Public GET /api/health, per IP. Monitors poll every minute or
+   *  five; this only stops someone hammering the database through it. */
+  healthCheck: { limit: 60, windowMs: 60_000 },
+  /** Rejected webhook requests (bad signature / unknown URL) per IP
+   *  per source before that IP is blocked for the rest of the window. */
+  webhookRejections: { limit: 20, windowMs: 10 * 60_000 },
+  /** AI generation (flows, chatbot tests), per user — each is a paid
+   *  Gemini request. */
+  aiGenerate: { limit: 10, windowMs: 60_000 },
 } as const;
 
 /** Test-only helper. Clears the in-memory state so unit tests don't

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { generateFlowFromPrompt, resolveNewTags } from '@/lib/flows/ai-generate'
@@ -19,6 +20,10 @@ export async function POST(request: Request) {
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  // Each call is a paid AI request — cap per user.
+  const aiLimit = checkRateLimit(`ai:${user.id}`, RATE_LIMITS.aiGenerate)
+  if (!aiLimit.success) return rateLimitResponse(aiLimit)
 
   const { data: profile } = await supabase
     .from('profiles')

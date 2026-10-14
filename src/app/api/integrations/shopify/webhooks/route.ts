@@ -11,6 +11,7 @@
 // ============================================================
 
 import { NextResponse, after } from 'next/server';
+import { recordWebhookRejection, webhookBlocked } from '@/lib/rate-limit';
 
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 import { shopifyAppCredentials } from '@/lib/shopify/config';
@@ -30,6 +31,9 @@ const COMPLIANCE_TOPICS = new Set([
 ]);
 
 export async function POST(request: Request) {
+  const blocked = webhookBlocked(request, 'shopify');
+  if (blocked) return blocked;
+
   const creds = shopifyAppCredentials();
   if (!creds) {
     return NextResponse.json(
@@ -46,6 +50,7 @@ export async function POST(request: Request) {
       creds.clientSecret
     )
   ) {
+    recordWebhookRejection(request, 'shopify');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 

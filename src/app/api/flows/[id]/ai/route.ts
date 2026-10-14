@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import {
@@ -35,6 +36,10 @@ export async function POST(
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  // Each call is a paid AI request — cap per user.
+  const aiLimit = checkRateLimit(`ai:${user.id}`, RATE_LIMITS.aiGenerate)
+  if (!aiLimit.success) return rateLimitResponse(aiLimit)
 
   // RLS scopes this to the caller's account.
   const { data: flow } = await supabase

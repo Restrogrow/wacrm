@@ -6,6 +6,7 @@
 // ============================================================
 
 import { NextResponse } from 'next/server'
+import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
@@ -18,6 +19,9 @@ import { logOutgoing } from '@/lib/whatsapp/commerce-server'
 export async function POST(request: Request) {
   try {
     const ctx = await requireRole('agent')
+
+    const sendLimit = checkRateLimit(`send:${ctx.userId}`, RATE_LIMITS.send)
+    if (!sendLimit.success) return rateLimitResponse(sendLimit)
     const b = ((await request.json().catch(() => null)) ?? {}) as Record<string, unknown>
     if (typeof b.conversation_id !== 'string') return NextResponse.json({ error: 'conversation_id is required' }, { status: 400 })
     if (!(await accountCanSend(ctx.accountId))) {

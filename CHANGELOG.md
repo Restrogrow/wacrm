@@ -190,6 +190,12 @@ and polish.
 
 ### Changed
 
+- **Security:** automated isolation tests (row-level security on every
+  table, account-scoped policies, authenticated API routes),
+  `npm run security:check` for a live anonymous read test (all 55
+  tables protected), and new rate limits on the health check, webhooks
+  (bad signatures), AI generation and form / order / catalog sends.
+
 - Smaller page script: Sentry performance tracing is no longer bundled
   (errors are still reported).
 - Better contrast on the pricing toggle, blog buttons and login links;
