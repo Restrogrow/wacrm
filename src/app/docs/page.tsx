@@ -10,6 +10,7 @@ import {
   FileText,
   GitBranch,
   HelpCircle,
+  IndianRupee,
   MessageSquare,
   PlugZap,
   Radio,
@@ -40,6 +41,7 @@ const TOPICS: { id: string; label: string; blurb: string; icon: LucideIcon }[] =
   { id: "contacts", label: "Contacts", blurb: "Import, tag, and organise customers.", icon: Users },
   { id: "pipelines", label: "Pipelines", blurb: "Track deals on Kanban boards.", icon: GitBranch },
   { id: "templates", label: "Message templates", blurb: "Create and submit templates to Meta.", icon: FileText },
+  { id: "orders", label: "Orders & payments", blurb: "Payment requests, catalog and order tracking.", icon: IndianRupee },
   { id: "forms", label: "WhatsApp forms", blurb: "Collect details inside WhatsApp.", icon: ClipboardList },
   { id: "broadcasts", label: "Broadcasts", blurb: "Message many customers at once.", icon: Radio },
   { id: "automations", label: "Automations & flows", blurb: "Reply and tag automatically.", icon: Zap },
@@ -349,7 +351,29 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="forms" n={7} title="WhatsApp forms" intro="Collect leads, booking requests or feedback in a form that opens inside WhatsApp.">
+          <Section id="orders" n={7} title="Orders & payments" intro="Take orders and payments in the chat, share your catalog, and keep customers updated on delivery.">
+            <ol className="steps">
+              <Step title="Choose how customers pay">
+                In <Ui to="/settings?tab=commerce">Settings → Orders & payments</Ui>, pick <b>WhatsApp Pay</b> (customers
+                pay by UPI, card or netbanking inside WhatsApp — set up a payment configuration with Razorpay, PayU,
+                BillDesk or Zaakpay in WhatsApp Manager first) or <b>UPI ID</b> (we send your UPI ID with the order).
+              </Step>
+              <Step title="Send an order from a chat">
+                Click the <b>₹ icon</b> at the top of a conversation, add the items and prices, and click{" "}
+                <b>Send payment request</b>. WhatsApp Pay orders are marked paid automatically; for UPI, click{" "}
+                <b>Mark paid</b> when the money arrives.
+              </Step>
+              <Step title="Update the order">
+                Change the status to processing, shipped or delivered — the customer gets a message each time.
+              </Step>
+            </ol>
+            <p>
+              Add your Meta catalog ID to share your catalog or a product from the ₹ icon. Orders customers place from your
+              catalog show up automatically.
+            </p>
+          </Section>
+
+          <Section id="forms" n={8} title="WhatsApp forms" intro="Collect leads, booking requests or feedback in a form that opens inside WhatsApp.">
             <ol className="steps">
               <Step title="Build the form">
                 In <Ui to="/settings?tab=forms">Settings → WhatsApp forms</Ui>, click <b>New form</b>, add fields (text,
@@ -366,7 +390,7 @@ export default function DocsPage() {
             </ol>
           </Section>
 
-          <Section id="broadcasts" n={8} title="Broadcasts" intro="Send an approved template to many customers at once.">
+          <Section id="broadcasts" n={9} title="Broadcasts" intro="Send an approved template to many customers at once.">
             <ol className="steps">
               <Step title="Pick an approved template">
                 Open <Ui to="/broadcasts">Broadcasts</Ui> and choose the template to send.
@@ -391,7 +415,7 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="automations" n={9} title="Automations & flows" intro="Let Repeat Grow handle the repetitive work.">
+          <Section id="automations" n={10} title="Automations & flows" intro="Let Repeat Grow handle the repetitive work.">
             <p>
               <Ui to="/automations">Automations</Ui> run actions when something happens, such as a new inbound
               message, a customer&apos;s first message, a keyword match, or a tag being added.
@@ -404,7 +428,7 @@ export default function DocsPage() {
             </p>
           </Section>
 
-          <Section id="ai-chatbot" n={10} title="AI chatbot" intro="Answer common questions instantly, day or night.">
+          <Section id="ai-chatbot" n={11} title="AI chatbot" intro="Answer common questions instantly, day or night.">
             <p>
               In <Ui to="/settings?tab=ai-chatbot">Settings → AI chatbot</Ui>, add your business knowledge (FAQs, policies,
               product details) and switch the chatbot on. It answers WhatsApp chats naturally from
@@ -413,7 +437,7 @@ export default function DocsPage() {
             </p>
           </Section>
 
-          <Section id="shopify" n={11} title="Shopify" intro="Send order confirmations, shipping updates, and abandoned-cart reminders on WhatsApp automatically.">
+          <Section id="shopify" n={12} title="Shopify" intro="Send order confirmations, shipping updates, and abandoned-cart reminders on WhatsApp automatically.">
             <ol className="steps">
               <Step title="Create your templates">
                 In <Ui to="/settings?tab=templates">Settings → Templates</Ui>, create a template for each message you want, such
@@ -438,7 +462,7 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="calendly" n={12} title="Calendly" intro="Confirm bookings and send reminders on WhatsApp so fewer people miss their meetings.">
+          <Section id="calendly" n={13} title="Calendly" intro="Confirm bookings and send reminders on WhatsApp so fewer people miss their meetings.">
             <ol className="steps">
               <Step title="Collect a phone number">
                 Calendly doesn&apos;t ask for one by default. In each Calendly event type, add a booking question of
@@ -460,7 +484,7 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="team" n={13} title="Team members" intro="Invite teammates by link and control what they can do.">
+          <Section id="team" n={14} title="Team members" intro="Invite teammates by link and control what they can do.">
             <p>Invite teammates from <Ui to="/settings?tab=members">Settings → Team members</Ui>. Each person gets one role:</p>
             <div className="docs-table-wrap">
               <table className="docs-table">
@@ -477,7 +501,7 @@ export default function DocsPage() {
             </div>
           </Section>
 
-          <Section id="plans" n={14} title="Plans & free trial" intro="Try everything free for 7 days, then pick the plan that fits.">
+          <Section id="plans" n={15} title="Plans & free trial" intro="Try everything free for 7 days, then pick the plan that fits.">
             <ul className="bullets">
               <li>New accounts get a <b>7-day free trial</b> with Growth features. The bar at the top shows the days left.</li>
               <li>
@@ -497,7 +521,7 @@ export default function DocsPage() {
             </ul>
           </Section>
 
-          <Section id="your-data" n={15} title="Your data & privacy" intro="Get a copy of your data or delete your account, any time.">
+          <Section id="your-data" n={16} title="Your data & privacy" intro="Get a copy of your data or delete your account, any time.">
             <ul className="bullets">
               <li>
                 Go to <Ui to="/settings?tab=your-data">Settings → Your data</Ui>.

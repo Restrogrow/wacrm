@@ -45,12 +45,9 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       `phone_number_quality_update` / `account_update` limit changes,
       show the number's quality rating and daily limit in Settings, and
       warn the owner (email / in-app) before Meta restricts sending.
-- [ ] **#40 Catalog, orders and payments (India).** Connect the
-      WhatsApp product catalog; send single/multi-product messages;
-      receive `order` messages (cart sent from the catalog) into the
-      inbox and a deal; order-details / checkout-button templates with
-      UPI / Razorpay payment links and payment-status webhooks. Useful
-      for restaurants and shops. (Was #11.)
+- [x] **#40 Catalog, orders and payments (India).** Shipped (migration 053): WhatsApp Pay order_details + payment webhooks, UPI-ID orders, catalog / product sharing, catalog cart orders, order status updates.
+      Follow-ups: multi-product messages, order-details templates (pay
+      outside the 24-hour window), creating a deal from an order.
 - [x] **#41 WhatsApp voice calls (Calling API).** Shipped: customers
       call the business number and agents answer in the browser
       (WebRTC), agents call customers, call-permission requests, recent
@@ -104,7 +101,7 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 - [ ] **#10 Multiple WhatsApp numbers per account.** `whatsapp_config` is
       UNIQUE(account_id) (migration 017). Needs number selection in inbox,
       broadcasts, flows, automations, chatbot and the API.
-- [ ] **#11 Catalog, orders and payments** — moved to the WhatsApp
+- [x] **#11 Catalog, orders and payments** — moved to the WhatsApp
       platform section above (#40).
 - [ ] **#12 Conversation cost tracking:** show Meta's per-conversation
       charges (from the `pricing` object in status webhooks) per account,

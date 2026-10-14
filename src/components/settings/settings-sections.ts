@@ -6,6 +6,7 @@ import {
   CreditCard,
   Download,
   FileText,
+  IndianRupee,
   KeyRound,
   LayoutGrid,
   Mail,
@@ -47,6 +48,7 @@ export const SETTINGS_SECTIONS = [
   'connected-apps',
   'shopify',
   'calendly',
+  'commerce',
   'billing',
   'daily-summary',
 ] as const;
@@ -81,6 +83,7 @@ export const SECTION_META: Record<SettingsSection, SectionMeta> = {
   'connected-apps': { id: 'connected-apps', label: 'Connected apps', icon: Plug, group: 'workspace' },
   shopify: { id: 'shopify', label: 'Shopify', icon: ShoppingBag, group: 'workspace' },
   calendly: { id: 'calendly', label: 'Calendly', icon: CalendarCheck, group: 'workspace' },
+  commerce: { id: 'commerce', label: 'Orders & payments', icon: IndianRupee, group: 'workspace' },
   billing: { id: 'billing', label: 'Plan & billing', icon: CreditCard, group: 'workspace' },
   'daily-summary': { id: 'daily-summary', label: 'Daily summary', icon: Mail, group: 'workspace' },
 };

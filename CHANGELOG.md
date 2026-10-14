@@ -13,6 +13,13 @@ and polish.
 
 ### Added
 
+- **Orders, payments and catalog (India).** Send orders with a payment
+  request from any chat — WhatsApp Pay (Razorpay / PayU / BillDesk /
+  Zaakpay via WhatsApp Manager, confirmed automatically) or your UPI ID
+  — share your catalog or a product, turn catalog carts into orders, and
+  update customers as orders are processed, shipped and delivered.
+  **Migration required:** `supabase/migrations/053_orders_and_payments.sql`.
+
 - **WhatsApp forms.** Build forms in Settings → WhatsApp forms and send
   them from any chat; customers fill them in inside WhatsApp. Answers
   appear in the chat, can be saved to the contact (name, email, custom

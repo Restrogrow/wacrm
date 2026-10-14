@@ -20,6 +20,12 @@ import { recordWebhookFailure } from '@/lib/ops/monitoring'
 import { handleCallsWebhook, type CallWebhookValue } from '@/lib/whatsapp/calling'
 import { handleFormReply } from '@/lib/whatsapp/forms'
 import {
+  createOrderFromCatalog,
+  handlePaymentStatus,
+  type CatalogOrderMessage,
+  type PaymentStatusEvent,
+} from '@/lib/whatsapp/commerce'
+import {
   handleTemplateWebhookChange,
   isTemplateWebhookField,
 } from '@/lib/whatsapp/template-webhook'
@@ -59,6 +65,8 @@ interface WhatsAppMessage {
   from_user_id?: string
   timestamp: string
   type: string
+  /** A cart the customer sent from the business's WhatsApp catalog. */
+  order?: CatalogOrderMessage
   text?: { body: string }
   image?: { id: string; mime_type: string; caption?: string }
   video?: { id: string; mime_type: string; caption?: string }
@@ -320,6 +328,15 @@ async function processWebhook(body: { entry?: WhatsAppWebhookEntry[] }) {
       // Handle status updates
       if (value.statuses) {
         for (const status of value.statuses) {
+          // WhatsApp Pay payment updates ride on statuses with type=payment.
+          if ((status as { type?: string }).type === 'payment') {
+            await handlePaymentStatus(
+              supabaseAdmin(),
+              value.metadata.phone_number_id,
+              status as unknown as PaymentStatusEvent,
+            ).catch((err) => console.error('[webhook] payment status failed:', err))
+            continue
+          }
           await handleStatusUpdate(status)
         }
       }
@@ -812,6 +829,28 @@ async function processMessage(
     console.error('Error updating conversation:', convError)
   }
 
+  // Cart sent from the catalog: create a pending order.
+  if (message.type === 'order' && message.order) {
+    try {
+      const summary = await createOrderFromCatalog(supabaseAdmin(), {
+        accountId,
+        contactId: contactRecord.id,
+        conversationId: conversation.id,
+        messageId: message.id,
+        order: message.order,
+      })
+      if (summary) {
+        await supabaseAdmin().from('messages').update({ content_text: summary }).eq('message_id', message.id)
+        await supabaseAdmin()
+          .from('conversations')
+          .update({ last_message_text: summary.split('\n')[0] })
+          .eq('id', conversation.id)
+      }
+    } catch (err) {
+      console.error('[webhook] catalog order handling failed:', err)
+    }
+  }
+
   // WhatsApp form submitted: save the answers, copy mapped ones onto
   // the contact, and replace the bubble text with the labelled answers.
   if (message.type === 'interactive' && message.interactive?.type === 'nfm_reply') {
@@ -1107,6 +1146,11 @@ async function parseMessageContent(
         interactiveReplyId: message.button?.payload || text,
       }
     }
+
+    case 'order':
+      // Cart from the catalog — the order (and a readable summary) is
+      // created after the insert by createOrderFromCatalog.
+      return { ...empty, contentText: '🛒 New order' }
 
     case 'interactive': {
       // The customer tapped a reply button or a list row on a message

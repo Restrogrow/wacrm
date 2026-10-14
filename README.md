@@ -119,6 +119,27 @@
 - Live sent / delivered / read / replied / failed counts per broadcast.
 - The broadcasts list shows 25 at a time with **Load more**.
 
+### Orders, payments and catalog (India)
+- **Settings → Orders & payments:** choose how customers pay —
+  **WhatsApp Pay** (native "Review and pay" with UPI / card /
+  netbanking, using a payment configuration made in WhatsApp Manager
+  with Razorpay, PayU, BillDesk or Zaakpay — no gateway keys in Repeat
+  Grow) or your **UPI ID** (order summary + UPI ID, marked paid by an
+  agent) — and add your Meta **catalog ID**.
+- **In a chat (₹ icon):** create an order (items, quantity, price, tax,
+  shipping, discount) and send the payment request; share the catalog or
+  a single product; see this customer's orders.
+- **Catalog carts** customers send become pending orders automatically.
+  **WhatsApp Pay** payment webhooks (`statuses[].type = payment`) mark
+  orders paid / failed / refunded by `reference_id`.
+- **Fulfilment:** processing → shipped → delivered (or cancelled); the
+  customer is told each time (an `order_status` card for WhatsApp Pay
+  orders, a short text otherwise). Recent orders with payment / status
+  controls are listed in Settings → Orders & payments.
+- Amounts are stored in paise (`whatsapp_orders`). Code:
+  `src/lib/whatsapp/commerce.ts`, `src/app/api/whatsapp/commerce/`,
+  `src/components/inbox/order-button.tsx` (migration 053).
+
 ### WhatsApp forms (Meta Flows)
 - **Settings → WhatsApp forms:** build a form from simple fields —
   short / long text, email, phone, number, dropdown, date, consent
@@ -525,6 +546,7 @@ is idempotent where possible. Recent ones:
 | `050_billing_reminders` | Trial-ending and plan-renewal reminder emails |
 | `051_carousel_templates` | Carousel templates (`message_templates.carousel_cards`) |
 | `052_whatsapp_forms` | WhatsApp forms (Meta Flows) and their responses |
+| `053_orders_and_payments` | Catalog / payment settings and orders (WhatsApp Pay or UPI ID) |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -555,6 +577,22 @@ retried runs never send twice.
   verify token shown in Settings → WhatsApp; subscribe the `messages`
   field (plus template status fields, and `calls` for voice calling).
   `META_APP_SECRET` must be set.
+
+### WhatsApp Pay (India)
+
+1. Run migration `053_orders_and_payments.sql`.
+2. WhatsApp Manager → Account tools → **Payment configurations**: link
+   your Razorpay / PayU / BillDesk / Zaakpay account and name the
+   configuration (Meta's Payments API for India must be enabled for
+   your business).
+3. Repeat Grow → **Settings → Orders & payments** → WhatsApp Pay → pick
+   the gateway and enter the configuration name.
+4. Payment updates arrive on the existing webhook (`messages` field,
+   `statuses` with `type: payment`) — nothing extra to subscribe.
+   Without WhatsApp Pay, choose **UPI ID** instead.
+5. For catalog sharing and catalog orders: create a catalog in Commerce
+   Manager, connect it to the number in WhatsApp Manager → Catalog, and
+   paste the catalog ID in Settings → Orders & payments.
 
 ### WhatsApp calling
 

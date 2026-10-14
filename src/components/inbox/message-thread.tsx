@@ -9,6 +9,7 @@ import { presenceLabel } from "@/lib/presence";
 import { cn } from "@/lib/utils";
 import { CallButton } from "@/components/calls/call-button";
 import { SendFormButton } from "@/components/inbox/send-form-button";
+import { OrderButton } from "@/components/inbox/order-button";
 import type {
   Conversation,
   Message,
@@ -933,6 +934,9 @@ export function MessageThread({
               )}
             </button>
           )}
+
+          {/* Orders, payment requests and catalog sharing. */}
+          <OrderButton conversationId={conversation.id} />
 
           {/* Send a WhatsApp form (Flows). */}
           <SendFormButton conversationId={conversation.id} />

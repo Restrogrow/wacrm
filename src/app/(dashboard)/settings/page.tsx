@@ -25,6 +25,7 @@ import { ConnectedAppsSettings } from '@/components/settings/connected-apps-sett
 import { AiChatbotSettings } from '@/components/settings/ai-chatbot-settings';
 import { ShopifySettings } from '@/components/settings/shopify-settings';
 import { CalendlySettings } from '@/components/settings/calendly-settings';
+import { CommerceSettings } from '@/components/settings/commerce-settings';
 import { BillingSettings } from '@/components/settings/billing-settings';
 import { DailySummarySettings } from '@/components/settings/daily-summary-settings';
 import { YourDataSettings } from '@/components/settings/your-data-settings';
@@ -91,6 +92,7 @@ export default function SettingsPage() {
     'connected-apps': <ConnectedAppsSettings />,
     shopify: <ShopifySettings />,
     calendly: <CalendlySettings />,
+    commerce: <CommerceSettings />,
     billing: <BillingSettings />,
     'daily-summary': <DailySummarySettings />,
   };
