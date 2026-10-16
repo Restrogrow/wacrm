@@ -271,7 +271,7 @@ export async function loadAdminDashboard(
   ).length;
   const plans = rows.map((r) => r.plan).filter((p): p is EffectivePlan => !!p);
   const paying = plans.filter(
-    (p) => p === 'starter' || p === 'growth' || p === 'enterprise'
+    (p) => p === 'starter' || p === 'growth' || p === 'pro' || p === 'enterprise'
   ).length;
   const profileComplete = rows.filter((r) => r.profileComplete).length;
 

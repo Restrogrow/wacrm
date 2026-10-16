@@ -388,7 +388,7 @@ export const HOME_CSS = `
 .lp-page .home .h-why .h-tile{ background: rgba(255,255,255,.75); backdrop-filter: blur(8px); }
 
 /* ---------- Pricing teaser ---------- */
-.lp-page .home .h-plans{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 900px; margin: 0 auto; }
+.lp-page .home .h-plans{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1080px; margin: 0 auto; }
 .lp-page .home .h-plan{ text-align: center; padding: 26px 20px; border-radius: var(--h-radius); background: #fff; border: 1px solid var(--border); box-shadow: var(--h-shadow-sm); }
 .lp-page .home .h-plan.pop{ border-color: var(--accent); box-shadow: var(--h-shadow-lg); position: relative; }
 .lp-page .home .h-plan.pop::before{
@@ -461,7 +461,8 @@ export const HOME_CSS = `
   .lp-page .home .h-stats{ grid-template-columns: 1fr 1fr; }
   .lp-page .home .h-stat:nth-child(3){ border-left: 0; }
   .lp-page .home .h-stat:nth-child(n+3){ border-top: 1px solid var(--border); }
-  .lp-page .home .h-steps, .lp-page .home .h-grid3, .lp-page .home .h-plans{ grid-template-columns: 1fr; }
+  .lp-page .home .h-steps, .lp-page .home .h-grid3{ grid-template-columns: 1fr; }
+  .lp-page .home .h-plans{ grid-template-columns: 1fr 1fr; row-gap: 26px; }
   .lp-page .home .h-step::after{ display: none; }
   .lp-page .home .h-grid2{ grid-template-columns: 1fr; }
 }

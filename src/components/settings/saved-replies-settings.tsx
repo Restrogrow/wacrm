@@ -244,7 +244,7 @@ export function SavedRepliesSettings() {
                 ref={bodyRef}
                 value={draft.body}
                 onChange={(e) => setDraft({ ...draft, body: e.target.value })}
-                placeholder="Hi {{name}}, our plans start at ₹499/month. Want me to send the details?"
+                placeholder="Hi {{name}}, our plans start at ₹999/month. Want me to send the details?"
                 rows={4}
                 maxLength={4096}
               />

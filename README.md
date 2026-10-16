@@ -239,14 +239,20 @@
 No payment gateway yet: plans are activated by a platform admin after
 the business pays (UPI / bank transfer).
 
-| | Starter | Growth | Enterprise |
-|---|---|---|---|
-| Price (monthly / yearly) | ₹499 / ₹5,389 | ₹999 / ₹10,789 | ₹1,999 / ₹21,589 |
-| Contacts (dashboard adds + imports) | 2,000 | 50,000 | Unlimited |
-| Broadcasts per month | 60 | 250 | Unlimited |
-| Automations + flows | 5 | 25 | Unlimited |
-| Custom fields | 5 | 25 | Unlimited |
-| Team members (incl. pending invites) | 5 | 25 | Unlimited |
+| | Starter | Growth | Pro | Enterprise |
+|---|---|---|---|---|
+| Monthly | ₹999 | ₹1,999 | ₹3,999 | Custom |
+| Quarterly | ₹2,699 | ₹5,399 | ₹10,799 | Custom |
+| Yearly | ₹9,999 | ₹19,999 | ₹39,999 | Custom |
+| Contacts (dashboard adds + imports) | 2,000 | 50,000 | 2,00,000 | Unlimited |
+| Broadcasts per month | 60 | 250 | 1,000 | Unlimited |
+| Automations + flows | 5 | 25 | 100 | Unlimited |
+| Custom fields | 5 | 25 | 100 | Unlimited |
+| Team members (incl. pending invites) | 5 | 25 | 50 | Unlimited |
+
+Prices live in `src/lib/billing/plans.ts` (`PLAN_INFO`); the pricing page,
+Settings → Plan & billing and the reminder emails all read from there.
+Limits must match `plan_limit()` in the database (migration 056).
 
 - **Free trial:** new accounts get **7 days** with Growth limits; a bar
   at the top of the app shows the days left.
@@ -560,6 +566,7 @@ is idempotent where possible. Recent ones:
 | `053_orders_and_payments` | Catalog / payment settings and orders (WhatsApp Pay or UPI ID) |
 | `054_demo_requests` | Demo requests from the public `/demo` page (service-role only) |
 | `055_lock_privileged_columns` | Security: users can't change their own account/role, and owners can't change their plan or billing columns, from the browser |
+| `056_pro_plan` | Pro plan (`plan = 'pro'`) and its limits in `plan_limit()` |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 

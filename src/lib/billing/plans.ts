@@ -6,7 +6,7 @@
 // sets accounts.plan / plan_expires_at in /admin when a business pays.
 // ============================================================
 
-export const PLANS = ['starter', 'growth', 'enterprise'] as const;
+export const PLANS = ['starter', 'growth', 'pro', 'enterprise'] as const;
 export type PaidPlan = (typeof PLANS)[number];
 export type AccountPlan = PaidPlan | 'trial';
 /** What the account can do right now. */
@@ -38,6 +38,13 @@ const GROWTH: PlanLimits = {
   custom_fields: 25,
   team_members: 25,
 };
+const PRO: PlanLimits = {
+  contacts: 200000,
+  broadcasts_per_month: 1000,
+  automation_flows: 100,
+  custom_fields: 100,
+  team_members: 50,
+};
 const UNLIMITED: PlanLimits = {
   contacts: null,
   broadcasts_per_month: null,
@@ -49,6 +56,7 @@ const UNLIMITED: PlanLimits = {
 export const PLAN_LIMITS: Record<EffectivePlan, PlanLimits> = {
   starter: STARTER,
   growth: GROWTH,
+  pro: PRO,
   enterprise: UNLIMITED,
   trial: GROWTH,
   expired: STARTER,
@@ -62,35 +70,56 @@ export const LIMIT_LABELS: Record<LimitKey, string> = {
   team_members: 'Team members (incl. invites)',
 };
 
+export const BILLING_CYCLES = ['monthly', 'quarterly', 'yearly'] as const;
+export type BillingCycle = (typeof BILLING_CYCLES)[number];
+
+export const BILLING_CYCLE_LABELS: Record<BillingCycle, { label: string; per: string; months: number }> = {
+  monthly: { label: 'Monthly', per: 'month', months: 1 },
+  quarterly: { label: 'Quarterly', per: 'quarter', months: 3 },
+  yearly: { label: 'Yearly', per: 'year', months: 12 },
+};
+
+/** Prices in rupees per billing cycle. null = custom pricing (talk to us). */
 export const PLAN_INFO: Record<
   PaidPlan,
-  { label: string; monthly: number; yearly: number; blurb: string }
+  { label: string; prices: Record<BillingCycle, number> | null; blurb: string }
 > = {
   starter: {
     label: 'Starter',
-    monthly: 499,
-    yearly: 5389,
+    prices: { monthly: 999, quarterly: 2699, yearly: 9999 },
     blurb: 'For a single team getting started with WhatsApp support and sales.',
   },
   growth: {
     label: 'Growth',
-    monthly: 999,
-    yearly: 10789,
+    prices: { monthly: 1999, quarterly: 5399, yearly: 19999 },
     blurb:
       'For growing teams running more campaigns with more people on the inbox.',
   },
+  pro: {
+    label: 'Pro',
+    prices: { monthly: 3999, quarterly: 10799, yearly: 39999 },
+    blurb: 'For high-volume teams with large contact lists and many agents.',
+  },
   enterprise: {
     label: 'Enterprise',
-    monthly: 1999,
-    yearly: 21589,
-    blurb: 'For larger teams that need no caps and hands-on setup.',
+    prices: null,
+    blurb: 'Custom pricing for no caps, multiple brands and hands-on setup.',
   },
 };
+
+/** Whole-percent saving of a longer cycle versus paying monthly. */
+export function cycleSavingPercent(plan: PaidPlan, cycle: BillingCycle): number | null {
+  const p = PLAN_INFO[plan].prices;
+  if (!p || cycle === 'monthly') return null;
+  const full = p.monthly * BILLING_CYCLE_LABELS[cycle].months;
+  return Math.round(((full - p[cycle]) / full) * 100);
+}
 
 export const EFFECTIVE_PLAN_LABELS: Record<EffectivePlan, string> = {
   trial: 'Free trial',
   starter: 'Starter',
   growth: 'Growth',
+  pro: 'Pro',
   enterprise: 'Enterprise',
   expired: 'Trial ended',
 };

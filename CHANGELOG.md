@@ -11,6 +11,17 @@ and polish.
 
 ## [Unreleased]
 
+### Changed
+
+- **New plans and prices.** Starter ₹999, Growth ₹1,999 and a new Pro
+  plan ₹3,999 per month; Enterprise is custom. Every plan can be paid
+  monthly, quarterly (about 10% off) or yearly (about 17% off). Pro
+  limits: 2,00,000 contacts, 1,000 broadcasts a month, 100 automations
+  and flows, 100 custom fields, 50 team members. The pricing page,
+  Settings → Plan & billing, reminder emails and /admin read the plans
+  from `src/lib/billing/plans.ts`. **Migration required:**
+  `supabase/migrations/056_pro_plan.sql`.
+
 ### Security
 
 - **Profiles and accounts can't be edited into a higher role or plan.**

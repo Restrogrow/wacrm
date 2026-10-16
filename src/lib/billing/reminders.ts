@@ -73,8 +73,13 @@ function formatDate(iso: string): string {
 
 export function reminderEmail(a: ReminderAccount, stage: ReminderStage): { subject: string; text: string } {
   const billing = `${SITE_URL}/settings?tab=billing`
-  const prices = (['starter', 'growth', 'enterprise'] as const)
-    .map((p) => `• ${PLAN_INFO[p].label}: ₹${PLAN_INFO[p].monthly}/month`)
+  const prices = (['starter', 'growth', 'pro', 'enterprise'] as const)
+    .map((p) => {
+      const pr = PLAN_INFO[p].prices
+      return pr
+        ? `• ${PLAN_INFO[p].label}: ₹${pr.monthly.toLocaleString('en-IN')}/month, ₹${pr.quarterly.toLocaleString('en-IN')}/quarter or ₹${pr.yearly.toLocaleString('en-IN')}/year`
+        : `• ${PLAN_INFO[p].label}: custom pricing`
+    })
     .join('\n')
   const howToPay = `To continue, pick a plan in Settings → Plan & billing (${billing}) and click Choose — our team will share UPI / bank details and switch it on as soon as it's paid. Questions? Reply to this email or write to ${SUPPORT_EMAIL}.`
   const planLabel = a.plan === 'trial' ? 'free trial' : `${PLAN_INFO[a.plan as keyof typeof PLAN_INFO]?.label ?? a.plan} plan`

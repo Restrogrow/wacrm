@@ -23,6 +23,10 @@ import {
   LIMIT_LABELS,
   PLANS,
   PLAN_INFO,
+  BILLING_CYCLES,
+  BILLING_CYCLE_LABELS,
+  cycleSavingPercent,
+  type BillingCycle,
   PLAN_LIMITS,
   daysLeft,
   formatInr,
@@ -56,7 +60,7 @@ function fmtDate(iso: string | null | undefined): string {
 export function BillingSettings() {
   const { account, profile } = useAuth();
   const [billing, setBilling] = useState<Billing | null>(null);
-  const [period, setPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [period, setPeriod] = useState<BillingCycle>('monthly');
 
   useEffect(() => {
     void (async () => {
@@ -98,10 +102,9 @@ export function BillingSettings() {
 
   const requestText = (plan: PaidPlan) => {
     const info = PLAN_INFO[plan];
-    const price =
-      period === 'monthly'
-        ? `${formatInr(info.monthly)}/month`
-        : `${formatInr(info.yearly)}/year`;
+    const price = info.prices
+      ? `${formatInr(info.prices[period])}/${BILLING_CYCLE_LABELS[period].per}`
+      : 'custom pricing';
     return `Hi Repeat Grow, I'd like the ${info.label} plan (${price}) for "${account?.name ?? 'my account'}" (account ${account?.id ?? ''}, ${profile?.email ?? ''}).`;
   };
   const whatsappLink = (plan: PaidPlan) =>
@@ -193,7 +196,7 @@ export function BillingSettings() {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-foreground text-sm font-semibold">Plans</h3>
           <div className="bg-muted inline-flex rounded-lg p-0.5 text-xs">
-            {(['monthly', 'yearly'] as const).map((p) => (
+            {BILLING_CYCLES.map((p) => (
               <button
                 key={p}
                 type="button"
@@ -205,12 +208,17 @@ export function BillingSettings() {
                     : 'text-muted-foreground'
                 )}
               >
-                {p === 'yearly' ? 'Yearly · save 10%' : 'Monthly'}
+                {BILLING_CYCLE_LABELS[p].label}
+                {p !== 'monthly' && (
+                  <span className="text-primary ml-1">
+                    · save {cycleSavingPercent('starter', p)}%
+                  </span>
+                )}
               </button>
             ))}
           </div>
         </div>
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {PLANS.map((plan) => {
             const info = PLAN_INFO[plan];
             const limits = PLAN_LIMITS[plan];
@@ -230,12 +238,16 @@ export function BillingSettings() {
                       )}
                     </div>
                     <p className="text-foreground mt-1 text-2xl font-bold">
-                      {formatInr(
-                        period === 'monthly' ? info.monthly : info.yearly
+                      {info.prices ? (
+                        <>
+                          {formatInr(info.prices[period])}
+                          <span className="text-muted-foreground text-sm font-normal">
+                            /{BILLING_CYCLE_LABELS[period].per}
+                          </span>
+                        </>
+                      ) : (
+                        'Custom'
                       )}
-                      <span className="text-muted-foreground text-sm font-normal">
-                        /{period === 'monthly' ? 'month' : 'year'}
-                      </span>
                     </p>
                     <p className="text-muted-foreground mt-1 text-xs">
                       {info.blurb}

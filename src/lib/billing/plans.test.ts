@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PLAN_LIMITS, daysLeft, effectivePlan } from './plans';
+import { PLAN_INFO, PLAN_LIMITS, cycleSavingPercent, daysLeft, effectivePlan } from './plans';
 
 const now = Date.parse('2026-10-14T12:00:00Z');
 const future = '2026-10-20T12:00:00Z';
@@ -55,6 +55,8 @@ describe('limits', () => {
     expect(PLAN_LIMITS.starter.contacts).toBe(2000);
     expect(PLAN_LIMITS.growth.broadcasts_per_month).toBe(250);
     expect(PLAN_LIMITS.enterprise.team_members).toBeNull();
+    expect(PLAN_LIMITS.pro.contacts).toBe(200000);
+    expect(PLAN_LIMITS.pro.team_members).toBe(50);
     expect(PLAN_LIMITS.trial).toEqual(PLAN_LIMITS.growth);
     expect(PLAN_LIMITS.expired).toEqual(PLAN_LIMITS.starter);
   });
@@ -66,5 +68,23 @@ describe('daysLeft', () => {
     expect(daysLeft(future, now)).toBe(6);
     expect(daysLeft(past, now)).toBe(0);
     expect(daysLeft(null, now)).toBeNull();
+  });
+});
+
+describe('prices', () => {
+  it('lists every billing cycle for paid plans and custom Enterprise', () => {
+    expect(PLAN_INFO.starter.prices).toEqual({ monthly: 999, quarterly: 2699, yearly: 9999 });
+    expect(PLAN_INFO.growth.prices).toEqual({ monthly: 1999, quarterly: 5399, yearly: 19999 });
+    expect(PLAN_INFO.pro.prices).toEqual({ monthly: 3999, quarterly: 10799, yearly: 39999 });
+    expect(PLAN_INFO.enterprise.prices).toBeNull();
+  });
+
+  it('works out the saving against paying monthly', () => {
+    for (const plan of ['starter', 'growth', 'pro'] as const) {
+      expect(cycleSavingPercent(plan, 'monthly')).toBeNull();
+      expect(cycleSavingPercent(plan, 'quarterly')).toBe(10);
+      expect(cycleSavingPercent(plan, 'yearly')).toBe(17);
+    }
+    expect(cycleSavingPercent('enterprise', 'yearly')).toBeNull();
   });
 });

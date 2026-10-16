@@ -35,7 +35,7 @@ const HOME_FAQS = [
   {
     question: "What does Repeat Grow cost?",
     answer:
-      "Plans start at ₹499/month and scale with your contacts and team size, and every new account gets a 7-day free trial with Growth limits. Pricing is published on our pricing page, with no hidden setup fees. WhatsApp Business API setup is included on every plan. WhatsApp conversation fees are billed by Meta directly.",
+      "Plans start at ₹999/month (Starter), with Growth at ₹1,999 and Pro at ₹3,999, and Enterprise is custom. Pay monthly, or save about 10% quarterly and 17% yearly. Every new account gets a 7-day free trial with Growth limits, and there are no hidden setup fees. WhatsApp Business API setup is included on every plan. WhatsApp conversation fees are billed by Meta directly.",
   },
   {
     question: "Can I take payments and send orders on WhatsApp?",
@@ -79,8 +79,8 @@ const STRUCTURED_DATA = {
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "INR",
-        lowPrice: "499",
-        highPrice: "1999",
+        lowPrice: "999",
+        highPrice: "3999",
         offerCount: "3",
       },
       publisher: { "@id": SITE_URL },
@@ -281,7 +281,7 @@ const LANDING_BODY_HTML = `
       <ul class="h-checks">
         <li>${ICON_CHECK}No credit card</li>
         <li>${ICON_CHECK}Setup done for you</li>
-        <li>${ICON_CHECK}Plans from &#8377;499/month</li>
+        <li>${ICON_CHECK}Plans from &#8377;999/month</li>
       </ul>
     </div>
 
@@ -312,7 +312,7 @@ const LANDING_BODY_HTML = `
   <div class="container">
     <div class="h-stats reveal">
       <div class="h-stat"><b>Official</b><span>Meta WhatsApp Cloud API, no ban risk from unofficial tools</span></div>
-      <div class="h-stat"><b>&#8377;499</b><span>per month to start, every feature included</span></div>
+      <div class="h-stat"><b>&#8377;999</b><span>per month to start, every feature included</span></div>
       <div class="h-stat"><b>7 days</b><span>free trial, no credit card needed</span></div>
       <div class="h-stat"><b>Days</b><span>to go live, with API setup done for you</span></div>
     </div>
@@ -477,11 +477,12 @@ const LANDING_BODY_HTML = `
       <p>Start with a 7-day free trial. Plans only change the limits. WhatsApp API setup is included, and Meta's message fees are billed by Meta.</p>
     </div>
     <div class="h-plans reveal">
-      <div class="h-plan"><span>Starter</span><b>&#8377;499<small>/month</small></b><p>For a small team getting started</p></div>
-      <div class="h-plan pop"><span>Growth</span><b>&#8377;999<small>/month</small></b><p>More contacts, campaigns and people</p></div>
-      <div class="h-plan"><span>Enterprise</span><b>&#8377;1,999<small>/month</small></b><p>No caps and hands-on setup</p></div>
+      <div class="h-plan"><span>Starter</span><b>&#8377;999<small>/month</small></b><p>For a small team getting started</p></div>
+      <div class="h-plan pop"><span>Growth</span><b>&#8377;1,999<small>/month</small></b><p>More contacts, campaigns and people</p></div>
+      <div class="h-plan"><span>Pro</span><b>&#8377;3,999<small>/month</small></b><p>High volume and bigger teams</p></div>
+      <div class="h-plan"><span>Enterprise</span><b>Custom</b><p>No caps and hands-on setup</p></div>
     </div>
-    <p class="h-plans-note reveal">Save 10% with yearly billing.</p>
+    <p class="h-plans-note reveal">Pay monthly, or save about 10% quarterly and 17% yearly.</p>
     <div class="h-center reveal">
       <a href="/pricing" class="btn btn-ghost h-btn">Compare plans ${ICON_ARROW}</a>
       <a href="/demo" class="btn btn-primary h-btn">Book a free demo</a>

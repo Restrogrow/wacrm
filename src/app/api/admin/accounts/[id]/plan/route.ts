@@ -11,7 +11,7 @@ import { supabaseAdmin } from '@/lib/flows/admin-client';
  * support sets their plan and paid-until date here. Dates are ISO
  * strings or null (null paid-until = no end date).
  */
-const PLANS = new Set(['trial', 'starter', 'growth', 'enterprise']);
+const PLANS = new Set(['trial', 'starter', 'growth', 'pro', 'enterprise']);
 
 function parseDate(value: unknown): string | null | undefined {
   if (value === undefined) return undefined;

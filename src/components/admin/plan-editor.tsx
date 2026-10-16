@@ -24,6 +24,7 @@ const PLAN_OPTIONS = [
   { value: 'trial', label: 'Free trial' },
   { value: 'starter', label: 'Starter' },
   { value: 'growth', label: 'Growth' },
+  { value: 'pro', label: 'Pro' },
   { value: 'enterprise', label: 'Enterprise' },
 ];
 

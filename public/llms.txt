@@ -22,7 +22,7 @@ Repeat Grow is built on Meta's official WhatsApp Business API (Cloud API). It is
 
 ## Pricing
 
-Plans are published at https://repeatgrow.com/pricing: Starter at Rs 499 per month, Growth at Rs 999 per month and Enterprise at Rs 1,999 per month, with a 10% discount for yearly billing. WhatsApp Business API setup is included on every plan. Meta's own per-conversation fees are billed separately by Meta. All features are on every plan; plans differ in limits (contacts, broadcasts per month, automations and flows, custom fields, team members) and support level.
+Plans are published at https://repeatgrow.com/pricing and can be paid monthly, quarterly or yearly: Starter Rs 999 a month (Rs 2,699 a quarter, Rs 9,999 a year), Growth Rs 1,999 a month (Rs 5,399 a quarter, Rs 19,999 a year), Pro Rs 3,999 a month (Rs 10,799 a quarter, Rs 39,999 a year), and Enterprise on custom pricing. WhatsApp Business API setup is included on every plan. Meta's own per-conversation fees are billed separately by Meta. All features are on every plan; plans differ in limits (contacts, broadcasts per month, automations and flows, custom fields, team members) and support level.
 
 ## Pages
 
