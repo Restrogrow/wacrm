@@ -129,7 +129,7 @@ export function Step4ScheduleSend({
       </div>
 
       {/* Summary Card */}
-      <div className="rounded-xl border border-border bg-card/50 p-4 space-y-3">
+      <div className="rounded-2xl border border-border bg-card/50 p-4 space-y-3">
         <p className="text-sm font-medium text-foreground">Summary</p>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
@@ -180,7 +180,7 @@ export function Step4ScheduleSend({
               onClick={() => setWhen(opt.id)}
               disabled={isProcessing}
               className={cn(
-                'rounded-xl border p-3 text-left transition-colors',
+                'rounded-2xl border p-3 text-left transition-colors',
                 when === opt.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50',
               )}
             >
@@ -219,7 +219,7 @@ export function Step4ScheduleSend({
 
       {/* Processing overlay */}
       {isProcessing && (
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
           <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />

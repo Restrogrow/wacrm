@@ -1,5 +1,6 @@
 "use client"
 
+import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
@@ -37,7 +38,10 @@ import { ActivityFeed } from '@/components/dashboard/activity-feed'
 type RangeDays = 7 | 30 | 90
 
 export default function DashboardPage() {
-  const { defaultCurrency } = useAuth()
+  const { defaultCurrency, profile } = useAuth()
+  const firstName = profile?.full_name?.split(' ')[0]
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
   const [metrics, setMetrics] = useState<MetricsBundle | null>(null)
   const [metricsLoading, setMetricsLoading] = useState(true)
 
@@ -119,17 +123,42 @@ export default function DashboardPage() {
   )
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Live analytics across conversations, contacts, deals, broadcasts, and automations.
-        </p>
+    <div className="mx-auto max-w-[1400px] space-y-6">
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--rail)] via-primary to-emerald-400 p-6 text-white shadow-lg sm:p-8">
+        <div className="pointer-events-none absolute -top-16 -right-16 size-64 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-20 left-1/3 size-56 rounded-full bg-white/10 blur-3xl" />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-white/80">
+              {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight">
+              {greeting}{firstName ? `, ${firstName}` : ''}!
+            </h1>
+            <p className="mt-2 max-w-xl text-sm text-white/80">
+              Your WhatsApp growth at a glance &mdash; conversations, contacts, deals, broadcasts and automations in one place.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Link
+              href="/inbox"
+              className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[var(--rail)] shadow-sm transition-transform hover:-translate-y-0.5"
+            >
+              Open inbox
+            </Link>
+            <Link
+              href="/broadcasts/new"
+              className="rounded-xl border border-white/40 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20"
+            >
+              New broadcast
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Metric cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {metricsLoading || !metrics ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
@@ -145,6 +174,7 @@ export default function DashboardPage() {
             />
             <MetricCard
               title="New Contacts Today"
+              tone="blue"
               value={metrics.newContactsToday.current.toLocaleString()}
               icon={UserPlus}
               delta={{
@@ -158,12 +188,14 @@ export default function DashboardPage() {
             />
             <MetricCard
               title="Open Deals Value"
+              tone="amber"
               value={formatCurrency(metrics.openDealsValue, defaultCurrency)}
               icon={DollarSign}
               subtitle={`${metrics.openDealsCount} open deal${metrics.openDealsCount === 1 ? '' : 's'}`}
             />
             <MetricCard
               title="Messages Sent Today"
+              tone="violet"
               value={metrics.messagesSentToday.current.toLocaleString()}
               icon={Send}
               delta={{
@@ -207,11 +239,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Response time */}
-      <ResponseTimeChart data={responseTime} loading={responseTimeLoading} />
-
-      {/* Activity feed */}
-      <ActivityFeed items={activity} loading={activityLoading} />
+      {/* Response time + activity */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <ResponseTimeChart data={responseTime} loading={responseTimeLoading} />
+        <ActivityFeed items={activity} loading={activityLoading} />
+      </div>
     </div>
   )
 }

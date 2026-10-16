@@ -171,7 +171,7 @@ export function FlowBuilder() {
         </div>
 
         {state.nodes.length === 0 ? (
-          <div className="border-border bg-card/50 text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">
+          <div className="border-border bg-card/50 text-muted-foreground rounded-2xl border border-dashed p-8 text-center text-sm">
             Add a <strong>Start</strong> node, then a{' '}
             <strong>Send buttons</strong> node, then a <strong>Handoff</strong>{' '}
             — that&apos;s the welcome-menu shape from the brief.
@@ -267,7 +267,7 @@ function TriggerPanel({
   triggerIssues: ValidationIssue[];
 }) {
   return (
-    <section className="border-border bg-card rounded-lg border p-4">
+    <section className="border-border bg-card rounded-2xl border p-4">
       <h2 className="text-foreground mb-3 text-sm font-semibold">Trigger</h2>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
@@ -346,7 +346,7 @@ function EntryPicker({
 }) {
   if (state.nodes.length === 0) return null;
   return (
-    <section className="border-border bg-card flex items-center gap-3 rounded-lg border p-3">
+    <section className="border-border bg-card flex items-center gap-3 rounded-2xl border p-3">
       <CornerDownRight className="text-primary h-4 w-4 shrink-0" />
       <span className="text-muted-foreground text-xs">Entry node:</span>
       <NodeKeySelect
@@ -399,7 +399,7 @@ function NodeCard({
     <div
       ref={cardRef}
       className={cn(
-        'bg-card relative overflow-hidden rounded-xl border transition-shadow duration-500',
+        'bg-card relative overflow-hidden rounded-2xl border transition-shadow duration-500',
         hasError
           ? 'border-red-500/40'
           : isEntry
@@ -481,7 +481,7 @@ function NodeCard({
             </Button>
           </div>
           {issues.length > 0 && (
-            <div className="mt-3 flex flex-col gap-1 rounded-md bg-red-500/5 p-2">
+            <div className="mt-3 flex flex-col gap-1 rounded-xl bg-red-500/5 p-2">
               {issues.map((i, ix) => (
                 <IssueLine key={ix} issue={i} />
               ))}
@@ -582,7 +582,7 @@ function AddNodeButton({ onAdd }: { onAdd: (type: NodeType) => void }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="border-border bg-card text-foreground hover:bg-muted inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors"
+        className="border-border bg-card text-foreground hover:bg-muted inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors"
         aria-label="Add node"
       >
         <Plus className="h-3.5 w-3.5" />

@@ -147,7 +147,7 @@ export default async function ConnectPage({
   return (
     <Shell>
       <div className="text-center">
-        <div className="bg-primary/10 mx-auto mb-3 flex size-12 items-center justify-center rounded-xl">
+        <div className="bg-primary/10 mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl">
           <ShieldCheck className="text-primary size-6" />
         </div>
         <h1 className="text-foreground text-xl font-semibold">Connect {req.client.name}</h1>
@@ -178,7 +178,7 @@ export default async function ConnectPage({
       </div>
 
       {!config ? (
-        <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
           <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
           <p className="text-foreground">
             {ctx.account.name} has no WhatsApp number connected yet. You can still connect, but messages

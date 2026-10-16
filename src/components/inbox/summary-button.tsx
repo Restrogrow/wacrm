@@ -81,7 +81,7 @@ export function SummaryButton({ conversationId }: { conversationId: string }) {
         onClick={openDialog}
         aria-label="Summarise this chat with AI"
         title="Summarise this chat (AI)"
-        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         <Sparkles className="h-3.5 w-3.5" />
       </button>
@@ -104,7 +104,7 @@ export function SummaryButton({ conversationId }: { conversationId: string }) {
               Reading the chat…
             </div>
           ) : error ? (
-            <p className="rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">{error}</p>
+            <p className="rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">{error}</p>
           ) : summary ? (
             <div className="space-y-4 text-sm">
               <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -136,7 +136,7 @@ export function SummaryButton({ conversationId }: { conversationId: string }) {
                 </div>
               )}
               {summary.next_step && (
-                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-primary">Suggested next step</p>
                   <p className="mt-1 text-foreground">{summary.next_step}</p>
                 </div>

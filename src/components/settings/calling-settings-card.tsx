@@ -70,11 +70,11 @@ export function CallingSettingsCard() {
       <CardContent className="space-y-3 p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <Phone className="size-4" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-semibold text-foreground">WhatsApp calling</h3>
+              <h3 className="font-bold tracking-tight text-foreground">WhatsApp calling</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 Let customers call your WhatsApp number and answer in the browser, and call them from the inbox.
                 Calls ring for every agent; the first to answer takes it. Customer calls are free; calls you make
@@ -98,7 +98,7 @@ export function CallingSettingsCard() {
           )}
         </div>
         {settings?.notice && (
-          <p className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-foreground">
+          <p className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-foreground">
             {settings.notice}
           </p>
         )}

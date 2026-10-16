@@ -271,7 +271,7 @@ export function ContactForm({
             />
             {dupMatch ? (
               <div
-                className={`flex items-start gap-2 rounded-md border px-2.5 py-2 text-xs ${
+                className={`flex items-start gap-2 rounded-lg border px-2.5 py-2 text-xs ${
                   dupMatch.exact
                     ? 'border-red-500/40 bg-red-500/10 text-red-300'
                     : 'border-amber-500/40 bg-amber-500/10 text-amber-300'

@@ -279,7 +279,7 @@ function ResourcesProvider({ children }: { children: ReactNode }) {
 }
 
 const SELECT_CLASS =
-  "w-full rounded-md border border-border bg-muted px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+  "w-full rounded-xl border border-border bg-card px-3 py-2 text-sm shadow-sm text-foreground focus:border-primary focus:outline-none"
 
 /** Tag dropdown by name + color, storing the tag's id. Falls back to a
  *  raw id input when no tags exist yet. */
@@ -672,15 +672,17 @@ export function AutomationBuilder({ initial }: { initial: BuilderInitial }) {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
+    <div
+      className="fixed inset-0 flex flex-col bg-background [background-image:radial-gradient(var(--border)_1px,transparent_1px)] [background-size:22px_22px]"
+    >
       {/* Top bar. At sub-sm widths the "Active" label is hidden and the
           switch moves to the right of the save button, so the name input
           gets maximum width. */}
-      <header className="flex flex-shrink-0 items-center gap-2 border-b border-border bg-card/80 px-3 py-3 sm:gap-3 sm:px-4">
+      <header className="flex flex-shrink-0 items-center gap-2 border-b border-border bg-card/90 px-3 py-3 shadow-sm backdrop-blur sm:gap-3 sm:px-4">
         <button
           type="button"
           onClick={() => router.push("/automations")}
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           aria-label="Back to automations"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -689,7 +691,7 @@ export function AutomationBuilder({ initial }: { initial: BuilderInitial }) {
           value={state.name}
           onChange={(e) => patchTop("name", e.target.value)}
           placeholder="Untitled automation"
-          className="min-w-0 flex-1 rounded-md bg-transparent px-2 py-1 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:bg-muted focus:outline-none sm:text-base"
+          className="min-w-0 flex-1 rounded-xl bg-transparent px-2 py-1 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:bg-muted focus:outline-none sm:text-base"
         />
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="hidden sm:inline">Active</span>
@@ -757,13 +759,13 @@ function TriggerCard({
     // Card width: full on mobile, fixed 320px on sm+. The canvas wrapper
     // (max-w-2xl + px-4) keeps this tidy on tablet/desktop.
     <div className="z-10 w-full max-w-[320px] sm:w-80">
-      <div className="rounded-lg border border-border border-l-4 border-l-blue-500 bg-card shadow-lg">
+      <div className="rounded-3xl border border-border border-l-4 border-l-blue-500 bg-card shadow-md">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           className="flex w-full items-center gap-3 px-4 py-3 text-left"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500/10 text-blue-400">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
             <Zap className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
@@ -785,7 +787,7 @@ function TriggerCard({
               <select
                 value={type}
                 onChange={(e) => onTypeChange(e.target.value as AutomationTriggerType)}
-                className="w-full rounded-md border border-border bg-muted px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+                className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm shadow-sm text-foreground focus:border-primary focus:outline-none"
               >
                 {TRIGGER_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -895,7 +897,7 @@ function KeywordMatchConfig({
         <select
           value={config?.match_type ?? "contains"}
           onChange={(e) => onChange({ ...config, match_type: e.target.value as "exact" | "contains" })}
-          className="w-full rounded-md border border-border bg-muted px-2 py-1.5 text-sm text-foreground focus:outline-none"
+          className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm shadow-sm text-foreground focus:outline-none"
         >
           <option value="contains">Contains</option>
           <option value="exact">Exact</option>
@@ -994,7 +996,7 @@ function StepRenderer({
       <div className={cn("z-10 flex flex-col", width)}>
         <div
           className={cn(
-            "rounded-lg border border-border border-l-4 bg-card shadow-lg",
+            "rounded-3xl border border-border border-l-4 bg-card shadow-md",
             meta.border,
           )}
         >
@@ -1004,7 +1006,7 @@ function StepRenderer({
             className="flex w-full items-center gap-3 px-4 py-3 text-left"
           >
             <GripVertical className="h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden />
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               <Icon className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
@@ -1211,7 +1213,7 @@ function StepEditor({
             <select
               value={(cfg.mode as string) ?? "round_robin"}
               onChange={(e) => set({ mode: e.target.value })}
-              className="w-full rounded-md border border-border bg-muted px-2 py-1.5 text-sm text-foreground"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm shadow-sm text-foreground"
             >
               <option value="round_robin">Round-robin</option>
               <option value="specific">Specific agent</option>
@@ -1287,7 +1289,7 @@ function StepEditor({
             <select
               value={(cfg.unit as string) ?? "hours"}
               onChange={(e) => set({ unit: e.target.value })}
-              className="w-full rounded-md border border-border bg-muted px-2 py-1.5 text-sm text-foreground"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm shadow-sm text-foreground"
             >
               <option value="minutes">Minutes</option>
               <option value="hours">Hours</option>
@@ -1303,7 +1305,7 @@ function StepEditor({
             <select
               value={(cfg.subject as string) ?? "tag_presence"}
               onChange={(e) => set({ subject: e.target.value })}
-              className="w-full rounded-md border border-border bg-muted px-2 py-1.5 text-sm text-foreground"
+              className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm shadow-sm text-foreground"
             >
               <option value="tag_presence">Tag presence</option>
               <option value="contact_field">Contact field</option>

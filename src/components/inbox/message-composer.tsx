@@ -553,7 +553,7 @@ export function MessageComposer({
         </div>
       )}
       {sessionExpired && (
-        <div className="mb-2 flex items-center justify-between rounded-lg bg-amber-500/10 px-3 py-2">
+        <div className="mb-2 flex items-center justify-between rounded-xl bg-amber-500/10 px-3 py-2">
           <p className="text-xs text-amber-400">
             24-hour session expired. Use a template to re-engage.
           </p>
@@ -612,7 +612,7 @@ export function MessageComposer({
         />
       ) : recording ? (
         // Recording bar — replaces the composer while the mic is live.
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-muted px-4 py-2.5">
+        <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted px-4 py-2.5">
           <span className="flex h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500" />
           <span className="flex-1 text-sm text-foreground">
             Recording… {formatDuration(recordSeconds)} /{" "}
@@ -621,7 +621,7 @@ export function MessageComposer({
           <button
             type="button"
             onClick={cancelRecording}
-            className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-card hover:text-foreground"
+            className="rounded-lg px-2 py-1 text-xs text-muted-foreground hover:bg-card hover:text-foreground"
           >
             Cancel
           </button>
@@ -656,7 +656,7 @@ export function MessageComposer({
                     ? undefined
                     : "Attach media"
               }
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md p-0 text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg p-0 text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -708,7 +708,7 @@ export function MessageComposer({
                     : "Type a reply, then translate it"
               }
               aria-label="Translate your reply"
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md p-0 text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg p-0 text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               {translating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -753,7 +753,7 @@ export function MessageComposer({
             // The placeholder text also surfaces the read-only state.
             title={readOnly ? "Read-only — your role can't send messages" : undefined}
             className={cn(
-              "flex-1 resize-none rounded-xl border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary/50",
+              "flex-1 resize-none rounded-2xl border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary/50",
               (sessionExpired || readOnly) && "cursor-not-allowed opacity-50"
             )}
           />
@@ -801,7 +801,7 @@ function SavedReplyPicker({
     <div
       role="listbox"
       aria-label="Saved replies"
-      className="absolute bottom-full left-0 right-0 z-20 mb-2 max-h-72 overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-lg"
+      className="absolute bottom-full left-0 right-0 z-20 mb-2 max-h-72 overflow-y-auto rounded-2xl border border-border bg-popover p-1 shadow-lg"
     >
       {matches.length === 0 ? (
         <p className="px-3 py-2.5 text-xs text-muted-foreground">
@@ -823,7 +823,7 @@ function SavedReplyPicker({
               onPick(reply);
             }}
             className={cn(
-              "flex w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left",
+              "flex w-full flex-col items-start gap-0.5 rounded-xl px-3 py-2 text-left",
               i === activeIndex ? "bg-muted" : "hover:bg-muted/60"
             )}
           >
@@ -864,7 +864,7 @@ function MediaDraftPreview({
   onSend: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-muted/40 p-3">
+    <div className="rounded-2xl border border-border bg-muted/40 p-3">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           {draft.kind === "image" && (
@@ -872,11 +872,11 @@ function MediaDraftPreview({
             <img
               src={draft.mediaUrl}
               alt={draft.filename}
-              className="max-h-40 rounded-lg object-cover"
+              className="max-h-40 rounded-xl object-cover"
             />
           )}
           {draft.kind === "video" && (
-            <video src={draft.mediaUrl} controls className="max-h-40 rounded-lg" />
+            <video src={draft.mediaUrl} controls className="max-h-40 rounded-xl" />
           )}
           {draft.kind === "audio" && (
             <audio src={draft.mediaUrl} controls className="w-full" />
@@ -911,7 +911,7 @@ function MediaDraftPreview({
               }
             }}
             placeholder="Add a caption…"
-            className="flex-1 rounded-xl border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary/50"
+            className="flex-1 rounded-2xl border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary/50"
           />
         )}
         <GatedButton

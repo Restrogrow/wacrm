@@ -75,7 +75,7 @@ export function SendFormButton({ conversationId }: { conversationId: string }) {
         onClick={() => void openDialog()}
         aria-label="Send a WhatsApp form"
         title="Send a WhatsApp form"
-        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         <ClipboardList className="h-3.5 w-3.5" />
       </button>
@@ -95,7 +95,7 @@ export function SendFormButton({ conversationId }: { conversationId: string }) {
           ) : forms.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No live forms yet.{' '}
-              <Link href="/settings?tab=forms" className="font-medium underline underline-offset-4">
+              <Link href="/forms" className="font-medium underline underline-offset-4">
                 Create one
               </Link>
               .

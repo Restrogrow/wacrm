@@ -22,8 +22,7 @@ import { normalizeShopDomain } from '@/lib/shopify/verify';
 const STATE_COOKIE = 'shopify_oauth_state';
 
 function backToSettings(error: string) {
-  const url = new URL('/settings', appBaseUrl());
-  url.searchParams.set('tab', 'shopify');
+  const url = new URL('/integrations/shopify', appBaseUrl());
   url.searchParams.set('shopify_error', error);
   return NextResponse.redirect(url);
 }

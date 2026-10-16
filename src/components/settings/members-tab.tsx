@@ -321,8 +321,8 @@ export function MembersTab() {
 
       {/* Roster */}
       <Card>
-        <CardContent className="p-0">
-          <ul className="divide-y divide-border">
+        <CardContent>
+          <ul className="space-y-2.5">
             {members.map((member) => {
               const roleMeta = ROLE_META[member.role];
               const RoleIcon = roleMeta.icon;
@@ -345,20 +345,20 @@ export function MembersTab() {
                   // 128px width doesn't force the name into a 50-pixel
                   // truncation. Desktop (sm+): everything inline as
                   // before.
-                  className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
+                  className="flex flex-col gap-3 rounded-2xl border border-border bg-card-2 px-4 py-3.5 transition-colors hover:border-primary-soft-2 sm:flex-row sm:items-center sm:gap-4"
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-4">
                     <Tooltip>
                       <TooltipTrigger
                         render={
-                          <Avatar className="size-9 shrink-0">
+                          <Avatar className="size-11 shrink-0">
                             {member.avatar_url ? (
                               <AvatarImage
                                 src={member.avatar_url}
                                 alt={member.full_name || 'Member'}
                               />
                             ) : null}
-                            <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
+                            <AvatarFallback className="bg-primary-soft text-base font-bold text-primary">
                               {(member.full_name || member.email || 'U')
                                 .charAt(0)
                                 .toUpperCase()}
@@ -380,7 +380,7 @@ export function MembersTab() {
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-medium text-foreground">
+                        <span className="truncate text-sm font-bold text-foreground">
                           {member.full_name || 'Unnamed'}
                         </span>
                         {isSelf && (
@@ -438,7 +438,7 @@ export function MembersTab() {
                       </Select>
                     ) : (
                       <span
-                        className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium ${roleMeta.className}`}
+                        className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-medium ${roleMeta.className}`}
                       >
                         <RoleIcon className="size-3.5" />
                         {roleMeta.label}
@@ -475,8 +475,8 @@ export function MembersTab() {
       <RequireRole min="admin">
         <div>
           <div className="mb-2 flex items-center gap-2">
-            <UsersRound className="size-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary"><UsersRound className="size-4" /></span>
+            <h3 className="text-base font-bold tracking-tight text-foreground">
               Pending invitations
             </h3>
             <Badge className="bg-muted text-muted-foreground border-border">
@@ -497,10 +497,10 @@ export function MembersTab() {
           ) : null}
 
           {invitations.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-                <Mail className="size-6 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">
+            <Card className="border border-dashed border-primary-soft-2 bg-primary-soft/40 ring-0">
+              <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+                <span className="flex size-12 items-center justify-center rounded-2xl bg-primary-soft text-primary"><Mail className="size-6" /></span>
+                <p className="mt-3 text-base font-bold text-foreground">
                   No pending invitations.
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -511,23 +511,23 @@ export function MembersTab() {
             </Card>
           ) : (
             <Card>
-              <CardContent className="p-0">
-                <ul className="divide-y divide-border">
+              <CardContent>
+                <ul className="space-y-2.5">
                   {invitations.map((inv) => {
                     const inviteRoleMeta = ROLE_META[inv.role];
                     const InviteRoleIcon = inviteRoleMeta.icon;
                     return (
                     <li
                       key={inv.id}
-                      className="flex items-center gap-4 px-4 py-3"
+                      className="flex items-center gap-4 rounded-2xl border border-border bg-card-2 px-4 py-3.5"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-foreground">
+                          <span className="text-sm font-bold text-foreground">
                             {inv.label || 'Untitled invite'}
                           </span>
                           <span
-                            className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium ${inviteRoleMeta.className}`}
+                            className={`inline-flex items-center gap-1 rounded-xl border px-2 py-0.5 text-[11px] font-medium ${inviteRoleMeta.className}`}
                           >
                             <InviteRoleIcon className="size-3" />
                             {inviteRoleMeta.label}

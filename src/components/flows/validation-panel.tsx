@@ -30,7 +30,7 @@ export function ValidationPanel() {
     // sticky-positioned over scrolled-behind node cards (a translucent
     // bg-emerald-500/10 would bleed through ugly).
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-emerald-600/50 bg-background p-3 text-sm font-medium text-emerald-300">
+      <div className="flex items-center gap-2 rounded-2xl border border-emerald-600/50 bg-background p-3 text-sm font-medium text-emerald-300">
         <CircleCheck className="h-4 w-4 shrink-0" />
         No issues. Ready to activate.
       </div>
@@ -41,7 +41,7 @@ export function ValidationPanel() {
   return (
     <div
       className={cn(
-        "rounded-lg border bg-background p-3",
+        "rounded-2xl border bg-background p-3",
         errors.length > 0 ? "border-red-500/40" : "border-amber-500/40",
       )}
     >
@@ -103,7 +103,7 @@ export function IssueLine({
         type="button"
         onClick={() => onJump(issue.node_key!)}
         className={cn(
-          "flex w-full items-start gap-2 rounded-md px-2 py-1 text-left text-xs transition-colors hover:bg-muted/60",
+          "flex w-full items-start gap-2 rounded-xl px-2 py-1 text-left text-xs transition-colors hover:bg-muted/60",
           tone,
         )}
         aria-label={`Jump to node ${issue.node_key}`}
@@ -115,7 +115,7 @@ export function IssueLine({
   return (
     <div
       className={cn(
-        "flex items-start gap-2 rounded-md px-2 py-1 text-xs",
+        "flex items-start gap-2 rounded-xl px-2 py-1 text-xs",
         tone,
       )}
     >

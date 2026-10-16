@@ -220,6 +220,7 @@ export function FormsSettings() {
   return (
     <section className="space-y-4">
       <SettingsPanelHead
+        icon={ClipboardList}
         title="WhatsApp forms"
         description="Forms that open inside WhatsApp — collect leads, bookings or feedback without sending people to a website. Send one from any chat with the clipboard icon."
         action={
@@ -243,21 +244,27 @@ export function FormsSettings() {
           </CardContent>
         </Card>
       ) : forms.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
-            <ClipboardList className="size-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">No forms yet. Create a lead form in a minute.</p>
+        <Card className="border border-dashed border-primary-soft-2 bg-primary-soft/40 ring-0">
+          <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-3xl bg-primary-soft text-primary">
+              <ClipboardList className="size-7" />
+            </span>
+            <p className="text-base font-bold text-foreground">No forms yet</p>
+            <p className="text-sm text-muted-foreground">Create a lead form in a minute.</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3 xl:grid-cols-2">
+        <div className="grid gap-4 xl:grid-cols-2">
           {forms.map((form) => (
-            <Card key={form.id}>
-              <CardContent className="space-y-2 pt-4">
+            <Card key={form.id} className="transition-all hover:-translate-y-0.5 hover:shadow-md">
+              <CardContent className="space-y-3">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+                    <ClipboardList className="size-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-medium text-foreground">{form.name}</h3>
+                      <h3 className="text-base font-bold tracking-tight text-foreground">{form.name}</h3>
                       <Badge className={`border text-xs ${STATUS[form.status].className}`}>{STATUS[form.status].label}</Badge>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -357,7 +364,7 @@ export function FormsSettings() {
               <div className="space-y-2">
                 <Label>Fields</Label>
                 {d.fields.map((f, i) => (
-                  <div key={i} className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+                  <div key={i} className="space-y-2 rounded-2xl border border-border bg-muted/30 p-3">
                     <div className="grid gap-2 sm:grid-cols-[1.4fr_1fr_auto]">
                       <Input value={f.label} maxLength={30} onChange={(e) => setField(i, { label: e.target.value })} placeholder="Label" />
                       <Select value={f.type} onValueChange={(v) => setField(i, { type: v as FieldType, options: v === 'dropdown' ? (f.options?.length ? f.options : ['Option 1', 'Option 2']) : undefined })}>
@@ -449,7 +456,7 @@ export function FormsSettings() {
           ) : viewing.rows.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">No responses yet.</p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-border">
+            <div className="overflow-x-auto rounded-2xl border border-border">
               <table className="w-full text-sm">
                 <thead className="text-left text-xs text-muted-foreground">
                   <tr className="border-b border-border">

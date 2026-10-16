@@ -50,9 +50,9 @@ interface StatCardProps {
 function StatCard({ label, value, total, icon, color }: StatCardProps) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-2xl border border-border bg-card p-4">
       <div className="flex items-center justify-between">
-        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${color}`}>
+        <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${color}`}>
           {icon}
         </div>
         <span className="text-xs text-muted-foreground">{pct}%</span>
@@ -77,7 +77,7 @@ interface FunnelStep {
 function FunnelChart({ steps }: { steps: FunnelStep[] }) {
   const max = Math.max(...steps.map((s) => s.value), 1);
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-2xl border border-border bg-card p-4">
       <h3 className="mb-4 text-sm font-medium text-foreground">Funnel</h3>
       <div className="space-y-2">
         {steps.map((step) => {
@@ -351,7 +351,7 @@ export default function BroadcastDetailPage() {
           </Button>
         )}
         {confirmDelete ? (
-          <div className="flex items-center gap-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm">
+          <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm">
             <span className="text-red-300">Delete this broadcast?</span>
             <Button
               variant="outline"
@@ -440,7 +440,7 @@ export default function BroadcastDetailPage() {
       <FunnelChart steps={funnelSteps} />
 
       {/* Recipients Table */}
-      <div className="rounded-xl border border-border bg-card">
+      <div className="rounded-2xl border border-border bg-card">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
           <h2 className="text-sm font-medium text-foreground">
             Recipients ({filteredRecipients.length}

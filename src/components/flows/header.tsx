@@ -70,11 +70,11 @@ export function EditorHeader() {
           onClick={() => router.push("/flows")}
           title="Back to Flows"
           aria-label="Back to Flows"
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
           <Workflow className="h-[18px] w-[18px]" />
         </span>
         <input
@@ -83,7 +83,7 @@ export function EditorHeader() {
           placeholder="Flow name"
           spellCheck={false}
           aria-label="Flow name"
-          className="min-w-[120px] max-w-[340px] rounded-lg border border-transparent bg-transparent px-2 py-1 text-lg font-bold leading-tight tracking-tight text-foreground outline-none transition-colors hover:bg-muted focus:border-primary focus:bg-transparent focus:shadow-[0_0_0_3px_var(--primary-soft)]"
+          className="min-w-[120px] max-w-[340px] rounded-2xl border border-transparent bg-transparent px-2 py-1 text-lg font-bold leading-tight tracking-tight text-foreground outline-none transition-colors hover:bg-muted focus:border-primary focus:bg-transparent focus:shadow-[0_0_0_3px_var(--primary-soft)]"
         />
         <StatusChip status={state.status} />
         {dirty && (
@@ -176,7 +176,7 @@ export function EditorHeader() {
         }
         placeholder="Add a short description (internal — customers don't see this)"
         aria-label="Flow description"
-        className="w-full max-w-[78ch] rounded-md border border-transparent bg-transparent px-2 py-1 text-[13px] text-muted-foreground outline-none transition-colors placeholder:text-muted-foreground/60 hover:bg-muted/50 focus:border-primary focus:bg-transparent focus:text-foreground"
+        className="w-full max-w-[78ch] rounded-xl border border-transparent bg-transparent px-2 py-1 text-[13px] text-muted-foreground outline-none transition-colors placeholder:text-muted-foreground/60 hover:bg-muted/50 focus:border-primary focus:bg-transparent focus:text-foreground"
       />
       {previewOpen && (
         <PreviewDialog open={previewOpen} onOpenChange={setPreviewOpen} />

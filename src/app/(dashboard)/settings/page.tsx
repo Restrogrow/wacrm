@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -14,23 +14,15 @@ import { AppearancePanel } from '@/components/settings/appearance-panel';
 import { WhatsAppConfig } from '@/components/settings/whatsapp-config';
 import { CallingSettingsCard } from '@/components/settings/calling-settings-card';
 import { NumberHealthCard } from '@/components/settings/number-health-card';
-import { TemplateManager } from '@/components/settings/template-manager';
-import { FormsSettings } from '@/components/settings/forms-settings';
 import { SavedRepliesSettings } from '@/components/settings/saved-replies-settings';
-import { QrLinkSettings } from '@/components/settings/qr-link-settings';
 import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel';
 import { DealsSettings } from '@/components/settings/deals-settings';
 import { MembersTab } from '@/components/settings/members-tab';
 import { ApiKeysSettings } from '@/components/settings/api-keys-settings';
-import { ConnectedAppsSettings } from '@/components/settings/connected-apps-settings';
-import { AiChatbotSettings } from '@/components/settings/ai-chatbot-settings';
-import { ShopifySettings } from '@/components/settings/shopify-settings';
-import { CalendlySettings } from '@/components/settings/calendly-settings';
-import { CommerceSettings } from '@/components/settings/commerce-settings';
 import { BillingSettings } from '@/components/settings/billing-settings';
-import { DailySummarySettings } from '@/components/settings/daily-summary-settings';
 import { YourDataSettings } from '@/components/settings/your-data-settings';
 import {
+  MOVED_SECTION_ROUTES,
   resolveSection,
   type SettingsSection,
 } from '@/components/settings/settings-sections';
@@ -47,7 +39,23 @@ export default function SettingsPage() {
   // resolve onto their new home; unknown/empty → the Overview landing.
   const section = resolveSection(searchParams.get('tab'));
 
+  // Sections that moved to the main sidebar: forward old deep links,
+  // keeping other params (e.g. shopify=connected) intact.
+  const movedTo = MOVED_SECTION_ROUTES[section];
+  useEffect(() => {
+    if (!movedTo) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('tab');
+    const qs = params.toString();
+    router.replace(qs ? `${movedTo}?${qs}` : movedTo);
+  }, [movedTo, router, searchParams]);
+
   const go = (next: SettingsSection) => {
+    const dest = MOVED_SECTION_ROUTES[next];
+    if (dest) {
+      router.push(dest);
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', next);
     router.replace(`/settings?${params.toString()}`, { scroll: false });
@@ -61,10 +69,10 @@ export default function SettingsPage() {
       appearance: mode.charAt(0).toUpperCase() + mode.slice(1),
       deals: defaultCurrency,
     }),
-    [mode, defaultCurrency],
+    [mode, defaultCurrency]
   );
 
-  const panel: Record<SettingsSection, ReactNode> = {
+  const panel: Partial<Record<SettingsSection, ReactNode>> = {
     overview: <SettingsOverview onSelect={go} />,
     profile: (
       <div className="space-y-6">
@@ -82,38 +90,19 @@ export default function SettingsPage() {
         <CallingSettingsCard />
       </div>
     ),
-    'ai-chatbot': <AiChatbotSettings />,
-    templates: <TemplateManager />,
-    forms: <FormsSettings />,
     'saved-replies': <SavedRepliesSettings />,
-    'qr-link': <QrLinkSettings />,
     fields: <FieldsAndTagsPanel />,
     deals: <DealsSettings />,
     members: <MembersTab />,
     api: <ApiKeysSettings />,
-    'connected-apps': <ConnectedAppsSettings />,
-    shopify: <ShopifySettings />,
-    calendly: <CalendlySettings />,
-    commerce: <CommerceSettings />,
     billing: <BillingSettings />,
-    'daily-summary': <DailySummarySettings />,
   };
 
   return (
     <div>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Settings
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Everything in one place — your account and your workspace. Pick a
-          section to manage it.
-        </p>
-      </div>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-[236px_minmax(0,1fr)] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[264px_minmax(0,1fr)] lg:items-start">
         <SettingsRail active={section} onSelect={go} hints={hints} />
-        <div className="min-w-0">{panel[section]}</div>
+        <div className="min-w-0">{movedTo ? null : panel[section]}</div>
       </div>
     </div>
   );

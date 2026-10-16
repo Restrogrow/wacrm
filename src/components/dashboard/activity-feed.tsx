@@ -14,6 +14,7 @@ import type { ComponentType } from 'react'
 import type { ActivityItem, ActivityKind } from '@/lib/dashboard/types'
 import { cn } from '@/lib/utils'
 import { EmptyState } from './empty-state'
+import { PanelTitle } from './panel-title'
 import { Skeleton } from './skeleton'
 
 interface ActivityFeedProps {
@@ -54,9 +55,9 @@ export function ActivityFeed({ items, loading }: ActivityFeedProps) {
     i === 0 || totalLoaded > PAGE_SIZES[i - 1]
 
   return (
-    <section className="rounded-xl border border-border bg-card">
-      <header className="flex items-center justify-between border-b border-border px-5 py-4">
-        <h2 className="text-sm font-semibold text-foreground">Recent Activity</h2>
+    <section className="rounded-3xl border border-border bg-card shadow-sm">
+      <header className="flex items-center justify-between px-6 pt-5 pb-1">
+        <PanelTitle icon={Zap} title="Recent Activity" subtitle="Latest events across your workspace" />
         <Link
           href="/inbox"
           className="text-xs font-medium text-primary hover:text-primary/80"
@@ -72,7 +73,7 @@ export function ActivityFeed({ items, loading }: ActivityFeedProps) {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="p-5">
+        <div className="p-6 pt-4">
           <EmptyState
             icon={Inbox}
             title="No activity yet"
@@ -88,16 +89,16 @@ export function ActivityFeed({ items, loading }: ActivityFeedProps) {
               // Alternating row background for scanability. bg-muted/40
               // keeps the stripe visible in both light and dark modes
               // (bg-card/40 vanishes against a white card surface in light).
-              const stripe = i % 2 === 0 ? 'bg-transparent' : 'bg-muted/40'
+              const stripe = 'bg-transparent'; void i
               const row = (
-                <div className="flex items-center gap-3 px-5 py-2.5">
+                <div className="flex items-center gap-3 px-6 py-3">
                   <span
                     className={cn(
-                      'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full',
+                      'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl',
                       theme.badge,
                     )}
                   >
-                    <Icon className="h-3.5 w-3.5" />
+                    <Icon className="h-4 w-4" />
                   </span>
                   <span className="min-w-0 flex-1 truncate text-sm text-foreground">
                     {it.text}
@@ -120,7 +121,7 @@ export function ActivityFeed({ items, loading }: ActivityFeedProps) {
               )
             })}
           </ul>
-          <footer className="flex items-center justify-between border-t border-border px-5 py-3 text-xs">
+          <footer className="flex items-center justify-between border-t border-border px-6 py-3 text-xs">
             <span className="text-muted-foreground tabular-nums">
               Showing {visible.length} of {totalLoaded}
               {totalLoaded === 50 ? '+' : ''}

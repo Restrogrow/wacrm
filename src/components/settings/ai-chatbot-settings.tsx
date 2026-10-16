@@ -11,7 +11,20 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Bot, Loader2, RotateCcw, Save, Send } from 'lucide-react';
+import {
+  BookOpen,
+  Bot,
+  Check,
+  Lightbulb,
+  Loader2,
+  RotateCcw,
+  Save,
+  Send,
+  Smile,
+  Sparkles,
+  UserRound,
+  Zap,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -119,7 +132,7 @@ export function AiChatbotSettings() {
   if (missingTable) {
     return (
       <div>
-        <SettingsPanelHead title="AI chatbot" />
+        <SettingsPanelHead icon={Bot} title="AI chatbot" />
         <Card>
           <CardContent className="space-y-2 py-6 text-sm">
             <p className="font-medium text-foreground">One-time setup needed</p>
@@ -131,121 +144,242 @@ export function AiChatbotSettings() {
   }
 
   const readOnly = !canEditSettings;
+  const kbPct = Math.min(100, Math.round((settings.knowledge_base.length / KNOWLEDGE_BASE_MAX) * 100));
+
+  const toggle = (checked: boolean) => {
+    const next = { ...settings, enabled: checked };
+    setSettings(next);
+    void save(next);
+  };
 
   return (
-    <div>
+    <div className="space-y-6">
       <SettingsPanelHead
+        icon={Bot}
         title="AI chatbot"
         description="Let AI chat with customers on WhatsApp using your own information. It answers from the knowledge below, stays quiet while your team is chatting, and hands the chat to a person only when the customer asks for one."
-        action={
-          <div className="flex items-center gap-2.5">
-            <Label htmlFor="ai-enabled" className="text-sm">
-              {settings.enabled ? 'On' : 'Off'}
-            </Label>
-            <Switch
-              id="ai-enabled"
-              checked={settings.enabled}
-              disabled={readOnly || saving}
-              onCheckedChange={(checked) => {
-                const next = { ...settings, enabled: checked };
-                setSettings(next);
-                void save(next);
-              }}
-            />
-          </div>
-        }
       />
 
       {!aiConfigured && (
-        <p className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-          The server has no AI key yet. Set <code>GEMINI_KEY</code> in your hosting environment variables, then redeploy.
+        <p className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+          <Zap className="size-4 shrink-0" />
+          <span>
+            The server has no AI key yet. Set <code>GEMINI_KEY</code> in your hosting environment variables, then redeploy.
+          </span>
         </p>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-5">
-          <Field
-            label="Knowledge base"
-            hint={`Menu, prices, timings, delivery area, offers, policies, FAQs. ${settings.knowledge_base.length.toLocaleString()} / ${KNOWLEDGE_BASE_MAX.toLocaleString()}`}
+      {/* Status card */}
+      <div
+        className={cn(
+          'flex flex-wrap items-center justify-between gap-4 rounded-3xl border p-5 shadow-sm transition-colors sm:p-6',
+          settings.enabled
+            ? 'border-primary-soft-2 bg-gradient-to-r from-primary-soft via-card to-card'
+            : 'border-border bg-card',
+        )}
+      >
+        <div className="flex items-center gap-4">
+          <span
+            className={cn(
+              'flex size-14 items-center justify-center rounded-2xl shadow-lg transition-colors',
+              settings.enabled
+                ? 'bg-primary text-primary-foreground shadow-primary/30'
+                : 'bg-muted text-muted-foreground shadow-none',
+            )}
           >
-            <Textarea
-              value={settings.knowledge_base}
-              onChange={(e) => update({ knowledge_base: e.target.value })}
-              placeholder={KB_PLACEHOLDER}
-              maxLength={KNOWLEDGE_BASE_MAX}
-              rows={14}
-              disabled={readOnly}
-              className="font-mono text-[13px]"
-            />
-          </Field>
-
-          <Field
-            label="Rules & tone (optional)"
-            hint='e.g. "Reply in Hinglish. Always share the website for orders. Never give discounts."'
-          >
-            <Textarea
-              value={settings.instructions}
-              onChange={(e) => update({ instructions: e.target.value })}
-              maxLength={INSTRUCTIONS_MAX}
-              rows={3}
-              disabled={readOnly}
-            />
-          </Field>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Bot name">
-              <Input
-                value={settings.bot_name}
-                onChange={(e) => update({ bot_name: e.target.value })}
-                maxLength={60}
-                disabled={readOnly}
-              />
-            </Field>
-            <Field label="Stay quiet after a team reply (minutes)">
-              <Input
-                type="number"
-                min={0}
-                max={10080}
-                value={settings.pause_minutes_after_agent}
-                onChange={(e) => update({ pause_minutes_after_agent: Number(e.target.value) })}
-                disabled={readOnly}
-              />
-            </Field>
+            <Sparkles className="size-7" />
+          </span>
+          <div>
+            <p className="flex items-center gap-2 text-lg font-bold tracking-tight text-foreground">
+              {settings.bot_name || 'Assistant'} is {settings.enabled ? 'live' : 'paused'}
+              <span
+                className={cn(
+                  'rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase',
+                  settings.enabled ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+                )}
+              >
+                {settings.enabled ? 'On' : 'Off'}
+              </span>
+            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {settings.enabled
+                ? 'Answering customers on WhatsApp from your knowledge base.'
+                : 'Turn it on when your knowledge base is ready. Test it first on the right.'}
+            </p>
           </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Label htmlFor="ai-enabled" className="text-sm font-medium">
+            {settings.enabled ? 'Turn off' : 'Turn on'}
+          </Label>
+          <Switch id="ai-enabled" checked={settings.enabled} disabled={readOnly || saving} onCheckedChange={toggle} />
+        </div>
+      </div>
 
-          <Field
-            label="Hand-off message"
-            hint="Sent when the bot passes the chat to your team. The chat then shows as Pending in the inbox."
-          >
-            <Input
-              value={settings.handoff_message}
-              onChange={(e) => update({ handoff_message: e.target.value })}
-              maxLength={1000}
-              disabled={readOnly}
-            />
-          </Field>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="space-y-6">
+          {/* Knowledge base */}
+          <Card>
+            <CardContent className="space-y-4">
+              <SectionTitle
+                icon={BookOpen}
+                title="Knowledge base"
+                subtitle="Menu, prices, timings, delivery area, offers, policies, FAQs."
+              />
+              <Textarea
+                value={settings.knowledge_base}
+                onChange={(e) => update({ knowledge_base: e.target.value })}
+                placeholder={KB_PLACEHOLDER}
+                maxLength={KNOWLEDGE_BASE_MAX}
+                rows={14}
+                disabled={readOnly}
+                className="font-mono text-[13px]"
+              />
+              <div className="space-y-1.5">
+                <div className="h-2 overflow-hidden rounded-full bg-border">
+                  <div
+                    className={cn('h-full rounded-full transition-all', kbPct >= 90 ? 'bg-amber-500' : 'bg-primary')}
+                    style={{ width: `${kbPct}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {settings.knowledge_base.length.toLocaleString()} / {KNOWLEDGE_BASE_MAX.toLocaleString()} characters
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-          {!readOnly && (
-            <div className="flex items-center gap-3">
-              <Button onClick={() => void save()} disabled={saving || !dirty}>
-                {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                Save
-              </Button>
-              {dirty && <span className="text-xs text-amber-300">Unsaved changes</span>}
-            </div>
-          )}
+          {/* Personality */}
+          <Card>
+            <CardContent className="space-y-4">
+              <SectionTitle icon={Smile} title="Personality" subtitle="How the bot introduces itself and how it should sound." />
+              <div className="grid gap-4 sm:grid-cols-[minmax(0,260px)_minmax(0,1fr)]">
+                <Field label="Bot name">
+                  <Input
+                    value={settings.bot_name}
+                    onChange={(e) => update({ bot_name: e.target.value })}
+                    maxLength={60}
+                    disabled={readOnly}
+                  />
+                </Field>
+                <Field
+                  label="Rules & tone (optional)"
+                  hint={'e.g. "Reply in Hinglish. Always share the website for orders. Never give discounts."'}
+                >
+                  <Textarea
+                    value={settings.instructions}
+                    onChange={(e) => update({ instructions: e.target.value })}
+                    maxLength={INSTRUCTIONS_MAX}
+                    rows={3}
+                    disabled={readOnly}
+                  />
+                </Field>
+              </div>
+            </CardContent>
+          </Card>
 
-          <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-xs">
-            <li>Flows always go first — the bot only answers messages no active flow handled.</li>
-            <li>It waits a few seconds before replying, so several quick messages get one answer, and it stays quiet if an automation or teammate already replied.</li>
-            <li>It knows the current date and time, so it can answer &quot;are you open now?&quot; from your timings.</li>
-            <li>For photos and voice notes it asks the customer to type, or hands payment proofs and complaints to your team. It doesn&apos;t reply to button taps or chats assigned to someone.</li>
-            <li>After handing a chat to your team it waits 2 hours; if nobody replied by then, it starts answering again. Setting the chat to Open resumes it right away.</li>
-            <li>Lines with [square brackets] are treated as not filled in — replace them with real details.</li>
-          </ul>
+          {/* Hand-off */}
+          <Card>
+            <CardContent className="space-y-4">
+              <SectionTitle
+                icon={UserRound}
+                title="Hand-off to your team"
+                subtitle="When and how the bot steps aside for a human."
+              />
+              <div className="grid gap-4 sm:grid-cols-[minmax(0,260px)_minmax(0,1fr)]">
+                <Field label="Stay quiet after a team reply (minutes)">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={10080}
+                    value={settings.pause_minutes_after_agent}
+                    onChange={(e) => update({ pause_minutes_after_agent: Number(e.target.value) })}
+                    disabled={readOnly}
+                  />
+                </Field>
+                <Field
+                  label="Hand-off message"
+                  hint="Sent when the bot passes the chat to your team. The chat then shows as Pending in the inbox."
+                >
+                  <Input
+                    value={settings.handoff_message}
+                    onChange={(e) => update({ handoff_message: e.target.value })}
+                    maxLength={1000}
+                    disabled={readOnly}
+                  />
+                </Field>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* How it works */}
+          <Card>
+            <CardContent className="space-y-4">
+              <SectionTitle icon={Lightbulb} title="Good to know" subtitle="How the bot behaves behind the scenes." />
+              <ul className="grid gap-3 md:grid-cols-2">
+                {HOW_IT_WORKS.map((text) => (
+                  <li key={text} className="flex gap-3 rounded-2xl bg-muted/50 p-3.5 text-xs leading-relaxed text-muted-foreground">
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+                      <Check className="size-3" />
+                    </span>
+                    {text}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
         </div>
 
-        {!readOnly && <TestChat settings={settings} />}
+        {!readOnly && (
+          <div className="xl:sticky xl:top-0 xl:self-start">
+            <TestChat settings={settings} />
+          </div>
+        )}
+      </div>
+
+      {/* Floating save bar */}
+      {!readOnly && dirty && (
+        <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-2xl border border-primary-soft-2 bg-card/95 px-5 py-3 shadow-xl backdrop-blur">
+          <span className="flex items-center gap-2 text-sm font-medium text-amber-600 dark:text-amber-300">
+            <span className="size-2 animate-pulse rounded-full bg-amber-500" />
+            You have unsaved changes
+          </span>
+          <Button onClick={() => void save()} disabled={saving} className="rounded-xl shadow-md shadow-primary/25">
+            {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+            Save changes
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const HOW_IT_WORKS = [
+  'Flows always go first — the bot only answers messages no active flow handled.',
+  'It waits a few seconds before replying, so several quick messages get one answer, and it stays quiet if an automation or teammate already replied.',
+  'It knows the current date and time, so it can answer "are you open now?" from your timings.',
+  "For photos and voice notes it asks the customer to type, or hands payment proofs and complaints to your team. It doesn't reply to button taps or chats assigned to someone.",
+  'After handing a chat to your team it waits 2 hours; if nobody replied by then, it starts answering again. Setting the chat to Open resumes it right away.',
+  'Lines with [square brackets] are treated as not filled in — replace them with real details.',
+];
+
+function SectionTitle({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+        <Icon className="size-5" />
+      </span>
+      <div>
+        <h3 className="text-base font-bold tracking-tight text-foreground">{title}</h3>
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
     </div>
   );
@@ -301,10 +435,10 @@ function TestChat({ settings }: { settings: ChatbotSettings }) {
 
   return (
     <Card className="flex h-fit flex-col">
-      <CardContent className="flex flex-col gap-3 p-4">
+      <CardContent className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <p className="flex items-center gap-1.5 text-sm font-medium">
-            <Bot className="size-4 text-primary" />
+          <p className="flex items-center gap-2 text-base font-bold tracking-tight">
+            <span className="flex size-8 items-center justify-center rounded-2xl bg-primary-soft text-primary"><Bot className="size-4" /></span>
             Test the bot
           </p>
           <Button variant="ghost" size="sm" onClick={() => setTurns([])} disabled={busy || turns.length === 0}>
@@ -315,11 +449,11 @@ function TestChat({ settings }: { settings: ChatbotSettings }) {
         <p className="text-muted-foreground text-xs">
           Ask like a customer would. Uses the form as typed (even unsaved). Nothing is sent to WhatsApp.
         </p>
-        <div className="h-[340px] overflow-y-auto rounded-lg border border-border bg-[#0b141a] p-3">
+        <div className="h-[340px] overflow-y-auto rounded-2xl border border-border bg-primary-soft/50 p-3">
           <div className="flex flex-col gap-2">
             {turns.length === 0 && (
               <div className="m-auto flex flex-col items-center gap-2 pt-16 text-center">
-                <p className="text-xs text-slate-400">Try a question, or tap one:</p>
+                <p className="text-xs text-muted-foreground">Try a question, or tap one:</p>
                 <div className="flex flex-wrap justify-center gap-1.5">
                   {TEST_SUGGESTIONS.map((q) => (
                     <button
@@ -327,7 +461,7 @@ function TestChat({ settings }: { settings: ChatbotSettings }) {
                       type="button"
                       onClick={() => void ask(q)}
                       disabled={busy}
-                      className="rounded-full border border-slate-600 px-2.5 py-1 text-xs text-slate-200 hover:border-emerald-500 hover:text-white"
+                      className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-sm hover:border-primary hover:text-primary"
                     >
                       {q}
                     </button>
@@ -339,18 +473,18 @@ function TestChat({ settings }: { settings: ChatbotSettings }) {
               <div key={i} className={cn('flex flex-col', t.role === 'user' ? 'items-end' : 'items-start')}>
                 <div
                   className={cn(
-                    'max-w-[85%] whitespace-pre-wrap break-words rounded-lg px-3 py-1.5 text-sm text-slate-100',
-                    t.role === 'user' ? 'rounded-tr-sm bg-[#005c4b]' : 'rounded-tl-sm bg-[#202c33]',
+                    'max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm shadow-sm',
+                    t.role === 'user' ? 'rounded-tr-sm bg-primary text-primary-foreground' : 'rounded-tl-sm bg-card text-foreground',
                   )}
                 >
                   {t.content}
                 </div>
                 {t.handoff && (
-                  <span className="mt-1 text-[11px] text-amber-300">→ would hand this chat to your team</span>
+                  <span className="mt-1 text-[11px] text-amber-600">→ would hand this chat to your team</span>
                 )}
               </div>
             ))}
-            {busy && <div className="text-xs text-slate-400">typing…</div>}
+            {busy && <div className="text-xs text-muted-foreground">typing…</div>}
             <div ref={bottomRef} />
           </div>
         </div>

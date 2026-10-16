@@ -33,10 +33,10 @@ export function ReplyQuote({
         "flex items-start gap-2 border-l-2 px-2 py-1",
         onPrimary ? "border-primary-foreground/50" : "border-primary",
         isChip
-          ? "rounded-md bg-muted/80"
+          ? "rounded-lg bg-muted/80"
           : onPrimary
-            ? "mb-1.5 rounded-md bg-primary-foreground/15"
-            : "mb-1.5 rounded-md bg-background/20",
+            ? "mb-1.5 rounded-lg bg-primary-foreground/15"
+            : "mb-1.5 rounded-lg bg-background/20",
       )}
     >
       <div className="min-w-0 flex-1 overflow-hidden">

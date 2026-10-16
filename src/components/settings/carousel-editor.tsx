@@ -103,7 +103,7 @@ export function CarouselEditor({ cards, onChange }: { cards: CarouselCard[]; onC
           <Label className="text-muted-foreground">Buttons on every card (1–2)</Label>
           <div className="flex flex-wrap gap-2">
             {layout.map((kind, j) => (
-              <span key={j} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs">
+              <span key={j} className="inline-flex items-center gap-1 rounded-xl border border-border px-2 py-1 text-xs">
                 {BUTTON_KIND_LABEL[kind]}
                 {layout.length > 1 && (
                   <button type="button" aria-label="Remove button" onClick={() => removeLayoutButton(j)} className="text-muted-foreground hover:text-foreground">
@@ -127,7 +127,7 @@ export function CarouselEditor({ cards, onChange }: { cards: CarouselCard[]; onC
         {cards.map((card, i) => {
           const vars = varCount(card.body_text);
           return (
-            <div key={i} className="rounded-lg border border-border bg-muted/30 p-3">
+            <div key={i} className="rounded-2xl border border-border bg-muted/30 p-3">
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-sm font-medium text-foreground">Card {i + 1}</p>
                 {cards.length > CAROUSEL_LIMITS.minCards && (
@@ -138,7 +138,7 @@ export function CarouselEditor({ cards, onChange }: { cards: CarouselCard[]; onC
               </div>
               <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
                 <div>
-                  <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-border bg-background">
+                  <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border border-border bg-background">
                     {card.media_url ? (
                       header === 'image' ? (
                         // eslint-disable-next-line @next/next/no-img-element

@@ -180,7 +180,7 @@ export default function FlowRunsPage() {
         <ArrowLeft className="h-3 w-3" />
         {flow.name}
       </button>
-      <h1 className="text-xl font-semibold text-foreground">Runs</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-foreground">Runs</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         The 50 most recent times this flow ran. Expand a row to see the engine&apos;s
         per-step log.

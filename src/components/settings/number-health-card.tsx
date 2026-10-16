@@ -116,11 +116,11 @@ export function NumberHealthCard() {
       <CardContent className="space-y-3 p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <Activity className="size-4" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-semibold text-foreground">Number health</h3>
+              <h3 className="font-bold tracking-tight text-foreground">Number health</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 How WhatsApp rates your number. Checked every day; the owner is emailed if it needs attention.
                 {h?.checked_at && <> Last checked {formatDistanceToNow(new Date(h.checked_at), { addSuffix: true })}.</>}
@@ -148,7 +148,7 @@ export function NumberHealthCard() {
             {data.reasons && data.reasons.length > 0 && (
               <ul
                 className={cn(
-                  'space-y-1 rounded-lg border p-3 text-sm text-foreground',
+                  'space-y-1 rounded-2xl border p-3 text-sm text-foreground',
                   data.level === 'critical' ? 'border-red-500/40 bg-red-500/5' : 'border-amber-500/40 bg-amber-500/5',
                 )}
               >
@@ -158,7 +158,7 @@ export function NumberHealthCard() {
               </ul>
             )}
             {h.check_error && (
-              <p className="rounded-lg border border-border p-3 text-sm text-muted-foreground">
+              <p className="rounded-2xl border border-border p-3 text-sm text-muted-foreground">
                 Couldn&apos;t check with WhatsApp: {h.check_error}
               </p>
             )}

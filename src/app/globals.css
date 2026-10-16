@@ -86,7 +86,7 @@
 
 /* ---- MODE: neutral surfaces ---- */
 
-:root,
+:root:not([data-mode]),
 html[data-mode="dark"] {
   --background: oklch(0.13 0.01 260);
   --foreground: oklch(0.985 0 0);
@@ -147,7 +147,6 @@ html[data-mode="light"] {
 
 /* ---- ACCENT: primary color ---- */
 
-:root,
 html[data-theme="violet"] {
   --primary: oklch(0.526 0.247 293);
   --primary-foreground: oklch(0.985 0 0);
@@ -159,6 +158,48 @@ html[data-theme="violet"] {
   --sidebar-primary: oklch(0.526 0.247 293);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-ring: oklch(0.526 0.247 293);
+}
+
+/* ---- ACCENT: mint (default) — fresh light green ---- */
+
+:root:not([data-theme]),
+html[data-theme="mint"] {
+  --primary: oklch(0.56 0.16 155);
+  --primary-foreground: oklch(0.99 0.01 155);
+  --primary-hover: oklch(0.5 0.15 155);
+  --primary-soft: oklch(0.56 0.16 155 / 0.1);
+  --primary-soft-2: oklch(0.56 0.16 155 / 0.2);
+  --ring: oklch(0.56 0.16 155);
+  --chart-1: oklch(0.56 0.16 155);
+  --chart-2: oklch(0.7 0.13 190);
+  --sidebar-primary: oklch(0.56 0.16 155);
+  --sidebar-primary-foreground: oklch(0.99 0.01 155);
+  --sidebar-ring: oklch(0.56 0.16 155);
+}
+
+/* Mint also tints the neutral surfaces a hint of green. */
+html[data-mode="light"][data-theme="mint"] {
+  --background: oklch(0.975 0.014 155);
+  --card-2: oklch(0.985 0.01 155);
+  --secondary: oklch(0.955 0.02 155);
+  --muted: oklch(0.955 0.02 155);
+  --muted-foreground: oklch(0.5 0.03 160);
+  --accent: oklch(0.95 0.025 155);
+  --border: oklch(0.91 0.025 155);
+  --input: oklch(0.91 0.025 155);
+  --sidebar: oklch(0.985 0.01 155);
+}
+
+html[data-mode="dark"][data-theme="mint"] {
+  --background: oklch(0.14 0.015 165);
+  --card: oklch(0.19 0.015 165);
+  --card-2: oklch(0.215 0.015 165);
+  --popover: oklch(0.19 0.015 165);
+  --secondary: oklch(0.23 0.015 165);
+  --muted: oklch(0.23 0.015 165);
+  --accent: oklch(0.23 0.015 165);
+  --border: oklch(0.29 0.02 165);
+  --input: oklch(0.29 0.02 165);
 }
 
 html[data-theme="emerald"] {
@@ -215,6 +256,11 @@ html[data-theme="rose"] {
   --sidebar-primary: oklch(0.645 0.22 16);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-ring: oklch(0.645 0.22 16);
+}
+
+/* Sidebar rail: a deep shade of whichever accent is active. */
+:root {
+  --rail: color-mix(in oklch, var(--primary) 34%, oklch(0.13 0.02 165));
 }
 
 @layer base {

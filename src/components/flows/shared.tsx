@@ -263,7 +263,7 @@ export function NodeIconChip({
   return (
     <span
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-lg',
+        'flex shrink-0 items-center justify-center rounded-2xl',
         className
       )}
       style={{ width: size, height: size, background: c.soft, color: c.solid }}

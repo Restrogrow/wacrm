@@ -243,11 +243,11 @@ export function Step3Personalize({
       </div>
 
       {mediaHeaderType && (
-        <div className="rounded-xl border border-border bg-card/50 p-4">
+        <div className="rounded-2xl border border-border bg-card/50 p-4">
           <div className="mb-3 flex items-center gap-2">
             <ImageIcon className="h-4 w-4 text-primary" />
             <p className="text-sm font-medium text-foreground">Header media</p>
-            <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium uppercase text-primary">
+            <span className="inline-flex items-center rounded-lg bg-primary/10 px-2 py-0.5 text-xs font-medium uppercase text-primary">
               {mediaHeaderType}
             </span>
           </div>
@@ -278,7 +278,7 @@ export function Step3Personalize({
               <img
                 src={headerMediaUrl.trim()}
                 alt="Header preview"
-                className="mt-3 max-h-40 rounded-lg border border-border object-contain"
+                className="mt-3 max-h-40 rounded-xl border border-border object-contain"
               />
             )}
           {headerMediaError && (
@@ -292,7 +292,7 @@ export function Step3Personalize({
       )}
 
       {placeholders.length === 0 && !mediaHeaderType ? (
-        <div className="rounded-xl border border-border bg-card/50 p-6 text-center">
+        <div className="rounded-2xl border border-border bg-card/50 p-6 text-center">
           <p className="text-sm text-muted-foreground">
             This template has no variables to personalize.
           </p>
@@ -306,10 +306,10 @@ export function Step3Personalize({
             return (
               <div
                 key={placeholder}
-                className="rounded-xl border border-border bg-card/50 p-4"
+                className="rounded-2xl border border-border bg-card/50 p-4"
               >
                 <div className="mb-3 flex items-center gap-2">
-                  <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-mono font-medium text-primary">
+                  <span className="inline-flex items-center rounded-lg bg-primary/10 px-2 py-0.5 text-xs font-mono font-medium text-primary">
                     {placeholder}
                   </span>
                 </div>
@@ -409,7 +409,7 @@ export function Step3Personalize({
 
       {/* Live Preview — rendered as a WhatsApp-style bubble so the user
           sees approximately what the recipient will see. */}
-      <div className="rounded-xl border border-border bg-card/50 p-4">
+      <div className="rounded-2xl border border-border bg-card/50 p-4">
         <div className="mb-3 flex items-center gap-2">
           <Eye className="h-4 w-4 text-primary" />
           <p className="text-sm font-medium text-foreground">Live Preview</p>
@@ -418,8 +418,8 @@ export function Step3Personalize({
             <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
           )}
         </div>
-        <div className="rounded-lg bg-[#0e1a12] p-3">
-          <div className="ml-auto max-w-[85%] rounded-lg bg-primary/30 px-3 py-2 shadow-sm">
+        <div className="rounded-xl bg-[#0e1a12] p-3">
+          <div className="ml-auto max-w-[85%] rounded-xl bg-primary/30 px-3 py-2 shadow-sm">
             <p className="whitespace-pre-wrap text-sm text-primary">
               {previewText}
             </p>
@@ -428,7 +428,7 @@ export function Step3Personalize({
       </div>
 
       {unmappedKeys.length > 0 && (
-        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
           Map every placeholder before continuing — still missing{' '}
           <span className="font-mono font-semibold">
             {unmappedKeys.join(', ')}

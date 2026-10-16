@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, Menu, Settings as SettingsIcon, User } from "lucide-react";
+import { Bell, HelpCircle, LogOut, Menu, Search, Settings as SettingsIcon, User } from "lucide-react";
+import { getPageTitle } from "./nav-config";
+import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 import {
   Avatar,
   AvatarFallback,
@@ -18,35 +20,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ModeToggle } from "@/components/layout/mode-toggle";
 
-const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/inbox": "Inbox",
-  "/notifications": "Notifications",
-  "/contacts": "Contacts",
-  "/pipelines": "Pipelines",
-  "/broadcasts": "Broadcasts",
-  "/automations": "Automations",
-  "/settings": "Settings",
-};
-
-function getPageTitle(pathname: string): string {
-  if (pageTitles[pathname]) return pageTitles[pathname];
-  const match = Object.entries(pageTitles).find(([path]) =>
-    pathname.startsWith(path),
-  );
-  return match ? match[1] : "Dashboard";
-}
-
 interface HeaderProps {
   /** Wired to the shell's drawer state. Used only on mobile — the
    *  hamburger button is hidden on lg+. */
   onOpenSidebar?: () => void;
+  onOpenPalette?: () => void;
 }
 
-export function Header({ onOpenSidebar }: HeaderProps) {
+export function Header({ onOpenSidebar, onOpenPalette }: HeaderProps) {
   const pathname = usePathname();
   const { profile, signOut } = useAuth();
   const title = getPageTitle(pathname);
+  const unread = useUnreadNotifications();
 
   const initial =
     profile?.full_name?.charAt(0)?.toUpperCase() ??
@@ -54,7 +39,7 @@ export function Header({ onOpenSidebar }: HeaderProps) {
     "U";
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4 lg:px-6">
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-md lg:px-6">
       <div className="flex min-w-0 items-center gap-2">
         {/* Hamburger — mobile only. 44×44 hit target per Apple HIG. */}
         <button
@@ -65,12 +50,49 @@ export function Header({ onOpenSidebar }: HeaderProps) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="truncate text-base font-semibold text-foreground sm:text-lg">
+        <h1 className="truncate text-lg font-bold tracking-tight text-foreground">
           {title}
         </h1>
       </div>
 
-      <div className="flex items-center gap-1 sm:gap-2">
+      <button
+        type="button"
+        onClick={onOpenPalette}
+        className="mx-auto hidden h-10 w-full max-w-sm items-center gap-2 rounded-xl border border-border bg-card-2 px-3 text-sm text-muted-foreground transition-colors hover:border-primary-soft-2 md:flex"
+      >
+        <Search className="size-4" />
+        <span className="flex-1 text-left">Search pages…</span>
+        <kbd className="rounded border border-border px-1.5 py-0.5 text-[10px]">Ctrl K</kbd>
+      </button>
+
+      <div className="flex items-center gap-1 sm:gap-1.5">
+        <button
+          type="button"
+          onClick={onOpenPalette}
+          aria-label="Search pages"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
+        >
+          <Search className="h-5 w-5" />
+        </button>
+        <Link
+          href="/docs"
+          aria-label="Help & docs"
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </Link>
+        <Link
+          href="/notifications"
+          aria-label="Notifications"
+          className="relative flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <Bell className="h-5 w-5" />
+          {unread > 0 && (
+            <span className="absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+              {unread > 9 ? "9+" : unread}
+            </span>
+          )}
+        </Link>
         <ModeToggle />
 
         <DropdownMenu>

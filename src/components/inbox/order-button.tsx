@@ -124,7 +124,7 @@ export function OrderButton({ conversationId }: { conversationId: string }) {
         onClick={() => void openDialog()}
         aria-label="Orders and payments"
         title="Orders and payments"
-        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         <IndianRupee className="h-3.5 w-3.5" />
       </button>
@@ -136,7 +136,7 @@ export function OrderButton({ conversationId }: { conversationId: string }) {
             <DialogDescription className="text-muted-foreground">Works within 24 hours of the customer’s last message.</DialogDescription>
           </DialogHeader>
 
-          <div className="flex gap-1 rounded-lg bg-muted p-1 text-sm">
+          <div className="flex gap-1 rounded-xl bg-muted p-1 text-sm">
             {(
               [
                 ['order', 'New order'],
@@ -148,7 +148,7 @@ export function OrderButton({ conversationId }: { conversationId: string }) {
                 key={t}
                 type="button"
                 onClick={() => setTab(t)}
-                className={cn('flex-1 rounded-md px-3 py-1.5 transition-colors', tab === t ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground')}
+                className={cn('flex-1 rounded-lg px-3 py-1.5 transition-colors', tab === t ? 'bg-background font-medium shadow-sm' : 'text-muted-foreground')}
               >
                 {label}
               </button>
@@ -163,7 +163,7 @@ export function OrderButton({ conversationId }: { conversationId: string }) {
             noPayments ? (
               <p className="text-sm text-muted-foreground">
                 Choose how customers pay first in{' '}
-                <Link href="/settings?tab=commerce" className="font-medium underline underline-offset-4">
+                <Link href="/orders" className="font-medium underline underline-offset-4">
                   Settings → Orders & payments
                 </Link>
                 .
@@ -217,7 +217,7 @@ export function OrderButton({ conversationId }: { conversationId: string }) {
             !settings.catalog_id ? (
               <p className="text-sm text-muted-foreground">
                 Add your catalog ID in{' '}
-                <Link href="/settings?tab=commerce" className="font-medium underline underline-offset-4">
+                <Link href="/orders" className="font-medium underline underline-offset-4">
                   Settings → Orders & payments
                 </Link>{' '}
                 to share products.

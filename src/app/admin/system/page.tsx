@@ -70,19 +70,19 @@ export default async function SystemHealthPage() {
         <Link
           href="/admin/system"
           prefetch={false}
-          className="border-border text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 self-start rounded-md border px-3 py-1.5 text-sm"
+          className="border-border text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 self-start rounded-lg border px-3 py-1.5 text-sm"
         >
           <RefreshCw className="size-3.5" />
           Refresh
         </Link>
       </header>
 
-      <div className={`rounded-xl border p-5 ${overall.className}`}>
+      <div className={`rounded-2xl border p-5 ${overall.className}`}>
         <p className="font-semibold">{overall.text}</p>
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="border-border rounded-xl border p-4">
+        <div className="border-border rounded-2xl border p-4">
           <p className="text-muted-foreground text-xs font-medium">Database</p>
           <div className="mt-2">
             <StateBadge state={h.database.state} />
@@ -91,7 +91,7 @@ export default async function SystemHealthPage() {
             {h.database.error ?? (h.database.latencyMs !== null ? `${h.database.latencyMs} ms` : '')}
           </p>
         </div>
-        <div className="border-border rounded-xl border p-4">
+        <div className="border-border rounded-2xl border p-4">
           <p className="text-muted-foreground text-xs font-medium">Configuration</p>
           <div className="mt-2">
             <StateBadge state={h.config.state} />
@@ -100,7 +100,7 @@ export default async function SystemHealthPage() {
             {h.config.missing.length ? `Missing: ${h.config.missing.join(', ')}` : 'Required env vars set'}
           </p>
         </div>
-        <div className="border-border rounded-xl border p-4">
+        <div className="border-border rounded-2xl border p-4">
           <p className="text-muted-foreground text-xs font-medium">Background jobs</p>
           <div className="mt-2">
             <StateBadge state={h.jobs.state} />
@@ -109,7 +109,7 @@ export default async function SystemHealthPage() {
             {h.jobs.migrationMissing ? 'Run migration 045 to track jobs' : 'Cron every minute'}
           </p>
         </div>
-        <div className="border-border rounded-xl border p-4">
+        <div className="border-border rounded-2xl border p-4">
           <p className="text-muted-foreground text-xs font-medium">Webhooks (last hour)</p>
           <div className="mt-2">
             <StateBadge state={h.webhooks.state} />
@@ -122,7 +122,7 @@ export default async function SystemHealthPage() {
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Background jobs</h2>
-        <div className="border-border overflow-x-auto rounded-xl border">
+        <div className="border-border overflow-x-auto rounded-2xl border">
           <table className="w-full text-sm">
             <thead className="text-muted-foreground text-left text-xs">
               <tr className="border-border border-b">
@@ -164,11 +164,11 @@ export default async function SystemHealthPage() {
       <section className="space-y-3">
         <h2 className="text-sm font-semibold">Recent webhook failures</h2>
         {h.webhooks.recent.length === 0 ? (
-          <p className="border-border text-muted-foreground rounded-xl border p-5 text-sm">
+          <p className="border-border text-muted-foreground rounded-2xl border p-5 text-sm">
             No failed webhooks in the last 30 days.
           </p>
         ) : (
-          <div className="border-border overflow-x-auto rounded-xl border">
+          <div className="border-border overflow-x-auto rounded-2xl border">
             <table className="w-full text-sm">
               <thead className="text-muted-foreground text-left text-xs">
                 <tr className="border-border border-b">

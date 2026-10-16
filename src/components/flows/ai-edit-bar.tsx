@@ -122,7 +122,7 @@ export function AiEditBar() {
 
   return (
     <div className="px-6 pt-3">
-      <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 p-1.5 pl-3">
+      <div className="flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 p-1.5 pl-3">
         <Sparkles className="h-4 w-4 shrink-0 text-primary" />
         <input
           value={prompt}

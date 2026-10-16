@@ -443,7 +443,7 @@ export function ImportModal({
                 fileInputRef.current?.click();
             }}
             className={cn(
-              'group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-5 transition-all',
+              'group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed p-5 transition-all',
               file
                 ? 'border-primary/35 bg-primary/[0.04]'
                 : 'hover:border-primary/40 border-border/80 bg-background/40 hover:bg-background/70'
@@ -451,7 +451,7 @@ export function ImportModal({
           >
             {file ? (
               <>
-                <div className="bg-primary/15 ring-primary/25 flex size-10 items-center justify-center rounded-lg ring-1">
+                <div className="bg-primary/15 ring-primary/25 flex size-10 items-center justify-center rounded-xl ring-1">
                   <FileText className="text-primary size-5" />
                 </div>
                 <p
@@ -467,7 +467,7 @@ export function ImportModal({
               </>
             ) : (
               <>
-                <div className="flex size-10 items-center justify-center rounded-lg bg-muted/80 ring-1 ring-border/80 transition-colors group-hover:bg-muted">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-muted/80 ring-1 ring-border/80 transition-colors group-hover:bg-muted">
                   <Upload className="size-5 text-muted-foreground group-hover:text-foreground" />
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -498,7 +498,7 @@ export function ImportModal({
                 </p>
                 <div className="flex flex-wrap items-center gap-1.5">
                   {tagStats.rowsWithTags > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-muted/90 px-2 py-0.5 text-[11px] text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 rounded-lg bg-muted/90 px-2 py-0.5 text-[11px] text-muted-foreground">
                       <Tag className="text-primary/80 size-3" />
                       {tagStats.unique} tag{tagStats.unique !== 1 ? 's' : ''} ·{' '}
                       {tagStats.rowsWithTags} contact
@@ -508,7 +508,7 @@ export function ImportModal({
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-xl border border-border ring-1 ring-border/50">
+              <div className="overflow-hidden rounded-2xl border border-border ring-1 ring-border/50">
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[32rem] text-xs">
                     <thead>
@@ -592,7 +592,7 @@ export function ImportModal({
           )}
 
           {result && (
-            <div className="rounded-xl border border-border bg-background/50 p-4">
+            <div className="rounded-2xl border border-border bg-background/50 p-4">
               <p className="text-sm font-medium text-popover-foreground">Import complete</p>
               <div className="mt-3 flex flex-wrap gap-3">
                 {result.imported > 0 && (

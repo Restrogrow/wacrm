@@ -28,8 +28,7 @@ import {
 const STATE_COOKIE = 'shopify_oauth_state';
 
 function backToSettings(params: Record<string, string>) {
-  const url = new URL('/settings', appBaseUrl());
-  url.searchParams.set('tab', 'shopify');
+  const url = new URL('/integrations/shopify', appBaseUrl());
   for (const [key, value] of Object.entries(params))
     url.searchParams.set(key, value);
   const response = NextResponse.redirect(url);

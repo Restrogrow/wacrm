@@ -12,7 +12,9 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Loader2, Mail, Send } from 'lucide-react';
+import { Clock, Loader2, Mail, Send } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -121,7 +123,7 @@ export function DailySummarySettings() {
   if (!settings.available) {
     return (
       <section className="space-y-6">
-        <SettingsPanelHead title="Daily summary" />
+        <SettingsPanelHead icon={Mail} title="Daily summary" />
         <Card>
           <CardContent className="text-muted-foreground py-6 text-sm">
             The daily summary isn&apos;t set up yet. Run
@@ -136,6 +138,7 @@ export function DailySummarySettings() {
   return (
     <section className="animate-in fade-in-50 space-y-6 duration-200">
       <SettingsPanelHead
+        icon={Mail}
         title="Daily summary"
         description="A short email every day with how WhatsApp went for your business. Pick when it arrives and who gets it."
       />
@@ -149,18 +152,36 @@ export function DailySummarySettings() {
         </Card>
       )}
 
-      <Card>
-        <CardContent className="space-y-5 py-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-foreground text-sm font-medium">
-                Send me a daily summary
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {settings.last_sent_on
-                  ? `Last sent ${new Date(`${settings.last_sent_on}T00:00:00Z`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' })}.`
-                  : 'Off by default.'}
-              </p>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="space-y-6">
+          {/* On / off */}
+          <div
+            className={cn(
+              'flex items-center justify-between gap-4 rounded-3xl border p-5 shadow-sm transition-colors sm:p-6',
+              enabled
+                ? 'border-primary-soft-2 bg-gradient-to-r from-primary-soft via-card to-card'
+                : 'border-border bg-card',
+            )}
+          >
+            <div className="flex items-center gap-4">
+              <span
+                className={cn(
+                  'flex size-14 items-center justify-center rounded-2xl shadow-lg transition-colors',
+                  enabled ? 'bg-primary text-primary-foreground shadow-primary/30' : 'bg-muted text-muted-foreground shadow-none',
+                )}
+              >
+                <Mail className="size-7" />
+              </span>
+              <div>
+                <p className="text-lg font-bold tracking-tight text-foreground">
+                  Daily summary is {enabled ? 'on' : 'off'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {settings.last_sent_on
+                    ? `Last sent ${new Date(`${settings.last_sent_on}T00:00:00Z`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' })}.`
+                    : 'Off by default.'}
+                </p>
+              </div>
             </div>
             <Switch
               checked={enabled}
@@ -170,81 +191,102 @@ export function DailySummarySettings() {
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs">
-                Time (India time)
-              </Label>
-              <Select
-                value={hour}
-                onValueChange={(v) => setHour(v ?? '9')}
-                disabled={readOnly}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {HOURS.map((h) => (
-                    <SelectItem key={h.value} value={h.value}>
-                      {h.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="summary-emails"
-                className="text-muted-foreground text-xs"
-              >
-                Send to (comma-separated, up to 5)
-              </Label>
-              <Input
-                id="summary-emails"
-                value={emails}
-                onChange={(e) => setEmails(e.target.value)}
-                placeholder={settings.owner_email ?? 'you@example.com'}
-                disabled={readOnly}
-              />
-              <p className="text-muted-foreground text-xs">
-                Leave empty to send it to the account owner
-                {settings.owner_email ? ` (${settings.owner_email})` : ''}.
-              </p>
-            </div>
-          </div>
+          {/* Schedule + recipients */}
+          <Card>
+            <CardContent className="space-y-5">
+              <div className="flex items-center gap-3">
+                <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+                  <Clock className="size-5" />
+                </span>
+                <div>
+                  <h3 className="text-base font-bold tracking-tight text-foreground">Schedule &amp; recipients</h3>
+                  <p className="text-xs text-muted-foreground">Pick when it arrives and who gets it.</p>
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground text-xs">Time (India time)</Label>
+                  <Select value={hour} onValueChange={(v) => setHour(v ?? '9')} disabled={readOnly}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HOURS.map((h) => (
+                        <SelectItem key={h.value} value={h.value}>
+                          {h.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="summary-emails" className="text-muted-foreground text-xs">
+                    Send to (comma-separated, up to 5)
+                  </Label>
+                  <Input
+                    id="summary-emails"
+                    value={emails}
+                    onChange={(e) => setEmails(e.target.value)}
+                    placeholder={settings.owner_email ?? 'you@example.com'}
+                    disabled={readOnly}
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    Leave empty to send it to the account owner
+                    {settings.owner_email ? ` (${settings.owner_email})` : ''}.
+                  </p>
+                </div>
+              </div>
 
-          <div className="bg-muted/50 rounded-lg p-3">
-            <p className="text-foreground mb-1.5 flex items-center gap-1.5 text-xs font-medium">
-              <Mail className="size-3.5" />
-              What&apos;s in it
-            </p>
-            <p className="text-muted-foreground text-xs">
-              {SUMMARY_ROWS.map((r) => r.label).join(' · ')}
-            </p>
-          </div>
+              {!readOnly && (
+                <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={sendTest}
+                    disabled={busy !== null || !settings.email_configured}
+                    className="rounded-xl"
+                  >
+                    {busy === 'test' ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                    Send a test now
+                  </Button>
+                  <Button onClick={save} disabled={busy !== null} className="rounded-xl shadow-md shadow-primary/25">
+                    {busy === 'save' && <Loader2 className="size-4 animate-spin" />}
+                    Save changes
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-          {!readOnly && (
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={sendTest}
-                disabled={busy !== null || !settings.email_configured}
-              >
-                {busy === 'test' ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Send className="size-4" />
-                )}
-                Send a test now
-              </Button>
-              <Button onClick={save} disabled={busy !== null}>
-                {busy === 'save' && <Loader2 className="size-4 animate-spin" />}
-                Save
-              </Button>
+        {/* Email preview */}
+        <Card className="h-fit xl:sticky xl:top-0">
+          <CardContent className="space-y-4">
+            <p className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">What the email looks like</p>
+            <div className="overflow-hidden rounded-2xl border border-border bg-card-2 shadow-sm">
+              <div className="flex items-center gap-3 bg-gradient-to-r from-[var(--rail)] to-primary px-4 py-3.5 text-white">
+                <span className="flex size-9 items-center justify-center rounded-xl bg-white/20">
+                  <Mail className="size-4" />
+                </span>
+                <div>
+                  <p className="text-sm font-bold">Your daily WhatsApp summary</p>
+                  <p className="text-[11px] text-white/75">Repeat Grow</p>
+                </div>
+              </div>
+              <ul className="divide-y divide-border">
+                {SUMMARY_ROWS.map((r, i) => (
+                  <li key={r.label} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                    <span className="text-muted-foreground">{r.label}</span>
+                    <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary tabular-nums">
+                      {[12, 34, 8, 5, 21, 3, 18, 9][i % 8]}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <p className="text-xs text-muted-foreground">Sample numbers shown &mdash; your real figures are filled in each day.</p>
+          </CardContent>
+        </Card>
+      </div>
     </section>
   );
 }

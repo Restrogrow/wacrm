@@ -85,7 +85,7 @@ function LoginPageInner() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md border-border bg-card">
         <CardHeader className="items-center text-center">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft">
             {inviteToken ? (
               <UsersRound className="h-6 w-6 text-primary" />
             ) : (
@@ -159,7 +159,7 @@ function LoginPageInner() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-1 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+                  className="absolute right-1 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {showPassword ? (
                     <EyeOff className="size-4" />
@@ -173,7 +173,7 @@ function LoginPageInner() {
             <Button
               type="submit"
               disabled={loading}
-              className="mt-2 h-10 w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="mt-2 h-11 w-full rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? "Signing in..." : "Sign in"}
             </Button>

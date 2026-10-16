@@ -13,7 +13,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Check, Copy, Loader2, Save, ShoppingBag, Unplug } from 'lucide-react';
+import {
+  Check,
+  Clock,
+  Copy,
+  CreditCard,
+  Loader2,
+  MessageSquare,
+  Package,
+  PackageCheck,
+  Save,
+  ShoppingBag,
+  ShoppingCart,
+  Truck,
+  Unplug,
+  Webhook,
+  XCircle,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -73,6 +91,16 @@ interface Topic {
   drives: string;
 }
 
+const EVENT_ICONS: Record<string, LucideIcon> = {
+  order_placed: ShoppingBag,
+  cod_order_placed: CreditCard,
+  order_shipped: Truck,
+  out_for_delivery: Package,
+  order_delivered: PackageCheck,
+  order_cancelled: XCircle,
+  abandoned_checkout: ShoppingCart,
+};
+
 function emptyRule(event: ShopifyEvent): Rule {
   return {
     event,
@@ -88,7 +116,7 @@ function CopyField({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex items-center gap-2">
-      <code className="bg-muted min-w-0 flex-1 truncate rounded-md px-3 py-2 font-mono text-xs">
+      <code className="bg-muted min-w-0 flex-1 truncate rounded-xl px-3 py-2 font-mono text-xs">
         {value}
       </code>
       <Button
@@ -297,7 +325,7 @@ export function ShopifySettings() {
   if (missingTable) {
     return (
       <section className="space-y-6">
-        <SettingsPanelHead title="Shopify" />
+        <SettingsPanelHead icon={ShoppingBag} title="Shopify" />
         <Card>
           <CardContent className="text-muted-foreground py-6 text-sm">
             {missingTable}
@@ -312,18 +340,53 @@ export function ShopifySettings() {
   return (
     <section className="animate-in fade-in-50 space-y-6 duration-200">
       <SettingsPanelHead
+        icon={ShoppingBag}
         title="Shopify"
         description="Send WhatsApp messages automatically when customers order, when orders ship or are delivered, and when carts are abandoned. Messages appear in your inbox like any other chat."
+        action={
+          connected ? (
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3.5 py-1.5 text-sm font-semibold text-primary">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+                <span className="relative inline-flex size-2 rounded-full bg-primary" />
+              </span>
+              Connected
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3.5 py-1.5 text-sm font-semibold text-muted-foreground">
+              <span className="size-2 rounded-full bg-muted-foreground/50" />
+              Not connected
+            </span>
+          )
+        }
       />
+
+      {/* ---------------- Stat tiles ---------------- */}
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        {[
+          { label: 'Store', value: connected ? (store?.shop_name || store?.shop_domain || '—') : 'Not connected', icon: ShoppingBag, tone: 'bg-primary text-primary-foreground shadow-primary/30' },
+          { label: 'Messages sent', value: String(activity.filter((r) => r.status === 'sent').length), icon: MessageSquare, tone: 'bg-sky-500 text-white shadow-sky-500/30' },
+          { label: 'Active automations', value: `${Object.values(rules).filter((r) => r.enabled).length} / ${SHOPIFY_EVENTS.length}`, icon: Zap, tone: 'bg-amber-500 text-white shadow-amber-500/30' },
+          { label: 'Last event', value: connected ? fmtActivityTime(store?.last_event_at ?? null) : '—', icon: Clock, tone: 'bg-violet-500 text-white shadow-violet-500/30' },
+        ].map((st) => (
+          <div key={st.label} className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+            <span className={`flex size-11 items-center justify-center rounded-2xl shadow-lg ${st.tone}`}>
+              <st.icon className="size-5" />
+            </span>
+            <p className="mt-4 truncate text-xl leading-none font-bold tracking-tight text-foreground tabular-nums">{st.value}</p>
+            <p className="mt-2 text-sm font-medium text-muted-foreground">{st.label}</p>
+          </div>
+        ))}
+      </div>
 
       {/* ---------------- Connection ---------------- */}
       {connected ? (
-        <Card>
-          <CardContent className="space-y-4 py-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <Card className="overflow-hidden">
+          <CardContent className="space-y-5">
+            <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-r from-primary-soft via-card to-card p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="bg-primary/10 flex size-10 shrink-0 items-center justify-center rounded-lg">
-                  <ShoppingBag className="text-primary size-5" />
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+                  <ShoppingBag className="size-6" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -393,7 +456,7 @@ export function ShopifySettings() {
             </div>
 
             {store.connection_type === 'webhook' && store.webhook_url && (
-              <div className="border-border space-y-3 rounded-lg border p-4">
+              <div className="border-border bg-muted/30 space-y-3 rounded-2xl border p-4">
                 <p className="text-foreground text-sm font-medium">
                   Webhooks to add in Shopify
                 </p>
@@ -453,20 +516,29 @@ export function ShopifySettings() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardContent className="py-5">
+        <div className="grid gap-5 lg:grid-cols-2">
+          <Card className="ring-2 ring-primary/30">
+            <CardContent>
               {/* A real navigation: the install route redirects to Shopify. */}
               <form
                 action="/api/integrations/shopify/install"
                 method="get"
                 className="space-y-3"
               >
-                <p className="text-foreground font-medium">Connect Shopify</p>
-                <p className="text-muted-foreground text-sm">
-                  One click: approve Repeat Grow in Shopify and we set
-                  everything up for you.
-                </p>
+                <div className="flex items-center gap-3">
+                  <span className="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+                    <Zap className="size-5" />
+                  </span>
+                  <div>
+                    <p className="text-foreground flex items-center gap-2 text-base font-bold tracking-tight">
+                      Connect Shopify
+                      <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-semibold tracking-wide text-primary uppercase">Recommended</span>
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      One click: approve Repeat Grow in Shopify and we set everything up for you.
+                    </p>
+                  </div>
+                </div>
                 <Input
                   name="shop"
                   required
@@ -493,10 +565,15 @@ export function ShopifySettings() {
           </Card>
 
           <Card>
-            <CardContent className="space-y-3 py-5">
-              <p className="text-foreground font-medium">
-                Connect with webhooks
-              </p>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="flex size-11 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                  <Webhook className="size-5" />
+                </span>
+                <p className="text-foreground text-base font-bold tracking-tight">
+                  Connect with webhooks
+                </p>
+              </div>
               <p className="text-muted-foreground text-sm">
                 Works on every store. In Shopify admin open{' '}
                 <b>Settings → Notifications → Webhooks</b> and copy the key
@@ -538,8 +615,13 @@ export function ShopifySettings() {
       <div>
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h3 className="text-foreground text-sm font-semibold">Messages</h3>
-            <p className="text-muted-foreground text-xs">
+            <h3 className="text-foreground flex items-center gap-2 text-base font-bold tracking-tight">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary">
+                <MessageSquare className="size-4" />
+              </span>
+              Automatic messages
+            </h3>
+            <p className="text-muted-foreground mt-1 text-xs">
               Pick an approved template for each event and choose what fills
               each {'{{1}}'}, {'{{2}}'}… Create templates in Settings →
               Templates (use the Utility category for order updates).
@@ -574,6 +656,7 @@ export function ShopifySettings() {
           templates={templates}
           readOnly={readOnly}
           canTest={!!connected && !readOnly}
+          icons={EVENT_ICONS}
           testingEvent={
             busy?.startsWith('test:') ? (busy.slice(5) as ShopifyEvent) : null
           }
@@ -602,7 +685,7 @@ export function ShopifySettings() {
 
         {!readOnly && (
           <div className="mt-4 flex justify-end">
-            <Button onClick={saveRules} disabled={!dirty || busy === 'rules'}>
+            <Button onClick={saveRules} disabled={!dirty || busy === 'rules'} className="rounded-xl shadow-md shadow-primary/25">
               {busy === 'rules' ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (

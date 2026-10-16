@@ -54,7 +54,7 @@ export default function ResetPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md border-border bg-card">
         <CardHeader className="items-center text-center">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft">
             <MessageSquare className="h-6 w-6 text-primary" />
           </div>
           <CardTitle className="text-xl text-foreground">
@@ -119,7 +119,7 @@ export default function ResetPasswordPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="mt-2 h-10 w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="mt-2 h-11 w-full rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? "Updating..." : "Update password"}
             </Button>

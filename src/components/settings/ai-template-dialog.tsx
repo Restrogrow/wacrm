@@ -212,8 +212,8 @@ export function AiTemplateDialog({
             </div>
 
             {/* WhatsApp-style preview with sample values filled in */}
-            <div className="rounded-lg bg-[#0b141a] p-4">
-              <div className="max-w-[85%] rounded-lg rounded-tl-none bg-[#202c33] p-3 text-sm text-[#e9edef] shadow">
+            <div className="rounded-2xl bg-[#0b141a] p-4">
+              <div className="max-w-[85%] rounded-2xl rounded-tl-none bg-[#202c33] p-3 text-sm text-[#e9edef] shadow">
                 {draft.header_type === 'text' && draft.header_content ? (
                   <p className="mb-1 font-semibold">{fillSamples(draft.header_content, samples?.header)}</p>
                 ) : null}
@@ -230,7 +230,7 @@ export function AiTemplateDialog({
                   {draft.buttons.map((b, i) => (
                     <div
                       key={i}
-                      className="rounded-lg bg-[#202c33] py-2 text-center text-sm text-[#53bdeb]"
+                      className="rounded-2xl bg-[#202c33] py-2 text-center text-sm text-[#53bdeb]"
                     >
                       {b.text}
                     </div>
@@ -241,7 +241,7 @@ export function AiTemplateDialog({
 
             <div className="space-y-1">
               <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Template text</p>
-              <p className="border-border text-foreground rounded-md border p-3 font-mono text-xs whitespace-pre-wrap">
+              <p className="border-border text-foreground rounded-xl border p-3 font-mono text-xs whitespace-pre-wrap">
                 {draft.body_text}
               </p>
               {samples?.body?.length ? (

@@ -314,15 +314,15 @@ export default function PipelinesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-border bg-gradient-to-r from-primary-soft via-card to-card p-4 shadow-sm">
         <div className="flex items-center gap-3">
           {/* Pipeline selector dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger
-              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors data-[popup-open]:bg-muted"
+              className="inline-flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-foreground shadow-sm transition-colors hover:border-primary-soft-2 data-[popup-open]:border-primary-soft-2"
             >
-              <GitBranch className="h-4 w-4 text-primary" />
-              <span className="font-semibold">
+              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary-soft text-primary"><GitBranch className="h-4 w-4" /></span>
+              <span className="text-base font-bold tracking-tight">
                 {selectedPipeline?.name ?? "Select Pipeline"}
               </span>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -370,7 +370,7 @@ export default function PipelinesPage() {
             canAct={canEditSettings}
             gateReason="create pipelines"
             onClick={() => setNewPipelineOpen(true)}
-            className="border-border bg-card text-foreground hover:bg-muted"
+            className="rounded-xl border-border bg-card text-foreground shadow-sm hover:bg-primary-soft"
           >
             <Plus className="mr-1 h-4 w-4" />
             Add Pipeline
@@ -380,7 +380,7 @@ export default function PipelinesPage() {
             gateReason="create deals"
             disabled={!selectedPipelineId || stages.length === 0}
             onClick={() => handleAddDeal()}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            className="rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90"
           >
             <Plus className="mr-1 h-4 w-4" />
             Add Deal
@@ -390,8 +390,8 @@ export default function PipelinesPage() {
 
       {/* Board */}
       {pipelines.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20">
-          <GitBranch className="h-12 w-12 text-muted-foreground" />
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-primary-soft-2 bg-primary-soft/40 py-20">
+          <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary-soft text-primary"><GitBranch className="h-8 w-8" /></span>
           <h3 className="mt-4 text-lg font-medium text-foreground">
             No pipelines yet
           </h3>

@@ -34,7 +34,7 @@ export function StatTile({
   const up = delta?.startsWith('+');
   const down = delta?.startsWith('−');
   return (
-    <div className="border-border bg-card rounded-xl border p-4">
+    <div className="border-border bg-card rounded-2xl border p-4">
       <p className="text-muted-foreground text-xs">{label}</p>
       <p
         className={cn(
@@ -81,7 +81,7 @@ export function DailyColumns({
   const plural = (n: number) => `${n} ${unit}${n === 1 ? '' : 's'}`;
 
   return (
-    <figure className="border-border bg-card rounded-xl border p-4">
+    <figure className="border-border bg-card rounded-2xl border p-4">
       <figcaption className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
         <span className="text-foreground text-sm font-semibold">{title}</span>
         <span className="text-muted-foreground text-xs">
@@ -115,7 +115,7 @@ export function DailyColumns({
                   height: d.count === 0 ? 2 : `${(d.count / max) * 100}%`,
                 }}
               />
-              <div className="border-border bg-popover text-popover-foreground pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 rounded-md border px-2 py-1 text-xs whitespace-nowrap shadow-md group-hover:block">
+              <div className="border-border bg-popover text-popover-foreground pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 rounded-lg border px-2 py-1 text-xs whitespace-nowrap shadow-md group-hover:block">
                 <span className="font-medium">{formatDayLabel(d.day)}</span>
                 <span className="text-muted-foreground">
                   {' '}
@@ -174,7 +174,7 @@ export function BarList({
   const base = total ?? Math.max(1, ...items.map((i) => i.count));
   const shareBase = items.reduce((s, i) => s + i.count, 0) || 1;
   return (
-    <div className="border-border bg-card rounded-xl border p-4">
+    <div className="border-border bg-card rounded-2xl border p-4">
       <p className="text-foreground mb-3 text-sm font-semibold">{title}</p>
       {items.length === 0 ? (
         <p className="text-muted-foreground text-xs">{empty}</p>

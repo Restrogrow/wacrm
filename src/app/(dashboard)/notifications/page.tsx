@@ -1,5 +1,6 @@
 "use client";
 
+import { PageHero } from "@/components/layout/page-hero";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -164,33 +165,33 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Conversations other teammates assign to you show up here.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={unreadIds.length === 0 || markingAll}
-          onClick={markAllRead}
-        >
-          {markingAll ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <CheckCheck className="h-4 w-4" />
-          )}
-          Mark all as read
-        </Button>
-      </div>
+      <PageHero
+        icon={Bell}
+        title="Notifications"
+        description="Conversations other teammates assign to you show up here."
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={unreadIds.length === 0 || markingAll}
+            onClick={markAllRead}
+            className="rounded-2xl bg-card"
+          >
+            {markingAll ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCheck className="h-4 w-4" />
+            )}
+            Mark all as read
+          </Button>
+        }
+      />
 
       <MessageAlertSettings />
 
       {notifications.length === 0 ? (
-        <div className="flex h-48 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+        <div className="flex h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted/40">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
             <Bell className="h-6 w-6 text-primary" />
           </div>
           <p className="mt-3 text-sm font-medium text-foreground">
@@ -212,7 +213,7 @@ export default function NotificationsPage() {
                   type="button"
                   onClick={() => handleClick(n)}
                   className={cn(
-                    "flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-colors",
+                    "flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors",
                     isUnread
                       ? "border-primary/30 bg-primary/5 hover:border-primary/50"
                       : "border-border bg-card hover:border-border/70",
@@ -220,7 +221,7 @@ export default function NotificationsPage() {
                 >
                   <div
                     className={cn(
-                      "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg",
+                      "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl",
                       isUnread ? "bg-primary/15" : "bg-muted",
                     )}
                     aria-hidden

@@ -16,26 +16,27 @@ interface Action {
 }
 
 const ACTIONS: Action[] = [
-  { label: 'New Contact', href: '/contacts', icon: UserPlus, tint: 'text-primary' },
-  { label: 'New Deal', href: '/pipelines', icon: Briefcase, tint: 'text-blue-400' },
-  { label: 'New Broadcast', href: '/broadcasts/new', icon: Radio, tint: 'text-amber-400' },
-  { label: 'New Automation', href: '/automations/new', icon: Zap, tint: 'text-primary' },
+  { label: 'New Contact', href: '/contacts', icon: UserPlus, tint: 'text-primary bg-primary-soft' },
+  { label: 'New Deal', href: '/pipelines', icon: Briefcase, tint: 'text-sky-500 bg-sky-500/10' },
+  { label: 'New Broadcast', href: '/broadcasts/new', icon: Radio, tint: 'text-amber-500 bg-amber-500/10' },
+  { label: 'New Automation', href: '/automations/new', icon: Zap, tint: 'text-primary bg-primary-soft' },
 ]
 
 export function QuickActions() {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="flex flex-wrap items-center gap-2.5">
+      <span className="mr-1 text-sm font-semibold text-foreground">Quick actions</span>
       {ACTIONS.map((a) => {
         const Icon = a.icon
         return (
           <Link
             key={a.href}
             href={a.href}
-            className="group flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-border hover:bg-muted/60"
+            className="group flex items-center gap-2 rounded-full border border-border bg-card py-1.5 pr-4 pl-1.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary-soft-2 hover:shadow-md"
           >
-            <div className={`flex h-9 w-9 items-center justify-center rounded-lg bg-muted ${a.tint}`}>
-              <Icon className="h-4 w-4" />
-            </div>
+            <span className={`flex h-7 w-7 items-center justify-center rounded-full ${a.tint}`}>
+              <Icon className="h-3.5 w-3.5" />
+            </span>
             <span className="text-sm font-medium text-foreground">{a.label}</span>
           </Link>
         )

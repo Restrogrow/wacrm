@@ -220,35 +220,43 @@ export function SettingsOverview({
   return (
     <section className="animate-in fade-in-50 duration-200">
       {/* Identity */}
-      <Card className="flex-row items-center gap-4 px-5 py-5">
-        <Avatar size="lg" className="size-14">
-          {profile?.avatar_url ? (
-            <AvatarImage src={profile.avatar_url} alt={displayName} />
-          ) : null}
-          <AvatarFallback className="bg-primary/10 text-xl text-primary">
-            {initial}
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-base font-semibold text-foreground">
-            {displayName}
-          </div>
-          {profile?.email ? (
-            <div className="truncate text-sm text-muted-foreground">
-              {profile.email}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--rail)] via-primary to-emerald-400 p-6 text-white shadow-lg sm:p-7">
+        <div className="pointer-events-none absolute -top-16 -right-16 size-60 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative flex flex-wrap items-center gap-4">
+          <Avatar size="lg" className="size-16 ring-4 ring-white/30">
+            {profile?.avatar_url ? (
+              <AvatarImage src={profile.avatar_url} alt={displayName} />
+            ) : null}
+            <AvatarFallback className="bg-white text-2xl font-bold text-[var(--rail)]">
+              {initial}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-white/75">Your workspace</p>
+            <div className="truncate text-2xl font-bold tracking-tight">
+              {displayName}
             </div>
+            {profile?.email ? (
+              <div className="truncate text-sm text-white/80">
+                {profile.email}
+              </div>
+            ) : null}
+          </div>
+          {roleMeta && RoleIcon ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-sm font-semibold backdrop-blur [&_svg]:size-4">
+              <RoleIcon />
+              {roleMeta.label}
+            </span>
           ) : null}
         </div>
-        {roleMeta && RoleIcon ? (
-          <SettingsChip variant={roleMeta.variant}>
-            <RoleIcon />
-            {roleMeta.label}
-          </SettingsChip>
-        ) : null}
-      </Card>
+      </div>
+
+      <h2 className="mt-7 mb-3 text-base font-bold tracking-tight text-foreground">
+        Quick overview
+      </h2>
 
       {/* Status tiles */}
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {tiles.map(({ section, loading, subtitle }) => {
           const meta = SECTION_META[section];
           const Icon = meta.icon;
@@ -258,18 +266,18 @@ export function SettingsOverview({
               type="button"
               onClick={() => onSelect(section)}
               className={cn(
-                'group flex items-start gap-3.5 rounded-xl border border-border bg-card p-4 text-left transition-colors',
-                'hover:border-primary-soft-2 hover:bg-card-2',
+                'group flex items-start gap-4 rounded-3xl border border-border bg-card p-5 text-left shadow-sm transition-all',
+                'hover:-translate-y-0.5 hover:border-primary-soft-2 hover:shadow-md',
               )}
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <Icon className="size-4" />
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <Icon className="size-5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-foreground">
+                <span className="block text-base font-bold tracking-tight text-foreground">
                   {meta.label}
                 </span>
-                <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                   {loading ? (
                     <>
                       <Loader2 className="size-3 animate-spin" /> Loading…
@@ -279,7 +287,7 @@ export function SettingsOverview({
                   )}
                 </span>
               </span>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
             </button>
           );
         })}

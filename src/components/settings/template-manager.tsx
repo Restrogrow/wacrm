@@ -13,6 +13,7 @@ import {
   RotateCcw,
   Sparkles,
   Upload,
+  FileText,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -540,6 +541,7 @@ export function TemplateManager() {
   return (
     <section className="animate-in fade-in-50 space-y-4 duration-200">
       <SettingsPanelHead
+        icon={FileText}
         title="Message templates"
         description={
           'Create templates and submit them to Meta for approval. Use "Sync from Meta" to pull templates approved elsewhere.'
@@ -568,9 +570,12 @@ export function TemplateManager() {
       />
 
       {templates.length === 0 ? (
-        <Card>
+        <Card className="border border-dashed border-primary-soft-2 bg-primary-soft/40 ring-0">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-muted-foreground text-sm">No templates yet.</p>
+            <span className="mb-3 flex h-14 w-14 items-center justify-center rounded-3xl bg-primary-soft text-primary">
+              <FileText className="h-7 w-7" />
+            </span>
+            <p className="text-foreground text-base font-bold">No templates yet</p>
             <p className="text-muted-foreground text-xs mt-1">
               Create your first message template to get started.
             </p>
@@ -582,11 +587,11 @@ export function TemplateManager() {
             const statusKey = template.status || 'DRAFT';
             const status = templateStatusConfig[statusKey];
             return (
-              <Card key={template.id}>
-                <CardContent className="flex items-start justify-between pt-4">
+              <Card key={template.id} className="transition-all hover:-translate-y-0.5 hover:shadow-md">
+                <CardContent className="flex items-start justify-between">
                   <div className="space-y-2 min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-medium text-foreground">{template.name}</h3>
+                      <h3 className="text-base font-bold tracking-tight text-foreground">{template.name}</h3>
                       <Badge
                         className={`text-xs border ${categoryColors[template.category] || ''}`}
                       >
@@ -615,7 +620,7 @@ export function TemplateManager() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
+                    <p className="line-clamp-3 max-w-prose rounded-2xl rounded-tl-sm bg-primary-soft px-3.5 py-2.5 text-sm text-foreground">
                       {template.body_text}
                     </p>
                     {template.carousel_cards?.length ? (
@@ -972,7 +977,7 @@ export function TemplateManager() {
                     <img
                       src={form.header_media_url}
                       alt="Header sample"
-                      className="max-h-28 rounded-md border border-border object-contain"
+                      className="max-h-28 rounded-xl border border-border object-contain"
                     />
                   )}
                   <p className="text-[11px] text-muted-foreground leading-relaxed">

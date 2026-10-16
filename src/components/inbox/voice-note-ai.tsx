@@ -87,7 +87,7 @@ export function VoiceNoteAi({
 
   const sameLanguage = voice.english.trim() === voice.transcript.trim();
   return (
-    <div className="mt-2 w-full min-w-48 space-y-2 rounded-xl border border-border bg-background/90 p-2.5 text-xs text-foreground">
+    <div className="mt-2 w-full min-w-48 space-y-2 rounded-2xl border border-border bg-background/90 p-2.5 text-xs text-foreground">
       <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
         <Sparkles className="size-3 text-primary" />
         Voice note
@@ -118,7 +118,7 @@ export function VoiceNoteAi({
       )}
 
       {voice.suggested_reply && (
-        <div className="rounded-lg border border-primary/30 bg-primary/5 p-2">
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-2">
           <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-primary">
             <MessageSquareQuote className="size-3" />
             Suggested reply

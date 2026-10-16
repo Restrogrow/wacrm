@@ -163,13 +163,24 @@ export function QrLinkSettings() {
   return (
     <section className="animate-in fade-in-50 space-y-6 duration-200">
       <SettingsPanelHead
+        icon={QrCode}
         title="QR & WhatsApp link"
         description="Make a WhatsApp link and a printable QR code with a ready-typed first message. Customers scan it, tap send, and the chat lands in your inbox."
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_minmax(0,380px)]">
         {/* ---------- Form ---------- */}
-        <Card className="space-y-5 p-5">
+        <Card className="space-y-6 p-6">
+          <div className="flex items-center gap-3">
+            <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+              <QrCode className="size-5" />
+            </span>
+            <div>
+              <h3 className="text-base font-bold tracking-tight text-foreground">Build your link</h3>
+              <p className="text-xs text-muted-foreground">Number, first message and QR style.</p>
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="qr-phone">WhatsApp number</Label>
             <div className="relative">
@@ -204,10 +215,10 @@ export function QrLinkSettings() {
                     setMessage(p.message);
                   }}
                   className={cn(
-                    'rounded-full border px-3 py-1 text-sm transition-colors',
+                    'rounded-full border px-4 py-1.5 text-sm font-medium transition-all',
                     preset === p.id
-                      ? 'border-primary bg-primary/10 text-foreground'
-                      : 'border-border text-muted-foreground hover:text-foreground',
+                      ? 'border-primary bg-primary text-primary-foreground shadow-md shadow-primary/25'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary-soft-2 hover:text-foreground',
                   )}
                 >
                   {p.label}
@@ -245,8 +256,8 @@ export function QrLinkSettings() {
                     aria-label={c.label}
                     title={c.label}
                     className={cn(
-                      'size-8 rounded-full border-2 transition-transform',
-                      color === c.value ? 'scale-110 border-primary' : 'border-transparent',
+                      'size-9 rounded-full border-2 shadow-sm transition-transform',
+                      color === c.value ? 'scale-110 border-primary ring-2 ring-primary-soft-2' : 'border-transparent',
                     )}
                     style={{ backgroundColor: c.value }}
                   />
@@ -264,7 +275,7 @@ export function QrLinkSettings() {
             </div>
           </div>
 
-          <div className="flex gap-3 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+          <div className="flex gap-3 rounded-2xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
             <Lightbulb className="mt-0.5 size-4 shrink-0 text-primary" />
             <p>
               Use a different message for each place (flyer, counter, packaging) to see where leads come from. Add a{' '}
@@ -274,12 +285,18 @@ export function QrLinkSettings() {
         </Card>
 
         {/* ---------- Preview ---------- */}
-        <Card className="flex flex-col items-center gap-4 p-5">
-          <div className="flex w-full items-center gap-2 text-sm font-semibold text-foreground">
-            <QrCode className="size-4 text-primary" />
-            Preview
+        <Card className="flex h-fit flex-col items-center gap-5 p-6 lg:sticky lg:top-0">
+          <div className="flex w-full items-center gap-3">
+            <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+              <ExternalLink className="size-5" />
+            </span>
+            <div>
+              <h3 className="text-base font-bold tracking-tight text-foreground">Preview</h3>
+              <p className="text-xs text-muted-foreground">What customers scan and see.</p>
+            </div>
           </div>
-          <div className="flex w-full max-w-[260px] flex-col items-center rounded-xl border border-border bg-white p-4">
+          <div className="flex w-full flex-col items-center rounded-3xl bg-gradient-to-br from-[var(--rail)] via-primary to-emerald-400 p-6">
+          <div className="flex w-full max-w-[240px] flex-col items-center rounded-2xl border border-border bg-white p-4 shadow-xl">
             {shownSvg ? (
               <div
                 className="w-full [&>svg]:h-auto [&>svg]:w-full"
@@ -299,6 +316,15 @@ export function QrLinkSettings() {
               </p>
             )}
           </div>
+          <p className="mt-4 text-center text-xs font-semibold tracking-wide text-white/90 uppercase">Scan to chat on WhatsApp</p>
+          </div>
+
+          {message.trim() && (
+            <div className="w-full rounded-2xl bg-primary-soft/50 p-3">
+              <p className="mb-1.5 text-[10px] font-bold tracking-wider text-muted-foreground uppercase">Customer sends</p>
+              <p className="ml-auto max-w-[85%] rounded-2xl rounded-tr-sm bg-primary px-3.5 py-2 text-sm text-primary-foreground shadow-sm">{message}</p>
+            </div>
+          )}
 
           <div className="w-full space-y-2">
             <Label htmlFor="qr-link">Link</Label>
@@ -311,7 +337,7 @@ export function QrLinkSettings() {
           </div>
 
           <div className="grid w-full grid-cols-2 gap-2">
-            <Button onClick={() => void downloadPng()} disabled={!link || downloading}>
+            <Button onClick={() => void downloadPng()} disabled={!link || downloading} className="rounded-xl shadow-md shadow-primary/25">
               {downloading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
               PNG
             </Button>

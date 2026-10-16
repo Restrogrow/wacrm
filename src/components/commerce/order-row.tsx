@@ -64,8 +64,8 @@ export function OrderRow({ order, showCustomer, onChange }: { order: OrderRowDat
   return (
     <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 text-sm">
-        <p className="font-medium text-foreground">
-          {order.reference_id} · {rupees(order.total)}
+        <p className="font-bold text-foreground">
+          {order.reference_id} · <span className="text-primary">{rupees(order.total)}</span>
           {showCustomer && order.contacts && (
             <span className="font-normal text-muted-foreground"> · {order.contacts.name || order.contacts.phone}</span>
           )}

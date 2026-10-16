@@ -50,7 +50,7 @@ export function DeletionRequests({ data }: { data: DeletionRequestsData }) {
 
   if (!data.available) {
     return (
-      <p className="border-border text-muted-foreground rounded-xl border p-4 text-sm">
+      <p className="border-border text-muted-foreground rounded-2xl border p-4 text-sm">
         Run migration <code>047_account_deletion_requests.sql</code> to receive account deletion requests.
       </p>
     );
@@ -84,9 +84,9 @@ export function DeletionRequests({ data }: { data: DeletionRequestsData }) {
   return (
     <div className="space-y-3">
       {data.pending.length === 0 ? (
-        <p className="border-border text-muted-foreground rounded-xl border p-4 text-sm">No pending requests.</p>
+        <p className="border-border text-muted-foreground rounded-2xl border p-4 text-sm">No pending requests.</p>
       ) : (
-        <div className="border-border divide-border divide-y rounded-xl border">
+        <div className="border-border divide-border divide-y rounded-2xl border">
           {data.pending.map((req) => (
             <div key={req.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 text-sm">

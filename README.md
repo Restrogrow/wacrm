@@ -547,6 +547,15 @@ npm run dev
 
 ---
 
+## Demo account (local testing)
+
+A fully populated demo workspace (contacts, chats, deals, broadcasts, templates, automations, forms, orders, AI chatbot) for previewing the UI.
+
+- **Email:** `support.repeatgrow+demo@gmail.com`
+- **Password:** stored in `.env.demo-login` (gitignored, never committed).
+- **Re-create it:** delete the demo user in Supabase, then run `node scripts/seed-demo.mjs` (it refuses to touch an existing demo user older than an hour). It uses the service-role key from `.env.local`, only writes inside the demo account, and sends no WhatsApp messages.
+- Shopify, Calendly and WhatsApp are intentionally not connected in the demo account, and Flows are not seeded.
+
 ## Environment variables
 
 Set in `.env.local` locally and in Hostinger hPanel in production.

@@ -102,7 +102,7 @@ export function MessageAlertSettings() {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-2xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="text-sm font-semibold text-foreground">New message alerts</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
@@ -271,10 +271,10 @@ export function MessageNotifier() {
     <div
       role="dialog"
       aria-label="Turn on message notifications"
-      className="fixed bottom-4 left-4 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-border bg-popover p-4 shadow-lg"
+      className="fixed bottom-4 left-4 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-border bg-popover p-4 shadow-lg"
     >
       <div className="flex items-start gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Bell className="size-4" />
         </div>
         <div className="min-w-0 flex-1">
@@ -303,7 +303,7 @@ export function MessageNotifier() {
           type="button"
           onClick={closePrompt}
           aria-label="Dismiss"
-          className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <X className="size-3.5" />
         </button>

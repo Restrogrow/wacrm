@@ -54,7 +54,7 @@ export default async function PlatformAdminPage() {
           <Link
             href="/admin/system"
             prefetch={false}
-            className="border-border text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm"
+            className="border-border text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm"
           >
             <Activity className="size-3.5" />
             System health
@@ -62,7 +62,7 @@ export default async function PlatformAdminPage() {
           <Link
             href="/admin"
             prefetch={false}
-            className="border-border text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm"
+            className="border-border text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm"
           >
             <RefreshCw className="size-3.5" />
             Refresh

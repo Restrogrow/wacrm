@@ -89,7 +89,7 @@ export function RecentCalls({ contactId }: { contactId: string }) {
                 </span>
               </div>
               {open === call.id && call.ai_notes && (
-                <div className="mt-2 rounded-lg border border-border bg-muted/30 p-2.5">
+                <div className="mt-2 rounded-xl border border-border bg-muted/30 p-2.5">
                   <CallNotesView notes={call.ai_notes} compact />
                 </div>
               )}

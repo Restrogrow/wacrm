@@ -19,39 +19,64 @@ interface MetricCardProps {
   }
   /** Used instead of `delta` when the metric has a static subtitle. */
   subtitle?: string
+  /** Accent colour of the card. Defaults to the brand green. */
+  tone?: 'green' | 'blue' | 'amber' | 'violet'
 }
 
-export function MetricCard({ title, value, icon: Icon, delta, subtitle }: MetricCardProps) {
+const TONES = {
+  green: {
+    chip: 'bg-primary text-primary-foreground shadow-primary/30',
+    glow: 'from-primary-soft',
+  },
+  blue: { chip: 'bg-sky-500 text-white shadow-sky-500/30', glow: 'from-sky-500/10' },
+  amber: { chip: 'bg-amber-500 text-white shadow-amber-500/30', glow: 'from-amber-500/10' },
+  violet: { chip: 'bg-violet-500 text-white shadow-violet-500/30', glow: 'from-violet-500/10' },
+} as const
+
+export function MetricCard({ title, value, icon: Icon, delta, subtitle, tone = 'green' }: MetricCardProps) {
+  const t = TONES[tone]
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-start justify-between">
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <Icon className="h-4 w-4" />
-        </div>
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br to-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md',
+        t.glow,
+      )}
+    >
+      <div
+        className={cn(
+          'flex h-11 w-11 items-center justify-center rounded-2xl shadow-lg',
+          t.chip,
+        )}
+      >
+        <Icon className="h-5 w-5" />
       </div>
-      <p className="mt-3 text-[28px] leading-none font-bold tabular-nums text-foreground">
+      <p className="mt-5 text-3xl leading-none font-bold tracking-tight tabular-nums text-foreground">
         {value}
       </p>
-      {delta ? <DeltaRow sign={delta.sign} label={delta.label} /> : subtitle ? (
-        <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
+      <p className="mt-2 text-sm font-medium text-muted-foreground">{title}</p>
+      {delta ? (
+        <DeltaChip sign={delta.sign} label={delta.label} />
+      ) : subtitle ? (
+        <span className="mt-3 inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+          {subtitle}
+        </span>
       ) : null}
     </div>
   )
 }
 
-function DeltaRow({ sign, label }: { sign: number; label: string }) {
+function DeltaChip({ sign, label }: { sign: number; label: string }) {
   const tone =
     sign > 0
-      ? 'text-primary'
+      ? 'bg-primary-soft text-primary'
       : sign < 0
-      ? 'text-red-400'
-      : 'text-muted-foreground'
+        ? 'bg-red-500/10 text-red-500'
+        : 'bg-muted text-muted-foreground'
   const Arrow = sign > 0 ? ArrowUp : sign < 0 ? ArrowDown : Minus
   return (
-    <div className={cn('mt-2 flex items-center gap-1 text-sm', tone)}>
-      <Arrow className="h-4 w-4" aria-hidden />
+    <span className={cn('mt-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium', tone)}>
+      <Arrow className="h-3 w-3" aria-hidden />
       <span className="tabular-nums">{label}</span>
-    </div>
+    </span>
   )
 }

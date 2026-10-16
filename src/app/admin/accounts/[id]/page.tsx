@@ -216,7 +216,7 @@ export default async function AdminAccountDetailPage({
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Users className="size-4" />
             <span className="text-xs">Members</span>
@@ -225,7 +225,7 @@ export default async function AdminAccountDetailPage({
             {account.members.length}
           </p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Phone className="size-4" />
             <span className="text-xs">WhatsApp</span>
@@ -236,7 +236,7 @@ export default async function AdminAccountDetailPage({
             </Badge>
           </div>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="size-4" />
             <span className="text-xs">WhatsApp signup</span>
@@ -255,7 +255,7 @@ export default async function AdminAccountDetailPage({
             {profileComplete ? "complete" : "incomplete"}
           </Badge>
         </h2>
-        <div className="grid grid-cols-1 gap-4 rounded-lg border border-border bg-card p-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-3">
           <div>
             <p className="text-xs text-muted-foreground">Business name</p>
             <p className="mt-1 text-sm text-foreground">{account.name}</p>
@@ -300,7 +300,7 @@ export default async function AdminAccountDetailPage({
         <h2 className="mb-3 text-sm font-semibold text-foreground">
           Members ({account.members.length})
         </h2>
-        <div className="rounded-lg border border-border">
+        <div className="rounded-xl border border-border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -379,7 +379,7 @@ export default async function AdminAccountDetailPage({
           <h2 className="mb-3 text-sm font-semibold text-foreground">
             WhatsApp connection
           </h2>
-          <div className="grid grid-cols-1 gap-4 rounded-lg border border-border bg-card p-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-2">
             <div>
               <p className="text-xs text-muted-foreground">Phone number ID</p>
               <p className="mt-1 font-mono text-sm text-foreground">

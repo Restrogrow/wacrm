@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { MessageSquare } from 'lucide-react'
 import type { ConversationsSeriesPoint } from '@/lib/dashboard/types'
 import { EmptyState } from './empty-state'
+import { PanelTitle } from './panel-title'
 import { Skeleton } from './skeleton'
 import { cn } from '@/lib/utils'
 
@@ -46,22 +47,19 @@ export function ConversationsChart({ series, loading, range, onRangeChange }: Co
   }, [data])
 
   return (
-    <section className="flex h-full flex-col rounded-xl border border-border bg-card">
-      <header className="flex items-center justify-between border-b border-border px-5 py-4">
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">Conversations Over Time</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">Daily message volume by direction</p>
-        </div>
-        <div className="flex items-center gap-1 rounded-lg bg-muted/60 p-1">
+    <section className="flex h-full flex-col rounded-3xl border border-border bg-card shadow-sm">
+      <header className="flex items-center justify-between px-6 pt-5 pb-1">
+        <PanelTitle icon={MessageSquare} title="Conversations Over Time" subtitle="Daily message volume by direction" />
+        <div className="flex items-center gap-1 rounded-full bg-muted p-1">
           {[7, 30, 90].map((r) => (
             <button
               key={r}
               type="button"
               onClick={() => onRangeChange(r as RangeDays)}
               className={cn(
-                'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+                'rounded-full px-3 py-1 text-xs font-semibold transition-colors',
                 range === r
-                  ? 'bg-secondary text-secondary-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -71,7 +69,7 @@ export function ConversationsChart({ series, loading, range, onRangeChange }: Co
         </div>
       </header>
 
-      <div className="p-5">
+      <div className="p-6 pt-4">
         {loading || !data ? (
           <Skeleton className="h-[240px] w-full" />
         ) : data.every((p) => p.incoming === 0 && p.outgoing === 0) ? (
@@ -85,9 +83,9 @@ export function ConversationsChart({ series, loading, range, onRangeChange }: Co
         )}
       </div>
 
-      <footer className="flex items-center gap-4 border-t border-border px-5 py-3 text-xs text-muted-foreground">
+      <footer className="flex items-center gap-4 border-t border-border px-6 py-3 text-xs text-muted-foreground">
         <LegendDot color="#3b82f6" label="Incoming" />
-        <LegendDot color="#7c3aed" label="Outgoing" />
+        <LegendDot color="#16a34a" label="Outgoing" />
       </footer>
     </section>
   )
@@ -238,11 +236,11 @@ function LineSvg({
           ) : null,
         )}
 
-        {/* Outgoing polyline (violet) */}
+        {/* Outgoing polyline (green) */}
         <path
           d={outgoingPath}
           fill="none"
-          stroke="#7c3aed"
+          stroke="#16a34a"
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -269,7 +267,7 @@ function LineSvg({
               strokeDasharray="3 3"
             />
             <circle cx={hoverX} cy={yFor(data[hover.idx].incoming)} r={3.5} fill="#3b82f6" />
-            <circle cx={hoverX} cy={yFor(data[hover.idx].outgoing)} r={3.5} fill="#7c3aed" />
+            <circle cx={hoverX} cy={yFor(data[hover.idx].outgoing)} r={3.5} fill="#16a34a" />
           </g>
         )}
       </svg>

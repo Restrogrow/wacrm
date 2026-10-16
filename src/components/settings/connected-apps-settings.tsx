@@ -102,6 +102,7 @@ export function ConnectedAppsSettings() {
   return (
     <section className="animate-in fade-in-50 space-y-6 duration-200">
       <SettingsPanelHead
+        icon={Plug}
         title="Connected apps"
         description="Apps you've connected to Repeat Grow, such as RestroGrow. They can only do what you allowed when connecting. Disconnect one to cut off its access immediately."
       />

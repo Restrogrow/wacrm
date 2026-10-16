@@ -49,7 +49,7 @@ export function DemoRequests({ data }: { data: DemoRequestsData }) {
 
   if (!data.available) {
     return (
-      <p className="border-border text-muted-foreground rounded-xl border p-4 text-sm">
+      <p className="border-border text-muted-foreground rounded-2xl border p-4 text-sm">
         Run migration <code>054_demo_requests.sql</code> to receive demo requests.
       </p>
     );
@@ -100,11 +100,11 @@ export function DemoRequests({ data }: { data: DemoRequestsData }) {
       </div>
 
       {rows.length === 0 ? (
-        <p className="border-border text-muted-foreground rounded-xl border p-4 text-sm">
+        <p className="border-border text-muted-foreground rounded-2xl border p-4 text-sm">
           {data.rows.length === 0 ? 'No demo requests yet.' : 'No requests with this status.'}
         </p>
       ) : (
-        <div className="border-border divide-border divide-y rounded-xl border">
+        <div className="border-border divide-border divide-y rounded-2xl border">
           {rows.map((r) => (
             <div key={r.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 space-y-1 text-sm">
@@ -143,7 +143,7 @@ export function DemoRequests({ data }: { data: DemoRequestsData }) {
                   value={r.status}
                   disabled={busyId === r.id}
                   onChange={(e) => setStatus(r, e.target.value as DemoStatus)}
-                  className="border-border bg-background rounded-md border px-2 py-1 text-sm"
+                  className="border-border bg-background rounded-lg border px-2 py-1 text-sm"
                 >
                   {DEMO_STATUSES.map((s) => (
                     <option key={s} value={s}>

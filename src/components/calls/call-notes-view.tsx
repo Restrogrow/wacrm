@@ -45,7 +45,7 @@ export function CallNotesView({ notes, compact = false }: { notes: CallNotes; co
         </div>
       )}
       {notes.follow_up && (
-        <p className="rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1.5 text-foreground">
+        <p className="rounded-lg border border-primary/30 bg-primary/5 px-2.5 py-1.5 text-foreground">
           <span className="font-semibold">Follow up: </span>
           {notes.follow_up}
         </p>

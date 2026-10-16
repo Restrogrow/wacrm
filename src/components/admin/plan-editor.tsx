@@ -80,7 +80,7 @@ export function PlanEditor({
   }
 
   return (
-    <div className="border-border bg-card space-y-4 rounded-lg border p-4">
+    <div className="border-border bg-card space-y-4 rounded-xl border p-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label className="text-muted-foreground text-xs">Plan</Label>

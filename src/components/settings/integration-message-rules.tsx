@@ -8,7 +8,9 @@
 // ============================================================
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Loader2, Send } from 'lucide-react';
+import { Clock, Loader2, MessageSquare, Send, type LucideIcon } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -86,6 +88,7 @@ export function MessageRulesEditor<E extends string, R extends MessageRule>({
   onChange,
   onTest,
   renderExtra,
+  icons,
 }: {
   events: readonly E[];
   meta: Record<E, { label: string; description: string }>;
@@ -100,6 +103,8 @@ export function MessageRulesEditor<E extends string, R extends MessageRule>({
   onTest: (event: E) => void;
   /** Extra per-event fields, e.g. a delay input. */
   renderExtra?: (event: E, rule: R) => ReactNode;
+  /** Optional icon per event, shown in the card header. */
+  icons?: Partial<Record<E, LucideIcon>>;
 }) {
   const templateByKey = useMemo(
     () => new Map(templates.map((t) => [templateKey(t.name, t.language), t])),
@@ -107,11 +112,12 @@ export function MessageRulesEditor<E extends string, R extends MessageRule>({
   );
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {templates.length === 0 && (
-        <p className="text-muted-foreground text-sm">
-          You don&apos;t have any approved templates yet.
-        </p>
+        <div className="flex items-center gap-3 rounded-2xl border border-dashed border-amber-500/40 bg-amber-500/5 px-4 py-3 text-sm text-muted-foreground">
+          <Clock className="size-4 shrink-0 text-amber-500" />
+          You don&apos;t have any approved templates yet — create one in Templates and wait for Meta approval.
+        </div>
       )}
       {events.map((event) => {
         const rule = rules[event];
@@ -128,18 +134,42 @@ export function MessageRulesEditor<E extends string, R extends MessageRule>({
           }
         );
         const extra = renderExtra?.(event, rule);
+        const EventIcon = icons?.[event] ?? MessageSquare;
 
         return (
-          <Card key={event}>
-            <CardContent className="space-y-3 py-4">
+          <Card
+            key={event}
+            className={cn(
+              'transition-all',
+              rule.enabled ? 'ring-primary/30 shadow-md' : 'opacity-95',
+            )}
+          >
+            <CardContent className="space-y-4">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-foreground text-sm font-medium">
-                    {info.label}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {info.description}
-                  </p>
+                <div className="flex min-w-0 items-start gap-3">
+                  <span
+                    className={cn(
+                      'flex size-11 shrink-0 items-center justify-center rounded-2xl transition-colors',
+                      rule.enabled
+                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                        : 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    <EventIcon className="size-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-foreground flex items-center gap-2 text-base font-bold tracking-tight">
+                      {info.label}
+                      {rule.enabled && (
+                        <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-semibold tracking-wide text-primary uppercase">
+                          On
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
+                      {info.description}
+                    </p>
+                  </div>
                 </div>
                 <Switch
                   checked={rule.enabled}
@@ -231,9 +261,14 @@ export function MessageRulesEditor<E extends string, R extends MessageRule>({
               )}
 
               {preview && (
-                <p className="bg-muted/60 text-foreground rounded-md px-3 py-2 text-xs whitespace-pre-wrap">
-                  {preview}
-                </p>
+                <div className="rounded-2xl bg-primary-soft/50 p-3">
+                  <p className="text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
+                    Customer sees
+                  </p>
+                  <p className="bg-card text-foreground max-w-md rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-sm whitespace-pre-wrap shadow-sm">
+                    {preview}
+                  </p>
+                </div>
               )}
 
               {canTest && rule.template_name && (
@@ -282,16 +317,19 @@ export function IntegrationActivity({ items }: { items: ActivityItem[] }) {
   if (items.length === 0) return null;
   return (
     <div>
-      <h3 className="text-foreground mb-2 text-sm font-semibold">
+      <h3 className="text-foreground mb-3 flex items-center gap-2 text-base font-bold tracking-tight">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary">
+          <Clock className="size-4" />
+        </span>
         Recent messages
       </h3>
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-2">
           <ul className="divide-border divide-y">
             {items.map((row) => (
               <li
                 key={row.id}
-                className="flex flex-col gap-1 px-4 py-2.5 sm:flex-row sm:items-center sm:gap-3"
+                className="flex flex-col gap-1 rounded-2xl px-4 py-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:gap-3"
               >
                 <Badge
                   variant={

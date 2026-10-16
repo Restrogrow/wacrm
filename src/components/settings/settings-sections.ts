@@ -64,7 +64,7 @@ export interface SectionMeta {
   id: SettingsSection;
   label: string;
   icon: LucideIcon;
-  group: 'top' | 'account' | 'workspace';
+  group: 'top' | 'account' | 'workspace' | 'moved';
 }
 
 export const SECTION_META: Record<SettingsSection, SectionMeta> = {
@@ -74,21 +74,38 @@ export const SECTION_META: Record<SettingsSection, SectionMeta> = {
   appearance: { id: 'appearance', label: 'Appearance', icon: Palette, group: 'account' },
   'your-data': { id: 'your-data', label: 'Your data', icon: Download, group: 'account' },
   whatsapp: { id: 'whatsapp', label: 'WhatsApp', icon: PlugZap, group: 'workspace' },
-  'ai-chatbot': { id: 'ai-chatbot', label: 'AI chatbot', icon: Bot, group: 'workspace' },
-  templates: { id: 'templates', label: 'Templates', icon: FileText, group: 'workspace' },
-  forms: { id: 'forms', label: 'WhatsApp forms', icon: ClipboardList, group: 'workspace' },
+  'ai-chatbot': { id: 'ai-chatbot', label: 'AI chatbot', icon: Bot, group: 'moved' },
+  templates: { id: 'templates', label: 'Templates', icon: FileText, group: 'moved' },
+  forms: { id: 'forms', label: 'WhatsApp forms', icon: ClipboardList, group: 'moved' },
   'saved-replies': { id: 'saved-replies', label: 'Saved replies', icon: MessageSquareText, group: 'workspace' },
-  'qr-link': { id: 'qr-link', label: 'QR & WhatsApp link', icon: QrCode, group: 'workspace' },
+  'qr-link': { id: 'qr-link', label: 'QR & WhatsApp link', icon: QrCode, group: 'moved' },
   fields: { id: 'fields', label: 'Fields & tags', icon: Tags, group: 'workspace' },
   deals: { id: 'deals', label: 'Deals & currency', icon: Coins, group: 'workspace' },
   members: { id: 'members', label: 'Team members', icon: UsersRound, group: 'workspace' },
   api: { id: 'api', label: 'API keys', icon: KeyRound, group: 'workspace' },
-  'connected-apps': { id: 'connected-apps', label: 'Connected apps', icon: Plug, group: 'workspace' },
-  shopify: { id: 'shopify', label: 'Shopify', icon: ShoppingBag, group: 'workspace' },
-  calendly: { id: 'calendly', label: 'Calendly', icon: CalendarCheck, group: 'workspace' },
-  commerce: { id: 'commerce', label: 'Orders & payments', icon: IndianRupee, group: 'workspace' },
+  'connected-apps': { id: 'connected-apps', label: 'Connected apps', icon: Plug, group: 'moved' },
+  shopify: { id: 'shopify', label: 'Shopify', icon: ShoppingBag, group: 'moved' },
+  calendly: { id: 'calendly', label: 'Calendly', icon: CalendarCheck, group: 'moved' },
+  commerce: { id: 'commerce', label: 'Orders & payments', icon: IndianRupee, group: 'moved' },
   billing: { id: 'billing', label: 'Plan & billing', icon: CreditCard, group: 'workspace' },
-  'daily-summary': { id: 'daily-summary', label: 'Daily summary', icon: Mail, group: 'workspace' },
+  'daily-summary': { id: 'daily-summary', label: 'Daily summary', icon: Mail, group: 'moved' },
+};
+
+/**
+ * Sections that graduated out of Settings into their own sidebar pages.
+ * Old `?tab=` deep links (docs, banners, emails) still work: the
+ * Settings page redirects them to the new route.
+ */
+export const MOVED_SECTION_ROUTES: Partial<Record<SettingsSection, string>> = {
+  'ai-chatbot': '/ai-chatbot',
+  forms: '/forms',
+  commerce: '/orders',
+  shopify: '/integrations/shopify',
+  calendly: '/integrations/calendly',
+  'connected-apps': '/integrations/apps',
+  templates: '/templates',
+  'qr-link': '/qr-link',
+  'daily-summary': '/daily-summary',
 };
 
 export const RAIL_GROUPS: { label: string | null; group: SectionMeta['group'] }[] = [

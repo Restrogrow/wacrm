@@ -159,7 +159,7 @@ export function AccountsTable({ rows }: { rows: AdminAccountRow[] }) {
         {filtered.length} of {rows.length} accounts
       </p>
 
-      <div className="border-border overflow-x-auto rounded-lg border">
+      <div className="border-border overflow-x-auto rounded-xl border">
         <Table>
           <TableHeader>
             <TableRow>

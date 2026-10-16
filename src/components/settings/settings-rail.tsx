@@ -50,7 +50,7 @@ export function SettingsRail({
       className={cn(
         'flex gap-1 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         'border-b border-border',
-        'lg:sticky lg:top-0 lg:flex-col lg:overflow-visible lg:border-b-0 lg:pb-0',
+        'lg:sticky lg:top-0 lg:flex-col lg:overflow-visible lg:rounded-3xl lg:border lg:bg-card lg:p-3 lg:pb-3 lg:shadow-sm',
       )}
     >
       {RAIL_GROUPS.map(({ label, group }) => {
@@ -63,7 +63,7 @@ export function SettingsRail({
             className="flex shrink-0 gap-1 lg:flex-col lg:gap-0.5"
           >
             {label ? (
-              <div className="hidden px-3 pt-3.5 pb-1.5 text-[11px] font-semibold tracking-[0.09em] text-muted-foreground uppercase lg:block">
+              <div className="hidden px-3 pt-4 pb-1.5 text-[10.5px] font-bold tracking-[0.1em] text-muted-foreground/70 uppercase lg:block">
                 {label}
               </div>
             ) : null}
@@ -79,11 +79,11 @@ export function SettingsRail({
                   onClick={() => onSelect(s)}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
-                    'flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium whitespace-nowrap transition-colors',
+                    'flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium whitespace-nowrap transition-all',
                     'lg:w-full',
                     isActive
-                      ? 'bg-primary-soft text-primary'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+                      : 'text-muted-foreground hover:bg-primary-soft hover:text-foreground',
                   )}
                 >
                   <Icon className="size-4 shrink-0" />
@@ -92,7 +92,7 @@ export function SettingsRail({
                     <span
                       className={cn(
                         'hidden items-center gap-1.5 text-xs lg:inline-flex',
-                        isActive ? 'text-primary' : 'text-muted-foreground',
+                        isActive ? 'text-primary-foreground/80' : 'text-muted-foreground',
                       )}
                     >
                       {hints[s]}

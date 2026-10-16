@@ -4,6 +4,7 @@
 // who handled it, how long it lasted and its AI call notes. Filters for
 // calls with AI notes and missed calls. ?call=<id> opens one call.
 
+import { PageHero } from "@/components/layout/page-hero";
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -16,6 +17,7 @@ import {
   PhoneMissed,
   PhoneOutgoing,
   Sparkles,
+  Phone,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -148,15 +150,14 @@ function CallsPageInner() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Calls</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Every WhatsApp call with your customers, and the AI notes from calls where an agent switched them on.
-        </p>
-      </div>
+      <PageHero
+        icon={Phone}
+        title="Calls"
+        description="Every WhatsApp call with your customers, and the AI notes from calls where an agent switched them on."
+      />
 
       {!notesColumn && (
-        <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-foreground">
+        <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-foreground">
           Run migration <code>057_call_ai_notes.sql</code> in Supabase to keep AI notes with each call. Until then,
           notes are saved on the contact only.
         </p>
@@ -190,7 +191,7 @@ function CallsPageInner() {
           <Loader2 className="size-5 animate-spin text-muted-foreground" />
         </div>
       ) : calls.length === 0 ? (
-        <p className="rounded-xl border border-border p-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-border p-6 text-center text-sm text-muted-foreground">
           {filter === 'notes'
             ? 'No calls with AI notes yet. During a call, click the sparkles button on the call card.'
             : filter === 'missed'
@@ -198,7 +199,7 @@ function CallsPageInner() {
               : 'No WhatsApp calls yet.'}
         </p>
       ) : (
-        <div className="divide-y divide-border rounded-xl border border-border">
+        <div className="divide-y divide-border rounded-2xl border border-border">
           {calls.map((call) => {
             const missed = MISSED.includes(call.status);
             const Icon = missed ? PhoneMissed : call.direction === 'inbound' ? PhoneIncoming : PhoneOutgoing;

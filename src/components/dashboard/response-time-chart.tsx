@@ -5,6 +5,7 @@ import { DOW_SHORT_MON_FIRST } from '@/lib/dashboard/date-utils'
 import type { ResponseTimeSummary } from '@/lib/dashboard/types'
 import { BarChart } from '@/components/tremor/bar-chart'
 import { EmptyState } from './empty-state'
+import { PanelTitle } from './panel-title'
 import { Skeleton } from './skeleton'
 
 interface ResponseTimeChartProps {
@@ -44,17 +45,13 @@ export function ResponseTimeChart({
     })) ?? []
 
   return (
-    <section className="rounded-xl border border-border bg-card">
-      <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">
-            Average First Response Time
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Minutes to reply to a customer&apos;s first unreplied message, by
-            weekday
-          </p>
-        </div>
+    <section className="rounded-3xl border border-border bg-card shadow-sm">
+      <header className="flex items-center justify-between gap-3 px-6 pt-5 pb-1">
+        <PanelTitle
+          icon={Clock}
+          title="Average First Response Time"
+          subtitle="Minutes to reply to a customer's first unreplied message, by weekday"
+        />
         <div className="flex items-center gap-3 text-right text-xs">
           {thresholdMinutes > 0 && (
             <span className="rounded-full border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 font-medium text-rose-300 tabular-nums">
@@ -78,7 +75,7 @@ export function ResponseTimeChart({
         </div>
       </header>
 
-      <div className="p-5">
+      <div className="p-6 pt-4">
         {loading || !data ? (
           <Skeleton className="h-[260px] w-full" />
         ) : !hasData ? (
@@ -94,7 +91,7 @@ export function ResponseTimeChart({
             categories={[CATEGORY]}
             // 'violet' maps to Tailwind's `fill-violet-500` — matches
             // the brand accent the hand-rolled bars used (#7c3aed).
-            colors={['violet']}
+            colors={['emerald']}
             valueFormatter={(value) => `${value.toFixed(1)}m`}
             showLegend={false}
             yAxisWidth={48}

@@ -120,7 +120,7 @@ export function PreviewDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-[360px] flex-1 overflow-y-auto rounded-xl border border-border bg-[#0b141a] p-3">
+        <div className="min-h-[360px] flex-1 overflow-y-auto rounded-2xl border border-border bg-[#0b141a] p-3">
           <div className="flex flex-col gap-2">
             {sim?.messages.map((m, i) => (
               <Bubble
@@ -182,7 +182,7 @@ function Bubble({
     return (
       <div
         className={cn(
-          "mx-auto max-w-[90%] rounded-md px-2.5 py-1 text-center text-[11px]",
+          "mx-auto max-w-[90%] rounded-xl px-2.5 py-1 text-center text-[11px]",
           m.tone === "error"
             ? "bg-red-500/15 text-red-300"
             : m.tone === "warn"
@@ -196,13 +196,13 @@ function Bubble({
   }
   if (m.from === "user") {
     return (
-      <div className="ml-auto max-w-[80%] whitespace-pre-wrap rounded-lg rounded-tr-sm bg-[#005c4b] px-3 py-1.5 text-sm text-white">
+      <div className="ml-auto max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-tr-sm bg-[#005c4b] px-3 py-1.5 text-sm text-white">
         {m.text}
       </div>
     );
   }
 
-  const shell = "max-w-[85%] rounded-lg rounded-tl-sm bg-[#202c33] text-sm text-slate-100";
+  const shell = "max-w-[85%] rounded-2xl rounded-tl-sm bg-[#202c33] text-sm text-slate-100";
   if (m.kind === "media") {
     return (
       <div className={cn(shell, "px-3 py-2")}>

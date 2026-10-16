@@ -1,5 +1,6 @@
 'use client';
 
+import { PageHero } from "@/components/layout/page-hero";
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -196,28 +197,27 @@ export default function BroadcastsPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Broadcasts</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Send bulk messages to your contacts using approved templates.
-          </p>
-        </div>
-        <GatedButton
-          canAct={canCreate}
-          gateReason="create broadcasts"
-          onClick={() => router.push('/broadcasts/new')}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" />
-          New Broadcast
-        </GatedButton>
-      </div>
+      <PageHero
+        icon={Radio}
+        title="Broadcasts"
+        description="Send bulk messages to your contacts using approved templates."
+        action={
+          <GatedButton
+            canAct={canCreate}
+            gateReason="create broadcasts"
+            onClick={() => router.push('/broadcasts/new')}
+            className="rounded-2xl bg-primary text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" />
+            New Broadcast
+          </GatedButton>
+        }
+      />
 
       {broadcasts.length === 0 ? (
-        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-border bg-card">
-          <Radio className="mb-3 h-10 w-10 text-muted-foreground" />
-          <p className="text-sm font-medium text-foreground">No broadcasts yet</p>
+        <div className="flex h-72 flex-col items-center justify-center rounded-3xl border border-dashed border-primary-soft-2 bg-primary-soft/40">
+          <span className="mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-primary-soft text-primary"><Radio className="h-8 w-8" /></span>
+          <p className="text-base font-bold text-foreground">No broadcasts yet</p>
           <p className="mt-1 text-xs text-muted-foreground">
             Create your first broadcast to reach your contacts at scale.
           </p>
@@ -232,10 +232,10 @@ export default function BroadcastsPage() {
           </GatedButton>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-card">
+        <div className="overflow-x-auto rounded-3xl border border-border bg-card shadow-sm">
           <Table>
             <TableHeader>
-              <TableRow className="border-border hover:bg-transparent">
+              <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
                 <TableHead className="text-muted-foreground">Name</TableHead>
                 <TableHead className="hidden text-muted-foreground md:table-cell">Template</TableHead>
                 <TableHead className="hidden text-right text-muted-foreground sm:table-cell">
@@ -253,10 +253,13 @@ export default function BroadcastsPage() {
                 return (
                   <TableRow
                     key={broadcast.id}
-                    className="cursor-pointer border-border hover:bg-muted/50"
+                    className="cursor-pointer border-border hover:bg-primary-soft/50"
                     onClick={() => router.push(`/broadcasts/${broadcast.id}`)}
                   >
-                    <TableCell className="font-medium text-foreground">
+                    <TableCell className="font-semibold text-foreground">
+                      <span className="mr-3 inline-flex size-9 items-center justify-center rounded-xl bg-primary-soft align-middle text-primary">
+                        <Radio className="size-4" />
+                      </span>
                       {broadcast.name}
                     </TableCell>
                     <TableCell className="hidden text-muted-foreground md:table-cell">

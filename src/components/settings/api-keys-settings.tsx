@@ -142,6 +142,7 @@ export function ApiKeysSettings() {
   return (
     <section className="animate-in fade-in-50 space-y-6 duration-200">
       <SettingsPanelHead
+        icon={KeyRound}
         title="API keys"
         description={
           <>
@@ -167,7 +168,7 @@ export function ApiKeysSettings() {
             ? '1 connected app also has access.'
             : `${connectedCount} connected apps also have access.`}{' '}
           Manage them in{' '}
-          <a href="/settings?tab=connected-apps" className="text-foreground underline">
+          <a href="/integrations/apps" className="text-foreground underline">
             Connected apps
           </a>
           .
@@ -175,11 +176,11 @@ export function ApiKeysSettings() {
       )}
 
       {keys.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-10 text-center">
-            <KeyRound className="text-muted-foreground size-6" />
-            <p className="text-muted-foreground mt-2 text-sm">
-              No API keys yet.
+        <Card className="border border-dashed border-primary-soft-2 bg-primary-soft/40 ring-0">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <span className="flex size-14 items-center justify-center rounded-3xl bg-primary-soft text-primary"><KeyRound className="size-7" /></span>
+            <p className="text-foreground mt-3 text-base font-bold">
+              No API keys yet
             </p>
             {canEditSettings ? (
               <p className="text-muted-foreground mt-1 text-xs">
@@ -194,21 +195,20 @@ export function ApiKeysSettings() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <ul className="divide-border divide-y">
+        <div className="grid gap-4 xl:grid-cols-2">
               {keys.map((k) => {
                 const status = keyStatus(k);
                 const inactive = status !== 'active';
                 return (
-                  <li
-                    key={k.id}
-                    className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
-                  >
+                  <Card key={k.id} className={inactive ? 'opacity-70' : 'transition-all hover:-translate-y-0.5 hover:shadow-md'}>
+                  <CardContent className="flex gap-4">
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+                      <KeyRound className="size-5" />
+                    </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`truncate text-sm font-medium ${
+                          className={`truncate text-base font-bold tracking-tight ${
                             inactive
                               ? 'text-muted-foreground line-through'
                               : 'text-foreground'
@@ -227,7 +227,7 @@ export function ApiKeysSettings() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-muted-foreground mt-0.5 font-mono text-xs">
+                      <p className="mt-1 inline-block rounded-lg bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">
                         {k.key_prefix}…
                       </p>
                       <div className="mt-1.5 flex flex-wrap gap-1">
@@ -276,12 +276,11 @@ export function ApiKeysSettings() {
                         </Button>
                       </RequireRole>
                     )}
-                  </li>
+                  </CardContent>
+                  </Card>
                 );
               })}
-            </ul>
-          </CardContent>
-        </Card>
+        </div>
       )}
 
       <CreateKeyDialog
@@ -439,7 +438,7 @@ function CreateKeyDialog({
 
               <div className="space-y-2">
                 <Label className="text-muted-foreground">Scopes</Label>
-                <div className="border-border space-y-2 rounded-md border p-3">
+                <div className="border-border space-y-2 rounded-xl border p-3">
                   {API_SCOPES.map((scope) => (
                     <label
                       key={scope}

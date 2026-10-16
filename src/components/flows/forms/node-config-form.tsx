@@ -83,7 +83,7 @@ export function NodeConfigForm({
             value={(cfg as { text?: string }).text ?? ""}
             onChange={(v) => onUpdateConfig({ text: v })}
           />
-          <div className="space-y-1.5 rounded-md border border-border p-2.5">
+          <div className="space-y-1.5 rounded-xl border border-border p-2.5">
             <label className="block text-xs text-muted-foreground">
               Link button (optional) — customer taps it to open your website
             </label>
@@ -301,7 +301,7 @@ function SendButtonsForm({
             <div
               key={i}
               className={cn(
-                "grid grid-cols-1 gap-2 rounded-md border border-border bg-muted/40 p-3",
+                "grid grid-cols-1 gap-2 rounded-xl border border-border bg-muted/40 p-3",
                 showAdvanced
                   ? "md:grid-cols-[1fr_2fr_2fr_auto]"
                   : "md:grid-cols-[2fr_2fr_auto]",
@@ -494,7 +494,7 @@ function SendListForm({
         {sections.map((section, sIdx) => (
           <div
             key={sIdx}
-            className="mb-3 rounded-md border border-border bg-muted/40 p-3"
+            className="mb-3 rounded-xl border border-border bg-muted/40 p-3"
           >
             <div className="mb-2 flex items-center gap-2">
               <Input
@@ -983,7 +983,7 @@ function SendMediaForm({
       <div>
         <label className="mb-1 block text-xs text-muted-foreground">File</label>
         {cfg.media_url ? (
-          <div className="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-xs">
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs">
             <Paperclip className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
             <a
               href={cfg.media_url}
@@ -1009,7 +1009,7 @@ function SendMediaForm({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-border bg-card px-3 py-4 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card px-3 py-4 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
           >
             {uploading ? (
               <>

@@ -130,7 +130,7 @@ export function MessageActions({
         {translation && (
           <div
             className={cn(
-              "mt-1 rounded-xl border border-border bg-background/90 px-3 py-2 text-sm text-foreground shadow-sm",
+              "mt-1 rounded-2xl border border-border bg-background/90 px-3 py-2 text-sm text-foreground shadow-sm",
               isAgent ? "ml-auto" : "mr-auto",
             )}
           >

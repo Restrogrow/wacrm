@@ -1,5 +1,6 @@
 'use client';
 
+import { PageHero } from "@/components/layout/page-hero";
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { contactPhoneLabel } from '@/lib/whatsapp/phone-utils';
@@ -363,56 +364,55 @@ export default function ContactsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Contacts</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage your contact list. {totalCount > 0 && `${totalCount} total contacts.`}
-          </p>
-        </div>
+      <PageHero
+        icon={Users}
+        title="Contacts"
+        description={`Manage your contact list. ${totalCount > 0 ? `${totalCount} total contacts.` : ''}`}
+        action={
         <div className="flex items-center gap-2">
-          {canEditSettings && (
-            <Button
-              variant="outline"
-              onClick={() => setCustomFieldsOpen(true)}
-              className="border-border text-muted-foreground hover:bg-muted"
-            >
-              <SlidersHorizontal className="size-4" />
-              Custom fields
-            </Button>
-          )}
-          <GatedButton
-            variant="outline"
-            canAct={canEdit}
-            gateReason="export contacts"
-            disabled={exporting || totalCount === 0}
-            onClick={handleExport}
-            className="border-border text-muted-foreground hover:bg-muted"
-          >
-            {exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
-            Export
-          </GatedButton>
-          <GatedButton
-            variant="outline"
-            canAct={canEdit}
-            gateReason="add or import contacts"
-            onClick={() => setImportOpen(true)}
-            className="border-border text-muted-foreground hover:bg-muted"
-          >
-            <Upload className="size-4" />
-            Import
-          </GatedButton>
-          <GatedButton
-            canAct={canEdit}
-            gateReason="add or import contacts"
-            onClick={openAddForm}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <Plus className="size-4" />
-            Add Contact
-          </GatedButton>
-        </div>
-      </div>
+                  {canEditSettings && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setCustomFieldsOpen(true)}
+                      className="border-border text-muted-foreground hover:bg-muted"
+                    >
+                      <SlidersHorizontal className="size-4" />
+                      Custom fields
+                    </Button>
+                  )}
+                  <GatedButton
+                    variant="outline"
+                    canAct={canEdit}
+                    gateReason="export contacts"
+                    disabled={exporting || totalCount === 0}
+                    onClick={handleExport}
+                    className="border-border text-muted-foreground hover:bg-muted"
+                  >
+                    {exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+                    Export
+                  </GatedButton>
+                  <GatedButton
+                    variant="outline"
+                    canAct={canEdit}
+                    gateReason="add or import contacts"
+                    onClick={() => setImportOpen(true)}
+                    className="border-border text-muted-foreground hover:bg-muted"
+                  >
+                    <Upload className="size-4" />
+                    Import
+                  </GatedButton>
+                  <GatedButton
+                    canAct={canEdit}
+                    gateReason="add or import contacts"
+                    onClick={openAddForm}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    <Plus className="size-4" />
+                    Add Contact
+                  </GatedButton>
+                </div>
+        }
+      />
 
       {/* Search + tag filter */}
       <div className="space-y-2">
@@ -532,7 +532,7 @@ export default function ContactsPage() {
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/40 px-4 py-2">
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-primary-soft-2 bg-primary-soft px-4 py-2.5">
           <p className="text-sm text-foreground">
             <span className="font-medium">{selected.size}</span>{' '}
             {selected.size === 1 ? 'contact' : 'contacts'} selected
@@ -561,10 +561,10 @@ export default function ContactsPage() {
       )}
 
       {/* Table */}
-      <div className="rounded-lg border border-border overflow-hidden">
+      <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
         <Table>
           <TableHeader>
-            <TableRow className="border-border hover:bg-transparent">
+            <TableRow className="border-border bg-muted/50 hover:bg-muted/50">
               <TableHead className="w-10">
                 <Checkbox
                   checked={allOnPageSelected}
@@ -621,7 +621,7 @@ export default function ContactsPage() {
               contacts.map((contact) => (
                 <TableRow
                   key={contact.id}
-                  className="border-border hover:bg-muted/50 cursor-pointer"
+                  className="border-border hover:bg-primary-soft/50 cursor-pointer"
                   onClick={() => openDetail(contact.id)}
                 >
                   <TableCell onClick={(e) => e.stopPropagation()}>
@@ -632,6 +632,9 @@ export default function ContactsPage() {
                     />
                   </TableCell>
                   <TableCell className="text-foreground font-medium">
+                    <span className="mr-2.5 inline-flex size-8 items-center justify-center rounded-full bg-primary-soft align-middle text-xs font-bold text-primary">
+                      {(contact.name || contact.phone || '?').charAt(0).toUpperCase()}
+                    </span>
                     {contact.name || <span className="text-muted-foreground italic">Unnamed</span>}
                     {contact.opted_out_at ? (
                       <span

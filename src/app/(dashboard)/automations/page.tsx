@@ -1,5 +1,6 @@
 "use client"
 
+import { PageHero } from "@/components/layout/page-hero"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -158,27 +159,26 @@ export default function AutomationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Automations</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Build workflows that react to WhatsApp® events automatically.
-          </p>
-        </div>
+      <PageHero
+        icon={Zap}
+        title="Automations"
+        description="Build workflows that react to WhatsApp® events automatically."
+        action={
         <GatedButton
           canAct={canCreate}
           gateReason="create automations"
           onClick={() => router.push("/automations/new")}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          className="rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90"
         >
           <Plus className="h-4 w-4" />
           Create Automation
         </GatedButton>
-      </div>
+        }
+      />
 
       {showTemplates && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Quick-start templates</h2>
+          <h2 className="mb-3 text-base font-bold tracking-tight text-foreground">Quick-start templates</h2>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             {TEMPLATE_ORDER.map((slug) => {
               const t = AUTOMATION_TEMPLATES[slug]
@@ -187,9 +187,9 @@ export default function AutomationsPage() {
                 <button
                   key={slug}
                   onClick={() => startFromTemplate(slug)}
-                  className="group flex flex-col items-start rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/50 hover:bg-card/80"
+                  className="group flex flex-col items-start rounded-3xl border border-border bg-card p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary-soft-2 hover:shadow-md"
                 >
-                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15">
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-soft text-primary group-hover:bg-primary group-hover:text-primary-foreground">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="text-sm font-semibold text-foreground">{t.name}</div>
@@ -202,8 +202,8 @@ export default function AutomationsPage() {
       )}
 
       {automations.length === 0 ? (
-        <div className="flex h-48 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/40">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+        <div className="flex h-52 flex-col items-center justify-center rounded-3xl border border-dashed border-primary-soft-2 bg-primary-soft/40">
+          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-primary-soft">
             <Zap className="h-6 w-6 text-primary" />
           </div>
           <p className="mt-3 text-sm font-medium text-foreground">No automations yet</p>
@@ -277,10 +277,10 @@ function AutomationCard({
 }) {
   const meta = triggerMeta(automation.trigger_type)
   return (
-    <li className="rounded-xl border border-border bg-card transition-colors hover:border-border">
+    <li className="rounded-3xl border border-border bg-card shadow-sm transition-all hover:border-primary-soft-2 hover:shadow-md">
       <div className="flex items-center gap-4 p-4">
         <div
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-primary-soft"
           aria-hidden
         >
           <Zap className="h-5 w-5 text-primary" />

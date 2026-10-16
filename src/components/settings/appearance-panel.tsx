@@ -22,15 +22,15 @@ import { SettingsPanelHead } from "./settings-panel-head";
 export function AppearancePanel() {
   const { theme, setTheme, mode, setMode } = useTheme();
   return (
-    <section className="max-w-3xl animate-in fade-in-50 duration-200">
+    <section className="animate-in fade-in-50 duration-200">
       <SettingsPanelHead
         title="Appearance"
         description="Set the mode and accent colour used across the app. Saved to this device — try it, it changes live."
       />
 
       <div className="space-y-4">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <SunMoon className="size-4 text-muted-foreground" />
+        <h3 className="flex items-center gap-2 text-base font-bold tracking-tight text-foreground">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary"><SunMoon className="size-4" /></span>
           Mode
         </h3>
 
@@ -51,8 +51,8 @@ export function AppearancePanel() {
       </div>
 
       <div className="mt-8 space-y-4">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Palette className="size-4 text-muted-foreground" />
+        <h3 className="flex items-center gap-2 text-base font-bold tracking-tight text-foreground">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary"><Palette className="size-4" /></span>
           Accent color
         </h3>
 
@@ -93,15 +93,15 @@ function ModeCard({
       aria-checked={isActive}
       aria-label={`Use ${mode} mode`}
       className={cn(
-        "flex items-center gap-3 rounded-lg border bg-card p-4 text-left transition-colors",
+        "flex items-center gap-3 rounded-3xl border-2 bg-card p-5 text-left shadow-sm transition-all hover:-translate-y-0.5",
         isActive
-          ? "border-primary/60 ring-2 ring-primary/40"
+          ? "border-primary bg-primary-soft"
           : "border-border hover:border-border hover:bg-muted/40",
       )}
     >
       <span
         aria-hidden
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-foreground"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-muted text-foreground"
       >
         <Icon className="h-4 w-4" />
       </span>
@@ -140,16 +140,16 @@ function ThemeCard({
       aria-pressed={isActive}
       aria-label={`Use ${name} theme`}
       className={cn(
-        "flex flex-col gap-3 rounded-lg border bg-card p-4 text-left transition-colors",
+        "flex flex-col gap-3 rounded-3xl border-2 bg-card p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
         isActive
-          ? "border-primary/60 ring-2 ring-primary/40"
+          ? "border-primary bg-primary-soft"
           : "border-border hover:border-border hover:bg-muted/40",
       )}
     >
       <div className="flex items-center justify-between">
         <span
           aria-hidden
-          className="h-8 w-8 shrink-0 rounded-full"
+          className="h-11 w-11 shrink-0 rounded-2xl shadow-md"
           style={{
             background: swatch,
             boxShadow: "inset 0 0 0 1px oklch(1 0 0 / 0.15)",

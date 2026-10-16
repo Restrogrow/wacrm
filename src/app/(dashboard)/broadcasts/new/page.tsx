@@ -1,5 +1,6 @@
 'use client';
 
+import { PageHero } from "@/components/layout/page-hero";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -11,7 +12,7 @@ import { Step2SelectAudience } from '@/components/broadcasts/step2-select-audien
 import { Step3Personalize } from '@/components/broadcasts/step3-personalize';
 import { Step4ScheduleSend } from '@/components/broadcasts/step4-schedule-send';
 import { useBroadcastSending } from '@/hooks/use-broadcast-sending';
-import { Check } from 'lucide-react';
+import { Check, Radio } from 'lucide-react';
 import { planLimitMessage } from '@/lib/billing/plans';
 
 const steps = [
@@ -136,12 +137,11 @@ export default function NewBroadcastPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">New Broadcast</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Create and send a broadcast message to your contacts.
-        </p>
-      </div>
+      <PageHero
+        icon={Radio}
+        title="New Broadcast"
+        description="Create and send a broadcast message to your contacts."
+      />
 
       {/* Step Indicator */}
       <div className="flex items-center justify-between">

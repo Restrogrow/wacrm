@@ -11,6 +11,7 @@ import { CallButton } from "@/components/calls/call-button";
 import { SendFormButton } from "@/components/inbox/send-form-button";
 import { OrderButton } from "@/components/inbox/order-button";
 import { SummaryButton } from "@/components/inbox/summary-button";
+import { ShareChatButton } from "@/components/inbox/share-chat-button";
 import type {
   Conversation,
   Message,
@@ -873,7 +874,7 @@ export function MessageThread({
     <div className={cn("flex min-w-0 flex-1 flex-col", DOODLE_BG_CLASSES)}>
       {/* Header — solid card surface sits on top of the doodle so the
           name/avatar/dropdowns stay legible. */}
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-3 sm:px-4">
+      <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-3.5 shadow-sm sm:px-5">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {/* Back-to-list button — mobile only. Hidden on lg+ where the
               conversation list is always visible next to the thread. */}
@@ -882,12 +883,12 @@ export function MessageThread({
               type="button"
               onClick={onBack}
               aria-label="Back to conversations"
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-foreground">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
             {displayName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
@@ -924,7 +925,7 @@ export function MessageThread({
               aria-pressed={contactPanelOpen}
               title={contactPanelOpen ? "Hide contact" : "Show contact"}
               className={cn(
-                "hidden h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-muted hover:text-foreground lg:inline-flex",
+                "hidden h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-muted hover:text-foreground lg:inline-flex",
                 contactPanelOpen ? "text-primary" : "text-muted-foreground",
               )}
             >
@@ -938,6 +939,13 @@ export function MessageThread({
 
           {/* AI summary of the chat. */}
           <SummaryButton conversationId={conversation.id} />
+
+          {/* Share just this conversation (copy / download / WhatsApp / email). */}
+          <ShareChatButton
+            messages={messages}
+            contactName={contact?.name || (contact?.phone ? `+${contact.phone.replace(/^\+/, "")}` : "Customer")}
+            contactPhone={contact?.phone ? `+${contact.phone.replace(/^\+/, "")}` : null}
+          />
 
           {/* Orders, payment requests and catalog sharing. */}
           <OrderButton conversationId={conversation.id} />
@@ -964,7 +972,7 @@ export function MessageThread({
               aria-label="Refresh conversation"
               title="Refresh"
               className={cn(
-                "inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60",
+                "inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60",
               )}
             >
               <RefreshCw
@@ -976,7 +984,7 @@ export function MessageThread({
           {/* Status dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger className={cn(
-                  "inline-flex items-center justify-center h-7 gap-1 px-2 text-xs rounded-md hover:bg-muted",
+                  "inline-flex items-center justify-center h-7 gap-1 px-2 text-xs rounded-lg hover:bg-muted",
                   currentStatus?.color ?? "text-muted-foreground"
                 )}>
                 {currentStatus?.label ?? "Status"}
@@ -1002,7 +1010,7 @@ export function MessageThread({
           <DropdownMenu>
             <DropdownMenuTrigger
               className={cn(
-                "inline-flex items-center justify-center h-7 gap-1 px-2 text-xs rounded-md hover:bg-muted",
+                "inline-flex items-center justify-center h-7 gap-1 px-2 text-xs rounded-lg hover:bg-muted",
                 assignedAgentId ? "text-primary" : "text-muted-foreground"
               )}
             >
@@ -1066,7 +1074,7 @@ export function MessageThread({
       </div>
 
       {/* Messages Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-primary-soft/30 px-4 py-5 sm:px-6">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />

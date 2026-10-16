@@ -145,7 +145,7 @@ function SignupPageInner() {
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <Card className="w-full max-w-md border-border bg-card">
           <CardHeader className="items-center text-center">
-            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft">
               <CheckCircle className="h-6 w-6 text-primary" />
             </div>
             <CardTitle className="text-xl text-foreground">
@@ -185,7 +185,7 @@ function SignupPageInner() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
       <Card className={`w-full border-border bg-card ${isInvite ? "max-w-md" : "max-w-xl"}`}>
         <CardHeader className="items-center pb-2 text-center">
-          <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
+          <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-soft">
             {inviteToken ? (
               <UsersRound className="h-5 w-5 text-primary" />
             ) : (
@@ -457,7 +457,7 @@ function SignupPageInner() {
             <Button
               type="submit"
               disabled={loading}
-              className="mt-1.5 h-10 w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="mt-1.5 h-11 w-full rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90 disabled:opacity-50"
             >
               {loading
                 ? isInvite

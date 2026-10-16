@@ -150,11 +150,11 @@ export function YourDataSettings() {
       <Card className="border-border bg-card">
         <CardContent className="space-y-4 p-5">
           <div className="flex items-start gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <Download className="size-4" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-semibold text-foreground">Download your data</h3>
+              <h3 className="font-bold tracking-tight text-foreground">Download your data</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {canManageMembers
                   ? 'A JSON file with your profile and all of your business’s data: contacts, tags, conversations and messages, deals, broadcasts, templates, automations, flows and integration settings.'
@@ -173,11 +173,11 @@ export function YourDataSettings() {
       <Card className="border-red-500/30 bg-card">
         <CardContent className="space-y-4 p-5">
           <div className="flex items-start gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-red-600 dark:text-red-400">
               <Trash2 className="size-4" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-semibold text-foreground">Delete your account</h3>
+              <h3 className="font-bold tracking-tight text-foreground">Delete your account</h3>
               {info?.is_owner ? (
                 <p className="mt-1 text-sm text-muted-foreground">
                   You own <b className="text-foreground">{info.account_name}</b>. Deleting your account
@@ -195,7 +195,7 @@ export function YourDataSettings() {
           </div>
 
           {info?.pending_request ? (
-            <div className="flex flex-col gap-3 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
               <p className="flex items-start gap-2 text-foreground">
                 <Clock className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
                 <span>
@@ -216,13 +216,13 @@ export function YourDataSettings() {
           ) : null}
 
           {info && !info.available && !info.pending_request ? (
-            <p className="rounded-lg border border-border p-3 text-sm text-muted-foreground">
+            <p className="rounded-2xl border border-border p-3 text-sm text-muted-foreground">
               To delete your account, email support@repeatgrow.com from your account email.
             </p>
           ) : null}
 
           {info && info.available && !info.can_delete && !info.pending_request ? (
-            <p className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-foreground">
+            <p className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3 text-sm text-foreground">
               Your business still has {info.other_members} teammate{info.other_members === 1 ? '' : 's'}.
               Remove them or transfer ownership in{' '}
               <Link href="/settings?tab=members" className="font-medium underline underline-offset-4">

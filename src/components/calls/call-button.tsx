@@ -101,7 +101,7 @@ export function CallButton({ conversationId, label }: { conversationId: string; 
         disabled={checking || !!active}
         aria-label="Call on WhatsApp"
         title={active ? 'You’re already on a call' : 'Call on WhatsApp'}
-        className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
+        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
       >
         {checking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Phone className="h-3.5 w-3.5" />}
       </button>

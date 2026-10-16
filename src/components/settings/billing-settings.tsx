@@ -10,7 +10,7 @@
 // ============================================================
 
 import { useEffect, useState } from 'react';
-import { Check, Loader2, Mail, MessageCircle } from 'lucide-react';
+import { Check, Loader2, Mail, MessageCircle, CreditCard, Sparkles, BarChart3, Crown } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -115,43 +115,55 @@ export function BillingSettings() {
   return (
     <section className="animate-in fade-in-50 space-y-6 duration-200">
       <SettingsPanelHead
+        icon={CreditCard}
         title="Plan & billing"
         description="Your plan, what you're using, and how to upgrade. WhatsApp conversation fees are billed by Meta separately."
       />
 
       {/* ---------------- Current plan ---------------- */}
-      <Card>
-        <CardContent className="space-y-1 py-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-foreground text-lg font-semibold">
-              {EFFECTIVE_PLAN_LABELS[effective]}
-            </span>
-            <Badge
-              variant={effective === 'expired' ? 'destructive' : 'outline'}
-              className="text-[10px] tracking-wide uppercase"
-            >
-              {effective === 'expired' ? 'Read-only' : 'Active'}
-            </Badge>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--rail)] via-primary to-emerald-400 p-6 text-white shadow-lg sm:p-7">
+        <div className="pointer-events-none absolute -top-16 -right-16 size-60 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-white/75">Your current plan</p>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              <span className="text-3xl font-bold tracking-tight">
+                {EFFECTIVE_PLAN_LABELS[effective]}
+              </span>
+              <span
+                className={cn(
+                  'rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase',
+                  effective === 'expired'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-white/25 text-white backdrop-blur',
+                )}
+              >
+                {effective === 'expired' ? 'Read-only' : 'Active'}
+              </span>
+            </div>
+            <p className="mt-2 max-w-xl text-sm text-white/85">
+              {effective === 'trial' &&
+                `Full Growth features until ${fmtDate(billing.trial_ends_at)} (${trialDays} day${trialDays === 1 ? '' : 's'} left).`}
+              {effective === 'expired' &&
+                'Your trial has ended. You can still see everything, but sending WhatsApp messages is paused until you choose a plan.'}
+              {effective !== 'trial' &&
+                effective !== 'expired' &&
+                (billing.plan_expires_at
+                  ? `Paid until ${fmtDate(billing.plan_expires_at)}.`
+                  : 'Active with no end date.')}
+            </p>
           </div>
-          <p className="text-muted-foreground text-sm">
-            {effective === 'trial' &&
-              `Full Growth features until ${fmtDate(billing.trial_ends_at)} (${trialDays} day${trialDays === 1 ? '' : 's'} left).`}
-            {effective === 'expired' &&
-              'Your trial has ended. You can still see everything, but sending WhatsApp messages is paused until you choose a plan.'}
-            {effective !== 'trial' &&
-              effective !== 'expired' &&
-              (billing.plan_expires_at
-                ? `Paid until ${fmtDate(billing.plan_expires_at)}.`
-                : 'Active with no end date.')}
-          </p>
-        </CardContent>
-      </Card>
+          <span className="flex size-16 items-center justify-center rounded-3xl bg-white/20 backdrop-blur">
+            <Sparkles className="size-8" />
+          </span>
+        </div>
+      </div>
 
       {/* ---------------- Usage ---------------- */}
       <div>
-        <h3 className="text-foreground mb-2 text-sm font-semibold">Usage</h3>
+        <h3 className="text-foreground mb-3 flex items-center gap-2 text-base font-bold tracking-tight"><span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary"><BarChart3 className="size-4" /></span>Usage</h3>
         <Card>
-          <CardContent className="grid gap-4 py-5 sm:grid-cols-2">
+          <CardContent className="grid gap-5 sm:grid-cols-2">
             {LIMIT_KEYS.map((key) => {
               const used = billing.usage![key];
               const limit = billing.limits![key];
@@ -159,8 +171,8 @@ export function BillingSettings() {
                 ? Math.min(100, Math.round((used / limit) * 100))
                 : 0;
               return (
-                <div key={key} className="space-y-1.5">
-                  <div className="flex justify-between text-xs">
+                <div key={key} className="space-y-2 rounded-2xl bg-muted/50 p-4">
+                  <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
                       {LIMIT_LABELS[key]}
                     </span>
@@ -171,7 +183,7 @@ export function BillingSettings() {
                         : limit.toLocaleString('en-IN')}
                     </span>
                   </div>
-                  <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                  <div className="bg-border h-2.5 overflow-hidden rounded-full">
                     <div
                       className={cn(
                         'h-full rounded-full',
@@ -194,17 +206,17 @@ export function BillingSettings() {
       {/* ---------------- Plans ---------------- */}
       <div>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-foreground text-sm font-semibold">Plans</h3>
-          <div className="bg-muted inline-flex rounded-lg p-0.5 text-xs">
+          <h3 className="text-foreground flex items-center gap-2 text-base font-bold tracking-tight"><span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary"><Crown className="size-4" /></span>Plans</h3>
+          <div className="bg-muted inline-flex rounded-full p-1 text-xs">
             {BILLING_CYCLES.map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setPeriod(p)}
                 className={cn(
-                  'rounded-md px-3 py-1.5 font-medium capitalize',
+                  'rounded-full px-4 py-1.5 font-semibold capitalize transition-colors',
                   period === p
-                    ? 'bg-background text-foreground shadow-sm'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground'
                 )}
               >
@@ -224,11 +236,11 @@ export function BillingSettings() {
             const limits = PLAN_LIMITS[plan];
             const current = effective === plan;
             return (
-              <Card key={plan} className={cn(current && 'border-primary')}>
-                <CardContent className="flex h-full flex-col gap-3 py-5">
+              <Card key={plan} className={cn('transition-all hover:-translate-y-0.5 hover:shadow-md', current && 'ring-2 ring-primary shadow-md')}>
+                <CardContent className="flex h-full flex-col gap-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-foreground font-semibold">
+                      <span className="text-foreground text-lg font-bold tracking-tight">
                         {info.label}
                       </span>
                       {current && (
@@ -237,7 +249,7 @@ export function BillingSettings() {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-foreground mt-1 text-2xl font-bold">
+                    <p className="text-foreground mt-2 text-3xl font-bold tracking-tight">
                       {info.prices ? (
                         <>
                           {formatInr(info.prices[period])}
@@ -253,10 +265,10 @@ export function BillingSettings() {
                       {info.blurb}
                     </p>
                   </div>
-                  <ul className="text-muted-foreground flex-1 space-y-1 text-xs">
+                  <ul className="text-muted-foreground flex-1 space-y-2 border-t border-border pt-4 text-sm">
                     {LIMIT_KEYS.map((key) => (
                       <li key={key} className="flex items-center gap-1.5">
-                        <Check className="text-primary size-3.5" />
+                        <span className="flex size-5 items-center justify-center rounded-full bg-primary-soft"><Check className="text-primary size-3" /></span>
                         {limits[key] === null
                           ? 'Unlimited'
                           : limits[key]!.toLocaleString('en-IN')}{' '}

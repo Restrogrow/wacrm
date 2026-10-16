@@ -117,7 +117,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
 
   if (!contact) {
     return (
-      <div className="flex h-full w-70 items-center justify-center border-l border-border bg-card">
+      <div className="flex h-full w-72 items-center justify-center border-l border-border bg-card">
         <p className="text-sm text-muted-foreground">Select a conversation</p>
       </div>
     );
@@ -127,12 +127,12 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
   const initials = displayName.charAt(0).toUpperCase();
 
   return (
-    <div className="flex h-full w-70 flex-col border-l border-border bg-card">
+    <div className="flex h-full w-72 flex-col border-l border-border bg-card">
       <ScrollArea className="flex-1">
         <div className="p-4">
           {/* Contact Info */}
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted text-lg font-semibold text-foreground">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary-soft text-2xl font-bold text-primary ring-4 ring-card shadow-md">
               {contact.avatar_url ? (
                 // next/image needs `unoptimized` for this anyway — avatar_url
                 // is an arbitrary user-pasted https URL, not a configured
@@ -141,7 +141,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
                 <img
                   src={contact.avatar_url}
                   alt={displayName}
-                  className="h-16 w-16 rounded-full object-cover"
+                  className="h-20 w-20 rounded-full object-cover shadow-md"
                 />
               ) : (
                 initials
@@ -159,7 +159,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
           <div className="mt-4 space-y-2">
             <button
               onClick={handleCopyPhone}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted"
             >
               <Phone className="h-4 w-4 text-muted-foreground" />
               <span className="flex-1 text-left">{contactPhoneLabel(contact)}</span>
@@ -171,7 +171,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
             </button>
 
             {contact.email && (
-              <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <span className="truncate">{contact.email}</span>
               </div>
@@ -183,7 +183,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
 
           {/* Tags */}
           <div>
-            <div className="flex items-center gap-2 px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="flex items-center gap-2 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               <TagIcon className="h-3 w-3" />
               Tags
             </div>
@@ -217,7 +217,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
 
           {/* Active Deals */}
           <div>
-            <div className="flex items-center gap-2 px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="flex items-center gap-2 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               <DollarSign className="h-3 w-3" />
               Active Deals
             </div>
@@ -228,7 +228,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
                 deals.map((deal) => (
                   <div
                     key={deal.id}
-                    className="rounded-lg bg-muted px-3 py-2"
+                    className="rounded-2xl bg-muted/70 px-3.5 py-2.5"
                   >
                     <p className="text-sm font-medium text-foreground">
                       {deal.title}
@@ -261,7 +261,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
 
           {/* Notes */}
           <div>
-            <div className="flex items-center gap-2 px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="flex items-center gap-2 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               <StickyNote className="h-3 w-3" />
               Notes
             </div>
@@ -272,7 +272,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
                   onChange={(e) => setNewNote(e.target.value)}
                   placeholder="Add a note..."
                   rows={2}
-                  className="flex-1 resize-none rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground placeholder-muted-foreground outline-none focus:border-primary/50"
+                  className="flex-1 resize-none rounded-xl border border-border bg-muted px-3 py-2 text-xs text-foreground placeholder-muted-foreground outline-none focus:border-primary/50"
                 />
                 <Button
                   size="sm"
@@ -288,7 +288,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
                 {notes.map((note) => (
                   <div
                     key={note.id}
-                    className="rounded-lg bg-muted px-3 py-2"
+                    className="rounded-2xl bg-muted/70 px-3.5 py-2.5"
                   >
                     <p className="whitespace-pre-wrap text-xs text-muted-foreground">
                       {note.note_text}

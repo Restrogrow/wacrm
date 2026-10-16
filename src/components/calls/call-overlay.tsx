@@ -152,7 +152,7 @@ export function CallOverlay() {
         <button
           type="button"
           onClick={() => void decline()}
-          className="flex items-center justify-center gap-2 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-red-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700"
         >
           <PhoneOff className="size-4" />
           Decline
@@ -160,7 +160,7 @@ export function CallOverlay() {
         <button
           type="button"
           onClick={() => void answer()}
-          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-700 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-700 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-800"
         >
           <Phone className="size-4" />
           Answer

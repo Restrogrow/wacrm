@@ -157,7 +157,7 @@ export function SavedRepliesSettings() {
   if (missing) {
     return (
       <section className="space-y-6">
-        <SettingsPanelHead title="Saved replies" />
+        <SettingsPanelHead icon={MessageSquareText} title="Saved replies" />
         <Card>
           <CardContent className="text-muted-foreground py-6 text-sm">
             Saved replies aren&apos;t set up yet. Run
@@ -172,6 +172,7 @@ export function SavedRepliesSettings() {
   return (
     <section className="animate-in fade-in-50 space-y-6 duration-200">
       <SettingsPanelHead
+        icon={MessageSquareText}
         title="Saved replies"
         description='Answers your team sends often. In the inbox, type "/" and pick one — or type its shortcut, like /price.'
         action={
@@ -185,8 +186,14 @@ export function SavedRepliesSettings() {
       />
 
       {draft && (
-        <Card>
-          <CardContent className="space-y-4 py-5">
+        <Card className="ring-2 ring-primary/30">
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+                <Pencil className="size-5" />
+              </span>
+              <h3 className="text-base font-bold tracking-tight text-foreground">{draft.id ? 'Edit reply' : 'New reply'}</h3>
+            </div>
             <div className="grid gap-4 sm:grid-cols-[200px_minmax(0,1fr)]">
               <div className="space-y-1.5">
                 <Label
@@ -255,7 +262,7 @@ export function SavedRepliesSettings() {
                     key={v.token}
                     type="button"
                     onClick={() => insertVariable(v.token)}
-                    className="border-border text-muted-foreground hover:bg-muted hover:text-foreground rounded-md border px-2 py-0.5 font-mono text-[11px]"
+                    className="border-border text-muted-foreground hover:bg-muted hover:text-foreground rounded-xl border px-2 py-0.5 font-mono text-[11px]"
                     title={v.label}
                   >
                     {v.token}
@@ -281,11 +288,13 @@ export function SavedRepliesSettings() {
       )}
 
       {replies.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-10 text-center">
-            <MessageSquareText className="text-muted-foreground size-6" />
-            <p className="text-muted-foreground mt-2 text-sm">
-              No saved replies yet.
+        <Card className="border border-dashed border-primary-soft-2 bg-primary-soft/40 ring-0">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <span className="flex size-14 items-center justify-center rounded-3xl bg-primary-soft text-primary">
+              <MessageSquareText className="size-7" />
+            </span>
+            <p className="mt-3 text-base font-bold text-foreground">
+              No saved replies yet
             </p>
             {canEditSettings && (
               <p className="text-muted-foreground mt-1 text-xs">
@@ -296,25 +305,18 @@ export function SavedRepliesSettings() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <ul className="divide-border divide-y">
-              {replies.map((reply) => (
-                <li key={reply.id} className="flex items-start gap-3 px-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm">
-                      <span className="text-primary font-mono font-semibold">
-                        /{reply.shortcut}
-                      </span>
-                      {reply.title && (
-                        <span className="text-foreground ml-2">
-                          {reply.title}
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-muted-foreground mt-0.5 text-xs whitespace-pre-wrap">
-                      {reply.body}
-                    </p>
+        <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+          {replies.map((reply) => (
+            <Card key={reply.id} className="group transition-all hover:-translate-y-0.5 hover:shadow-md">
+              <CardContent className="flex h-full flex-col gap-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="inline-flex items-center rounded-full bg-primary-soft px-3 py-1 font-mono text-sm font-bold text-primary">
+                      /{reply.shortcut}
+                    </span>
+                    {reply.title && (
+                      <p className="mt-2 truncate text-base font-bold tracking-tight text-foreground">{reply.title}</p>
+                    )}
                   </div>
                   {canEditSettings && (
                     <div className="flex shrink-0 gap-1">
@@ -343,11 +345,14 @@ export function SavedRepliesSettings() {
                       </Button>
                     </div>
                   )}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+                </div>
+                <p className="line-clamp-4 flex-1 rounded-2xl rounded-tl-sm bg-primary-soft/50 px-3.5 py-2.5 text-sm whitespace-pre-wrap text-foreground">
+                  {reply.body}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </section>
   );
