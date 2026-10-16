@@ -23,8 +23,8 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 - [x] **#5 Background jobs (cron).** Done 2026-10-13:
       `AUTOMATION_CRON_SECRET` is set and Hostinger runs
       `/api/automations/cron` and `/api/flows/cron` every minute with the
-      `x-cron-secret` header (both verified returning 200).
-      Still to do: document this setup in the README.
+      `x-cron-secret` header (both verified returning 200). Documented
+      in the README ("Background jobs (cron)").
 
 ## 🔴 Important — WhatsApp platform (from Meta docs review, 2026-10-13)
 

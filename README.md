@@ -323,7 +323,7 @@ per-connection country code).
 ## Public API and webhooks
 
 REST API at `https://repeatgrow.com/api/v1`: send messages and templates,
-manage contacts, read conversations, list templates, launch broadcasts,
+manage contacts, read conversations, create and list templates, launch broadcasts,
 and subscribe to signed outbound webhooks (`message.received`,
 `message.status_updated`, `conversation.created`).
 
@@ -504,12 +504,14 @@ baked in at build time — **redeploy after changing them**.
 | `NEXT_PUBLIC_SITE_URL` | Yes (prod) | Public origin, `https://repeatgrow.com` (local: `http://localhost:3000`); used for redirects, OAuth callbacks and webhook URLs |
 | `AUTOMATION_CRON_SECRET` | Yes (prod) | Shared secret for the cron endpoints (`x-cron-secret` header) |
 | `META_APP_ID`, `NEXT_PUBLIC_META_APP_ID`, `NEXT_PUBLIC_META_CONFIG_ID` | Optional | WhatsApp Embedded Signup ("Connect with Facebook") |
-| `GEMINI_KEY` (`GEMINI_MODEL`) | Optional | AI chatbot, AI flows, AI templates |
+| `GEMINI_KEY` (`GEMINI_API_KEY` also accepted), `GEMINI_MODEL` | Optional | AI chatbot, AI flows, AI templates; model defaults to `gemini-2.5-flash` |
+| `ALLOWED_INVITE_HOSTS` | Optional | Comma-separated hostnames allowed in team invite links (extra protection on bare deployments) |
 | `CHATBOT_TIMEZONE` | Optional | Chatbot's "are you open now?" time zone (default `Asia/Kolkata`) |
 | `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET` | Optional | Shopify one-click connect (Client ID / secret) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Optional | Outgoing email (daily summary, deletion request emails) |
 | `ADMIN_ALERT_EMAIL` | Optional | Who is emailed about account deletion requests (comma-separated; default support@repeatgrow.com) |
 | `NEXT_PUBLIC_SENTRY_DSN` | Optional | Turns on Sentry error monitoring |
+| `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | Optional | Environment label in Sentry (defaults to `NODE_ENV`) |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Optional | Upload source maps to Sentry at build time |
 | `WHATSAPP_TEMPLATES_DRY_RUN` | Dev only | Skip the Meta call when submitting templates (never in production) |
 

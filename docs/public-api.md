@@ -59,6 +59,8 @@ it. Grant the minimum.
 | `conversations:read` | List and read conversations              |
 | `broadcasts:send`    | Launch broadcast campaigns               |
 | `webhooks:manage`    | Register and manage outbound webhooks    |
+| `templates:read`     | List message templates and their review status |
+| `templates:write`    | Create message templates and submit them to Meta |
 
 A key with **no scopes** still authenticates and can call
 `GET /api/v1/me` — useful for verifying a key works.
@@ -281,6 +283,64 @@ Broadcast status + counts. Scope: `broadcasts:send`. `status` moves
 `sending` → `sent`; `delivered_count` / `read_count` keep climbing as
 Meta delivery webhooks arrive. `404` for another account's broadcast.
 
+### `GET /api/v1/templates`
+
+List your message templates and their review status. Scope:
+`templates:read`. Optional `?names=a,b,c` filter (up to 50 names).
+Status is kept current by Meta's template-status webhook.
+
+```bash
+curl "https://repeatgrow.com/api/v1/templates?names=promo_july" \
+  -H "Authorization: Bearer wacrm_live_xxx"
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "…", "name": "promo_july", "language": "en_US",
+      "category": "MARKETING", "status": "APPROVED",
+      "rejection_reason": null, "body_text": "Hi {{1}}, …",
+      "updated_at": "2026-10-14T09:12:00Z"
+    }
+  ]
+}
+```
+
+### `POST /api/v1/templates`
+
+Create a template and submit it to Meta for review. Scope:
+`templates:write`. Same pipeline as the dashboard.
+
+Body: `name`, `category` (`MARKETING` or `UTILITY`, any case),
+`language`, `body_text` (required); `sample_values` (`{ "body": [...] }`
+for `{{1}}`…), `header_type`, `header_content`, `header_media_url`,
+`footer_text` and `buttons` (optional). AUTHENTICATION templates are not
+supported here — create them in Meta WhatsApp Manager.
+
+The call is idempotent per `name` + `language`:
+
+- `201` — submitted (`{ id, name, language, category, status }`).
+- `200` — already exists with the same wording; returned unchanged
+  (rejected or draft templates are re-submitted).
+- `409` — an approved or pending template with that name has different
+  wording.
+
+### `POST /api/v1/connect/token`
+
+Used by partner apps ("Connect RepeatGrow", e.g. RestroGrow): exchange
+the one-time code from the consent screen for a scoped API key. No API
+key is sent; the partner authenticates with its client secret. Body:
+`{ "client_id", "client_secret", "code", "redirect_uri" }`. The key is
+returned exactly once. Errors: `400` `invalid_request` / `invalid_grant`,
+`401` `invalid_client`, `429` `rate_limited`. Full contract:
+[RESTROGROW_CONNECT.md](./RESTROGROW_CONNECT.md).
+
+### `POST /api/v1/keys/revoke-self`
+
+A key revokes itself (used for "Disconnect"). Any valid key, no scope
+needed. Takes effect immediately; response `{ "data": { "revoked": true } }`.
+
 ## Pagination
 
 Every list endpoint pages the same way. Request a page size with
@@ -395,6 +455,6 @@ internal targets are refused at delivery time.
 ## Roadmap
 
 The public API covers messaging, contacts, conversations,
-broadcasts, and outbound webhooks. Future ideas (deals/pipelines,
-templates, flows, a delivery queue for webhooks) are not yet
-scheduled.
+broadcasts, templates, partner connect and outbound webhooks. Future
+ideas (deals/pipelines, flows, orders, forms, a delivery queue for
+webhooks) are not yet scheduled.

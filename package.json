@@ -1,18 +1,18 @@
 {
   "name": "whatsapp-crm",
   "displayName": "Repeat Grow",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "Self-hostable WhatsApp CRM built on Next.js and Supabase — shared inbox, contacts, sales pipelines, broadcasts, and no-code automations.",
   "license": "MIT",
   "author": "Arnas Donauskas",
-  "homepage": "https://github.com/ArnasDon/wacrm",
+  "homepage": "https://github.com/Restrogrow/wacrm",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ArnasDon/wacrm.git"
+    "url": "git+https://github.com/Restrogrow/wacrm.git"
   },
   "bugs": {
-    "url": "https://github.com/ArnasDon/wacrm/issues"
+    "url": "https://github.com/Restrogrow/wacrm/issues"
   },
   "keywords": [
     "crm",

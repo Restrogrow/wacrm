@@ -11,6 +11,13 @@ and polish.
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-10-16
+
+Repeat Grow release: plans and trials, WhatsApp calling, number health,
+orders and payments, forms, carousels and more. **Migrations required:**
+apply `041` through `053` from `supabase/migrations/` in order (each is
+also noted below).
+
 ### Added
 
 - **Orders, payments and catalog (India).** Send orders with a payment
