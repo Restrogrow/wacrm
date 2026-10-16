@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandMark } from "@/components/brand-mark";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -9,14 +10,7 @@ import { AuthDivider, GoogleButton } from "@/components/auth/google-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { MessageSquare, UsersRound, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 // `useSearchParams` opts the component out of static prerendering
 // unless it sits under a Suspense boundary. We split the form into
@@ -82,120 +76,125 @@ function LoginPageInner() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md border-border bg-card">
-        <CardHeader className="items-center text-center">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft">
-            {inviteToken ? (
-              <UsersRound className="h-6 w-6 text-primary" />
-            ) : (
-              <MessageSquare className="h-6 w-6 text-primary" />
-            )}
-          </div>
-          <CardTitle className="text-xl text-foreground">
+    <div className="flex min-h-screen items-center justify-center px-6 py-10">
+      <div className="w-full max-w-[420px]">
+        {/* Logo shows here on small screens; on large screens the brand panel on the left carries it. */}
+        <BrandMark className="mb-6 size-12 rounded-2xl lg:hidden" />
+
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             {inviteToken ? "Sign in to accept" : "Welcome back"}
-          </CardTitle>
-          <CardDescription className="text-muted-foreground">
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             {inviteToken
               ? "Sign in and we'll take you to the invitation."
-              : "Sign in to your account"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <GoogleButton
-            next={
-              inviteToken
-                ? `/join/${encodeURIComponent(inviteToken)}`
-                : nextPath
-            }
-          />
-          <AuthDivider />
+              : "Sign in to your Repeat Grow account to continue."}
+          </p>
+        </div>
 
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
-            {error && (
-              <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                {error}
-              </div>
-            )}
+        <GoogleButton
+          next={
+            inviteToken
+              ? `/join/${encodeURIComponent(inviteToken)}`
+              : nextPath
+          }
+        />
+        <AuthDivider label="or sign in with email" />
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email" className="text-muted-foreground">
-                Email
-              </Label>
+        <form onSubmit={handleLogin} className="flex flex-col gap-5">
+          {error && (
+            <div
+              role="alert"
+              className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400"
+            >
+              {error}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="email" className="text-sm font-semibold text-foreground">
+              Email
+            </Label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="border-border bg-muted text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20"
+                className="h-12 rounded-2xl border-border bg-card pl-11 text-base shadow-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20"
               />
             </div>
+          </div>
 
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-muted-foreground">
-                  Password
-                </Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm font-medium text-primary underline-offset-4 hover:text-primary/80 hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="border-border bg-muted text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20 pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-1 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  {showPassword ? (
-                    <EyeOff className="size-4" />
-                  ) : (
-                    <Eye className="size-4" />
-                  )}
-                </button>
-              </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-sm font-semibold text-foreground">
+                Password
+              </Label>
+              <Link
+                href="/forgot-password"
+                className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                Forgot password?
+              </Link>
             </div>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="h-12 rounded-2xl border-border bg-card pr-12 pl-11 text-base shadow-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute top-1/2 right-2 flex size-9 -translate-y-1/2 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
+          </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="mt-2 h-11 w-full rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25 hover:bg-primary/90 disabled:opacity-50"
-            >
-              {loading ? "Signing in..." : "Sign in"}
-            </Button>
-          </form>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="mt-1 h-12 w-full rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90 disabled:opacity-50"
+          >
+            {loading ? "Signing in..." : "Sign in"}
+            {!loading && <ArrowRight className="size-4" />}
+          </Button>
+        </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link
-              href={
-                inviteToken
-                  ? `/signup?invite=${encodeURIComponent(inviteToken)}`
-                  : searchParams.get("next")
-                    ? `/signup?next=${encodeURIComponent(nextPath)}`
-                    : "/signup"
-              }
-              className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
-            >
-              Create account
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link
+            href={
+              inviteToken
+                ? `/signup?invite=${encodeURIComponent(inviteToken)}`
+                : searchParams.get("next")
+                  ? `/signup?next=${encodeURIComponent(nextPath)}`
+                  : "/signup"
+            }
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            Create account
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

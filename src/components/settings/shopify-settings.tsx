@@ -10,28 +10,11 @@
 // API: /api/integrations/shopify (see lib/shopify/process.ts).
 // ============================================================
 
+import { IconChip } from '@/components/icon-chip';
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import {
-  Check,
-  Clock,
-  Copy,
-  CreditCard,
-  Loader2,
-  MessageSquare,
-  Package,
-  PackageCheck,
-  Save,
-  ShoppingBag,
-  ShoppingCart,
-  Truck,
-  Unplug,
-  Webhook,
-  XCircle,
-  Zap,
-  type LucideIcon,
-} from 'lucide-react';
+import { Check, Clock, Copy, CreditCard, Loader2, MessageSquare, Package, PackageCheck, Save, ShoppingBag, ShoppingCart, Truck, Unplug, Webhook, XCircle, Zap, type LucideIcon } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -526,9 +509,7 @@ export function ShopifySettings() {
                 className="space-y-3"
               >
                 <div className="flex items-center gap-3">
-                  <span className="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-                    <Zap className="size-5" />
-                  </span>
+                  <IconChip icon={Zap} className="size-11 rounded-2xl" />
                   <div>
                     <p className="text-foreground flex items-center gap-2 text-base font-bold tracking-tight">
                       Connect Shopify
@@ -616,9 +597,7 @@ export function ShopifySettings() {
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h3 className="text-foreground flex items-center gap-2 text-base font-bold tracking-tight">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary">
-                <MessageSquare className="size-4" />
-              </span>
+              <IconChip icon={MessageSquare} className="size-9 rounded-xl" />
               Automatic messages
             </h3>
             <p className="text-muted-foreground mt-1 text-xs">

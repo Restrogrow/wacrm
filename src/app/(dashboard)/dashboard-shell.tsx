@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Sidebar } from "@/components/layout/sidebar";
+import { HelpWidget } from "@/components/assistant/help-widget";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { Header } from "@/components/layout/header";
 import { PresenceHeartbeat } from "@/components/presence/presence-heartbeat";
@@ -90,6 +91,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
         onToggleCollapsed={toggleCollapsed}
       />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <HelpWidget />
       <div className="flex flex-1 flex-col overflow-hidden">
         <PlanBanner />
         <NumberHealthBanner />

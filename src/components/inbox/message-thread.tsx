@@ -942,6 +942,11 @@ export function MessageThread({
 
           {/* Share just this conversation (copy / download / WhatsApp / email). */}
           <ShareChatButton
+            conversationId={conversation.id}
+            members={profiles}
+            currentUserId={user?.id}
+            assignedAgentId={assignedAgentId}
+            onAssign={handleAssignChange}
             messages={messages}
             contactName={contact?.name || (contact?.phone ? `+${contact.phone.replace(/^\+/, "")}` : "Customer")}
             contactPhone={contact?.phone ? `+${contact.phone.replace(/^\+/, "")}` : null}

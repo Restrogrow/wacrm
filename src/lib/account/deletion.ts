@@ -18,6 +18,7 @@ import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import { deleteWebhookSubscription, friendlyCalendlyError } from '@/lib/calendly/api'
 import { isEmailConfigured, sendEmail } from '@/lib/email/mailer'
+import { deletionDecisionEmail, deletionRequestAdminEmail, type BuiltEmail } from '@/lib/email/content'
 import { SITE_URL, SUPPORT_EMAIL } from '@/lib/seo'
 
 export class DeletionError extends Error {
@@ -124,13 +125,10 @@ function adminAlertRecipients(): string[] {
     .filter(Boolean)
 }
 
-async function safeSend(message: { to: string[]; subject: string; text: string }) {
+async function safeSend(message: { to: string[] } & BuiltEmail) {
   if (!isEmailConfigured() || message.to.length === 0) return
   try {
-    await sendEmail({
-      ...message,
-      html: `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;white-space:pre-line">${escapeHtml(message.text)}</div>`,
-    })
+    await sendEmail(message)
   } catch (err) {
     console.warn('[account-deletion] email not sent:', err instanceof Error ? err.message : err)
   }
@@ -146,20 +144,7 @@ export async function notifyAdminsOfRequest(req: {
   isOwner: boolean
   reason: string | null
 }) {
-  await safeSend({
-    to: adminAlertRecipients(),
-    subject: `Account deletion request — ${req.businessName ?? req.email ?? 'a user'}`,
-    text: [
-      `${req.email ?? 'A user'} asked to delete their Repeat Grow account.`,
-      req.isOwner
-        ? `They own "${req.businessName}". Approving deletes the business and all of its data.`
-        : `They are a teammate in "${req.businessName}". Approving deletes only their login.`,
-      req.reason ? `Reason: ${req.reason}` : '',
-      `Review it on ${SITE_URL}/admin#deletion-requests`,
-    ]
-      .filter(Boolean)
-      .join('\n\n'),
-  })
+  await safeSend({ to: adminAlertRecipients(), ...deletionRequestAdminEmail(req) })
 }
 
 export async function notifyUserOfDecision(
@@ -168,15 +153,5 @@ export async function notifyUserOfDecision(
   note: string | null,
 ) {
   if (!email) return
-  await safeSend({
-    to: [email],
-    subject:
-      decision === 'approved'
-        ? 'Your Repeat Grow account has been deleted'
-        : 'About your Repeat Grow account deletion request',
-    text:
-      decision === 'approved'
-        ? `Your request was approved and your Repeat Grow account has been deleted.\n\nIf you didn't ask for this, reply to this email straight away.`
-        : `We didn't delete your Repeat Grow account.${note ? `\n\n${note}` : ''}\n\nReply to this email or write to ${SUPPORT_EMAIL} if you have questions. You can file a new request any time in Settings → Your data.`,
-  })
+  await safeSend({ to: [email], ...deletionDecisionEmail(decision, note) })
 }

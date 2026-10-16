@@ -86,8 +86,10 @@ export default function SettingsPage() {
     whatsapp: (
       <div className="space-y-6">
         <WhatsAppConfig />
-        <NumberHealthCard />
-        <CallingSettingsCard />
+        <div className="grid items-start gap-6 xl:grid-cols-2">
+          <NumberHealthCard />
+          <CallingSettingsCard />
+        </div>
       </div>
     ),
     'saved-replies': <SavedRepliesSettings />,

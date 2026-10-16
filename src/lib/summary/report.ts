@@ -97,11 +97,11 @@ export function renderSummaryEmail(args: {
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border-radius:12px;padding:24px">
         <tr><td>
-          <p style="margin:0;color:#7c3aed;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase">Repeat Grow daily summary</p>
+          <p style="margin:0;color:#0da968;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase">Repeat Grow daily summary</p>
           <h1 style="margin:6px 0 2px;font-size:20px;color:#111">${escapeHtml(accountName)}</h1>
           <p style="margin:0 0 16px;color:#666;font-size:14px">${escapeHtml(window.label)}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rowsHtml}</table>
-          <p style="margin:20px 0 0"><a href="${escapeHtml(appUrl)}/inbox" style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600">Open the inbox</a></p>
+          <p style="margin:20px 0 0"><a href="${escapeHtml(appUrl)}/inbox" style="display:inline-block;background:#0da968;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600">Open the inbox</a></p>
           <p style="margin:20px 0 0;color:#999;font-size:12px">Change or turn off this email in Settings → Daily summary.</p>
         </td></tr>
       </table>

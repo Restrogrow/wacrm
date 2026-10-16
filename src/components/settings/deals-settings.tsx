@@ -1,5 +1,6 @@
 "use client";
 
+import { IconChip } from '@/components/icon-chip';
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Coins, Loader2 } from "lucide-react";
@@ -78,9 +79,7 @@ export function DealsSettings() {
         <Card>
           <CardContent className="space-y-5">
             <div className="flex items-center gap-3">
-              <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                <Coins className="size-5" />
-              </span>
+              <IconChip icon={Coins} className="size-11 rounded-2xl" />
               <div>
                 <h3 className="text-base font-bold tracking-tight text-foreground">Default currency</h3>
                 <p className="text-xs text-muted-foreground">

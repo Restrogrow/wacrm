@@ -1,5 +1,6 @@
 "use client";
 
+import { IconChip } from '@/components/icon-chip';
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Pipeline, PipelineStage, Deal } from "@/types";
@@ -391,7 +392,7 @@ export default function PipelinesPage() {
       {/* Board */}
       {pipelines.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-primary-soft-2 bg-primary-soft/40 py-20">
-          <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary-soft text-primary"><GitBranch className="h-8 w-8" /></span>
+          <IconChip icon={GitBranch} className="h-16 w-16 rounded-3xl" />
           <h3 className="mt-4 text-lg font-medium text-foreground">
             No pipelines yet
           </h3>

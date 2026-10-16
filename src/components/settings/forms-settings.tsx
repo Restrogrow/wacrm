@@ -11,6 +11,7 @@
 // CSV download. API: /api/whatsapp/forms.
 // ============================================================
 
+import { IconChip } from '@/components/icon-chip';
 import { useCallback, useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -246,9 +247,7 @@ export function FormsSettings() {
       ) : forms.length === 0 ? (
         <Card className="border border-dashed border-primary-soft-2 bg-primary-soft/40 ring-0">
           <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-3xl bg-primary-soft text-primary">
-              <ClipboardList className="size-7" />
-            </span>
+            <IconChip icon={ClipboardList} className="h-14 w-14 rounded-3xl" />
             <p className="text-base font-bold text-foreground">No forms yet</p>
             <p className="text-sm text-muted-foreground">Create a lead form in a minute.</p>
           </CardContent>
@@ -259,9 +258,7 @@ export function FormsSettings() {
             <Card key={form.id} className="transition-all hover:-translate-y-0.5 hover:shadow-md">
               <CardContent className="space-y-3">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                    <ClipboardList className="size-5" />
-                  </span>
+                  <IconChip icon={ClipboardList} className="size-11 shrink-0 rounded-2xl" />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-base font-bold tracking-tight text-foreground">{form.name}</h3>

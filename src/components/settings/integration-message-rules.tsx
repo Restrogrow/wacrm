@@ -7,6 +7,7 @@
 // "Recent messages" activity list.
 // ============================================================
 
+import { IconChip } from '@/components/icon-chip';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Clock, Loader2, MessageSquare, Send, type LucideIcon } from 'lucide-react';
 
@@ -318,9 +319,7 @@ export function IntegrationActivity({ items }: { items: ActivityItem[] }) {
   return (
     <div>
       <h3 className="text-foreground mb-3 flex items-center gap-2 text-base font-bold tracking-tight">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary">
-          <Clock className="size-4" />
-        </span>
+        <IconChip icon={Clock} className="size-9 rounded-xl" />
         Recent messages
       </h3>
       <Card>

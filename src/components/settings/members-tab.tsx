@@ -21,17 +21,10 @@
 //   the role anyway.
 // ============================================================
 
+import { IconChip } from '@/components/icon-chip';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import {
-  AlertTriangle,
-  Loader2,
-  Mail,
-  MailX,
-  Plus,
-  Trash2,
-  UsersRound,
-} from 'lucide-react';
+import { AlertTriangle, Loader2, Mail, MailX, Plus, Trash2, UsersRound } from 'lucide-react';
 
 import {
   Avatar,
@@ -458,7 +451,7 @@ export function MembersTab() {
                         size="sm"
                         onClick={() => setRemovingMember(member)}
                         disabled={isBusy}
-                        className="border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:border-red-500/60 hover:text-red-200"
+                        className="border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-300 hover:bg-red-500/20 hover:border-red-500/60 hover:text-red-700 dark:hover:text-red-200"
                       >
                         <Trash2 className="size-4" />
                       </Button>
@@ -475,7 +468,7 @@ export function MembersTab() {
       <RequireRole min="admin">
         <div>
           <div className="mb-2 flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary"><UsersRound className="size-4" /></span>
+            <IconChip icon={UsersRound} className="size-9 rounded-xl" />
             <h3 className="text-base font-bold tracking-tight text-foreground">
               Pending invitations
             </h3>
@@ -499,7 +492,7 @@ export function MembersTab() {
           {invitations.length === 0 ? (
             <Card className="border border-dashed border-primary-soft-2 bg-primary-soft/40 ring-0">
               <CardContent className="flex flex-col items-center justify-center py-10 text-center">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-primary-soft text-primary"><Mail className="size-6" /></span>
+                <IconChip icon={Mail} className="size-12 rounded-2xl" />
                 <p className="mt-3 text-base font-bold text-foreground">
                   No pending invitations.
                 </p>
@@ -546,7 +539,7 @@ export function MembersTab() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleRevoke(inv)}
-                        className="border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:border-red-500/60 hover:text-red-200"
+                        className="border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-300 hover:bg-red-500/20 hover:border-red-500/60 hover:text-red-700 dark:hover:text-red-200"
                       >
                         <MailX className="size-4" />
                         Revoke

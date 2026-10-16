@@ -28,6 +28,8 @@ import {
 } from "@/lib/auth/invitations";
 import { isAccountRole } from "@/lib/auth/roles";
 import { SITE_URL } from "@/lib/seo";
+import { isEmailConfigured, sendEmail } from "@/lib/email/mailer";
+import { teamInviteEmail } from "@/lib/email/content";
 import {
   checkRateLimit,
   rateLimitResponse,
@@ -181,7 +183,7 @@ export async function POST(request: Request) {
     if (!limit.success) return rateLimitResponse(limit);
 
     const body = (await request.json().catch(() => null)) as
-      | { role?: unknown; expiresInDays?: unknown; label?: unknown }
+      | { role?: unknown; expiresInDays?: unknown; label?: unknown; email?: unknown }
       | null;
 
     const role = body?.role;
@@ -216,6 +218,20 @@ export async function POST(request: Request) {
       label = trimmed === "" ? null : trimmed;
     }
 
+    // Optional: email the link to the invitee. Best effort — the link is
+    // always returned to the admin too, so a mail problem never blocks it.
+    let inviteeEmail: string | null = null;
+    if (typeof body?.email === "string" && body.email.trim() !== "") {
+      const candidate = body.email.trim().toLowerCase();
+      if (candidate.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate)) {
+        return NextResponse.json(
+          { error: "That email address does not look right" },
+          { status: 400 },
+        );
+      }
+      inviteeEmail = candidate;
+    }
+
     const { token, hash } = generateInviteToken();
 
     const { data, error } = await ctx.supabase
@@ -243,13 +259,49 @@ export async function POST(request: Request) {
       );
     }
 
+    const url = inviteUrl(token, getBaseUrl(request));
+
+    let emailed: "sent" | "failed" | "not_configured" | null = null;
+    if (inviteeEmail) {
+      if (!isEmailConfigured()) {
+        emailed = "not_configured";
+      } else {
+        try {
+          const { data: me } = await ctx.supabase
+            .from("profiles")
+            .select("full_name, email")
+            .eq("user_id", ctx.userId)
+            .maybeSingle();
+          await sendEmail({
+            to: [inviteeEmail],
+            ...teamInviteEmail({
+              inviterName: me?.full_name || me?.email || "A teammate",
+              accountName: ctx.account.name,
+              role,
+              url,
+              expiresInDays: expiryDays,
+            }),
+          });
+          emailed = "sent";
+        } catch (err) {
+          console.warn(
+            "[POST /api/account/invitations] invite email not sent:",
+            err instanceof Error ? err.message : err,
+          );
+          emailed = "failed";
+        }
+      }
+    }
+
     return NextResponse.json(
       {
         invitation: data,
         // Plaintext payload — visible to the admin exactly once.
         token,
-        url: inviteUrl(token, getBaseUrl(request)),
+        url,
         expiresInDays: expiryDays,
+        emailed,
+        emailedTo: emailed === "sent" ? inviteeEmail : null,
       },
       { status: 201 },
     );

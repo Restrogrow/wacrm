@@ -14,6 +14,7 @@
 
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { isEmailConfigured, sendEmail } from '@/lib/email/mailer'
+import { autoBrandedEmail } from '@/lib/email/content'
 import { PLAN_INFO, type AccountPlan } from '@/lib/billing/plans'
 import { SITE_URL, SUPPORT_EMAIL } from '@/lib/seo'
 
@@ -69,6 +70,19 @@ export function isIndianDaytime(now = Date.now()): boolean {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', timeZone: 'Asia/Kolkata' })
+}
+
+/** The reminder wrapped in the branded shell (what actually gets sent). */
+export function brandedReminderEmail(a: ReminderAccount, stage: ReminderStage) {
+  const { subject, text } = reminderEmail(a, stage)
+  return autoBrandedEmail({
+    subject,
+    text,
+    eyebrow: stage.startsWith('trial') ? 'Your trial' : 'Your plan',
+    buttons: [{ label: 'Choose a plan', href: `${SITE_URL}/settings?tab=billing` }],
+    reason: `You are receiving this because you own ${a.name} on Repeat Grow. Questions? Write to ${SUPPORT_EMAIL}.`,
+    noteLabel: 'How to continue',
+  })
 }
 
 export function reminderEmail(a: ReminderAccount, stage: ReminderStage): { subject: string; text: string } {
@@ -149,17 +163,9 @@ export async function processBillingReminders(now = Date.now()): Promise<number>
     const { data: owner } = await db.from('profiles').select('email').eq('user_id', a.owner_user_id).maybeSingle()
     if (!owner?.email) continue
 
-    const { subject, text } = reminderEmail(a, due.stage)
+    const mail = brandedReminderEmail(a, due.stage)
     try {
-      await sendEmail({
-        to: [owner.email],
-        subject,
-        text,
-        html: `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;white-space:pre-line">${text.replace(
-          /[&<>]/g,
-          (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!,
-        )}</div>`,
-      })
+      await sendEmail({ to: [owner.email], ...mail })
       sent++
     } catch (err) {
       console.warn('[billing-reminders] email not sent:', err instanceof Error ? err.message : err)

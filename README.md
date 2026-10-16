@@ -14,6 +14,9 @@
 **LinkedIn:** [repeat-grow](https://www.linkedin.com/company/repeat-grow) ·
 **Reviews:** [Trustpilot](https://www.trustpilot.com/review/repeatgrow.com)
 
+> **Running the platform?** Read the private **[Admin handbook](./docs/ADMIN.md)** — every mailbox, service, cron job,
+> email and the **⚠️ important to-do list** (SMTP, email templates, crons, merging the redesign) live there.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](./LICENSE)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org)
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth-3ecf8e?logo=supabase)](https://supabase.com)
@@ -29,6 +32,7 @@
 - [Public API and webhooks](#public-api-and-webhooks)
 - [Platform admin](#platform-admin)
 - [Operations and monitoring](#operations-and-monitoring)
+- [Email system](#email-system)
 - [Blog](#blog)
 - [Tech stack](#tech-stack)
 - [Getting started (local development)](#getting-started-local-development)
@@ -243,7 +247,7 @@
   nature of business, team size) on an onboarding step; owners can edit
   them later in **Settings → Your profile**. Google users can set a
   password later in **Settings → Login & security**.
-- Team members by invite link with roles: **owner / admin / agent /
+- Team members by invite link (optionally emailed to them) with roles: **owner / admin / agent /
   viewer**; ownership transfer.
 - API keys and "Connect RepeatGrow" partner connections (e.g.
   RestroGrow) managed in Settings.
@@ -424,6 +428,10 @@ rate limited; marketing templates to opted-out contacts are refused.
 - **Account deletion requests:** shown at the top of the dashboard while
   any are waiting (history at the bottom). Approve (type DELETE) or
   reject with a note; the user is emailed.
+- **Emails** (`/admin/emails`): preview every email the platform sends
+  (designed or plain text, desktop or phone width), see when it goes out
+  and who gets it, and send a `[TEST]` copy — one at a time or all of them
+  — to the test inbox (`restrogrow@gmail.com`). See [Email system](#email-system).
 - **System health** (`/admin/system`): database, required env vars,
   every background job (last success, duration, last error — "Not
   running" if a job hasn't succeeded recently) and the last 50 failed
@@ -434,7 +442,7 @@ rate limited; marketing templates to opted-out contacts are refused.
 
 ## Operations and monitoring
 
-Admin-only. Full runbook: **[docs/OPERATIONS.md](./docs/OPERATIONS.md)**
+Admin-only. Setup and who-owns-what: **[docs/ADMIN.md](./docs/ADMIN.md)**. Full runbook: **[docs/OPERATIONS.md](./docs/OPERATIONS.md)**
 (what alerts you, what each state means, what to do when something
 breaks, releases, testing).
 
@@ -474,6 +482,30 @@ Point a free monitor at it (UptimeRobot, Better Stack): an HTTP monitor
 on `https://repeatgrow.com/api/health` every 5 minutes alerts you when
 it returns 503. For "degraded" alerts too, use a keyword monitor that
 expects `"status":"ok"`.
+
+---
+
+## Email system
+
+Every email goes through one branded layout (logo header, green buttons, footer with support links) —
+[`src/lib/email/branded.ts`](./src/lib/email/branded.ts) and [`content.ts`](./src/lib/email/content.ts). The full list
+(21 emails) lives in [`src/lib/email/catalog.ts`](./src/lib/email/catalog.ts) and is previewable at **`/admin/emails`**.
+
+| Group | Emails | Sent by |
+|---|---|---|
+| Sign-in & security | Confirm signup (link + 6-digit code), magic link / login code, reset password, invite user, change email, reauthentication | **Supabase** — paste the templates from `/admin/emails` into Supabase → Authentication → Email Templates |
+| Team | Team invite (admin types the invitee's email in *Invite member*) | App |
+| Billing | Trial ends in 2 days · last day of trial · trial ended · plan renews in 3 days · plan expired | App (cron) |
+| Reports & alerts | Daily summary · WhatsApp number health (warning / critical) | App (cron) |
+| Sales & admin | New demo request · account deletion request · deleted · declined | App |
+| Built, not live | Welcome email (needs a "welcome sent" flag) | — |
+
+- **Two senders.** The app uses `SMTP_*` environment variables. Supabase Auth uses its **own** SMTP setting inside the
+  Supabase dashboard. Both use the `support@repeatgrow.com` Google Workspace mailbox.
+- **Recipients** are controlled by `ADMIN_ALERT_EMAIL`, `DEMO_REQUEST_EMAIL` and `EMAIL_TEST_RECIPIENT`.
+- **Test it:** `/admin/emails` → *Send test* (one) or *Send all*. Needs SMTP configured on that server.
+- **Adding an email:** write a builder in `content.ts` using the branded layout, add an entry to `catalog.ts`
+  (the tests in `catalog.test.ts` then check it renders), and call `sendEmail()` from wherever it is triggered.
 
 ---
 
@@ -576,7 +608,8 @@ baked in at build time — **redeploy after changing them**.
 | `ALLOWED_INVITE_HOSTS` | Optional | Comma-separated hostnames allowed in team invite links (extra protection on bare deployments) |
 | `CHATBOT_TIMEZONE` | Optional | Chatbot's "are you open now?" time zone (default `Asia/Kolkata`) |
 | `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET` | Optional | Shopify one-click connect (Client ID / secret) |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Optional | Outgoing email (daily summary, deletion request emails) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Optional | Outgoing app email: daily summary, billing reminders, number-health alerts, team invites, demo/deletion notices (Supabase's own auth emails use a separate SMTP setting in its dashboard) |
+| `EMAIL_TEST_RECIPIENT` | Optional | Where the `/admin/emails` test button sends (default `restrogrow@gmail.com`) |
 | `DEMO_REQUEST_EMAIL` | Optional | Who is emailed when someone requests a demo on `/demo` (comma-separated; default sales@repeatgrow.com) |
 | `ADMIN_ALERT_EMAIL` | Optional | Who is emailed about account deletion requests (comma-separated; default support@repeatgrow.com) |
 | `NEXT_PUBLIC_GA_ID` | Optional | Google Analytics 4 measurement ID. Defaults to `G-L56ZRQGJ67`; set it empty to turn analytics off. Loaded on public marketing pages only; the demo form sends a `generate_lead` event |
@@ -637,7 +670,8 @@ Hostinger calls these every minute with the header
 | Endpoint | Runs |
 |---|---|
 | `GET /api/automations/cron` | Delayed automation steps, **scheduled broadcasts** (batched, leased), **Shopify abandoned-cart reminders**, **Calendly 24 h / 1 h reminders**, **daily summary emails**, **WhatsApp number health** (daily per account, 10 per run), **trial / renewal reminder emails** |
-| `GET /api/flows/cron` | Flow waits and timeouts |
+| `GET /api/flows/cron` | Flow waits and timeouts (every 5 minutes is enough) |
+| `GET /api/health` | No secret; hit it from an uptime monitor every 5 minutes |
 
 Each job is idempotent (claims before sending), so overlapping or
 retried runs never send twice.
@@ -718,22 +752,24 @@ Supabase → Authentication → Emails → SMTP: host `smtp.gmail.com`, port
 Password. Add SPF, DKIM and DMARC records for repeatgrow.com.
 
 ### Email addresses
-Repeat Grow uses three addresses on Google Workspace (added as "Send mail
-as" aliases):
+Repeat Grow uses these addresses (Google Workspace for `repeatgrow.com`; the first three are "Send mail as" aliases):
 
 | Address | Used for |
 |---|---|
-| `support@repeatgrow.com` | Default sender (SMTP login), customer support, security reports, account deletion alerts |
+| `support@repeatgrow.com` | Main Workspace account: default sender, SMTP login (app and Supabase), customer support, security reports, account-deletion alerts |
 | `sales@repeatgrow.com` | Demo requests from `/demo` are emailed here |
 | `info@repeatgrow.com` | General enquiries and public listings |
+| `teamrepeatgrow@gmail.com` | Workspace billing / recovery contact, Sentry alerts, directory listings |
+| `restrogrow@gmail.com` | Email test inbox for `/admin/emails` |
 
-All app email is sent through the `support@` SMTP account (see below).
+The complete list (including the demo logins) is in the [Admin handbook](./docs/ADMIN.md#2-mailboxes-and-addresses-all-of-them).
 
-### App email (daily summary)
+### App email (SMTP)
 Set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`,
 `SMTP_USER=support@repeatgrow.com`, `SMTP_PASS=<App Password>`,
-`SMTP_FROM="Repeat Grow <support@repeatgrow.com>"`, restart, then use
-**Send a test now** in Settings → Daily summary.
+`SMTP_FROM="Repeat Grow <support@repeatgrow.com>"` in hPanel (and `.env.local`
+to try it locally), restart, then open **`/admin/emails` → Send all test emails**.
+Add SPF, DKIM and DMARC records for `repeatgrow.com` so mail does not land in spam.
 
 ### Shopify app
 Configure in the [Shopify Dev Dashboard](https://dev.shopify.com) or
@@ -891,6 +927,7 @@ Report vulnerabilities privately to
 
 ## More documentation
 
+- [docs/ADMIN.md](./docs/ADMIN.md) — **admin handbook (private)**: mailboxes, services, emails, crons, demo account, ⚠️ important to-do list
 - [docs/OPERATIONS.md](./docs/OPERATIONS.md) — **admin runbook**: monitoring, alerts, incidents, releases, testing
 - [CHANGELOG.md](./CHANGELOG.md) — what changed and which migrations it needs
 - [TODO.md](./TODO.md) — roadmap and known gaps

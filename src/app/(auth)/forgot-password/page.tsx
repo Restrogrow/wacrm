@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandMark } from "@/components/brand-mark";
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -44,12 +45,12 @@ export default function ForgotPasswordPage() {
   if (success) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <Card className="w-full max-w-md border-border bg-card">
-          <CardHeader className="items-center text-center">
+        <Card className="w-full max-w-[420px] border-0 bg-transparent shadow-none ring-0">
+          <CardHeader className="items-start px-0 text-left">
             <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft">
               <CheckCircle className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-xl text-foreground">
+            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
               Check your email
             </CardTitle>
             <CardDescription className="text-muted-foreground">
@@ -58,7 +59,7 @@ export default function ForgotPasswordPage() {
               inbox.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-0">
             <Link href="/login">
               <Button
                 variant="outline"
@@ -75,26 +76,24 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md border-border bg-card">
-        <CardHeader className="items-center text-center">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft">
-            <MessageSquare className="h-6 w-6 text-primary" />
-          </div>
-          <CardTitle className="text-xl text-foreground">Reset password</CardTitle>
+      <Card className="w-full max-w-[420px] border-0 bg-transparent shadow-none ring-0">
+        <CardHeader className="items-start px-0 text-left">
+          <BrandMark className="mb-4 h-12 w-12 rounded-2xl lg:hidden" />
+          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">Reset password</CardTitle>
           <CardDescription className="text-muted-foreground">
             Enter your email and we&apos;ll send you a reset link
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           <form onSubmit={handleReset} className="flex flex-col gap-4">
             {error && (
-              <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
                 {error}
               </div>
             )}
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="email" className="text-muted-foreground">
+              <Label htmlFor="email" className="text-sm font-semibold text-foreground">
                 Email
               </Label>
               <Input
@@ -104,7 +103,7 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="border-border bg-muted text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20"
+                className="h-12 rounded-2xl border-border bg-card text-base text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20"
               />
             </div>
 

@@ -57,7 +57,7 @@ export function GoogleButton({ next = "/dashboard" }: { next?: string }) {
   return (
     <div className="flex flex-col gap-2">
       {error && (
-        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
           {error}
         </div>
       )}
@@ -66,7 +66,7 @@ export function GoogleButton({ next = "/dashboard" }: { next?: string }) {
         variant="outline"
         onClick={handleClick}
         disabled={loading}
-        className="h-10 w-full gap-2 border-border text-foreground hover:bg-muted"
+        className="h-12 w-full gap-3 rounded-2xl border-border bg-card text-base font-semibold text-foreground shadow-sm hover:bg-muted"
       >
         <GoogleLogo />
         {loading ? "Redirecting…" : "Continue with Google"}
@@ -78,7 +78,7 @@ export function GoogleButton({ next = "/dashboard" }: { next?: string }) {
 // Separates the Google button from the email/password form.
 export function AuthDivider({ label = "or" }: { label?: string }) {
   return (
-    <div className="my-4 flex items-center gap-3 text-xs uppercase text-muted-foreground">
+    <div className="my-6 flex items-center gap-3 text-xs font-medium tracking-wide text-muted-foreground">
       <span className="h-px flex-1 bg-border" />
       {label}
       <span className="h-px flex-1 bg-border" />

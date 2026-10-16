@@ -4,9 +4,12 @@
 // for the business number (Meta Calling API). Admins can change it.
 // API: /api/whatsapp/calling-settings.
 
+import { IconChip } from '@/components/icon-chip';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Loader2, Phone } from 'lucide-react';
+import { Gauge, Loader2, Mic, Phone, PhoneIncoming, PlugZap } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -67,28 +70,50 @@ export function CallingSettingsCard() {
 
   return (
     <Card className="border-border bg-card">
-      <CardContent className="space-y-3 p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Phone className="size-4" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-bold tracking-tight text-foreground">WhatsApp calling</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Let customers call your WhatsApp number and answer in the browser, and call them from the inbox.
-                Calls ring for every agent; the first to answer takes it. Customer calls are free; calls you make
-                are billed by Meta per minute.
+      <CardContent className="space-y-5">
+        <div className="flex items-start gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+            <Phone className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-base font-bold tracking-tight text-foreground">WhatsApp calling</h3>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Let customers call your WhatsApp number and answer in the browser, and call them from the inbox.
+              Calls ring for every agent; the first to answer takes it. Customer calls are free; calls you make
+              are billed by Meta per minute.
+            </p>
+          </div>
+        </div>
+
+        {/* On / off */}
+        <div
+          className={cn(
+            'flex items-center justify-between gap-4 rounded-2xl border p-4 transition-colors',
+            on ? 'border-primary-soft-2 bg-primary-soft' : 'border-border bg-card-2',
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <span
+              className={cn(
+                'flex size-10 items-center justify-center rounded-xl',
+                on ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+              )}
+            >
+              <PhoneIncoming className="size-5" />
+            </span>
+            <div>
+              <p className="text-sm font-bold text-foreground">Calling is {on ? 'on' : 'off'}</p>
+              <p className="text-xs text-muted-foreground">
+                {on ? 'Customers can call and agents can answer.' : 'Turn on to allow voice calls.'}
               </p>
             </div>
           </div>
           {settings || error ? (
             <div className="flex shrink-0 items-center gap-2">
               {saving && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
-              <span className="text-xs font-medium text-muted-foreground">{on ? 'On' : 'Off'}</span>
               <Switch
                 checked={on}
-                disabled={!canEditSettings || saving}
+                disabled={!canEditSettings || saving || (!settings && !!error)}
                 onCheckedChange={(v) => void toggle(v)}
                 aria-label="WhatsApp calling"
               />
@@ -102,15 +127,32 @@ export function CallingSettingsCard() {
             {settings.notice}
           </p>
         )}
-        {error && !settings && <p className="text-sm text-muted-foreground">{error}</p>}
+        {error && !settings && (
+          <div className="flex items-center gap-3 rounded-2xl border border-dashed border-primary-soft-2 bg-primary-soft/40 p-4">
+            <IconChip icon={PlugZap} className="size-10 shrink-0 rounded-xl" />
+            <p className="text-sm text-muted-foreground">{error}</p>
+          </div>
+        )}
         {!canEditSettings && (
           <p className="text-xs text-muted-foreground">Only owners and admins can change this.</p>
         )}
-        <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-          <li>Needs a WhatsApp messaging limit of at least 2,000 customers a day.</li>
-          <li>To call a customer, they must allow it first — the Call button sends them a request.</li>
-          <li>Allow microphone access in your browser the first time you answer or call.</li>
-        </ul>
+        <div>
+          <p className="mb-2 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">Before you start</p>
+          <ul className="space-y-2">
+            {[
+              { icon: Gauge, text: 'Needs a WhatsApp messaging limit of at least 2,000 customers a day.' },
+              { icon: PhoneIncoming, text: 'To call a customer, they must allow it first — the Call button sends them a request.' },
+              { icon: Mic, text: 'Allow microphone access in your browser the first time you answer or call.' },
+            ].map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-start gap-3 rounded-2xl bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+                  <Icon className="size-4" />
+                </span>
+                <span className="pt-1">{text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </CardContent>
     </Card>
   );

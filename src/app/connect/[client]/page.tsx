@@ -9,6 +9,7 @@
 // docs/RESTROGROW_CONNECT.md §3.3.
 // ============================================================
 
+import { BrandMark } from "@/components/brand-mark";
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -147,9 +148,7 @@ export default async function ConnectPage({
   return (
     <Shell>
       <div className="text-center">
-        <div className="bg-primary/10 mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl">
-          <ShieldCheck className="text-primary size-6" />
-        </div>
+        <BrandMark className="mx-auto mb-3 size-12 rounded-2xl" />
         <h1 className="text-foreground text-xl font-semibold">Connect {req.client.name}</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           <span className="text-foreground font-medium">{req.client.name}</span> wants to send WhatsApp

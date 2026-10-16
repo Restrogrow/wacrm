@@ -9,7 +9,9 @@ platform.
 
 | What | Where |
 |---|---|
+| Admin handbook (mailboxes, services, to-dos) | [ADMIN.md](./ADMIN.md) |
 | Admin dashboard (sign-ups, activity, funnel, accounts) | https://repeatgrow.com/admin |
+| Email previews + test sends | https://repeatgrow.com/admin/emails |
 | System health (jobs, webhooks, config) | https://repeatgrow.com/admin/system |
 | Public health check (for monitors) | https://repeatgrow.com/api/health |
 | Uptime monitor | https://dashboard.uptimerobot.com |

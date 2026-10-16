@@ -10,9 +10,11 @@
 // API: /api/account/daily-summary (lib/summary/daily.ts).
 // ============================================================
 
+import { IconChip } from '@/components/icon-chip';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Clock, Loader2, Mail, Send } from 'lucide-react';
+
 
 import { cn } from '@/lib/utils';
 
@@ -164,14 +166,7 @@ export function DailySummarySettings() {
             )}
           >
             <div className="flex items-center gap-4">
-              <span
-                className={cn(
-                  'flex size-14 items-center justify-center rounded-2xl shadow-lg transition-colors',
-                  enabled ? 'bg-primary text-primary-foreground shadow-primary/30' : 'bg-muted text-muted-foreground shadow-none',
-                )}
-              >
-                <Mail className="size-7" />
-              </span>
+              <IconChip icon={Mail} tone={enabled ? 'solid' : 'muted'} className="size-14 rounded-2xl" />
               <div>
                 <p className="text-lg font-bold tracking-tight text-foreground">
                   Daily summary is {enabled ? 'on' : 'off'}
@@ -195,9 +190,7 @@ export function DailySummarySettings() {
           <Card>
             <CardContent className="space-y-5">
               <div className="flex items-center gap-3">
-                <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                  <Clock className="size-5" />
-                </span>
+                <IconChip icon={Clock} className="size-11 rounded-2xl" />
                 <div>
                   <h3 className="text-base font-bold tracking-tight text-foreground">Schedule &amp; recipients</h3>
                   <p className="text-xs text-muted-foreground">Pick when it arrives and who gets it.</p>

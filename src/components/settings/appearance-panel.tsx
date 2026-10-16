@@ -1,5 +1,6 @@
 "use client";
 
+import { IconChip } from '@/components/icon-chip';
 import { Check, Moon, Palette, SunMoon, Sun } from "lucide-react";
 
 import { useTheme } from "@/hooks/use-theme";
@@ -30,7 +31,7 @@ export function AppearancePanel() {
 
       <div className="space-y-4">
         <h3 className="flex items-center gap-2 text-base font-bold tracking-tight text-foreground">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary"><SunMoon className="size-4" /></span>
+          <IconChip icon={SunMoon} className="size-9 rounded-xl" />
           Mode
         </h3>
 
@@ -52,7 +53,7 @@ export function AppearancePanel() {
 
       <div className="mt-8 space-y-4">
         <h3 className="flex items-center gap-2 text-base font-bold tracking-tight text-foreground">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary"><Palette className="size-4" /></span>
+          <IconChip icon={Palette} className="size-9 rounded-xl" />
           Accent color
         </h3>
 

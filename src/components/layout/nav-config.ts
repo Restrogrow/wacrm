@@ -1,6 +1,7 @@
 import {
   Bell,
   Bot,
+  FileSpreadsheet,
   FileText,
   Mail,
   QrCode,
@@ -72,6 +73,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/integrations/shopify", label: "Shopify", icon: ShoppingBag },
       { href: "/integrations/calendly", label: "Calendly", icon: CalendarCheck },
+      { href: "/integrations/google-sheets", label: "Google Sheets", icon: FileSpreadsheet },
       { href: "/integrations/apps", label: "Connected apps", icon: Plug },
     ],
   },

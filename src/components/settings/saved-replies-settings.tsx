@@ -8,6 +8,7 @@
 // (RLS in migration 042 enforces the same).
 // ============================================================
 
+import { IconChip } from '@/components/icon-chip';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Loader2, MessageSquareText, Pencil, Plus, Trash2 } from 'lucide-react';
@@ -189,9 +190,7 @@ export function SavedRepliesSettings() {
         <Card className="ring-2 ring-primary/30">
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-                <Pencil className="size-5" />
-              </span>
+              <IconChip icon={Pencil} className="size-11 rounded-2xl" />
               <h3 className="text-base font-bold tracking-tight text-foreground">{draft.id ? 'Edit reply' : 'New reply'}</h3>
             </div>
             <div className="grid gap-4 sm:grid-cols-[200px_minmax(0,1fr)]">
@@ -290,9 +289,7 @@ export function SavedRepliesSettings() {
       {replies.length === 0 ? (
         <Card className="border border-dashed border-primary-soft-2 bg-primary-soft/40 ring-0">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <span className="flex size-14 items-center justify-center rounded-3xl bg-primary-soft text-primary">
-              <MessageSquareText className="size-7" />
-            </span>
+            <IconChip icon={MessageSquareText} className="size-14 rounded-3xl" />
             <p className="mt-3 text-base font-bold text-foreground">
               No saved replies yet
             </p>

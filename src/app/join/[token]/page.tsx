@@ -22,6 +22,7 @@
 // this page after email verification.
 // ============================================================
 
+import { BrandMark } from "@/components/brand-mark";
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -293,9 +294,7 @@ export default function JoinPage() {
   // ----- Peek OK -----
   const inviteHeader = (
     <CardHeader className="items-center text-center">
-      <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
-        <UsersRound className="h-6 w-6 text-primary" />
-      </div>
+      <BrandMark className="mb-2 h-12 w-12 rounded-2xl" />
       <CardTitle className="text-xl text-foreground">
         You&apos;re invited to{' '}
         <span className="text-primary">{peek.account_name}</span>

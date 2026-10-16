@@ -1,3 +1,4 @@
+import { IconChip } from '@/components/icon-chip';
 import type { ComponentType, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -29,9 +30,7 @@ export function PageHero({
     >
       <div className="flex min-w-0 items-center gap-4">
         {Icon ? (
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-            <Icon className="h-6 w-6" />
-          </span>
+          <IconChip icon={Icon} tone="solid" className="h-12 w-12 shrink-0 rounded-2xl" />
         ) : null}
         <div className="min-w-0">
           <div className="flex items-center gap-2">

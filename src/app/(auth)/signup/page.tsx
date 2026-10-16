@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandMark } from "@/components/brand-mark";
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -143,12 +144,12 @@ function SignupPageInner() {
   if (success) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <Card className="w-full max-w-md border-border bg-card">
-          <CardHeader className="items-center text-center">
+        <Card className="w-full max-w-[420px] border-0 bg-transparent shadow-none ring-0">
+          <CardHeader className="items-start px-0 text-left">
             <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft">
               <CheckCircle className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-xl text-foreground">
+            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
               Check your email
             </CardTitle>
             <CardDescription className="text-muted-foreground">
@@ -157,7 +158,7 @@ function SignupPageInner() {
               inbox and click the link to verify your account.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-0">
             <Link
               href={
                 inviteToken
@@ -179,20 +180,14 @@ function SignupPageInner() {
   }
 
   const inputClassName =
-    "border-border bg-muted text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20";
+    "h-12 rounded-2xl border-border bg-card text-base text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
-      <Card className={`w-full border-border bg-card ${isInvite ? "max-w-md" : "max-w-xl"}`}>
-        <CardHeader className="items-center pb-2 text-center">
-          <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-soft">
-            {inviteToken ? (
-              <UsersRound className="h-5 w-5 text-primary" />
-            ) : (
-              <MessageSquare className="h-5 w-5 text-primary" />
-            )}
-          </div>
-          <CardTitle className="text-xl text-foreground">
+      <Card className={`w-full border-0 bg-transparent shadow-none ring-0 ${isInvite ? "max-w-md" : "max-w-xl"}`}>
+        <CardHeader className="items-start px-0 pb-2 text-left">
+          <BrandMark className="mb-4 size-12 rounded-2xl lg:hidden" />
+          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
             {inviteToken ? "Create account & join" : "Create account"}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
@@ -201,7 +196,7 @@ function SignupPageInner() {
               : "Get started with Repeat Grow"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           <GoogleButton
             next={
               inviteToken
@@ -213,7 +208,7 @@ function SignupPageInner() {
 
           <form onSubmit={handleSignup} className="flex flex-col gap-3.5">
             {error && (
-              <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
                 {error}
               </div>
             )}
@@ -221,7 +216,7 @@ function SignupPageInner() {
             {isInvite ? (
               <>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="fullName" className="text-muted-foreground">
+                  <Label htmlFor="fullName" className="text-sm font-semibold text-foreground">
                     Your name
                   </Label>
                   <Input
@@ -236,7 +231,7 @@ function SignupPageInner() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="email" className="text-muted-foreground">
+                  <Label htmlFor="email" className="text-sm font-semibold text-foreground">
                     Email
                   </Label>
                   <Input
@@ -251,7 +246,7 @@ function SignupPageInner() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="password" className="text-muted-foreground">
+                  <Label htmlFor="password" className="text-sm font-semibold text-foreground">
                     Password
                   </Label>
                   <div className="relative">
@@ -284,7 +279,7 @@ function SignupPageInner() {
             <>
             <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="fullName" className="text-muted-foreground">
+                <Label htmlFor="fullName" className="text-sm font-semibold text-foreground">
                   Full name
                 </Label>
                 <Input
@@ -299,7 +294,7 @@ function SignupPageInner() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="businessName" className="text-muted-foreground">
+                <Label htmlFor="businessName" className="text-sm font-semibold text-foreground">
                   Business name
                 </Label>
                 <Input
@@ -316,66 +311,7 @@ function SignupPageInner() {
 
             <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="mobileNumber" className="text-muted-foreground">
-                  Mobile number
-                </Label>
-                <Input
-                  id="mobileNumber"
-                  type="tel"
-                  placeholder="+91 98765 43210"
-                  value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value)}
-                  required
-                  className={inputClassName}
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="natureOfBusiness" className="text-muted-foreground">
-                  Nature of business
-                </Label>
-                <Select
-                  value={natureOfBusiness}
-                  onValueChange={(value) => setNatureOfBusiness(value ?? "")}
-                >
-                  <SelectTrigger id="natureOfBusiness" className="w-full bg-muted">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NATURE_OF_BUSINESS_OPTIONS.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="teamSize" className="text-muted-foreground">
-                  Team size
-                </Label>
-                <Select
-                  value={teamSize}
-                  onValueChange={(value) => setTeamSize(value ?? "")}
-                >
-                  <SelectTrigger id="teamSize" className="w-full bg-muted">
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TEAM_SIZE_OPTIONS.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="email" className="text-muted-foreground">
+                <Label htmlFor="email" className="text-sm font-semibold text-foreground">
                   Email
                 </Label>
                 <Input
@@ -388,11 +324,70 @@ function SignupPageInner() {
                   className={inputClassName}
                 />
               </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="mobileNumber" className="text-sm font-semibold text-foreground">
+                  Mobile number
+                </Label>
+                <Input
+                  id="mobileNumber"
+                  type="tel"
+                  placeholder="+91 98765 43210"
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value)}
+                  required
+                  className={inputClassName}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="password" className="text-muted-foreground">
+                <Label htmlFor="natureOfBusiness" className="text-sm font-semibold text-foreground">
+                  Nature of business
+                </Label>
+                <Select
+                  value={natureOfBusiness}
+                  onValueChange={(value) => setNatureOfBusiness(value ?? "")}
+                >
+                  <SelectTrigger id="natureOfBusiness" className="h-12 w-full rounded-2xl border-border bg-card px-4 text-base shadow-sm data-[size=default]:h-12">
+                    <SelectValue placeholder="Select your industry" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {NATURE_OF_BUSINESS_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="teamSize" className="text-sm font-semibold text-foreground">
+                  Team size
+                </Label>
+                <Select
+                  value={teamSize}
+                  onValueChange={(value) => setTeamSize(value ?? "")}
+                >
+                  <SelectTrigger id="teamSize" className="h-12 w-full rounded-2xl border-border bg-card px-4 text-base shadow-sm data-[size=default]:h-12">
+                    <SelectValue placeholder="Select team size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEAM_SIZE_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="password" className="text-sm font-semibold text-foreground">
                   Password
                 </Label>
                 <div className="relative">
@@ -421,7 +416,7 @@ function SignupPageInner() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="confirmPassword" className="text-muted-foreground">
+                <Label htmlFor="confirmPassword" className="text-sm font-semibold text-foreground">
                   Confirm password
                 </Label>
                 <div className="relative">

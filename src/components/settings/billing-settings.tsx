@@ -9,6 +9,7 @@
 // in; support activates the plan from /admin once paid.
 // ============================================================
 
+import { IconChip } from '@/components/icon-chip';
 import { useEffect, useState } from 'react';
 import { Check, Loader2, Mail, MessageCircle, CreditCard, Sparkles, BarChart3, Crown } from 'lucide-react';
 
@@ -121,11 +122,13 @@ export function BillingSettings() {
       />
 
       {/* ---------------- Current plan ---------------- */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--rail)] via-primary to-emerald-400 p-6 text-white shadow-lg sm:p-7">
+      <div className="via-primary relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--rail)] to-emerald-400 p-6 text-white shadow-lg sm:p-7">
         <div className="pointer-events-none absolute -top-16 -right-16 size-60 rounded-full bg-white/10 blur-2xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-white/75">Your current plan</p>
+            <p className="text-sm font-medium text-white/75">
+              Your current plan
+            </p>
             <div className="mt-1 flex flex-wrap items-center gap-3">
               <span className="text-3xl font-bold tracking-tight">
                 {EFFECTIVE_PLAN_LABELS[effective]}
@@ -135,7 +138,7 @@ export function BillingSettings() {
                   'rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase',
                   effective === 'expired'
                     ? 'bg-red-500 text-white'
-                    : 'bg-white/25 text-white backdrop-blur',
+                    : 'bg-white/25 text-white backdrop-blur'
                 )}
               >
                 {effective === 'expired' ? 'Read-only' : 'Active'}
@@ -161,7 +164,10 @@ export function BillingSettings() {
 
       {/* ---------------- Usage ---------------- */}
       <div>
-        <h3 className="text-foreground mb-3 flex items-center gap-2 text-base font-bold tracking-tight"><span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary"><BarChart3 className="size-4" /></span>Usage</h3>
+        <h3 className="text-foreground mb-3 flex items-center gap-2 text-base font-bold tracking-tight">
+          <IconChip icon={BarChart3} className="size-9 rounded-xl" />
+          Usage
+        </h3>
         <Card>
           <CardContent className="grid gap-5 sm:grid-cols-2">
             {LIMIT_KEYS.map((key) => {
@@ -171,7 +177,10 @@ export function BillingSettings() {
                 ? Math.min(100, Math.round((used / limit) * 100))
                 : 0;
               return (
-                <div key={key} className="space-y-2 rounded-2xl bg-muted/50 p-4">
+                <div
+                  key={key}
+                  className="bg-muted/50 space-y-2 rounded-2xl p-4"
+                >
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
                       {LIMIT_LABELS[key]}
@@ -206,7 +215,10 @@ export function BillingSettings() {
       {/* ---------------- Plans ---------------- */}
       <div>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-foreground flex items-center gap-2 text-base font-bold tracking-tight"><span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary"><Crown className="size-4" /></span>Plans</h3>
+          <h3 className="text-foreground flex items-center gap-2 text-base font-bold tracking-tight">
+            <IconChip icon={Crown} className="size-9 rounded-xl" />
+            Plans
+          </h3>
           <div className="bg-muted inline-flex rounded-full p-1 text-xs">
             {BILLING_CYCLES.map((p) => (
               <button
@@ -236,7 +248,13 @@ export function BillingSettings() {
             const limits = PLAN_LIMITS[plan];
             const current = effective === plan;
             return (
-              <Card key={plan} className={cn('transition-all hover:-translate-y-0.5 hover:shadow-md', current && 'ring-2 ring-primary shadow-md')}>
+              <Card
+                key={plan}
+                className={cn(
+                  'transition-all hover:-translate-y-0.5 hover:shadow-md',
+                  current && 'ring-primary shadow-md ring-2'
+                )}
+              >
                 <CardContent className="flex h-full flex-col gap-4">
                   <div>
                     <div className="flex items-center gap-2">
@@ -265,10 +283,12 @@ export function BillingSettings() {
                       {info.blurb}
                     </p>
                   </div>
-                  <ul className="text-muted-foreground flex-1 space-y-2 border-t border-border pt-4 text-sm">
+                  <ul className="text-muted-foreground border-border flex-1 space-y-2 border-t pt-4 text-sm">
                     {LIMIT_KEYS.map((key) => (
                       <li key={key} className="flex items-center gap-1.5">
-                        <span className="flex size-5 items-center justify-center rounded-full bg-primary-soft"><Check className="text-primary size-3" /></span>
+                        <span className="bg-primary-soft flex size-5 items-center justify-center rounded-full">
+                          <Check className="text-primary size-3" />
+                        </span>
                         {limits[key] === null
                           ? 'Unlimited'
                           : limits[key]!.toLocaleString('en-IN')}{' '}
@@ -280,6 +300,7 @@ export function BillingSettings() {
                     <div className="flex gap-2">
                       <Button
                         className="flex-1"
+                        nativeButton={false}
                         render={
                           <a
                             href={whatsappLink(plan)}
@@ -295,6 +316,7 @@ export function BillingSettings() {
                         variant="outline"
                         size="icon"
                         aria-label={`Email us about ${info.label}`}
+                        nativeButton={false}
                         render={<a href={emailLink(plan)} />}
                       >
                         <Mail className="size-4" />

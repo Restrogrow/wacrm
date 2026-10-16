@@ -9,6 +9,7 @@
 // can tune answers before going live — nothing is sent to WhatsApp.
 // ============================================================
 
+import { IconChip } from '@/components/icon-chip';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -179,16 +180,7 @@ export function AiChatbotSettings() {
         )}
       >
         <div className="flex items-center gap-4">
-          <span
-            className={cn(
-              'flex size-14 items-center justify-center rounded-2xl shadow-lg transition-colors',
-              settings.enabled
-                ? 'bg-primary text-primary-foreground shadow-primary/30'
-                : 'bg-muted text-muted-foreground shadow-none',
-            )}
-          >
-            <Sparkles className="size-7" />
-          </span>
+          <IconChip icon={Sparkles} tone={settings.enabled ? 'solid' : 'muted'} className="size-14 rounded-2xl" />
           <div>
             <p className="flex items-center gap-2 text-lg font-bold tracking-tight text-foreground">
               {settings.bot_name || 'Assistant'} is {settings.enabled ? 'live' : 'paused'}
@@ -374,9 +366,7 @@ function SectionTitle({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-        <Icon className="size-5" />
-      </span>
+      <IconChip icon={Icon} className="size-11 shrink-0 rounded-2xl" />
       <div>
         <h3 className="text-base font-bold tracking-tight text-foreground">{title}</h3>
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}

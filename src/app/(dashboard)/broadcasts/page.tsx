@@ -1,5 +1,6 @@
 'use client';
 
+import { IconChip } from '@/components/icon-chip';
 import { PageHero } from "@/components/layout/page-hero";
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -216,7 +217,7 @@ export default function BroadcastsPage() {
 
       {broadcasts.length === 0 ? (
         <div className="flex h-72 flex-col items-center justify-center rounded-3xl border border-dashed border-primary-soft-2 bg-primary-soft/40">
-          <span className="mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-primary-soft text-primary"><Radio className="h-8 w-8" /></span>
+          <IconChip icon={Radio} className="mb-3 h-16 w-16 rounded-3xl" />
           <p className="text-base font-bold text-foreground">No broadcasts yet</p>
           <p className="mt-1 text-xs text-muted-foreground">
             Create your first broadcast to reach your contacts at scale.
@@ -257,9 +258,7 @@ export default function BroadcastsPage() {
                     onClick={() => router.push(`/broadcasts/${broadcast.id}`)}
                   >
                     <TableCell className="font-semibold text-foreground">
-                      <span className="mr-3 inline-flex size-9 items-center justify-center rounded-xl bg-primary-soft align-middle text-primary">
-                        <Radio className="size-4" />
-                      </span>
+                      <IconChip icon={Radio} className="mr-3 size-9 rounded-xl" />
                       {broadcast.name}
                     </TableCell>
                     <TableCell className="hidden text-muted-foreground md:table-cell">

@@ -23,6 +23,15 @@ export interface MetaPhoneInfo {
   display_phone_number: string
   verified_name?: string
   quality_rating?: string
+  // Extra detail — only present when Meta returns it for this number.
+  name_status?: string
+  status?: string
+  code_verification_status?: string
+  platform_type?: string
+  account_mode?: string
+  is_official_business_account?: boolean
+  last_onboarded_time?: string
+  messaging_limit_tier?: string
 }
 
 interface MetaErrorResponse {
@@ -57,14 +66,20 @@ export async function verifyPhoneNumber(
   args: VerifyPhoneNumberArgs
 ): Promise<MetaPhoneInfo> {
   const { phoneNumberId, accessToken } = args
-  const url = `${META_API_BASE}/${phoneNumberId}?fields=id,display_phone_number,verified_name,quality_rating`
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
-  if (!response.ok) {
-    await throwMetaError(response, `Meta API error: ${response.status}`)
+  const basic = 'id,display_phone_number,verified_name,quality_rating'
+  const extended = `${basic},name_status,status,code_verification_status,platform_type,account_mode,is_official_business_account,last_onboarded_time,messaging_limit_tier`
+  // Try the detailed field set first; if Meta rejects any field for this
+  // number / API version, fall back so the connection check never breaks.
+  for (const fields of [extended, basic]) {
+    const response = await fetch(`${META_API_BASE}/${phoneNumberId}?fields=${fields}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    if (response.ok) return response.json()
+    if (fields === basic) {
+      await throwMetaError(response, `Meta API error: ${response.status}`)
+    }
   }
-  return response.json()
+  throw new Error('Meta API error')
 }
 
 // ============================================================

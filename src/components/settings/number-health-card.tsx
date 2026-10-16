@@ -4,10 +4,11 @@
 // limit, display name, send status and calling, each with a plain
 // explanation. API: /api/whatsapp/number-health.
 
+import { IconChip } from '@/components/icon-chip';
 import { useEffect, useState, type ReactNode } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
-import { Activity, Loader2, RefreshCw } from 'lucide-react';
+import { Activity, Loader2, PlugZap, RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -43,6 +44,13 @@ const TONE: Record<Tone, string> = {
   muted: 'bg-muted-foreground/40',
 };
 
+const TONE_CHIP: Record<Tone, string> = {
+  good: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  warn: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+  bad: 'bg-red-500/10 text-red-700 dark:text-red-300',
+  muted: 'bg-muted text-muted-foreground',
+};
+
 function limitText(limit: string | null): string {
   if (!limit) return 'Unknown';
   const v = limit.toUpperCase().replace(/^TIER_/, '');
@@ -61,15 +69,18 @@ function limitNumber(limit: string | null): number {
 
 function Row({ label, tone, value, help }: { label: string; tone: Tone; value: string; help: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1 border-b border-border py-3 last:border-0 sm:flex-row sm:items-start sm:gap-4">
-      <p className="w-40 shrink-0 text-sm text-muted-foreground">{label}</p>
-      <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <span className={cn('size-2 rounded-full', TONE[tone])} aria-hidden />
-          {value}
-        </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{help}</p>
-      </div>
+    <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card-2 p-4">
+      <p className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">{label}</p>
+      <p
+        className={cn(
+          'inline-flex w-fit max-w-full items-center gap-2 rounded-full px-3 py-1 text-sm font-bold',
+          TONE_CHIP[tone],
+        )}
+      >
+        <span className={cn('size-2 shrink-0 rounded-full', TONE[tone])} aria-hidden />
+        <span className="truncate">{value}</span>
+      </p>
+      <p className="text-xs leading-relaxed text-muted-foreground">{help}</p>
     </div>
   );
 }
@@ -113,15 +124,15 @@ export function NumberHealthCard() {
 
   return (
     <Card className="border-border bg-card">
-      <CardContent className="space-y-3 p-5">
+      <CardContent className="space-y-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Activity className="size-4" />
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+              <Activity className="size-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-bold tracking-tight text-foreground">Number health</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <h3 className="text-base font-bold tracking-tight text-foreground">Number health</h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 How WhatsApp rates your number. Checked every day; the owner is emailed if it needs attention.
                 {h?.checked_at && <> Last checked {formatDistanceToNow(new Date(h.checked_at), { addSuffix: true })}.</>}
               </p>
@@ -142,7 +153,22 @@ export function NumberHealthCard() {
         ) : data.available === false ? (
           <p className="text-sm text-muted-foreground">Run migration 049_whatsapp_number_health.sql to see number health.</p>
         ) : !h ? (
-          <p className="text-sm text-muted-foreground">Connect WhatsApp above to see your number&apos;s health.</p>
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-primary-soft-2 bg-primary-soft/40 px-4 py-10 text-center">
+            <IconChip icon={PlugZap} className="size-14 rounded-3xl" />
+            <p className="text-base font-bold text-foreground">No number connected yet</p>
+            <p className="max-w-xs text-xs text-muted-foreground">
+              Connect your WhatsApp Business number above and we&apos;ll show its quality rating, messaging limit and
+              status here.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl bg-card"
+              onClick={() => document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+              Go to connection
+            </Button>
+          </div>
         ) : (
           <>
             {data.reasons && data.reasons.length > 0 && (
@@ -162,7 +188,7 @@ export function NumberHealthCard() {
                 Couldn&apos;t check with WhatsApp: {h.check_error}
               </p>
             )}
-            <div>
+            <div className="grid gap-3 2xl:grid-cols-2">
               <Row
                 label="Quality rating"
                 tone={quality === 'GREEN' ? 'good' : quality === 'YELLOW' ? 'warn' : quality === 'RED' ? 'bad' : 'muted'}

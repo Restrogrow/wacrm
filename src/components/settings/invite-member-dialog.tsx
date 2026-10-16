@@ -71,6 +71,10 @@ interface CreatedInvite {
   url: string;
   role: InviteRole;
   expiresInDays: number;
+  /** Set when we emailed the link to the invitee. */
+  emailedTo: string | null;
+  /** 'failed' / 'not_configured' when an email was requested but not sent. */
+  emailNote: string | null;
   /** Snapshotted at creation time so a later account rename can't
    *  retroactively change the wa.me message text on the result step. */
   accountName: string;
@@ -85,6 +89,7 @@ export function InviteMemberDialog({
   const [role, setRole] = useState<InviteRole>('agent');
   const [expiry, setExpiry] = useState<string>('7');
   const [label, setLabel] = useState('');
+  const [inviteeEmail, setInviteeEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<CreatedInvite | null>(null);
 
@@ -92,6 +97,7 @@ export function InviteMemberDialog({
     setRole('agent');
     setExpiry('7');
     setLabel('');
+    setInviteeEmail('');
     setResult(null);
     setSubmitting(false);
   }
@@ -117,6 +123,7 @@ export function InviteMemberDialog({
           role,
           expiresInDays: Number(expiry),
           label: trimmedLabel || undefined,
+          email: inviteeEmail.trim() || undefined,
         }),
       });
 
@@ -129,12 +136,21 @@ export function InviteMemberDialog({
       const data = (await res.json()) as {
         url: string;
         expiresInDays: number;
+        emailed?: 'sent' | 'failed' | 'not_configured' | null;
+        emailedTo?: string | null;
       };
 
       setResult({
         url: data.url,
         role,
         expiresInDays: data.expiresInDays,
+        emailedTo: data.emailedTo ?? null,
+        emailNote:
+          data.emailed === 'failed'
+            ? "We couldn't send the email — share the link below yourself."
+            : data.emailed === 'not_configured'
+              ? 'Email sending is not set up on this server — share the link below yourself.'
+              : null,
         // Snapshot the account name into the result so the wa.me
         // share message has team context. Falls back to a generic
         // string if `account` hasn't loaded yet (shouldn't happen
@@ -206,6 +222,16 @@ export function InviteMemberDialog({
             </DialogHeader>
 
             <div className="space-y-3 py-2">
+              {result.emailedTo && (
+                <p className="rounded-2xl bg-primary-soft px-4 py-2.5 text-sm font-medium text-primary">
+                  We emailed this invite to {result.emailedTo}.
+                </p>
+              )}
+              {result.emailNote && (
+                <p className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-sm text-amber-700 dark:text-amber-300">
+                  {result.emailNote}
+                </p>
+              )}
               <Label className="text-muted-foreground">Invite link</Label>
               <div className="flex gap-2">
                 <Input
@@ -229,7 +255,7 @@ export function InviteMemberDialog({
                   text (target ratio 7:1). Border bumped to /50, bg to
                   /15, foreground promoted to amber-100 for the strong
                   intro, amber-200 for the body. */}
-              <div className="rounded-xl border border-amber-500/50 bg-amber-500/15 px-3 py-2 text-xs text-amber-200">
+              <div className="rounded-xl border border-amber-500/50 bg-amber-500/15 px-3 py-2 text-xs text-amber-700 dark:text-amber-200">
                 <strong className="font-semibold text-amber-100">
                   Save this link now.
                 </strong>{' '}
@@ -315,6 +341,21 @@ export function InviteMemberDialog({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">
+                  Email{' '}
+                  <span className="text-xs text-muted-foreground">(optional — we&apos;ll email them the link)</span>
+                </Label>
+                <Input
+                  type="email"
+                  placeholder="teammate@example.com"
+                  value={inviteeEmail}
+                  onChange={(e) => setInviteeEmail(e.target.value)}
+                  maxLength={254}
+                  className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
+                />
               </div>
 
               <div className="space-y-2">

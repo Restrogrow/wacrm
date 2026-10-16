@@ -10,24 +10,10 @@
 // API: /api/integrations/calendly (see lib/calendly/process.ts).
 // ============================================================
 
+import { IconChip } from '@/components/icon-chip';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import {
-  Bell,
-  BellRing,
-  CalendarCheck,
-  CalendarClock,
-  CalendarX,
-  Clock,
-  Link2,
-  Loader2,
-  MessageSquare,
-  Save,
-  Unplug,
-  UserX,
-  Zap,
-  type LucideIcon,
-} from 'lucide-react';
+import { Bell, BellRing, CalendarCheck, CalendarClock, CalendarX, Clock, Link2, Loader2, MessageSquare, Save, Unplug, UserX, Zap, type LucideIcon } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -420,9 +406,7 @@ export function CalendlySettings() {
         <Card className="ring-2 ring-primary/30">
           <CardContent className="space-y-5">
             <div className="flex items-center gap-3">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-                <Link2 className="size-6" />
-              </span>
+              <IconChip icon={Link2} className="size-12 rounded-2xl" />
               <div>
                 <p className="text-foreground text-lg font-bold tracking-tight">Connect Calendly</p>
                 <p className="text-muted-foreground text-xs">Three quick steps &mdash; we set up the booking webhooks for you.</p>
@@ -473,9 +457,7 @@ export function CalendlySettings() {
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h3 className="text-foreground flex items-center gap-2 text-base font-bold tracking-tight">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-primary-soft text-primary">
-                <MessageSquare className="size-4" />
-              </span>
+              <IconChip icon={MessageSquare} className="size-9 rounded-xl" />
               Automatic messages
             </h3>
             <p className="text-muted-foreground mt-1 text-xs">

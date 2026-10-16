@@ -1,3 +1,4 @@
+import { syncMessage, syncNewContact } from '@/lib/google-sheets/sync'
 import { NextResponse, after } from 'next/server'
 import { recordWebhookRejection, webhookBlocked } from '@/lib/rate-limit'
 import { createClient } from '@supabase/supabase-js'
@@ -986,6 +987,25 @@ async function processMessage(
   // so users can pick whichever semantic they want; an automation that
   // listens to only one trigger runs only when that trigger matches.
   if (contactOutcome.wasCreated) automationTriggers.unshift('new_contact_created')
+  // Google Sheets sync - runs after the response; errors are recorded on
+  // the connection and never affect message handling.
+  if (contactOutcome.wasCreated) {
+    after(() => syncNewContact(accountId, {
+      name: contactRecord.name,
+      phone: contactRecord.phone,
+      email: contactRecord.email,
+      company: contactRecord.company,
+      created_at: contactRecord.created_at,
+    }))
+  }
+  after(() => syncMessage(accountId, {
+    direction: 'Inbound',
+    contactName: contactRecord.name,
+    phone: contactRecord.phone,
+    type: contentType,
+    text: contentText,
+    at: new Date(parseInt(message.timestamp) * 1000).toISOString(),
+  }))
   if (isFirstInboundMessage) automationTriggers.unshift('first_inbound_message')
   const automationRuns = automationTriggers.map((triggerType) =>
     runAutomationsForTrigger({

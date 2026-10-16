@@ -274,3 +274,12 @@ html[data-theme="rose"] {
     @apply font-sans;
   }
 }
+/* Sign-in showcase animations */
+@keyframes rg-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes rg-typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}

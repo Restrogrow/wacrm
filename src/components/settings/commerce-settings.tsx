@@ -10,20 +10,10 @@
 // API: /api/whatsapp/commerce/settings, /api/whatsapp/commerce/orders.
 // ============================================================
 
+import { IconChip } from '@/components/icon-chip';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import {
-  Ban,
-  Clock,
-  IndianRupee,
-  Loader2,
-  Package,
-  Save,
-  ShoppingBag,
-  Smartphone,
-  Wallet,
-  type LucideIcon,
-} from 'lucide-react';
+import { Ban, Clock, IndianRupee, Loader2, Package, Save, ShoppingBag, Smartphone, Wallet, type LucideIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -268,9 +258,7 @@ export function CommerceSettings() {
           <Card className="xl:col-span-2">
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
-                <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                  <ShoppingBag className="size-5" />
-                </span>
+                <IconChip icon={ShoppingBag} className="size-11 rounded-2xl" />
                 <div>
                   <h3 className="text-base font-bold tracking-tight text-foreground">Product catalog</h3>
                   <p className="text-xs text-muted-foreground">Optional — share products and receive catalog orders.</p>
@@ -294,9 +282,7 @@ export function CommerceSettings() {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                <Package className="size-5" />
-              </span>
+              <IconChip icon={Package} className="size-11 rounded-2xl" />
               <div>
                 <h3 className="text-base font-bold tracking-tight text-foreground">Recent orders</h3>
                 <p className="text-xs text-muted-foreground">Track payment and delivery — customers are notified on updates.</p>
@@ -312,9 +298,7 @@ export function CommerceSettings() {
             </div>
           ) : orders.length === 0 ? (
             <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-primary-soft-2 bg-primary-soft/40 px-4 py-12 text-center">
-              <span className="flex size-14 items-center justify-center rounded-3xl bg-primary-soft text-primary">
-                <Package className="size-7" />
-              </span>
+              <IconChip icon={Package} className="size-14 rounded-3xl" />
               <p className="text-base font-bold text-foreground">No orders yet</p>
               <p className="text-sm text-muted-foreground">Create one from any chat with the ₹ icon.</p>
             </div>

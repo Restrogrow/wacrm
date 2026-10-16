@@ -15,6 +15,7 @@
 // bug (same lesson as the invite-link flow).
 // ============================================================
 
+import { IconChip } from '@/components/icon-chip';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Copy, KeyRound, Loader2, Plus, Trash2 } from 'lucide-react';
@@ -178,7 +179,7 @@ export function ApiKeysSettings() {
       {keys.length === 0 ? (
         <Card className="border border-dashed border-primary-soft-2 bg-primary-soft/40 ring-0">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <span className="flex size-14 items-center justify-center rounded-3xl bg-primary-soft text-primary"><KeyRound className="size-7" /></span>
+            <IconChip icon={KeyRound} className="size-14 rounded-3xl" />
             <p className="text-foreground mt-3 text-base font-bold">
               No API keys yet
             </p>
@@ -202,9 +203,7 @@ export function ApiKeysSettings() {
                 return (
                   <Card key={k.id} className={inactive ? 'opacity-70' : 'transition-all hover:-translate-y-0.5 hover:shadow-md'}>
                   <CardContent className="flex gap-4">
-                    <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                      <KeyRound className="size-5" />
-                    </span>
+                    <IconChip icon={KeyRound} className="size-11 shrink-0 rounded-2xl" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span
@@ -265,7 +264,7 @@ export function ApiKeysSettings() {
                           size="sm"
                           onClick={() => handleRevoke(k)}
                           disabled={revoking === k.id}
-                          className="self-start border-red-500/40 bg-red-500/10 text-red-300 hover:border-red-500/60 hover:bg-red-500/20 hover:text-red-200 sm:self-auto"
+                          className="self-start border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-300 hover:border-red-500/60 hover:bg-red-500/20 hover:text-red-700 dark:hover:text-red-200 sm:self-auto"
                         >
                           {revoking === k.id ? (
                             <Loader2 className="size-4 animate-spin" />

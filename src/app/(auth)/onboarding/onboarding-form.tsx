@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandMark } from "@/components/brand-mark";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Building2 } from "lucide-react";
@@ -29,7 +30,7 @@ import {
 } from "@/components/ui/select";
 
 const inputClassName =
-  "border-border bg-muted text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20";
+  "h-12 rounded-2xl border-border bg-card text-base text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20";
 
 export function OnboardingForm({ initial }: { initial: OnboardingState }) {
   const [fullName, setFullName] = useState(initial.fullName);
@@ -88,12 +89,10 @@ export function OnboardingForm({ initial }: { initial: OnboardingState }) {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
-      <Card className="w-full max-w-xl border-border bg-card">
-        <CardHeader className="items-center pb-2 text-center">
-          <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
-            <Building2 className="h-5 w-5 text-primary" />
-          </div>
-          <CardTitle className="text-xl text-foreground">
+      <Card className="w-full max-w-xl border-0 bg-transparent shadow-none ring-0">
+        <CardHeader className="items-start px-0 pb-2 text-left">
+          <BrandMark className="mb-4 size-12 rounded-2xl lg:hidden" />
+          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
             Tell us about your business
           </CardTitle>
           <CardDescription className="text-muted-foreground">
@@ -106,17 +105,17 @@ export function OnboardingForm({ initial }: { initial: OnboardingState }) {
             .
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
             {error && (
-              <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
                 {error}
               </div>
             )}
 
             <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="fullName" className="text-muted-foreground">
+                <Label htmlFor="fullName" className="text-sm font-semibold text-foreground">
                   Full name
                 </Label>
                 <Input
@@ -132,7 +131,7 @@ export function OnboardingForm({ initial }: { initial: OnboardingState }) {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="businessName" className="text-muted-foreground">
+                <Label htmlFor="businessName" className="text-sm font-semibold text-foreground">
                   Business name
                 </Label>
                 <Input
@@ -148,9 +147,8 @@ export function OnboardingForm({ initial }: { initial: OnboardingState }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="mobileNumber" className="text-muted-foreground">
+            <div className="flex flex-col gap-1.5">
+                <Label htmlFor="mobileNumber" className="text-sm font-semibold text-foreground">
                   Mobile number
                 </Label>
                 <Input
@@ -165,16 +163,17 @@ export function OnboardingForm({ initial }: { initial: OnboardingState }) {
                 />
               </div>
 
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="natureOfBusiness" className="text-muted-foreground">
+                <Label htmlFor="natureOfBusiness" className="text-sm font-semibold text-foreground">
                   Nature of business
                 </Label>
                 <Select
                   value={natureOfBusiness}
                   onValueChange={(value) => setNatureOfBusiness(value ?? "")}
                 >
-                  <SelectTrigger id="natureOfBusiness" className="w-full bg-muted">
-                    <SelectValue placeholder="Select an option" />
+                  <SelectTrigger id="natureOfBusiness" className="h-12 w-full rounded-2xl border-border bg-card px-4 text-base shadow-sm data-[size=default]:h-12">
+                    <SelectValue placeholder="Select your industry" />
                   </SelectTrigger>
                   <SelectContent>
                     {NATURE_OF_BUSINESS_OPTIONS.map((option) => (
@@ -185,19 +184,17 @@ export function OnboardingForm({ initial }: { initial: OnboardingState }) {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="teamSize" className="text-muted-foreground">
+                <Label htmlFor="teamSize" className="text-sm font-semibold text-foreground">
                   Team size
                 </Label>
                 <Select
                   value={teamSize}
                   onValueChange={(value) => setTeamSize(value ?? "")}
                 >
-                  <SelectTrigger id="teamSize" className="w-full bg-muted">
-                    <SelectValue placeholder="Select an option" />
+                  <SelectTrigger id="teamSize" className="h-12 w-full rounded-2xl border-border bg-card px-4 text-base shadow-sm data-[size=default]:h-12">
+                    <SelectValue placeholder="Select team size" />
                   </SelectTrigger>
                   <SelectContent>
                     {TEAM_SIZE_OPTIONS.map((option) => (
@@ -213,7 +210,7 @@ export function OnboardingForm({ initial }: { initial: OnboardingState }) {
             <Button
               type="submit"
               disabled={loading}
-              className="mt-1.5 h-10 w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="mt-2 h-12 w-full rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? "Saving..." : "Continue to dashboard"}
             </Button>
@@ -224,7 +221,7 @@ export function OnboardingForm({ initial }: { initial: OnboardingState }) {
             <button
               type="button"
               onClick={handleSignOut}
-              className="text-primary hover:text-primary/80"
+              className="font-semibold text-primary underline-offset-4 hover:underline"
             >
               Sign out
             </button>

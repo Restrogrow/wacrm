@@ -18,6 +18,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import { isEmailConfigured, sendEmail } from '@/lib/email/mailer'
+import { numberHealthAlertEmail } from '@/lib/email/content'
 import { SITE_URL } from '@/lib/seo'
 
 const GRAPH = 'https://graph.facebook.com/v21.0'
@@ -238,23 +239,14 @@ async function maybeAlertOwner(db: SupabaseClient, health: NumberHealth, lastAle
   const { data: owner } = await db.from('profiles').select('email').eq('user_id', account.owner_user_id).maybeSingle()
   if (!owner?.email) return
 
-  const lines = [
-    `Your WhatsApp number ${health.display_phone ?? ''} for ${account.name} needs attention:`,
-    ...reasons.map((r) => `• ${r}`),
-    '',
-    'What helps: only message customers who opted in, keep templates relevant, honour STOP requests, and slow down broadcasts until quality recovers.',
-    '',
-    `See the details in Repeat Grow: ${SITE_URL}/settings?tab=whatsapp`,
-  ]
+  const mail = numberHealthAlertEmail({
+    level: level === 'critical' ? 'critical' : 'warning',
+    displayPhone: health.display_phone,
+    accountName: account.name,
+    reasons,
+  })
   try {
-    await sendEmail({
-      to: [owner.email],
-      subject: `${level === 'critical' ? 'Action needed' : 'Heads up'}: your WhatsApp number's health`,
-      text: lines.join('\n'),
-      html: `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;white-space:pre-line">${lines
-        .join('\n')
-        .replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]!)}</div>`,
-    })
+    await sendEmail({ to: [owner.email], ...mail })
   } catch (err) {
     console.warn('[number-health] alert email not sent:', err instanceof Error ? err.message : err)
   }
