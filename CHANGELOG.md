@@ -18,6 +18,9 @@ and polish.
   emailed to `sales@repeatgrow.com` (override with `DEMO_REQUEST_EMAIL`). "Book a demo" is now the main button on
   the home page, pricing, use-case pages, blog posts and the site nav.
   **Migration required:** `supabase/migrations/054_demo_requests.sql`.
+- **Demo requests in /admin.** A "Demo requests" section lists each request
+  with a WhatsApp link and lets platform admins set its status (new,
+  contacted, demo done, won, lost).
 - **Comparison pages.** `/wati-alternative`, `/interakt-alternative`,
   `/aisensy-alternative` and `/wati-vs-interakt-vs-aisensy`, from the data in
   `src/lib/compare.ts`. Competitor prices were checked on 16 October 2026;

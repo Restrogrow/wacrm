@@ -364,6 +364,9 @@ rate limited; marketing templates to opted-out contacts are refused.
 - **Accounts table** also shows each account's WhatsApp number health
   under its WhatsApp status (quality dot, messaging limit, limited /
   blocked).
+- **Demo requests:** every request from `/demo` with a WhatsApp link, email,
+  team size and message, a status you change as you follow up (new,
+  contacted, demo done, won, lost) and a count of new ones (migration 054).
 - **Account deletion requests:** shown at the top of the dashboard while
   any are waiting (history at the bottom). Approve (type DELETE) or
   reject with a note; the user is emailed.

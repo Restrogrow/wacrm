@@ -7,6 +7,8 @@ import { formatDelta } from '@/lib/admin/time';
 import { AccountsTable } from '@/components/admin/accounts-table';
 import { DeletionRequests } from '@/components/admin/deletion-requests';
 import { loadDeletionRequests } from '@/lib/admin/deletion-requests';
+import { DemoRequests } from '@/components/admin/demo-requests';
+import { loadDemoRequests } from '@/lib/admin/demo-requests';
 import {
   BarList,
   DailyColumns,
@@ -24,7 +26,11 @@ const pct = (part: number, whole: number) =>
   whole > 0 ? `${Math.round((part / whole) * 100)}%` : '—';
 
 export default async function PlatformAdminPage() {
-  const [d, deletions] = await Promise.all([loadAdminDashboard(), loadDeletionRequests()]);
+  const [d, deletions, demos] = await Promise.all([
+    loadAdminDashboard(),
+    loadDeletionRequests(),
+    loadDemoRequests(),
+  ]);
   const s = d.signups;
   const a = d.accounts;
 
@@ -63,6 +69,19 @@ export default async function PlatformAdminPage() {
           </Link>
         </div>
       </header>
+
+      {/* ---------------- Demo requests ---------------- */}
+      <section id="demo-requests" className="space-y-3">
+        <h2 className="text-foreground text-sm font-semibold">
+          Demo requests
+          {demos.counts.new > 0 && (
+            <span className="ml-2 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-700 dark:text-emerald-400">
+              {demos.counts.new} new
+            </span>
+          )}
+        </h2>
+        <DemoRequests data={demos} />
+      </section>
 
       {/* ---------------- Deletion requests ---------------- */}
       {(deletions.pending.length > 0 || !deletions.available) && (
