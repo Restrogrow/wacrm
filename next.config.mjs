@@ -101,6 +101,8 @@ const PRIVATE_SECTIONS = [
 ].join("|");
 
 const nextConfig = {
+  // Don't advertise the framework in every response (X-Powered-By: Next.js).
+  poweredByHeader: false,
   turbopack: {
     root: process.cwd(),
   },

@@ -8,6 +8,7 @@ import {
   rateLimitResponse,
   RATE_LIMITS,
 } from '@/lib/rate-limit';
+import { roleGuard } from '@/lib/auth/account';
 
 /**
  * POST /api/whatsapp/react
@@ -19,6 +20,9 @@ import {
  * webhook — this route only writes `actor_type = 'agent'` rows.
  */
 export async function POST(request: Request) {
+  const denied = await roleGuard('agent');
+  if (denied) return denied;
+
   try {
     const supabase = await createClient();
 

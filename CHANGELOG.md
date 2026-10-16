@@ -11,6 +11,40 @@ and polish.
 
 ## [Unreleased]
 
+### Security
+
+- **Profiles and accounts can't be edited into a higher role or plan.**
+  The row-level policies allowed a signed-in user to change their own
+  `account_role` / `account_id` (becoming owner, or joining another
+  business) and an owner to change `plan` and trial dates from the
+  browser. A trigger now blocks those columns for browser sessions.
+  **Migration required:** `supabase/migrations/055_lock_privileged_columns.sql`.
+- **Invited teammates verify their email.** The invite signup route that
+  created pre-confirmed users for any email is removed.
+- **Role checks on the server.** Viewers can no longer send messages,
+  broadcasts or reactions, or edit automations and flows; WhatsApp setup
+  and template changes need admin. Automations are also scoped to the
+  caller's current account, so removed members lose access.
+- **SSRF.** Automation webhook steps and template media links now go
+  through the SSRF guard (public addresses only, redirects checked,
+  timeouts, size cap). The guard also catches IPv4-mapped IPv6 forms such
+  as `[::ffff:7f00:1]` and more reserved ranges.
+- **Media proxy.** Customer media is no longer cacheable by shared caches,
+  types that could run as a page are downloaded instead of shown, the
+  access token is only sent to Meta hosts, and media IDs must be numeric.
+- **Webhooks.** The block for repeated bad signatures can't be pointed at
+  Meta's or Shopify's servers with a forged `X-Forwarded-For`; the
+  WhatsApp verify endpoint is rate limited and only echoes numeric
+  challenges.
+- Smaller hardening: no `X-Powered-By` header, http(s)-only media links in
+  the inbox, account checks on automation tag/assign/deal steps, strict
+  API cursor parsing.
+
+### Fixed
+
+- `/admin` build failure: the demo requests component imported server
+  code. Client-safe types moved to `src/lib/admin/demo-status.ts`.
+
 ### Added
 
 - **Book a demo.** A public `/demo` page with a short form. Requests are

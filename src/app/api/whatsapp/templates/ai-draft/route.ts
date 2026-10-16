@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getCurrentAccount, toErrorResponse } from '@/lib/auth/account'
 import { draftTemplateWithAi, type DraftAnswer } from '@/lib/ai/template-draft'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
+import { roleGuard } from '@/lib/auth/account'
 
 /**
  * POST /api/whatsapp/templates/ai-draft — "Create template with AI".
@@ -15,6 +16,9 @@ import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit
  * and submits it through the normal /api/whatsapp/templates/submit.
  */
 export async function POST(request: Request) {
+  const denied = await roleGuard('admin');
+  if (denied) return denied;
+
   try {
     const ctx = await getCurrentAccount()
 

@@ -10,7 +10,8 @@ export async function GET(
   try {
     const { mediaId } = await params
 
-    if (!mediaId) {
+    // Meta media IDs are numeric.
+    if (!mediaId || !/^\d{1,32}$/.test(mediaId)) {
       return NextResponse.json(
         { error: 'Media ID is required' },
         { status: 400 }
@@ -73,11 +74,21 @@ export async function GET(
       accessToken,
     })
 
+    // Customer media is private: never let a shared cache (CDN) keep it.
+    // The file comes from a customer, so only inline-render types a
+    // browser can't run as a page; everything else downloads. The
+    // sandbox CSP stops any script even if a type slips through.
+    const type = (contentType || mediaInfo.mimeType || '').split(';')[0].trim().toLowerCase()
+    const inlineSafe =
+      /^(image\/(jpeg|png|gif|webp)|audio\/[a-z0-9.+-]+|video\/[a-z0-9.+-]+|application\/pdf)$/.test(type)
     return new Response(new Uint8Array(buffer), {
       status: 200,
       headers: {
-        'Content-Type': contentType || mediaInfo.mimeType || 'application/octet-stream',
-        'Cache-Control': 'public, max-age=86400',
+        'Content-Type': inlineSafe ? type : 'application/octet-stream',
+        'Content-Disposition': inlineSafe ? 'inline' : 'attachment',
+        'Cache-Control': 'private, max-age=86400',
+        'X-Content-Type-Options': 'nosniff',
+        'Content-Security-Policy': "sandbox; default-src 'none'",
       },
     })
   } catch (error) {

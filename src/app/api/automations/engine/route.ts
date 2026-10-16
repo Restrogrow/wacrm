@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getCurrentAccount, toErrorResponse } from '@/lib/auth/account'
 import { runAutomationsForTrigger } from '@/lib/automations/engine'
 import type { AutomationTriggerType } from '@/types'
+import { roleGuard } from '@/lib/auth/account'
 
 /**
  * Manual trigger for testing or for external integrations that want
@@ -9,6 +10,9 @@ import type { AutomationTriggerType } from '@/types'
  * account_id and dispatch over the account's automations.
  */
 export async function POST(request: Request) {
+  const denied = await roleGuard('agent');
+  if (denied) return denied;
+
   let accountId: string
   try {
     const ctx = await getCurrentAccount()

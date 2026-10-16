@@ -188,3 +188,19 @@ export async function requireRole(min: AccountRole): Promise<AccountContext> {
   }
   return ctx;
 }
+
+/**
+ * Route-handler guard: returns an error response (401/403) when the
+ * caller is not signed in or is below `min`, or null when they may go
+ * on. For handlers that don't otherwise use the AccountContext:
+ *
+ *   const denied = await roleGuard('agent'); if (denied) return denied;
+ */
+export async function roleGuard(min: AccountRole): Promise<NextResponse | null> {
+  try {
+    await requireRole(min);
+    return null;
+  } catch (err) {
+    return toErrorResponse(err);
+  }
+}

@@ -1,5 +1,6 @@
 import { uploadResumableMedia } from '@/lib/whatsapp/meta-api'
 import type { TemplatePayload } from '@/lib/whatsapp/template-validators'
+import { readBodyCapped, safeFetch, UnsafeUrlError } from '@/lib/webhooks/ssrf'
 
 /**
  * Meta requires an `example.header_handle` (from the Resumable Upload
@@ -21,6 +22,42 @@ const VIDEO_MAX_BYTES = 16 * 1024 * 1024
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/3gpp']
 
 /**
+ * Download a customer-supplied sample media link. The URL must resolve to
+ * a public address (no SSRF into our network), the response must declare
+ * an allowed media type, and the body is capped while streaming so a huge
+ * file can't exhaust memory.
+ */
+async function fetchSampleMedia(
+  url: string,
+  allowed: string[],
+  maxBytes: number,
+  label: string,
+  typeLabel: string,
+): Promise<{ bytes: Uint8Array; contentType: string }> {
+  let res: Response
+  try {
+    res = await safeFetch(url, {}, { timeoutMs: 15_000 })
+  } catch (err) {
+    if (err instanceof UnsafeUrlError) throw new Error(`${label}: ${err.message}.`)
+    throw new Error(`${label}: could not fetch the media link. Make sure it is publicly reachable.`)
+  }
+  if (!res.ok) throw new Error(`${label}: the media link did not load. It must be publicly reachable.`)
+
+  const contentType = (res.headers.get('content-type') || '').split(';')[0].trim().toLowerCase()
+  if (!allowed.includes(contentType)) {
+    throw new Error(`${label}: must be ${typeLabel}.`)
+  }
+  let bytes: Uint8Array
+  try {
+    bytes = await readBodyCapped(res, maxBytes)
+  } catch {
+    throw new Error(`${label}: file is larger than Meta's limit of ${maxBytes / 1024 / 1024} MB.`)
+  }
+  if (bytes.byteLength === 0) throw new Error(`${label}: the file is empty.`)
+  return { bytes, contentType }
+}
+
+/**
  * Upload a public image/video URL as a template sample and return the
  * Resumable-Upload handle. Used for every carousel card.
  */
@@ -34,26 +71,9 @@ export async function uploadHeaderSample(
   if (!appId) {
     throw new Error('Media templates need META_APP_ID set (used for Meta’s Resumable Upload).')
   }
-  let res: Response
-  try {
-    res = await fetch(url)
-  } catch {
-    throw new Error(`${label}: could not fetch the media link. Make sure it is publicly reachable.`)
-  }
-  if (!res.ok) throw new Error(`${label}: media link returned ${res.status}. It must be publicly reachable.`)
-
   const allowed = kind === 'image' ? ALLOWED_IMAGE_TYPES : ALLOWED_VIDEO_TYPES
   const max = kind === 'image' ? IMAGE_MAX_BYTES : VIDEO_MAX_BYTES
-  const contentType = (res.headers.get('content-type') || '').split(';')[0].trim().toLowerCase()
-  if (contentType && !allowed.includes(contentType)) {
-    throw new Error(`${label}: must be ${kind === 'image' ? 'JPEG or PNG' : 'MP4'} (got ${contentType}).`)
-  }
-  const bytes = new Uint8Array(await res.arrayBuffer())
-  if (bytes.byteLength === 0) throw new Error(`${label}: the file is empty.`)
-  if (bytes.byteLength > max) {
-    throw new Error(`${label}: file is ${(bytes.byteLength / 1024 / 1024).toFixed(1)} MB — Meta's limit is ${max / 1024 / 1024} MB.`)
-  }
-  const mimeType = allowed.includes(contentType) ? contentType : allowed[0]
+  const { bytes, contentType: mimeType } = await fetchSampleMedia(url, allowed, max, label, kind === 'image' ? 'JPEG or PNG' : 'MP4')
   const ext = mimeType.split('/')[1].replace('jpeg', 'jpg').replace('3gpp', '3gp')
   const { handle } = await uploadResumableMedia({ appId, accessToken, fileName: `${kind}.${ext}`, mimeType, bytes })
   return handle
@@ -86,32 +106,13 @@ export async function ensureImageHeaderHandle(
 
   // Fetch the sample image bytes (works for our uploaded chat-media URL
   // and for a manually-pasted public link).
-  let res: Response
-  try {
-    res = await fetch(payload.header_media_url)
-  } catch {
-    throw new Error('Could not fetch the header image URL. Make sure it is publicly reachable.')
-  }
-  if (!res.ok) {
-    throw new Error(`Header image URL returned ${res.status}. It must be publicly reachable.`)
-  }
-
-  const contentType = (res.headers.get('content-type') || '').split(';')[0].trim().toLowerCase()
-  if (contentType && !ALLOWED_IMAGE_TYPES.includes(contentType)) {
-    throw new Error(`Header image must be JPEG or PNG (got ${contentType}).`)
-  }
-
-  const bytes = new Uint8Array(await res.arrayBuffer())
-  if (bytes.byteLength === 0) {
-    throw new Error('Header image is empty.')
-  }
-  if (bytes.byteLength > IMAGE_MAX_BYTES) {
-    throw new Error(
-      `Header image is ${(bytes.byteLength / 1024 / 1024).toFixed(1)} MB — Meta's limit is 5 MB.`,
-    )
-  }
-
-  const mimeType = ALLOWED_IMAGE_TYPES.includes(contentType) ? contentType : 'image/jpeg'
+  const { bytes, contentType: mimeType } = await fetchSampleMedia(
+    payload.header_media_url,
+    ALLOWED_IMAGE_TYPES,
+    IMAGE_MAX_BYTES,
+    'Header image',
+    'JPEG or PNG',
+  )
   const fileName = mimeType === 'image/png' ? 'header.png' : 'header.jpg'
 
   const { handle } = await uploadResumableMedia({

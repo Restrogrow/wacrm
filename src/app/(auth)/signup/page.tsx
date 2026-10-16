@@ -98,45 +98,9 @@ function SignupPageInner() {
 
     setLoading(true);
 
-    // Invited teammates: the server creates the account pre-confirmed
-    // (valid invite required), then we sign in and accept the invite
-    // right away — no "check your email" step.
-    if (isInvite) {
-      const res = await fetch(
-        `/api/invitations/${encodeURIComponent(inviteToken!)}/signup`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ full_name: fullName, email, password }),
-        },
-      );
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(json.error ?? "Could not create your account");
-        setLoading(false);
-        return;
-      }
-      const { error: signInErr } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (signInErr) {
-        setError(signInErr.message);
-        setLoading(false);
-        return;
-      }
-      const redeem = await fetch(
-        `/api/invitations/${encodeURIComponent(inviteToken!)}/redeem`,
-        { method: "POST" },
-      );
-      // Full reload so the dashboard loads with the joined account. If
-      // the auto-accept failed, the join page shows why and a retry.
-      window.location.href = redeem.ok
-        ? "/dashboard"
-        : `/join/${encodeURIComponent(inviteToken!)}`;
-      return;
-    }
-
+    // Invited teammates verify their email like everyone else. (Creating
+    // them pre-confirmed let anyone with an invite link, including one
+    // minted in their own account, register someone else's email.)
     // If we have an invite token, point Supabase's verification
     // email back at the join page so the user can accept after
     // verifying. Without a token, Supabase uses its default
@@ -233,7 +197,7 @@ function SignupPageInner() {
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             {inviteToken
-              ? "Just your name, email and a password — you'll join your team right away."
+              ? "Your name, email and a password. Confirm your email and you'll join your team."
               : "Get started with Repeat Grow"}
           </CardDescription>
         </CardHeader>

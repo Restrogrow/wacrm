@@ -27,6 +27,11 @@ interface MessageBubbleProps {
   onToggleReaction?: (emoji: string) => void;
 }
 
+/** Only web URLs become clickable links (never javascript: or data:). */
+function isWebUrl(url: string): boolean {
+  return /^https?:\/\//i.test(url);
+}
+
 function StatusIcon({ status }: { status: Message["status"] }) {
   switch (status) {
     case "sending":
@@ -177,7 +182,7 @@ function MessageContent({ message }: { message: Message }) {
       );
 
     case "document":
-      if (!message.media_url) {
+      if (!message.media_url || !isWebUrl(message.media_url)) {
         return <MediaUnavailable label={message.content_text || "Document"} />;
       }
       return (

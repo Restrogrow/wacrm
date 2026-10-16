@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { getFlowTemplate } from '@/lib/flows/templates'
 import { planLimitMessage } from '@/lib/billing/plans'
+import { roleGuard } from '@/lib/auth/account'
 
 /**
  * GET /api/flows — list the caller's flows.
@@ -46,6 +47,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = await roleGuard('agent');
+  if (denied) return denied;
+
   const guard = await requireUser()
   if (!guard.ok) {
     return NextResponse.json(guard.body, { status: guard.status })

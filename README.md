@@ -557,6 +557,7 @@ is idempotent where possible. Recent ones:
 | `052_whatsapp_forms` | WhatsApp forms (Meta Flows) and their responses |
 | `053_orders_and_payments` | Catalog / payment settings and orders (WhatsApp Pay or UPI ID) |
 | `054_demo_requests` | Demo requests from the public `/demo` page (service-role only) |
+| `055_lock_privileged_columns` | Security: users can't change their own account/role, and owners can't change their plan or billing columns, from the browser |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 

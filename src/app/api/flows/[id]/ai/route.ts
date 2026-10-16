@@ -7,6 +7,7 @@ import {
   resolveNewTags,
   type EditableFlow,
 } from '@/lib/flows/ai-generate'
+import { roleGuard } from '@/lib/auth/account'
 
 /**
  * POST /api/flows/[id]/ai — { prompt, current } → AI-edited flow.
@@ -28,6 +29,9 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const denied = await roleGuard('agent');
+  if (denied) return denied;
+
   const { id } = await context.params
   const supabase = await createClient()
   const {

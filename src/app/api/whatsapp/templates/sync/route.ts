@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import { normalizeStatus } from '@/lib/whatsapp/template-status-normalize'
 import type { TemplateButton, TemplateSampleValues } from '@/types'
+import { roleGuard } from '@/lib/auth/account'
 
 /**
  * Sync message templates from Meta → local message_templates table.
@@ -139,6 +140,9 @@ function extractSampleValues(
 }
 
 export async function POST() {
+  const denied = await roleGuard('admin');
+  if (denied) return denied;
+
   try {
     const supabase = await createClient()
 

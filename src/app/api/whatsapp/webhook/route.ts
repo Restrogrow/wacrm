@@ -148,13 +148,21 @@ interface LooseWebhookEntry {
 
 // GET - Webhook verification
 export async function GET(request: Request) {
+  // Public and costly (decrypts every account's verify token), so a
+  // caller that keeps failing verification gets blocked for a while.
+  const blocked = webhookBlocked(request, 'whatsapp-verify')
+  if (blocked) return blocked
+
   try {
     const { searchParams } = new URL(request.url)
     const mode = searchParams.get('hub.mode')
     const challenge = searchParams.get('hub.challenge')
     const verifyToken = searchParams.get('hub.verify_token')
 
-    if (mode !== 'subscribe' || !challenge || !verifyToken) {
+    // Meta's challenge is a number; echoing anything else back would
+    // let this endpoint reflect arbitrary text.
+    if (mode !== 'subscribe' || !challenge || !/^\d{1,64}$/.test(challenge) || !verifyToken) {
+      recordWebhookRejection(request, 'whatsapp-verify')
       return NextResponse.json(
         { error: 'Missing verification parameters' },
         { status: 400 }
@@ -215,6 +223,7 @@ export async function GET(request: Request) {
       })
     }
 
+    recordWebhookRejection(request, 'whatsapp-verify')
     return NextResponse.json(
       { error: 'Verification token mismatch' },
       { status: 403 }

@@ -16,18 +16,14 @@ function payload(over: Partial<TemplatePayload> = {}): TemplatePayload {
     language: 'en_US',
     body_text: 'hi',
     header_type: 'image',
-    header_media_url: 'https://x.test/img.jpg',
+    // A literal public IP, so the SSRF guard passes without a DNS lookup.
+    header_media_url: 'https://93.184.216.34/img.jpg',
     ...over,
   };
 }
 
-function imgResponse(type = 'image/jpeg', size = 1024, ok = true, status = 200): Response {
-  return {
-    ok,
-    status,
-    headers: { get: (h: string) => (h.toLowerCase() === 'content-type' ? type : null) },
-    arrayBuffer: async () => new ArrayBuffer(size),
-  } as unknown as Response;
+function imgResponse(type = 'image/jpeg', size = 1024, status = 200): Response {
+  return new Response(new Uint8Array(size), { status, headers: { 'content-type': type } });
 }
 
 describe('ensureImageHeaderHandle', () => {
@@ -65,6 +61,16 @@ describe('ensureImageHeaderHandle', () => {
     await ensureImageHeaderHandle(p, 'tok');
     expect(uploadResumableMedia).toHaveBeenCalledOnce();
     expect(p.header_handle).toBe('HANDLE123');
+  });
+
+  it('refuses a link to a private or metadata address without fetching it', async () => {
+    vi.stubEnv('META_APP_ID', 'app-1');
+    const fetchMock = vi.fn(async () => imgResponse());
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(
+      ensureImageHeaderHandle(payload({ header_media_url: 'http://169.254.169.254/latest/meta-data' }), 'tok'),
+    ).rejects.toThrow(/private or internal/);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('rejects a non-image content type', async () => {

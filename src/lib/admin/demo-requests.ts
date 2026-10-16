@@ -1,42 +1,11 @@
-// Demo requests for the /admin dashboard (migration 054).
+// Demo requests for the /admin dashboard (migration 054). Server only;
+// statuses and types for client components are in ./demo-status.
 
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { isMissingObject } from '@/lib/account/deletion'
+import type { DemoRequestRow, DemoRequestsData, DemoStatus } from './demo-status'
 
-export const DEMO_STATUSES = ['new', 'contacted', 'demo_done', 'won', 'lost'] as const
-export type DemoStatus = (typeof DEMO_STATUSES)[number]
-
-export const DEMO_STATUS_LABELS: Record<DemoStatus, string> = {
-  new: 'New',
-  contacted: 'Contacted',
-  demo_done: 'Demo done',
-  won: 'Won',
-  lost: 'Lost',
-}
-
-export interface DemoRequestRow {
-  id: string
-  name: string
-  business_name: string
-  whatsapp: string
-  email: string | null
-  team_size: string | null
-  use_case: string | null
-  message: string | null
-  source_page: string | null
-  status: DemoStatus
-  created_at: string
-}
-
-export interface DemoRequestsData {
-  available: boolean
-  rows: DemoRequestRow[]
-  counts: Record<DemoStatus, number>
-}
-
-export function isDemoStatus(value: unknown): value is DemoStatus {
-  return typeof value === 'string' && (DEMO_STATUSES as readonly string[]).includes(value)
-}
+export * from './demo-status'
 
 const EMPTY_COUNTS: Record<DemoStatus, number> = { new: 0, contacted: 0, demo_done: 0, won: 0, lost: 0 }
 

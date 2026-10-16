@@ -137,15 +137,29 @@ export function isRateLimited(key: string): boolean {
  * signatures or unknown URLs. Call `webhookBlocked` first (cheap, no
  * DB) and `recordWebhookRejection` whenever a request is rejected.
  */
+/**
+ * Key for the webhook block. Uses the whole forwarding chain, not just
+ * the leftmost entry: a client can put any value first in
+ * x-forwarded-for, but our proxy appends the address it really saw, so
+ * a request forging "X-Forwarded-For: <Meta's IP>" ends up with a
+ * different key from Meta's genuine deliveries and can't get them
+ * blocked.
+ */
+function webhookRejectKey(request: Request, source: string): string {
+  const chain = (request.headers.get('x-forwarded-for') ?? '').replace(/\s+/g, '');
+  const realIp = (request.headers.get('x-real-ip') ?? '').trim();
+  return `webhook-reject:${source}:${chain}|${realIp}`;
+}
+
 export function webhookBlocked(request: Request, source: string): NextResponse | null {
-  const key = `webhook-reject:${source}:${getClientIp(request)}`;
+  const key = webhookRejectKey(request, source);
   if (!isRateLimited(key)) return null;
   const entry = buckets.get(key)!;
   return rateLimitResponse({ success: false, remaining: 0, reset: entry.resetAt, limit: RATE_LIMITS.webhookRejections.limit });
 }
 
 export function recordWebhookRejection(request: Request, source: string): void {
-  checkRateLimit(`webhook-reject:${source}:${getClientIp(request)}`, RATE_LIMITS.webhookRejections);
+  checkRateLimit(webhookRejectKey(request, source), RATE_LIMITS.webhookRejections);
 }
 
 /** Preconfigured budgets, tweak here not at call sites. */

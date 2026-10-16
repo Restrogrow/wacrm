@@ -31,7 +31,6 @@ const PUBLIC_ROUTES: Record<string, string> = {
   'health/route.ts': 'uptime monitors; returns states only, rate limited per IP',
   'v1/openapi.json/route.ts': 'public API description',
   'invitations/[token]/peek/route.ts': 'invite preview by unguessable token, rate limited per IP',
-  'invitations/[token]/signup/route.ts': 'sign up from an invite token, rate limited per IP',
   'v1/connect/token/route.ts': 'OAuth-style code exchange with client secret, rate limited',
   'demo-request/route.ts': 'public demo request form; honeypot, validation and rate limit per IP, writes with the service role',
 }
@@ -69,7 +68,7 @@ describe('API route authentication', () => {
   })
 
   it('public routes that hit the database are rate limited', () => {
-    for (const rel of ['health/route.ts', 'invitations/[token]/peek/route.ts', 'invitations/[token]/signup/route.ts', 'demo-request/route.ts']) {
+    for (const rel of ['health/route.ts', 'invitations/[token]/peek/route.ts', 'demo-request/route.ts']) {
       const src = fs.readFileSync(path.join(API_DIR, rel), 'utf8')
       expect(src, rel).toMatch(/checkRateLimit\(/)
     }

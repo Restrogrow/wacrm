@@ -8,6 +8,7 @@ import {
   validateTriggerForActivation,
 } from '@/lib/automations/validate'
 import { planLimitMessage } from '@/lib/billing/plans'
+import { requireRole, toErrorResponse, type AccountContext } from '@/lib/auth/account'
 
 export async function GET() {
   const supabase = await createClient()
@@ -25,27 +26,15 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  // Resolve the caller's account_id — `automations.account_id` is NOT
-  // NULL post-017, so an INSERT without it trips the not-null constraint
-  // even though the admin client bypasses RLS.
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('account_id')
-    .eq('user_id', user.id)
-    .single()
-  const accountId = profile?.account_id as string | undefined
-  if (!accountId) {
-    return NextResponse.json(
-      { error: 'Your profile is not linked to an account.' },
-      { status: 403 },
-    )
+  // Creating automations needs agent or above (viewers are read-only).
+  let ctx: AccountContext
+  try {
+    ctx = await requireRole('agent')
+  } catch (err) {
+    return toErrorResponse(err)
   }
+  const user = { id: ctx.userId }
+  const accountId = ctx.accountId
 
   const body = await request.json().catch(() => null)
   if (!body) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })

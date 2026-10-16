@@ -7,6 +7,7 @@ import {
   submitNewTemplate,
   TemplateSubmitError,
 } from '@/lib/whatsapp/template-submit'
+import { roleGuard } from '@/lib/auth/account'
 
 /**
  * Submit a template to Meta for approval AND persist it locally.
@@ -21,6 +22,9 @@ import {
  * CI / local dev can exercise the full UI without a real Meta App.
  */
 export async function POST(request: Request) {
+  const denied = await roleGuard('admin');
+  if (denied) return denied;
+
   try {
     const supabase = await createClient()
     const {

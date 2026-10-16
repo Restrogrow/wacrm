@@ -18,6 +18,7 @@ import {
 } from '@/lib/rate-limit'
 import { accountCanSend } from '@/lib/billing/server'
 import { PLAN_EXPIRED_MESSAGE } from '@/lib/billing/plans'
+import { roleGuard } from '@/lib/auth/account'
 
 interface BroadcastResult {
   phone: string
@@ -62,6 +63,9 @@ interface NewRecipient {
 }
 
 export async function POST(request: Request) {
+  const denied = await roleGuard('agent');
+  if (denied) return denied;
+
   try {
     const supabase = await createClient()
 

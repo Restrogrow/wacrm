@@ -124,6 +124,11 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(async () => supabaseMock),
 }))
 
+// The caller is an agent; the role guard itself is covered elsewhere.
+vi.mock('@/lib/auth/account', () => ({
+  roleGuard: vi.fn(async () => null),
+}))
+
 vi.mock('@/lib/flows/admin-client', () => ({
   supabaseAdmin: () => ({
     from: () => {

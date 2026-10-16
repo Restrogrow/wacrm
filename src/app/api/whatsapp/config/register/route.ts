@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { registerPhoneNumber, isSmbRegistrationRejection } from '@/lib/whatsapp/meta-api'
 import { decrypt } from '@/lib/whatsapp/encryption'
+import { roleGuard } from '@/lib/auth/account'
 
 async function resolveAccountId(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -33,6 +34,9 @@ async function resolveAccountId(
  * side effect.
  */
 export async function POST(request: Request) {
+  const denied = await roleGuard('admin');
+  if (denied) return denied;
+
   try {
     const supabase = await createClient()
 

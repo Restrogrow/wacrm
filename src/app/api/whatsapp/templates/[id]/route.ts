@@ -9,6 +9,7 @@ import {
   resubmitExistingTemplate,
   TemplateSubmitError,
 } from '@/lib/whatsapp/template-submit'
+import { roleGuard } from '@/lib/auth/account'
 
 /**
  * Per-template lifecycle endpoint.
@@ -39,6 +40,9 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const denied = await roleGuard('admin');
+  if (denied) return denied;
+
   try {
     const { id } = await context.params
     if (!UUID_RE.test(id)) {
@@ -147,6 +151,9 @@ export async function DELETE(
   _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const denied = await roleGuard('admin');
+  if (denied) return denied;
+
   try {
     const { id } = await context.params
     if (!UUID_RE.test(id)) {

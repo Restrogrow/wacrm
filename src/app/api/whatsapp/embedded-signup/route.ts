@@ -10,6 +10,7 @@ import {
 } from '@/lib/whatsapp/meta-api'
 import { encrypt } from '@/lib/whatsapp/encryption'
 import { startSmbSyncs } from '@/lib/whatsapp/smb-sync'
+import { roleGuard } from '@/lib/auth/account'
 
 async function resolveAccountId(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -85,6 +86,9 @@ async function listWabaPhoneNumbers(
  *    contacts + history syncs are kicked off immediately (24h deadline).
  */
 export async function POST(request: Request) {
+  const denied = await roleGuard('admin');
+  if (denied) return denied;
+
   try {
     const supabase = await createClient()
 

@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/automations/admin-client'
+import {
+  getCurrentAccount,
+  requireRole,
+  toErrorResponse,
+  type AccountContext,
+} from '@/lib/auth/account'
 import {
   loadStepsTree,
   replaceSteps,
@@ -11,12 +16,19 @@ import {
   validateTriggerForActivation,
 } from '@/lib/automations/validate'
 
-async function requireUser() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  return user
+// Automations are scoped to the caller's current account AND to the
+// member who built them. Checking the account matters: the service-role
+// client below bypasses RLS, and a member who was removed from a
+// business must not keep editing that business's automations.
+// Viewers can read; changing anything needs agent or above.
+async function authorize(
+  write: boolean,
+): Promise<{ ctx: AccountContext } | { res: NextResponse }> {
+  try {
+    return { ctx: write ? await requireRole('agent') : await getCurrentAccount() }
+  } catch (err) {
+    return { res: toErrorResponse(err) }
+  }
 }
 
 export async function GET(
@@ -24,15 +36,17 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
-  const user = await requireUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await authorize(false)
+  if ('res' in auth) return auth.res
+  const { ctx } = auth
 
   const admin = supabaseAdmin()
   const { data: automation, error } = await admin
     .from('automations')
     .select('*')
     .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('account_id', ctx.accountId)
+    .eq('user_id', ctx.userId)
     .maybeSingle()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -47,8 +61,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
-  const user = await requireUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await authorize(true)
+  if ('res' in auth) return auth.res
+  const { ctx } = auth
 
   const body = await request.json().catch(() => null)
   if (!body) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
@@ -61,8 +76,9 @@ export async function PATCH(
     .from('automations')
     .select('id, user_id, is_active, trigger_type, trigger_config')
     .eq('id', id)
+    .eq('account_id', ctx.accountId)
     .maybeSingle()
-  if (!existing || existing.user_id !== user.id) {
+  if (!existing || existing.user_id !== ctx.userId) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
@@ -109,6 +125,7 @@ export async function PATCH(
       .from('automations')
       .update(update)
       .eq('id', id)
+      .eq('account_id', ctx.accountId)
     if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 })
   }
 
@@ -125,14 +142,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
-  const user = await requireUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const auth = await authorize(true)
+  if ('res' in auth) return auth.res
+  const { ctx } = auth
 
   const { error } = await supabaseAdmin()
     .from('automations')
     .delete()
     .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('account_id', ctx.accountId)
+    .eq('user_id', ctx.userId)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

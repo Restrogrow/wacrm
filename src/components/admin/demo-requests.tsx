@@ -14,7 +14,7 @@ import {
   type DemoRequestRow,
   type DemoRequestsData,
   type DemoStatus,
-} from '@/lib/admin/demo-requests';
+} from '@/lib/admin/demo-status';
 
 function formatIst(iso: string): string {
   return new Date(iso).toLocaleString('en-IN', {

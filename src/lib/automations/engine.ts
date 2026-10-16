@@ -17,6 +17,7 @@ import type {
 import { supabaseAdmin } from './admin-client'
 import { engineSendText, engineSendTemplate } from './meta-send'
 import { DEFAULT_CURRENCY } from '@/lib/currency'
+import { safeFetch, UnsafeUrlError } from '@/lib/webhooks/ssrf'
 
 // ------------------------------------------------------------
 // Public API
@@ -399,6 +400,15 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
       // runAutomationsForTrigger.
       const cfg = step.step_config as TagStepConfig
       if (!args.contactId || !cfg.tag_id) throw new Error('add_tag needs contact + tag_id')
+      // The tag id comes from the step config; make sure it is this
+      // account's tag (the service-role client bypasses RLS).
+      const { data: tag } = await db
+        .from('tags')
+        .select('id')
+        .eq('id', cfg.tag_id)
+        .eq('account_id', args.automation.account_id)
+        .maybeSingle()
+      if (!tag) return 'tag not found in this account'
       await db
         .from('contact_tags')
         .upsert(
@@ -437,6 +447,14 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
         agentId = profiles?.[0]?.user_id
       }
       if (!agentId) return 'no agent resolved'
+      // Only assign to a member of this account.
+      const { data: member } = await db
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', agentId)
+        .eq('account_id', args.automation.account_id)
+        .maybeSingle()
+      if (!member) return 'agent is not a member of this account'
       await db
         .from('conversations')
         .update({ assigned_agent_id: agentId })
@@ -500,6 +518,22 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
     case 'create_deal': {
       const cfg = step.step_config as CreateDealStepConfig
       if (!cfg.pipeline_id || !cfg.stage_id) throw new Error('create_deal needs pipeline + stage')
+      // Pipeline must be this account's, and the stage must be in it.
+      const { data: pipeline } = await db
+        .from('pipelines')
+        .select('id')
+        .eq('id', cfg.pipeline_id)
+        .eq('account_id', args.automation.account_id)
+        .maybeSingle()
+      const { data: stage } = pipeline
+        ? await db
+            .from('pipeline_stages')
+            .select('id')
+            .eq('id', cfg.stage_id)
+            .eq('pipeline_id', cfg.pipeline_id)
+            .maybeSingle()
+        : { data: null }
+      if (!pipeline || !stage) return 'pipeline or stage not found in this account'
       // Match the account's configured default currency rather than
       // the static `deals.currency` DB default — keeps automation-
       // created deals consistent with the one-currency-per-account
@@ -529,11 +563,19 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
       const cfg = step.step_config as SendWebhookStepConfig
       if (!cfg.url) throw new Error('send_webhook needs url')
       const body = cfg.body_template ? interpolate(cfg.body_template, args) : JSON.stringify(args.context)
-      const res = await fetch(cfg.url, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', ...(cfg.headers ?? {}) },
-        body,
-      })
+      // The URL is customer-supplied: only public addresses, no
+      // redirects into the private network, and a timeout.
+      const headers: Record<string, string> = { 'content-type': 'application/json' }
+      for (const [k, v] of Object.entries(cfg.headers ?? {})) {
+        if (!/^(host|content-length|connection|transfer-encoding)$/i.test(k)) headers[k] = String(v)
+      }
+      let res: Response
+      try {
+        res = await safeFetch(cfg.url, { method: 'POST', headers, body }, { timeoutMs: 10_000 })
+      } catch (err) {
+        if (err instanceof UnsafeUrlError) throw new Error(`webhook blocked: ${err.message}`)
+        throw new Error('webhook request failed')
+      }
       if (!res.ok) throw new Error(`webhook returned ${res.status}`)
       return `webhook ${res.status}`
     }

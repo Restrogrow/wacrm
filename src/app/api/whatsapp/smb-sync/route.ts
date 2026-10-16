@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import { initiateSmbAppDataSync, type SmbSyncType } from '@/lib/whatsapp/meta-api'
+import { roleGuard } from '@/lib/auth/account'
 
 /**
  * POST /api/whatsapp/smb-sync
@@ -18,6 +19,9 @@ import { initiateSmbAppDataSync, type SmbSyncType } from '@/lib/whatsapp/meta-ap
  * the UI can show precise state instead of a generic success toast.
  */
 export async function POST() {
+  const denied = await roleGuard('admin');
+  if (denied) return denied;
+
   const supabase = await createClient()
 
   const {

@@ -1275,10 +1275,28 @@ export interface DownloadMediaArgs {
  * Fetch the binary bytes for a media URL obtained from getMediaUrl.
  * Step two of the media-proxy flow.
  */
+const META_MEDIA_HOST_SUFFIXES = ['.fbsbx.com', '.fbcdn.net', '.facebook.com', '.whatsapp.net']
+
+/** True for an https URL on a Meta-owned media host. */
+export function isMetaMediaHost(rawUrl: string): boolean {
+  try {
+    const u = new URL(rawUrl)
+    if (u.protocol !== 'https:') return false
+    const host = u.hostname.toLowerCase()
+    return META_MEDIA_HOST_SUFFIXES.some((s) => host.endsWith(s) || host === s.slice(1))
+  } catch {
+    return false
+  }
+}
+
 export async function downloadMedia(
   args: DownloadMediaArgs
 ): Promise<{ buffer: Buffer; contentType: string }> {
   const { downloadUrl, accessToken } = args
+  // The access token goes with this request, so only send it to Meta.
+  if (!isMetaMediaHost(downloadUrl)) {
+    throw new Error('Media download URL is not a Meta host')
+  }
   const response = await fetch(downloadUrl, {
     headers: { Authorization: `Bearer ${accessToken}` },
   })

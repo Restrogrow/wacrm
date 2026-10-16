@@ -3,6 +3,7 @@ import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { generateFlowFromPrompt, resolveNewTags } from '@/lib/flows/ai-generate'
+import { roleGuard } from '@/lib/auth/account'
 
 /**
  * POST /api/flows/ai — { prompt } → generate a flow with AI and save it
@@ -13,6 +14,9 @@ import { generateFlowFromPrompt, resolveNewTags } from '@/lib/flows/ai-generate'
 const MAX_PROMPT_LENGTH = 4000
 
 export async function POST(request: Request) {
+  const denied = await roleGuard('agent');
+  if (denied) return denied;
+
   const supabase = await createClient()
   const {
     data: { user },

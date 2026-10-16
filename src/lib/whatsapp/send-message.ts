@@ -144,6 +144,16 @@ export function validateSendMessageParams(params: {
     );
   }
 
+  // The URL is stored and later rendered as a link in the inbox, so only
+  // web URLs are accepted (never javascript:, data: and the like).
+  if (mediaUrl && !/^https?:\/\//i.test(mediaUrl)) {
+    throw new SendMessageError(
+      'bad_request',
+      'media_url must be an http(s) URL',
+      400
+    );
+  }
+
   // Meta caps media captions at 1024 chars (audio carries none).
   if (
     isMediaKind &&

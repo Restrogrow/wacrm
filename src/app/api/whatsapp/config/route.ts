@@ -8,6 +8,7 @@ import {
   isSmbRegistrationRejection,
 } from '@/lib/whatsapp/meta-api'
 import { encrypt, decrypt } from '@/lib/whatsapp/encryption'
+import { roleGuard } from '@/lib/auth/account'
 
 /**
  * Resolve the caller's account_id from their profile. Inlined here
@@ -165,6 +166,9 @@ export async function GET() {
  * Verifies credentials with Meta first, then encrypts and stores.
  */
 export async function POST(request: Request) {
+  const denied = await roleGuard('admin');
+  if (denied) return denied;
+
   try {
     const supabase = await createClient()
 
@@ -473,6 +477,9 @@ export async function POST(request: Request) {
  * encrypted token (mismatched ENCRYPTION_KEY across environments).
  */
 export async function DELETE() {
+  const denied = await roleGuard('admin');
+  if (denied) return denied;
+
   try {
     const supabase = await createClient()
 

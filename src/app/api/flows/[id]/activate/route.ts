@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { validateFlowForActivation } from '@/lib/flows/validate'
 import { findTriggerConflicts, type TriggerFlow } from '@/lib/flows/conflicts'
+import { roleGuard } from '@/lib/auth/account'
 
 /**
  * POST /api/flows/[id]/activate
@@ -22,6 +23,9 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  const denied = await roleGuard('agent');
+  if (denied) return denied;
+
   const { id } = await context.params
 
   const supabase = await createClient()
