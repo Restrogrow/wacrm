@@ -222,7 +222,10 @@ export function MessageNotifier() {
     if (!userId) return;
     const supabase = createClient();
     const channel = supabase
-      .channel("message-notifier")
+      // Unique name per mount: the Supabase client is shared, and a second
+      // mount of this hook asking for the same channel name gets the one
+      // already subscribed, where adding listeners throws.
+      .channel(`message-notifier-${Math.random().toString(36).slice(2, 10)}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: "sender_type=eq.customer" },
