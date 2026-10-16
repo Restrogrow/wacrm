@@ -270,6 +270,11 @@ export default function DocsPage() {
               </li>
               <li>The contact panel shows the customer&apos;s details, tags, and deals beside the chat.</li>
               <li>
+                <b>New-message alerts:</b> click <b>Turn on</b> on the card at the bottom left to get a desktop
+                alert and a chime when a customer writes, even in another tab. The tab title shows how many chats
+                are unread. Mute the sound in <Ui to="/notifications">Notifications</Ui>.
+              </li>
+              <li>
                 <b>AI chat summary:</b> click the <b>sparkles icon</b> at the top of a chat to see what the customer
                 wants, the key points, their language and mood, and a suggested next step. Handy when you take over
                 someone else&apos;s chat.
@@ -442,8 +447,10 @@ export default function DocsPage() {
             <p>
               <Ui to="/automations">Automations</Ui> run actions when something happens, such as a new inbound
               message, a customer&apos;s first message, a keyword match, or a tag being added.
-              Actions include sending a message, tagging, waiting, branching on conditions, and
-              calling a webhook.
+              Actions include sending a message, tagging, waiting, branching on conditions,
+              assigning the chat, and calling a webhook. <b>Assign → Round-robin</b> shares new chats fairly:
+              it prefers teammates who are online, then whoever has the fewest open chats, and never takes a
+              chat away from someone who already has it.
             </p>
             <p>
               <Ui to="/flows">Flows</Ui> (beta) is the visual builder for multi-step conversations like menus

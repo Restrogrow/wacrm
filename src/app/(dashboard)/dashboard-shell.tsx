@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { PresenceHeartbeat } from "@/components/presence/presence-heartbeat";
+import { MessageNotifier } from "@/components/notifications/message-notifier";
 import { PlanBanner } from "@/components/billing/plan-banner";
 import { CallProvider } from "@/components/calls/call-provider";
 import { NumberHealthBanner } from "@/components/settings/number-health-banner";
@@ -50,6 +51,8 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
       {/* Reports this tab's online/away presence once we know a user is
           signed in. Headless — renders nothing. */}
       <PresenceHeartbeat />
+      {/* Desktop alert + sound for new customer messages, on every page. */}
+      <MessageNotifier />
       <Sidebar open={sidebarOpen} onClose={closeSidebar} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <PlanBanner />

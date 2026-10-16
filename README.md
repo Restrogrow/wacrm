@@ -77,6 +77,12 @@
   **Recent calls** in the contact panel. Turn it on in **Settings →
   WhatsApp → WhatsApp calling**. Nothing is recorded; audio goes browser
   ↔ Meta directly. See [WhatsApp calling setup](#whatsapp-calling).
+- **New-message alerts:** a desktop notification and a short chime when a
+  customer writes, on any page, plus the unread count in the tab title.
+  Skips chats assigned to a teammate and the chat already on screen.
+  Agents turn alerts on from a card (browsers need a click) and can mute
+  the sound on the Notifications page. Code:
+  `src/components/notifications/message-notifier.tsx`.
 - **AI chat summary** (sparkles icon in the chat header): what the
   customer wants, key points, language, mood and a suggested next step,
   from the latest 120 messages. Nothing is stored.
@@ -172,7 +178,11 @@
 ### Automations and flows
 - **Automations:** triggers (new message, first message, keyword, new
   contact, tag added, …) and steps (send message or template, tag, wait,
-  branch, create deal, webhook).
+  branch, create deal, webhook, assign).
+- **Round-robin assignment** (Assign conversation → Round-robin): never
+  picks viewers, prefers teammates who are online, then whoever has the
+  fewest open chats, rotating ties; never takes a chat from a teammate who
+  already has it. Code: `src/lib/automations/round-robin.ts`.
 - **Flows:** visual chatbot builder with buttons, lists, media, links,
   waits and branches; can be generated with AI from a description.
 

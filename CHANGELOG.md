@@ -13,6 +13,19 @@ and polish.
 
 ### Added
 
+- **New-message alerts.** Desktop notification + chime for new customer
+  messages on any page, unread count in the tab title, mute switch on the
+  Notifications page. Skips chats assigned to a teammate.
+
+### Fixed
+
+- **Round-robin assignment now works.** It used to give every chat to the
+  same person. It now skips viewers, prefers online teammates, balances
+  open chats and rotates ties, and never reassigns a chat that is already
+  taken.
+
+### Added
+
 - **AI chat summary in the inbox.** The sparkles icon in a chat header
   shows what the customer wants, key points, their language and mood, and
   a suggested next step.

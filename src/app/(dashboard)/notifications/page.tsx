@@ -10,6 +10,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { MessageAlertSettings } from "@/components/notifications/message-notifier";
 
 // Icon per notification type. Only one type exists today
 // (conversation_assigned) but this keeps future types a one-line add.
@@ -184,6 +185,8 @@ export default function NotificationsPage() {
           Mark all as read
         </Button>
       </div>
+
+      <MessageAlertSettings />
 
       {notifications.length === 0 ? (
         <div className="flex h-48 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/40">

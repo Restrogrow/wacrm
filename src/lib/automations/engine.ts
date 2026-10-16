@@ -18,6 +18,12 @@ import { supabaseAdmin } from './admin-client'
 import { engineSendText, engineSendTemplate } from './meta-send'
 import { DEFAULT_CURRENCY } from '@/lib/currency'
 import { safeFetch, UnsafeUrlError } from '@/lib/webhooks/ssrf'
+import {
+  pickRoundRobinAgent,
+  type RoundRobinLoad,
+  type RoundRobinMember,
+  type RoundRobinPresence,
+} from './round-robin'
 
 // ------------------------------------------------------------
 // Public API
@@ -436,15 +442,52 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
       if (!args.contactId) throw new Error('assign_conversation needs a contact')
       let agentId = cfg.agent_id
       if (cfg.mode === 'round_robin') {
-        // Pick any member of the account. The existing implementation
-        // only ever returned the automation's author; preserving that
-        // shape until a real round-robin algorithm replaces it.
-        const { data: profiles } = await db
+        const accountId = args.automation.account_id
+        const { data: members } = await db
           .from('profiles')
-          .select('user_id')
-          .eq('account_id', args.automation.account_id)
-          .limit(1)
-        agentId = profiles?.[0]?.user_id
+          .select('user_id, account_role')
+          .eq('account_id', accountId)
+        const eligible = (members ?? []).filter((m) => m.account_role !== 'viewer')
+        const eligibleIds = new Set(eligible.map((m) => m.user_id as string))
+
+        // Round-robin never takes a chat away from a teammate who has it.
+        const { data: current } = await db
+          .from('conversations')
+          .select('assigned_agent_id')
+          .eq('account_id', accountId)
+          .eq('contact_id', args.contactId)
+          .maybeSingle()
+        if (current?.assigned_agent_id && eligibleIds.has(current.assigned_agent_id as string)) {
+          return `already assigned to ${current.assigned_agent_id}`
+        }
+
+        const [{ data: presence }, { data: assigned }] = await Promise.all([
+          db.from('member_presence').select('user_id, status, last_seen_at').eq('account_id', accountId),
+          db
+            .from('conversations')
+            .select('assigned_agent_id, status, updated_at')
+            .eq('account_id', accountId)
+            .not('assigned_agent_id', 'is', null)
+            .order('updated_at', { ascending: false })
+            .limit(5000),
+        ])
+        // Open/pending load per member, plus their most recent assigned
+        // chat as a stand-in for "last given a chat" (no assigned_at column).
+        const loads = new Map<string, RoundRobinLoad>()
+        for (const row of assigned ?? []) {
+          const id = row.assigned_agent_id as string
+          if (!eligibleIds.has(id)) continue
+          const load = loads.get(id) ?? { open: 0, lastAssignedAt: row.updated_at as string }
+          if (row.status !== 'closed') load.open += 1
+          loads.set(id, load)
+        }
+        agentId =
+          pickRoundRobinAgent(
+            eligible as RoundRobinMember[],
+            (presence ?? []) as RoundRobinPresence[],
+            loads,
+            Date.now(),
+          ) ?? undefined
       }
       if (!agentId) return 'no agent resolved'
       // Only assign to a member of this account.

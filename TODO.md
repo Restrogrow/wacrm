@@ -94,8 +94,8 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       email to the owner 2 days before, on the last day, and 1 day after
       the trial ends, with a "Choose a plan" link.
 - [ ] **#8 Notifications agents can't miss:** browser notifications +
-      sound, email digests, and mobile push for new messages and
-      assignments (today notifications only show inside the app).
+      sound for new messages are done (2026-10-16, MessageNotifier). Still
+      to do: email digests and mobile push.
 - [x] **#9 Contact export.** Done: Export on the Contacts page (CSV
       with tags and custom fields, formula-safe).
 - [ ] **#10 Multiple WhatsApp numbers per account.** `whatsapp_config` is
