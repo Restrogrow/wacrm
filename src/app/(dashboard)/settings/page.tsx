@@ -17,6 +17,7 @@ import { NumberHealthCard } from '@/components/settings/number-health-card';
 import { TemplateManager } from '@/components/settings/template-manager';
 import { FormsSettings } from '@/components/settings/forms-settings';
 import { SavedRepliesSettings } from '@/components/settings/saved-replies-settings';
+import { QrLinkSettings } from '@/components/settings/qr-link-settings';
 import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel';
 import { DealsSettings } from '@/components/settings/deals-settings';
 import { MembersTab } from '@/components/settings/members-tab';
@@ -85,6 +86,7 @@ export default function SettingsPage() {
     templates: <TemplateManager />,
     forms: <FormsSettings />,
     'saved-replies': <SavedRepliesSettings />,
+    'qr-link': <QrLinkSettings />,
     fields: <FieldsAndTagsPanel />,
     deals: <DealsSettings />,
     members: <MembersTab />,

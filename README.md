@@ -77,6 +77,12 @@
   **Recent calls** in the contact panel. Turn it on in **Settings →
   WhatsApp → WhatsApp calling**. Nothing is recorded; audio goes browser
   ↔ Meta directly. See [WhatsApp calling setup](#whatsapp-calling).
+- **QR & WhatsApp link** (Settings → QR & WhatsApp link): a wa.me link and a
+  printable QR code (PNG 1200 px with a caption, or SVG) with a ready-typed
+  first message, prefilled with the connected number. Presets for shop
+  counter, flyer, packaging, visiting card, Instagram bio and offers.
+  Generated in the browser; nothing stored. Code: `src/lib/wa-link.ts`,
+  `src/components/settings/qr-link-settings.tsx`.
 - **New-message alerts:** a desktop notification and a short chime when a
   customer writes, on any page, plus the unread count in the tab title.
   Skips chats assigned to a teammate and the chat already on screen.

@@ -299,7 +299,7 @@ already have an entry above are linked by number.
       response time, chats handled, resolution per agent; CSV export. See #27.
 - [ ] **Customer satisfaction rating** after a chat is closed (1–5 rating
       question on WhatsApp, shown per agent and over time).
-- [ ] **QR code + wa.me link generator** with a pre-filled message, for
+- [x] **QR code + wa.me link generator** (done 2026-10-16, Settings → QR & WhatsApp link) with a pre-filled message, for
       shops, flyers and packaging (Settings → Growth tools).
 - [ ] **Zapier, Make, Pabbly and Google Sheets** connectors. See #29.
 - [ ] **WooCommerce integration** (order, COD, shipping, abandoned cart,

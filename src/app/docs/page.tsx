@@ -270,6 +270,11 @@ export default function DocsPage() {
               </li>
               <li>The contact panel shows the customer&apos;s details, tags, and deals beside the chat.</li>
               <li>
+                <b>QR code &amp; WhatsApp link:</b> in <Ui to="/settings?tab=qr-link">Settings → QR &amp; WhatsApp link</Ui>,
+                pick where people will see it (shop counter, flyer, packaging…), adjust the first message, and download
+                a print-ready QR code. Customers scan it, tap send, and the chat arrives here.
+              </li>
+              <li>
                 <b>New-message alerts:</b> click <b>Turn on</b> on the card at the bottom left to get a desktop
                 alert and a chime when a customer writes, even in another tab. The tab title shows how many chats
                 are unread. Mute the sound in <Ui to="/notifications">Notifications</Ui>.

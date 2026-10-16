@@ -13,6 +13,10 @@ and polish.
 
 ### Added
 
+- **QR & WhatsApp link generator** in Settings: a wa.me link and a
+  print-ready QR code with a pre-filled first message, for shop counters,
+  flyers, packaging and bios.
+
 - **New-message alerts.** Desktop notification + chime for new customer
   messages on any page, unread count in the tab title, mute switch on the
   Notifications page. Skips chats assigned to a teammate.
