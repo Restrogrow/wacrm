@@ -219,3 +219,63 @@ each needs a backwards-compatible rollout.
 - [ ] **#31 Marketing:** submit the directory listings (G2, Capterra,
       Trustpilot, Product Hunt, …) and add their pricing once final; add
       screenshots and short videos to the Help Center.
+
+## 🔵 SEO and content plan (added 2026-10-16)
+
+Done so far: `/demo` page, comparison pages (WATI / Interakt / AiSensy),
+GA4 (`G-L56ZRQGJ67`), AI crawler rules, `llms.txt`, FAQ schema, short
+titles and descriptions, LinkedIn + Trustpilot in `sameAs` and footer.
+
+### Blog posts, one a week (answer first, a table, an FAQ, link to /demo)
+- [ ] **WhatsApp Business API pricing in India (2026):** per-message
+      costs, GST, worked examples. Check Meta's official rate card first
+      (marketing ~₹0.86 before GST since 2026-01-01); add "last updated".
+- [ ] **How to send bulk WhatsApp messages in India without getting banned.**
+- [ ] **How to get the WhatsApp green tick (blue tick) in India.**
+- [ ] **WhatsApp Business app vs WhatsApp Business API** (expand the
+      existing comparison page into a full guide with a decision table).
+- [ ] **COD order confirmation on WhatsApp to cut RTO** (Shopify stores).
+- [ ] **20 WhatsApp marketing templates that get approved** (India examples).
+- [ ] **WhatsApp chatbot for business without code** (AI chatbot included).
+- [ ] **Click-to-WhatsApp ads: working Meta ad leads in a WhatsApp CRM.**
+- [ ] **WhatsApp CRM for real estate: site-visit follow-ups.**
+- [ ] **WhatsApp for coaching institutes: admissions, fees, parent updates.**
+- [ ] **Abandoned cart recovery on WhatsApp for Indian stores.**
+- [ ] **DPDP Act and WhatsApp marketing: consent rules.**
+
+### Bigger pieces
+- [ ] **WhatsApp API pricing calculator** page (`/whatsapp-api-pricing-calculator`).
+- [ ] **"Best WhatsApp Business API providers in India"** roundup (fair, includes us).
+- [ ] Refresh `src/lib/compare.ts` competitor prices every quarter
+      (update `PRICES_CHECKED`).
+- [ ] Add `AggregateRating` schema once there are real Trustpilot reviews.
+- [ ] Founder name/photo, real customer quotes and usage numbers on
+      `/about` and the home page (never invented).
+
+### Owner tasks (not code)
+- [ ] Test the demo form end to end: row in `demo_requests`, email to
+      sales@, shows in `/admin`.
+- [ ] GA4: mark `generate_lead` as a key event; check Realtime works.
+- [ ] Search Console: request indexing for the 4 comparison pages and the
+      blog posts; resubmit the sitemap; check Queries after 4–6 weeks.
+- [ ] Get 5–10 Trustpilot reviews from real customers.
+- [ ] Complete the LinkedIn page and post weekly (share each blog post).
+- [ ] Directory listings with backlinks (G2, Capterra, SaaSworthy,
+      Product Hunt, Indian startup directories).
+- [ ] Optional: Google Keyword Planner volumes for the blog list above.
+
+## 🔵 Security leftovers (after the 2026-10-16 audit)
+
+All confirmed audit findings are fixed (migration 055, role guards, SSRF,
+media proxy, webhook block). Still open, lower risk:
+- [ ] Enforce the CSP (now report-only) after testing every page.
+- [ ] Demo form / invite peek rate limits key on the leftmost
+      `X-Forwarded-For`, which can be spoofed. Use a trusted proxy header
+      once Hostinger's setup is confirmed.
+- [ ] Shared rate-limit store (Redis/Upstash) if we run more than one instance.
+- [ ] Optional recipient cap on dashboard broadcasts.
+- [ ] Dev-only npm advisories (shadcn CLI, eslint-config-next): upgrade
+      when non-breaking versions ship.
+- [ ] Clear the 26 React lint warnings (set-state-in-effect, memoization).
+- [ ] Click through the main app screens in a browser to find UI bugs.
+- [ ] External penetration test before scaling paid customers.
