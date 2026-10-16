@@ -18,6 +18,13 @@ and polish.
   emailed to `sales@repeatgrow.com` (override with `DEMO_REQUEST_EMAIL`). "Book a demo" is now the main button on
   the home page, pricing, use-case pages, blog posts and the site nav.
   **Migration required:** `supabase/migrations/054_demo_requests.sql`.
+- **Comparison pages.** `/wati-alternative`, `/interakt-alternative`,
+  `/aisensy-alternative` and `/wati-vs-interakt-vs-aisensy`, from the data in
+  `src/lib/compare.ts`. Competitor prices were checked on 16 October 2026;
+  update the data and `PRICES_CHECKED` when plans change.
+- **Google Analytics.** Measurement ID `G-L56ZRQGJ67` (override with
+  `NEXT_PUBLIC_GA_ID`). It loads on
+  public pages only and the demo form records a `generate_lead` event.
 - Search: explicit rules for AI crawlers in `robots.txt`, a refreshed
   `llms.txt`, `/demo` in the sitemap and links to the blog guides on the
   home page.

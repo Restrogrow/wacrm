@@ -49,7 +49,7 @@ const SECURITY_HEADERS = [
       // and 'unsafe-eval' in dev + some production optimisations.
       // Nonce-based CSP is a later project. connect.facebook.net serves
       // the Facebook JS SDK the Embedded Signup button loads client-side.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://www.googletagmanager.com",
       // Tailwind + inline style attributes on lots of components.
       "style-src 'self' 'unsafe-inline'",
       // Supabase public-bucket avatars, contact avatars (arbitrary
@@ -65,7 +65,7 @@ const SECURITY_HEADERS = [
       // the Embedded Signup button's client-side FB SDK calls
       // connect.facebook.net (app config) and www.facebook.com
       // (login telemetry) directly from the browser.
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://connect.facebook.net https://www.facebook.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://connect.facebook.net https://www.facebook.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com",
       // The FB SDK's cross-domain messaging bridge runs in a hidden
       // iframe on facebook.com — without this, default-src 'self'
       // blocks it once CSP is enforced.

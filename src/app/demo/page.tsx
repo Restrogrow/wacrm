@@ -183,6 +183,7 @@ const DEMO_SCRIPT = `
     }).then(function(res){
       if (res.ok) {
         form.reset();
+        if (window.gtag) { window.gtag('event', 'generate_lead', { event_category: 'demo_request', value: 1 }); }
         msg.className = 'form-msg ok';
         msg.textContent = 'Thanks! We have your request and will message you soon.';
         btn.textContent = 'Request sent';

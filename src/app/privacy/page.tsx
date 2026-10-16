@@ -64,8 +64,10 @@ export default function PrivacyPolicyPage() {
             </li>
             <li>
               <span className="font-medium text-foreground">Cookies:</span> used to keep you signed in
-              and remember basic preferences (such as theme). We do not use
-              cookies for third-party advertising.
+              and remember basic preferences (such as theme). On our public
+              website pages we use Google Analytics cookies to count visits and
+              see which pages are useful; it is not loaded inside the signed-in
+              app. We do not use cookies for third-party advertising.
             </li>
           </ul>
         </section>

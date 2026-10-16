@@ -513,6 +513,7 @@ baked in at build time — **redeploy after changing them**.
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Optional | Outgoing email (daily summary, deletion request emails) |
 | `DEMO_REQUEST_EMAIL` | Optional | Who is emailed when someone requests a demo on `/demo` (comma-separated; default sales@repeatgrow.com) |
 | `ADMIN_ALERT_EMAIL` | Optional | Who is emailed about account deletion requests (comma-separated; default support@repeatgrow.com) |
+| `NEXT_PUBLIC_GA_ID` | Optional | Google Analytics 4 measurement ID. Defaults to `G-L56ZRQGJ67`; set it empty to turn analytics off. Loaded on public marketing pages only; the demo form sends a `generate_lead` event |
 | `NEXT_PUBLIC_SENTRY_DSN` | Optional | Turns on Sentry error monitoring |
 | `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | Optional | Environment label in Sentry (defaults to `NODE_ENV`) |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Optional | Upload source maps to Sentry at build time |

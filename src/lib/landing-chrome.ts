@@ -67,6 +67,9 @@ export const LANDING_FOOTER_HTML = `
           <li><a href="/whatsapp-crm-for-ecommerce">E-commerce</a></li>
           <li><a href="/whatsapp-crm-for-real-estate">Real Estate</a></li>
           <li><a href="/whatsapp-crm-for-education">Coaching &amp; Education</a></li>
+          <li><a href="/wati-alternative">WATI alternative</a></li>
+          <li><a href="/interakt-alternative">Interakt alternative</a></li>
+          <li><a href="/aisensy-alternative">AiSensy alternative</a></li>
         </ul>
       </div>
       <div class="footer-col">

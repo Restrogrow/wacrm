@@ -34,6 +34,10 @@ Plans are published at https://repeatgrow.com/pricing: Starter at Rs 499 per mon
 - [WhatsApp CRM for coaching and education](https://repeatgrow.com/whatsapp-crm-for-education)
 - [WhatsApp CRM vs the WhatsApp Business app](https://repeatgrow.com/whatsapp-crm-vs-whatsapp-business-app)
 - [Official vs unofficial WhatsApp API](https://repeatgrow.com/official-vs-unofficial-whatsapp-api)
+- [WATI alternative](https://repeatgrow.com/wati-alternative): Repeat Grow vs WATI, prices and features compared.
+- [Interakt alternative](https://repeatgrow.com/interakt-alternative): Repeat Grow vs Interakt.
+- [AiSensy alternative](https://repeatgrow.com/aisensy-alternative): Repeat Grow vs AiSensy.
+- [WATI vs Interakt vs AiSensy vs Repeat Grow](https://repeatgrow.com/wati-vs-interakt-vs-aisensy): four-way pricing and feature comparison for India.
 - [Blog](https://repeatgrow.com/blog): guides on the WhatsApp Business API, templates, Shopify order notifications, appointment reminders, payments and voice calling.
 - [Help Center](https://repeatgrow.com/docs): setup and how-to guides for every feature.
 - [API reference](https://repeatgrow.com/docs/api): REST API guide with authentication, endpoints, webhooks and code examples.
