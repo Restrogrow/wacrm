@@ -10,6 +10,7 @@ import {
   LANDING_WHATSAPP_FLOAT_HTML,
 } from "@/lib/landing-chrome";
 import { BLOG_POSTS } from "@/lib/blog";
+import { brandSvg, type BrandIcon } from "@/lib/brand-icons";
 import { BRAND_KEYWORDS, SITE_URL, buildFAQNode, buildOrganizationNode } from "@/lib/seo";
 
 const HOME_TITLE = "Repeat Grow: WhatsApp CRM & API for Indian Businesses";
@@ -246,22 +247,26 @@ curl -X POST https://repeatgrow.com/api/v1/messages \\
 
 <span class="k">→ 201</span> { "data": { "status": <span class="s">"sent"</span> } }</div>`;
 
-const INTEGRATIONS = [
-  ["WhatsApp Business API", "#25d366"],
-  ["Shopify", "#5e8e3e"],
-  ["Calendly", "#006bff"],
-  ["WhatsApp Pay", "#0da968"],
+// Brand icon where Simple Icons has one; otherwise a coloured dot.
+const INTEGRATIONS: Array<[name: string, color: string, icon?: BrandIcon]> = [
+  ["WhatsApp Business API", "#25d366", "whatsapp"],
+  ["Shopify", "#7ab55c", "shopify"],
+  ["Calendly", "#006bff", "calendly"],
+  ["WhatsApp Pay", "#0da968", "whatsapp"],
   ["UPI", "#ff7a00"],
-  ["Razorpay", "#0c2451"],
+  ["Razorpay", "#0c2451", "razorpay"],
   ["PayU", "#a6c307"],
   ["BillDesk", "#e2231a"],
   ["Zaakpay", "#1e88e5"],
-  ["Google Gemini AI", "#7b61ff"],
+  ["Google Gemini AI", "#8e75b2", "googlegemini"],
   ["REST API & webhooks", "#16212c"],
 ];
 const MARQUEE_HTML = INTEGRATIONS.map(
-  ([name, color]) => `<span class="h-logo"><i style="--c:${color}"></i>${name}</span>`
+  ([name, color, icon]) =>
+    `<span class="h-logo">${icon ? brandSvg(icon, color, 18) : `<i style="--c:${color}"></i>`}${name}</span>`
 ).join("");
+const ICON_CODE =
+  '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6M14.5 4l-5 16"/></svg>';
 
 const LANDING_BODY_HTML = `
 <main id="top" class="home">
@@ -444,9 +449,9 @@ const LANDING_BODY_HTML = `
       <p>Each event maps to an approved WhatsApp template, filled with live data, with a preview, a test send and a message log.</p>
     </div>
     <div class="h-grid3">
-      <div class="h-tile hov reveal"><div class="ico logo" style="background:#5e8e3e">S</div><h3>Shopify</h3><p>Order placed, COD confirmation, shipped with tracking, out for delivery, delivered, cancelled and abandoned-cart reminders. Connect in one click or with webhooks.</p></div>
-      <div class="h-tile hov reveal" style="--d:1"><div class="ico logo" style="background:#006bff">C</div><h3>Calendly</h3><p>Booking confirmed, rescheduled and cancelled messages, no-show follow-ups, and reminders 24 hours and 1 hour before the meeting.</p></div>
-      <a href="/docs/api" class="h-tile reveal" style="--d:2"><div class="ico logo" style="background:#16212c">{ }</div><h3>Connect RepeatGrow &amp; API</h3><p>Partner apps connect with one click and send WhatsApp messages through the API. Or build your own with the REST API and webhooks.</p><span class="more">View the API docs ${ICON_ARROW}</span></a>
+      <div class="h-tile hov reveal"><div class="ico brand">${brandSvg("shopify", "#7AB55C", 26)}</div><h3>Shopify</h3><p>Order placed, COD confirmation, shipped with tracking, out for delivery, delivered, cancelled and abandoned-cart reminders. Connect in one click or with webhooks.</p></div>
+      <div class="h-tile hov reveal" style="--d:1"><div class="ico brand">${brandSvg("calendly", "#006BFF", 26)}</div><h3>Calendly</h3><p>Booking confirmed, rescheduled and cancelled messages, no-show follow-ups, and reminders 24 hours and 1 hour before the meeting.</p></div>
+      <a href="/docs/api" class="h-tile reveal" style="--d:2"><div class="ico">${ICON_CODE}</div><h3>Connect RepeatGrow &amp; API</h3><p>Partner apps connect with one click and send WhatsApp messages through the API. Or build your own with the REST API and webhooks.</p><span class="more">View the API docs ${ICON_ARROW}</span></a>
     </div>
   </div>
 </section>

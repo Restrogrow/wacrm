@@ -271,6 +271,7 @@ export const HOME_CSS = `
   background: #fff; border: 1px solid var(--border); font-weight: 700; font-size: 14.5px; color: var(--text-muted);
 }
 .lp-page .home .h-logo i{ width: 10px; height: 10px; border-radius: 3px; background: var(--c, var(--accent)); }
+.lp-page .home .h-logo svg{ width: 18px; height: 18px; flex: none; }
 @keyframes h-marquee{ from{ transform: translateX(0); } to{ transform: translateX(-50%); } }
 
 /* ---------- Bento ---------- */
@@ -378,7 +379,8 @@ export const HOME_CSS = `
   background: var(--accent-soft); color: var(--accent-deep); border: 1px solid var(--border-accent);
 }
 .lp-page .home .h-tile .ico svg{ width: 22px; height: 22px; }
-.lp-page .home .h-tile .ico.logo{ font-weight: 800; font-size: 18px; color: #fff; border: 0; }
+.lp-page .home .h-tile .ico.brand{ background: #fff; border: 1px solid var(--border); box-shadow: var(--h-shadow-sm); }
+.lp-page .home .h-tile .ico.brand svg{ width: 26px; height: 26px; }
 .lp-page .home .h-tile h3{ font-size: 18px; color: var(--h-ink); letter-spacing: -0.02em; }
 .lp-page .home .h-tile p{ margin-top: 8px; font-size: 14.5px; color: var(--text-muted); line-height: 1.6; }
 .lp-page .home .h-tile .more{ display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 14px; font-weight: 700; color: var(--accent-deep); white-space: nowrap; }

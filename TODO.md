@@ -279,3 +279,33 @@ media proxy, webhook block). Still open, lower risk:
 - [ ] Clear the 26 React lint warnings (set-state-in-effect, memoization).
 - [ ] Click through the main app screens in a browser to find UI bugs.
 - [ ] External penetration test before scaling paid customers.
+
+## 🟣 Feature backlog (competitor gap review, 2026-10-16)
+
+Picked from the review against WATI, Interakt and AiSensy. Items that
+already have an entry above are linked by number.
+
+- [ ] **Online payment + auto-renewal for our plans** (Razorpay
+      subscriptions, GST invoices; monthly / quarterly / yearly). See #1.
+- [ ] **Mobile app or installable PWA with push notifications.** See #30.
+- [ ] **AI conversation summary:** one-click summary of a chat for the
+      agent who picks it up (uses the existing Gemini setup).
+- [ ] **Auto-translate chats** both ways (Hindi, Tamil, Marathi, etc.):
+      agent writes in English, customer gets their language.
+- [ ] **Broadcast failed-message auto-retry** with a retry log.
+- [ ] **Saved audience segments** (tags + custom fields + opt-in) that can
+      be reused across broadcasts.
+- [ ] **Agent performance reports + downloadable reports:** first
+      response time, chats handled, resolution per agent; CSV export. See #27.
+- [ ] **Customer satisfaction rating** after a chat is closed (1–5 rating
+      question on WhatsApp, shown per agent and over time).
+- [ ] **QR code + wa.me link generator** with a pre-filled message, for
+      shops, flyers and packaging (Settings → Growth tools).
+- [ ] **Zapier, Make, Pabbly and Google Sheets** connectors. See #29.
+- [ ] **WooCommerce integration** (order, COD, shipping, abandoned cart,
+      same engine as Shopify). See #29.
+- [ ] **Drip sequences screen:** ready "Day 1 / Day 3 / Day 7" campaign
+      builder on top of automations + waits.
+- [ ] **Conversation cost tracking:** Meta's per-message fees per chat
+      and per campaign. See #12.
+- [ ] **Instagram DM and Facebook Messenger** in the same shared inbox.
