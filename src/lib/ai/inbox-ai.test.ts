@@ -89,6 +89,30 @@ describe('summarizeConversation', () => {
     expect(s.mood).toBe('neutral')
   })
 
+  it('retries without the schema when Gemini rejects the request', async () => {
+    vi.stubEnv('GEMINI_KEY', 'test-key')
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: { message: 'Invalid JSON payload: response_schema' } }), { status: 400 }),
+      )
+      .mockResolvedValueOnce(
+        geminiReply({
+          summary: 'Asked for the price list.',
+          customer_wants: 'Prices',
+          key_points: [],
+          next_step: 'Send the price list',
+          customer_language: 'English',
+          mood: 'neutral',
+        }),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+    const s = await summarizeConversation([{ from: 'customer', text: 'price?', at: '2026-10-16T10:00:00Z' }], '')
+    expect(s.next_step).toBe('Send the price list')
+    const second = JSON.parse((fetchMock.mock.calls[1] as unknown as [string, RequestInit])[1].body as string)
+    expect(second.generationConfig.responseSchema).toBeUndefined()
+  })
+
   it('refuses an empty chat', async () => {
     vi.stubEnv('GEMINI_KEY', 'test-key')
     await expect(summarizeConversation([], 'Riya')).rejects.toBeInstanceOf(InboxAiError)

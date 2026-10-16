@@ -5,7 +5,16 @@
 // an instruction to ignore anything inside them that looks like a
 // command, and the replies are constrained to a JSON schema.
 
-import { aiApiKey, aiChat, aiModel, AI_NOT_CONFIGURED, parseJsonObject } from './gemini'
+import {
+  aiApiKey,
+  aiChat,
+  aiModel,
+  AiRateLimitError,
+  AiTransientError,
+  AI_NOT_CONFIGURED,
+  parseJsonObject,
+  type AiChatOptions,
+} from './gemini'
 import {
   languageLabel,
   MAX_TRANSLATE_CHARS,
@@ -14,6 +23,29 @@ import {
 } from './languages'
 
 export class InboxAiError extends Error {}
+
+/**
+ * Ask for JSON with a response schema; if Gemini rejects the request
+ * itself (not a rate limit or outage), ask again in plain mode. The
+ * prompts already describe the fields, and parseJsonObject reads the
+ * object out of a plain reply.
+ */
+async function chatJson(opts: AiChatOptions): Promise<Record<string, unknown> | null> {
+  try {
+    return parseJsonObject(await aiChat(opts))
+  } catch (err) {
+    if (err instanceof AiRateLimitError || err instanceof AiTransientError) throw err
+    console.warn('[inbox-ai] schema request failed, retrying in plain mode:', err instanceof Error ? err.message : err)
+    const { responseSchema: _schema, ...plain } = opts
+    void _schema
+    const last = plain.messages[plain.messages.length - 1]
+    const messages = [
+      ...plain.messages.slice(0, -1),
+      { ...last, content: last.content + '\n\nReply with one JSON object only, no other text.' },
+    ]
+    return parseJsonObject(await aiChat({ ...plain, messages }))
+  }
+}
 
 function requireKey(): string {
   const key = aiApiKey()
@@ -37,7 +69,7 @@ export interface TranslationResult {
 export async function translateText(text: string, target: TranslateLanguage): Promise<TranslationResult> {
   const input = text.trim().slice(0, MAX_TRANSLATE_CHARS)
   if (!input) throw new InboxAiError('Nothing to translate.')
-  const raw = await aiChat({
+  const obj = await chatJson({
     apiKey: requireKey(),
     model: aiModel(),
     temperature: 0.2,
@@ -64,7 +96,6 @@ export async function translateText(text: string, target: TranslateLanguage): Pr
       required: ['translation', 'detected_language'],
     },
   })
-  const obj = parseJsonObject(raw)
   const translation = typeof obj?.translation === 'string' ? obj.translation.trim() : ''
   if (!translation) throw new InboxAiError('Could not translate this message. Try again.')
   return {
@@ -106,7 +137,7 @@ export async function summarizeConversation(
 ): Promise<ConversationSummary> {
   const transcript = buildTranscript(lines)
   if (!transcript) throw new InboxAiError('There are no messages to summarise yet.')
-  const raw = await aiChat({
+  const obj = await chatJson({
     apiKey: requireKey(),
     model: aiModel(),
     temperature: 0.2,
@@ -133,12 +164,11 @@ export async function summarizeConversation(
         key_points: { type: 'ARRAY', items: { type: 'STRING' } },
         next_step: { type: 'STRING' },
         customer_language: { type: 'STRING' },
-        mood: { type: 'STRING', enum: [...MOODS] },
+        mood: { type: 'STRING' },
       },
       required: ['summary', 'customer_wants', 'key_points', 'next_step', 'customer_language', 'mood'],
     },
   })
-  const obj = parseJsonObject(raw)
   const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '')
   const summary = str(obj?.summary, 1200)
   if (!summary) throw new InboxAiError('Could not summarise this chat. Try again.')

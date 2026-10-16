@@ -40,7 +40,10 @@ export async function POST(request: Request) {
     if (err instanceof AiRateLimitError) return NextResponse.json({ error: 'AI is busy. Try again in a minute.' }, { status: 429 })
     if (err instanceof Error && /AI request failed|AI returned|AI declined/.test(err.message)) {
       console.error('[translate] AI error:', err.message)
-      return NextResponse.json({ error: 'Translation failed. Try again.' }, { status: 502 })
+      // Gemini's own error text (never contains our key) shows whether the
+      // model name, the key or the quota is the problem.
+      const reason = err.message.replace(/^AI request failed \(\d+\): /, '').slice(0, 200)
+      return NextResponse.json({ error: `Translation failed: ${reason}` }, { status: 502 })
     }
     return toErrorResponse(err)
   }
