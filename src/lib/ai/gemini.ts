@@ -8,7 +8,10 @@
  */
 
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+// gemini-2.5-flash is no longer available to new API keys (Google's
+// error message names gemini-3.8-flash as the replacement). Override
+// with GEMINI_MODEL if Google retires this one too.
+export const DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";
 
 export type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
 
@@ -91,10 +94,14 @@ export async function aiChat(opts: AiChatOptions): Promise<string> {
 
 async function aiChatOnce(opts: AiChatOptions): Promise<string> {
   const maxTokens = opts.maxTokens ?? 6000;
-  // Gemini 2.5 models "think" before answering and those tokens count
-  // against maxOutputTokens; keep thinking small (a low reasoning
-  // effort) and give it room on top of the answer budget.
-  const thinking = opts.model.startsWith("gemini-2.5") ? 512 : 0;
+  // Gemini 2.5+ models "think" before answering and those tokens count
+  // against maxOutputTokens. On 2.5 we cap thinking with a budget; newer
+  // models manage their own thinking, so we only leave room for it on
+  // top of the answer budget (otherwise a reply can come back empty with
+  // finishReason MAX_TOKENS).
+  const isGemini25 = opts.model.startsWith("gemini-2.5");
+  const thinking = isGemini25 ? 512 : 0;
+  const thinkingRoom = isGemini25 ? thinking : /^gemini-[3-9]/.test(opts.model) ? 2048 : 0;
   let res: Response;
   try {
     res = await fetch(`${GEMINI_BASE}/${encodeURIComponent(opts.model)}:generateContent`, {
@@ -107,7 +114,7 @@ async function aiChatOnce(opts: AiChatOptions): Promise<string> {
         ...toGeminiRequest(opts.messages),
         generationConfig: {
           temperature: opts.temperature ?? 0.4,
-          maxOutputTokens: maxTokens + thinking,
+          maxOutputTokens: maxTokens + thinkingRoom,
           ...(opts.responseSchema
             ? { responseMimeType: "application/json", responseSchema: opts.responseSchema }
             : {}),

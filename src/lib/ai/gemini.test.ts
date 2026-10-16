@@ -62,6 +62,18 @@ describe("aiChat", () => {
     expect(body.generationConfig.thinkingConfig).toEqual({ thinkingBudget: 512 });
   });
 
+  it("leaves room for thinking on newer models without a 2.5 budget", async () => {
+    const fetchFn = mockFetch(200, {
+      candidates: [{ content: { parts: [{ text: "ok" }] }, finishReason: "STOP" }],
+    });
+    await aiChat({ apiKey: "k", model: "gemini-3.8-flash", messages: [{ role: "user", content: "hi" }], maxTokens: 100 });
+    const [url, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toContain("/models/gemini-3.8-flash:generateContent");
+    const body = JSON.parse(init.body as string);
+    expect(body.generationConfig.maxOutputTokens).toBe(2148);
+    expect(body.generationConfig.thinkingConfig).toBeUndefined();
+  });
+
   it("skips thought parts", async () => {
     mockFetch(200, {
       candidates: [{ content: { parts: [{ text: "thinking…", thought: true }, { text: "Answer" }] } }],

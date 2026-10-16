@@ -527,7 +527,7 @@ baked in at build time — **redeploy after changing them**.
 | `NEXT_PUBLIC_SITE_URL` | Yes (prod) | Public origin, `https://repeatgrow.com` (local: `http://localhost:3000`); used for redirects, OAuth callbacks and webhook URLs |
 | `AUTOMATION_CRON_SECRET` | Yes (prod) | Shared secret for the cron endpoints (`x-cron-secret` header) |
 | `META_APP_ID`, `NEXT_PUBLIC_META_APP_ID`, `NEXT_PUBLIC_META_CONFIG_ID` | Optional | WhatsApp Embedded Signup ("Connect with Facebook") |
-| `GEMINI_KEY` (`GEMINI_API_KEY` also accepted), `GEMINI_MODEL` | Optional | AI chatbot, AI flows, AI templates; model defaults to `gemini-2.5-flash` |
+| `GEMINI_KEY` (`GEMINI_API_KEY` also accepted), `GEMINI_MODEL` | Optional | AI chatbot, AI flows, AI templates; model defaults to `gemini-3.8-flash` |
 | `ALLOWED_INVITE_HOSTS` | Optional | Comma-separated hostnames allowed in team invite links (extra protection on bare deployments) |
 | `CHATBOT_TIMEZONE` | Optional | Chatbot's "are you open now?" time zone (default `Asia/Kolkata`) |
 | `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET` | Optional | Shopify one-click connect (Client ID / secret) |
