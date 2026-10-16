@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { CallButton } from "@/components/calls/call-button";
 import { SendFormButton } from "@/components/inbox/send-form-button";
 import { OrderButton } from "@/components/inbox/order-button";
+import { SummaryButton } from "@/components/inbox/summary-button";
 import type {
   Conversation,
   Message,
@@ -934,6 +935,9 @@ export function MessageThread({
               )}
             </button>
           )}
+
+          {/* AI summary of the chat. */}
+          <SummaryButton conversationId={conversation.id} />
 
           {/* Orders, payment requests and catalog sharing. */}
           <OrderButton conversationId={conversation.id} />

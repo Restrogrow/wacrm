@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { CornerUpLeft, Copy, SmilePlus } from "lucide-react";
+import { CornerUpLeft, Copy, Languages, Loader2, SmilePlus } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -38,6 +38,8 @@ export function MessageActions({
   // interacts elsewhere.
   const [touchOpen, setTouchOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [translation, setTranslation] = useState<{ text: string; from: string } | null>(null);
+  const [translating, setTranslating] = useState(false);
 
   const isAgent =
     message.sender_type === "agent" || message.sender_type === "bot";
@@ -60,6 +62,39 @@ export function MessageActions({
       toast.error("Copy failed");
     }
     setTouchOpen(false);
+  };
+
+  // Translate the message into English for the agent (toggle). The
+  // result is shown under the bubble and never sent to the customer.
+  const handleTranslate = async () => {
+    setTouchOpen(false);
+    if (translation) {
+      setTranslation(null);
+      return;
+    }
+    const text = message.content_text?.trim();
+    if (!text) {
+      toast.error("Nothing to translate");
+      return;
+    }
+    setTranslating(true);
+    try {
+      const res = await fetch("/api/inbox/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, target: "en" }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        toast.error(body?.error ?? "Translation failed");
+        return;
+      }
+      setTranslation({ text: body.translation, from: body.detected_language ?? "" });
+    } catch {
+      toast.error("Translation failed");
+    } finally {
+      setTranslating(false);
+    }
   };
 
   const handlePickEmoji = (emoji: string) => {
@@ -92,6 +127,20 @@ export function MessageActions({
        *  area. See issue #165. */}
       <div className="group/actions relative min-w-0 max-w-[75%]">
         {children}
+        {translation && (
+          <div
+            className={cn(
+              "mt-1 rounded-xl border border-border bg-background/90 px-3 py-2 text-sm text-foreground shadow-sm",
+              isAgent ? "ml-auto" : "mr-auto",
+            )}
+          >
+            <p className="mb-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              <Languages className="h-3 w-3" />
+              {translation.from ? `Translated from ${translation.from}` : "Translation"}
+            </p>
+            <p className="whitespace-pre-wrap break-words">{translation.text}</p>
+          </div>
+        )}
       <div
         data-touch-open={touchOpen || pickerOpen ? "true" : undefined}
         className={cn(
@@ -141,6 +190,21 @@ export function MessageActions({
         >
           <Copy className="h-3.5 w-3.5" />
         </button>
+        {message.content_text?.trim() && (
+          <button
+            type="button"
+            onClick={() => void handleTranslate()}
+            disabled={translating}
+            className={cn(
+              "flex h-5 w-5 items-center justify-center rounded-full text-popover-foreground hover:bg-muted hover:text-foreground",
+              translation && "bg-muted text-foreground",
+            )}
+            aria-label={translation ? "Hide translation" : "Translate to English"}
+            title={translation ? "Hide translation" : "Translate to English (AI)"}
+          >
+            {translating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Languages className="h-3.5 w-3.5" />}
+          </button>
+        )}
       </div>
       </div>
     </div>

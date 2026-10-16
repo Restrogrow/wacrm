@@ -232,6 +232,12 @@ export const RATE_LIMITS = {
   /** AI generation (flows, chatbot tests), per user — each is a paid
    *  Gemini request. */
   aiGenerate: { limit: 10, windowMs: 60_000 },
+  /** Inbox "Translate" (a message or the draft reply), per user. An
+   *  agent working a busy multilingual inbox clicks this often, but each
+   *  is a Gemini request, so cap a runaway loop. */
+  aiTranslate: { limit: 60, windowMs: 60_000 },
+  /** Inbox "Summarise this chat", per user. */
+  aiSummary: { limit: 20, windowMs: 60_000 },
 } as const;
 
 /** Test-only helper. Clears the in-memory state so unit tests don't

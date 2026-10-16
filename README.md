@@ -77,6 +77,16 @@
   **Recent calls** in the contact panel. Turn it on in **Settings →
   WhatsApp → WhatsApp calling**. Nothing is recorded; audio goes browser
   ↔ Meta directly. See [WhatsApp calling setup](#whatsapp-calling).
+- **AI chat summary** (sparkles icon in the chat header): what the
+  customer wants, key points, language, mood and a suggested next step,
+  from the latest 120 messages. Nothing is stored.
+  `POST /api/inbox/conversations/[id]/summary`.
+- **Translate:** any message into English from its hover toolbar, and the
+  draft reply into 14 languages (Hindi, Hinglish, Marathi, Gujarati,
+  Bengali, Tamil, Telugu, Kannada, Malayalam, Punjabi, Odia, Urdu,
+  Arabic, English) from the composer, with Undo. `POST /api/inbox/translate`.
+  Both use Gemini (`GEMINI_KEY`) and are rate limited per user. Code:
+  `src/lib/ai/inbox-ai.ts`, `src/lib/ai/languages.ts`.
 - **Fast on big inboxes:** conversations load 50 at a time (**Load older
   conversations**) and threads load the latest 50 messages (**Load
   earlier messages**, scroll position kept). Links to an older

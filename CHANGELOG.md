@@ -11,6 +11,16 @@ and polish.
 
 ## [Unreleased]
 
+### Added
+
+- **AI chat summary in the inbox.** The sparkles icon in a chat header
+  shows what the customer wants, key points, their language and mood, and
+  a suggested next step.
+- **Translate in the inbox.** Translate any customer message into English
+  from its hover toolbar, and translate your reply into 14 languages
+  (Hindi, Hinglish, Marathi, Tamil, Telugu and more) before sending, with
+  Undo. Both need `GEMINI_KEY`.
+
 ### Changed
 
 - **New plans and prices.** Starter ₹999, Growth ₹1,999 and a new Pro

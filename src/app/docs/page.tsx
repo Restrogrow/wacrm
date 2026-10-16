@@ -270,6 +270,17 @@ export default function DocsPage() {
               </li>
               <li>The contact panel shows the customer&apos;s details, tags, and deals beside the chat.</li>
               <li>
+                <b>AI chat summary:</b> click the <b>sparkles icon</b> at the top of a chat to see what the customer
+                wants, the key points, their language and mood, and a suggested next step. Handy when you take over
+                someone else&apos;s chat.
+              </li>
+              <li>
+                <b>Translate:</b> hover a message and click the <b>translate icon</b> to read it in English. To reply
+                in the customer&apos;s language, type your reply, click the <b>translate icon</b> next to the message
+                box and pick a language (Hindi, Hinglish, Marathi, Tamil, Telugu, Bengali and more). Check the
+                result, then send; <b>Undo</b> brings your original text back.
+              </li>
+              <li>
                 <b>WhatsApp calls:</b> when a customer calls your WhatsApp number, a call card rings on every
                 agent&apos;s screen. Click <b>Answer</b> to talk in the browser (allow the microphone the first
                 time). Click the <b>phone icon</b> in a chat to call the customer; if they haven&apos;t allowed calls

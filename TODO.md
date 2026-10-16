@@ -288,9 +288,9 @@ already have an entry above are linked by number.
 - [ ] **Online payment + auto-renewal for our plans** (Razorpay
       subscriptions, GST invoices; monthly / quarterly / yearly). See #1.
 - [ ] **Mobile app or installable PWA with push notifications.** See #30.
-- [ ] **AI conversation summary:** one-click summary of a chat for the
+- [x] **AI conversation summary:** (done 2026-10-16, sparkles icon in the chat header) one-click summary of a chat for the
       agent who picks it up (uses the existing Gemini setup).
-- [ ] **Auto-translate chats** both ways (Hindi, Tamil, Marathi, etc.):
+- [x] **Auto-translate chats** (done 2026-10-16: message → English, reply → 14 languages) both ways (Hindi, Tamil, Marathi, etc.):
       agent writes in English, customer gets their language.
 - [ ] **Broadcast failed-message auto-retry** with a retry log.
 - [ ] **Saved audience segments** (tags + custom fields + opt-in) that can

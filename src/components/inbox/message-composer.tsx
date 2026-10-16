@@ -19,7 +19,13 @@ import {
   Square,
   X,
   Loader2,
+  Languages,
 } from "lucide-react";
+import {
+  TRANSLATE_LANGUAGES,
+  languageLabel,
+  type TranslateLanguage,
+} from "@/lib/ai/languages";
 import { Button } from "@/components/ui/button";
 import { GatedButton } from "@/components/ui/gated-button";
 import {
@@ -230,6 +236,50 @@ export function MessageComposer({
     // Max 4 lines (~96px)
     el.style.height = `${Math.min(el.scrollHeight, 96)}px`;
   }, []);
+
+  // "Translate reply": rewrite the draft in the customer's language
+  // before sending. The agent sees the result in the box and can still
+  // edit it; Undo puts the original back.
+  const [translating, setTranslating] = useState(false);
+  const translateDraft = useCallback(
+    async (target: TranslateLanguage) => {
+      const original = text;
+      if (!original.trim()) {
+        toast.error("Type your reply first, then translate it.");
+        return;
+      }
+      setTranslating(true);
+      try {
+        const res = await fetch("/api/inbox/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: original, target }),
+        });
+        const body = await res.json().catch(() => null);
+        if (!res.ok) {
+          toast.error(body?.error ?? "Translation failed");
+          return;
+        }
+        setText(body.translation);
+        requestAnimationFrame(adjustHeight);
+        textareaRef.current?.focus();
+        toast.success(`Translated to ${languageLabel(target)}. Check it, then send.`, {
+          action: {
+            label: "Undo",
+            onClick: () => {
+              setText(original);
+              requestAnimationFrame(adjustHeight);
+            },
+          },
+        });
+      } catch {
+        toast.error("Translation failed");
+      } finally {
+        setTranslating(false);
+      }
+    },
+    [text, adjustHeight]
+  );
 
   const handleSend = useCallback(async () => {
     const trimmed = text.trim();
@@ -629,6 +679,44 @@ export function MessageComposer({
           >
             <LayoutTemplate className="h-4 w-4" />
           </GatedButton>
+
+          {/* Translate the draft into the customer's language (AI). */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              disabled={inputsDisabled || translating || !text.trim()}
+              title={
+                inputsDisabled
+                  ? undefined
+                  : text.trim()
+                    ? "Translate your reply (AI)"
+                    : "Type a reply, then translate it"
+              }
+              aria-label="Translate your reply"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md p-0 text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {translating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Languages className="h-4 w-4" />
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              className="max-h-80 overflow-y-auto border-border bg-popover"
+            >
+              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                Translate my reply into
+              </div>
+              {TRANSLATE_LANGUAGES.map((lang) => (
+                <DropdownMenuItem
+                  key={lang.code}
+                  onClick={() => void translateDraft(lang.code)}
+                >
+                  {lang.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <textarea
             ref={textareaRef}
