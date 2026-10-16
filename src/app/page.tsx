@@ -7,17 +7,18 @@ import {
   LANDING_FOOTER_HTML,
   LANDING_WHATSAPP_FLOAT_HTML,
 } from "@/lib/landing-chrome";
+import { BLOG_POSTS } from "@/lib/blog";
 import { BRAND_KEYWORDS, SITE_URL, buildFAQNode, buildOrganizationNode } from "@/lib/seo";
 
-const HOME_TITLE = "Repeat Grow — WhatsApp CRM for sales & support teams.";
+const HOME_TITLE = "Repeat Grow: WhatsApp CRM for sales & support teams.";
 const HOME_DESCRIPTION =
-  "Repeat Grow is a WhatsApp CRM built on the official WhatsApp Business API — shared inbox, sales pipelines, broadcasts, and automations, set up for you.";
+  "Repeat Grow is a WhatsApp CRM built on the official WhatsApp Business API: shared inbox with voice calls, sales pipelines, scheduled broadcasts, AI chatbot, orders & payments, Shopify and Calendly. 7-day free trial.";
 
 const HOME_FAQS = [
   {
     question: "Is Repeat Grow built on the official WhatsApp Business API?",
     answer:
-      "Yes. Repeat Grow runs entirely on Meta's official WhatsApp Business API (Cloud API) — not a jailbroken app or an unofficial automation layer — so your number stays compliant and can't get banned for using third-party clients.",
+      "Yes. Repeat Grow runs entirely on Meta's official WhatsApp Business API (Cloud API), not a jailbroken app or an unofficial automation layer, so your number stays compliant and can't get banned for using third-party clients.",
   },
   {
     question: "How long does it take to get set up?",
@@ -32,17 +33,32 @@ const HOME_FAQS = [
   {
     question: "What does Repeat Grow cost?",
     answer:
-      "Plans start at ₹499/month and scale with your contacts and team size. Pricing is published on our pricing page, with no hidden setup fees — WhatsApp Business API setup is included on every plan.",
+      "Plans start at ₹499/month and scale with your contacts and team size, and every new account gets a 7-day free trial with Growth limits. Pricing is published on our pricing page, with no hidden setup fees. WhatsApp Business API setup is included on every plan. WhatsApp conversation fees are billed by Meta directly.",
+  },
+  {
+    question: "Can I take payments and send orders on WhatsApp?",
+    answer:
+      "Yes. Send an order with a payment request from any chat, paid through WhatsApp Pay (Razorpay, PayU, BillDesk or Zaakpay, confirmed automatically) or your UPI ID. You can also share your catalog, turn catalog carts into orders, and update customers as orders are processed, shipped and delivered.",
+  },
+  {
+    question: "Can customers call my business on WhatsApp?",
+    answer:
+      "Yes. With WhatsApp calling turned on, customers can call your WhatsApp number and every agent's browser rings. The first to answer takes the call. Agents can also call customers from the chat. Nothing is recorded and no phone line is needed.",
+  },
+  {
+    question: "Does it have an AI chatbot?",
+    answer:
+      "Yes. The AI chatbot answers chats from your own knowledge base, knows your opening hours, and hands the conversation to a human when asked. You can also build chatbot flows visually, or generate them with AI from a short description.",
   },
   {
     question: "Can multiple agents use the same WhatsApp number?",
     answer:
-      "Yes. Repeat Grow is a shared inbox by design — multiple agents can work from one WhatsApp Business number with per-conversation assignment, status tracking, and internal notes.",
+      "Yes. Repeat Grow is a shared inbox by design: multiple agents can work from one WhatsApp Business number with per-conversation assignment, status tracking, and internal notes.",
   },
   {
     question: "Does Repeat Grow integrate with other tools?",
     answer:
-      "Repeat Grow includes a public REST API with scoped, revocable API keys, plus webhook support in the automation builder, so you can connect it to your existing stack or build custom workflows on top of your CRM data.",
+      "Yes. Shopify (order, shipping and abandoned-cart messages) and Calendly (booking confirmations and reminders) connect from Settings, and partner apps can connect with one click. There's also a public REST API with scoped, revocable API keys and signed outbound webhooks, so you can plug Repeat Grow into your existing stack.",
   },
 ];
 
@@ -70,6 +86,17 @@ const STRUCTURED_DATA = {
     buildFAQNode(HOME_FAQS),
   ],
 };
+
+const BLOG_CARDS_HTML = BLOG_POSTS.slice(0, 6)
+  .map(
+    (post) => `
+      <a href="/blog/${post.slug}" class="usecase-card">
+        <h3>${post.title}</h3>
+        <p>${post.description}</p>
+        <span class="usecase-link">Read the guide &rarr;</span>
+      </a>`
+  )
+  .join("");
 
 const FAQ_HTML = HOME_FAQS.map(
   (faq, index) => `
@@ -130,15 +157,16 @@ const LANDING_BODY_HTML = `
     <div class="hero-copy">
       <span class="eyebrow">Official WhatsApp Business API &middot; Done-for-you setup</span>
       <h1>Turn one-time chats into <span class="accent-text">repeat</span> customers.</h1>
-      <p class="hero-sub">Repeat Grow is a WhatsApp CRM for sales and support teams — shared inbox, contacts, sales pipelines, broadcasts, and no-code automations, built on the official WhatsApp Business API. We set it up for your business, so your team is selling on WhatsApp in days.</p>
+      <p class="hero-sub">Repeat Grow is a WhatsApp CRM for sales and support teams: shared inbox with voice calls, pipelines, scheduled broadcasts, an AI chatbot, orders and payments, and Shopify and Calendly built in, all on the official WhatsApp Business API. We set it up for your business, so your team is selling on WhatsApp in days.</p>
       <div class="hero-ctas">
-        <a href="/signup" class="btn btn-primary">Start Free Trial</a>
+        <a href="/demo" class="btn btn-primary">Book a demo</a>
+        <a href="/signup" class="btn btn-ghost">Start free trial</a>
         <a href="https://wa.me/916377568749" target="_blank" rel="noopener" class="btn btn-ghost">
           <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2zm5.8 14.16c-.24.68-1.4 1.3-1.93 1.38-.49.08-1.11.11-1.8-.11-.41-.13-.94-.31-1.62-.6-2.85-1.23-4.71-4.1-4.85-4.29-.14-.19-1.16-1.54-1.16-2.94s.73-2.09.99-2.37c.26-.29.56-.36.75-.36l.53.01c.17.01.4-.06.62.48.24.58.81 2 .88 2.15.07.15.12.32.02.52-.09.19-.14.31-.28.48-.14.17-.29.37-.42.5-.14.14-.28.29-.12.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.68-.79.87-1.06.19-.28.37-.23.62-.14.26.09 1.63.77 1.91.91.28.14.47.21.53.33.07.12.07.68-.17 1.36z"/></svg>
           Message us on WhatsApp
         </a>
       </div>
-      <p class="hero-note">Free to start — no credit card required.</p>
+      <p class="hero-note">7-day free trial, no credit card required.</p>
       <div class="hero-meta">
         <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Official WhatsApp Business API</span>
         <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Managed setup &amp; onboarding</span>
@@ -164,7 +192,7 @@ const LANDING_BODY_HTML = `
     <div class="section-head reveal">
       <span class="eyebrow">What's inside</span>
       <h2>Everything a WhatsApp sales &amp; support team needs</h2>
-      <p>One codebase covering the full loop — from first inbound message to closed deal — without stitching together three SaaS tools.</p>
+      <p>One product covering the full loop, from first inbound message to closed deal, without stitching together three SaaS tools.</p>
     </div>
 
     <div class="feature-grid reveal">
@@ -174,7 +202,7 @@ const LANDING_BODY_HTML = `
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2 3h4l2-3h4"/><path d="M4 12l2-7h12l2 7v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6z"/></svg>
           </div>
           <h3>Shared inbox</h3>
-          <p>Official WhatsApp Business API on one shared number. Multiple agents, per-conversation assignment, status, and internal notes.</p>
+          <p>Official WhatsApp Business API on one shared number. Multiple agents, assignment, status, internal notes, saved replies, voice notes and in-browser voice calls. Works alongside the WhatsApp Business app.</p>
         </div>
         <div class="mini-inbox">
           <div class="mini-inbox-row"><div class="mini-avatar" style="background:#3ecf8e">RS</div><span class="who">Riya Shah</span><span class="mini-badge">Assigned</span></div>
@@ -189,7 +217,7 @@ const LANDING_BODY_HTML = `
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.5a2 2 0 0 0 0-1L19 8.4a2 2 0 0 0-1.8-1.1H6.8A2 2 0 0 0 5 8.4L3.4 11.5a2 2 0 0 0 0 1L5 15.6a2 2 0 0 0 1.8 1.1h10.4a2 2 0 0 0 1.8-1.1l1.6-3.1z"/><circle cx="12" cy="12" r="2.2"/></svg>
         </div>
         <h3>Contacts &amp; tags</h3>
-        <p>Custom fields, CSV import, automatic deduplication. Every contact keeps its full conversation and deal history.</p>
+        <p>Custom fields, CSV import and export, automatic deduplication, and STOP / opt-out handling. Every contact keeps its full conversation and deal history.</p>
       </article>
 
       <article class="feature-card">
@@ -198,7 +226,7 @@ const LANDING_BODY_HTML = `
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M9 4v16M15 4v16"/></svg>
         </div>
         <h3>Sales pipelines</h3>
-        <p>Kanban boards with deals linked directly to conversations — see chat history without leaving the pipeline.</p>
+        <p>Kanban boards with deals linked directly to conversations. See chat history without leaving the pipeline.</p>
       </article>
 
       <article class="feature-card">
@@ -207,7 +235,7 @@ const LANDING_BODY_HTML = `
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-7-7 18-3-8-8-3z"/></svg>
         </div>
         <h3>Broadcasts</h3>
-        <p>Meta-approved templates with delivery + read tracking and per-recipient variable substitution.</p>
+        <p>Meta-approved templates, including carousels. Send now or schedule for later, with delivery and read tracking and per-recipient variables.</p>
       </article>
 
       <article class="feature-card">
@@ -216,7 +244,7 @@ const LANDING_BODY_HTML = `
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="12" cy="18" r="2.2"/><path d="M7.8 7.2L11 16M16.2 7.2L13 16M8 6h8"/></svg>
         </div>
         <h3>No-code automations</h3>
-        <p>Visual builder — trigger on inbound messages, new contacts, keywords, or schedule. Branches, waits, tags, webhooks.</p>
+        <p>Visual builder: trigger on messages, new contacts, keywords or tags. Branches, waits, tags, deals, webhooks. Plus chatbot flows you can generate with AI.</p>
       </article>
 
       <article class="feature-card">
@@ -225,7 +253,7 @@ const LANDING_BODY_HTML = `
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M11 19V5M18 19v-7"/><path d="M3 19h18"/></svg>
         </div>
         <h3>Real-time dashboard</h3>
-        <p>Response times, daily volume, pipeline value, and a cross-module activity feed — all live.</p>
+        <p>Response times, daily volume, pipeline value and a live activity feed, plus a daily summary email and WhatsApp number health checks.</p>
       </article>
 
       <article class="feature-card">
@@ -244,7 +272,7 @@ const LANDING_BODY_HTML = `
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12"/></svg>
           </div>
           <h3>Public REST API</h3>
-          <p>Scoped, revocable API keys for building custom automations on top of your CRM data.</p>
+          <p>Scoped, revocable API keys to send messages and templates, manage contacts and launch broadcasts, plus signed outbound webhooks for every incoming message and delivery status.</p>
         </div>
         <div class="mini-code">
           <span class="mini-code-line"><span class="mc-prompt">$</span> curl https://repeatgrow.com/api/v1/contacts \\</span>
@@ -256,20 +284,95 @@ const LANDING_BODY_HTML = `
   </div>
 </section>
 
+<!-- ============================= MORE FEATURES ============================= -->
+<section id="more-features" class="section-alt">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">New &amp; built for India</span>
+      <h2>More than a shared inbox</h2>
+      <p>Calls, payments, forms, AI and more: everything your team needs to sell and support on WhatsApp, in one place.</p>
+    </div>
+    <div class="usecase-grid reveal">
+      <div class="usecase-card">
+        <h3>Voice calls in the browser</h3>
+        <p>Customers call your WhatsApp number and every agent's browser rings. The first to answer takes it. Call customers back from the chat, no phone line needed.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Orders, payments &amp; catalog</h3>
+        <p>Send an order with a payment request in WhatsApp through WhatsApp Pay (Razorpay, PayU, BillDesk, Zaakpay) or your UPI ID. Share your catalog and turn carts into orders.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>WhatsApp forms</h3>
+        <p>Build simple forms and send them in a chat. Customers fill them in without leaving WhatsApp, and answers save to the contact with a CSV download.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>AI chatbot</h3>
+        <p>Answers chats from your own knowledge base, knows your opening hours and hands over to a human when asked. Build flows visually or generate them with AI.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Scheduled broadcasts &amp; carousels</h3>
+        <p>Schedule campaigns for later and let the server send them. Create swipeable carousel templates with up to 10 image or video cards.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Opt-outs &amp; number health</h3>
+        <p>STOP replies are honoured automatically. Daily checks on your number's quality rating and messaging limit warn you before Meta limits it.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Works with the WhatsApp Business app</h3>
+        <p>Use one number in both the app and Repeat Grow (coexistence). Contacts, history and messages sent from your phone sync in.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Daily summary email</h3>
+        <p>Get messages, new chats, broadcasts, deals won and opt-outs in your inbox every day, at the hour you choose.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Your data, your control</h3>
+        <p>Download your data any time and request account deletion from Settings (DPDP Act / GDPR). Credentials are encrypted and webhooks are signature-verified.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= INTEGRATIONS ============================= -->
+<section id="integrations">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Integrations</span>
+      <h2>Connects to the tools you already use</h2>
+      <p>Each event maps to an approved WhatsApp template, filled with live data, with a preview, a test send and a message log.</p>
+    </div>
+    <div class="usecase-grid reveal">
+      <div class="usecase-card">
+        <h3>Shopify</h3>
+        <p>Order placed, COD confirmation, shipped with tracking, out for delivery, delivered, cancelled and abandoned-cart reminders. Connect in one click or with webhooks.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Calendly</h3>
+        <p>Booking confirmed, rescheduled and cancelled messages, no-show follow-ups, and reminders 24 hours and 1 hour before the meeting.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Connect RepeatGrow</h3>
+        <p>Partner apps connect with one click and send WhatsApp messages through the API. Or build your own with the REST API and webhooks.</p>
+        <a href="/docs/api" class="usecase-link">View the API docs &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ============================= WHY REPEAT GROW ============================= -->
 <section id="why-us" class="why-fork section-alt">
   <div class="container">
     <div class="section-head reveal">
       <span class="eyebrow">Why Repeat Grow</span>
       <h2>Built to turn conversations into repeat revenue</h2>
-      <p>Most WhatsApp tools are just messaging apps. Repeat Grow is a CRM — every conversation is tied to a contact, a deal, and a next step, so no lead falls through the cracks.</p>
+      <p>Most WhatsApp tools are just messaging apps. Repeat Grow is a CRM, every conversation is tied to a contact, a deal, and a next step, so no lead falls through the cracks.</p>
     </div>
     <div class="fork-list reveal">
       <div class="fork-item">
         <span class="num mono">01</span>
         <div>
           <h3>Official WhatsApp Business API</h3>
-          <p>Verified, compliant messaging on your own business number — not a jailbroken app or a shared inbox that can get banned.</p>
+          <p>Verified, compliant messaging on your own business number, not a jailbroken app or a shared inbox that can get banned.</p>
         </div>
       </div>
       <div class="fork-item">
@@ -283,7 +386,7 @@ const LANDING_BODY_HTML = `
         <span class="num mono">03</span>
         <div>
           <h3>Built for repeat business</h3>
-          <p>Pipelines, tags, and automations keep every contact moving — so first-time buyers turn into repeat customers instead of one-off chats.</p>
+          <p>Pipelines, tags, and automations keep every contact moving, so first-time buyers turn into repeat customers instead of one-off chats.</p>
         </div>
       </div>
       <div class="fork-item">
@@ -303,7 +406,7 @@ const LANDING_BODY_HTML = `
     <div class="section-head reveal">
       <span class="eyebrow">Product tour</span>
       <h2>One shared number. Every conversation, tied to a deal.</h2>
-      <p>Every inbound WhatsApp message lands in the shared inbox — and stays linked to its pipeline stage, so nobody's chasing context across tools.</p>
+      <p>Every inbound WhatsApp message lands in the shared inbox, and stays linked to its pipeline stage, so nobody's chasing context across tools.</p>
     </div>
 
     <div class="app-window reveal">
@@ -342,10 +445,10 @@ const LANDING_BODY_HTML = `
         </div>
 
         <div class="thread">
-          <div class="bubble in">Hi! I saw your post about the Business plan — is it still available?<span class="ts">10:38</span></div>
-          <div class="bubble out">Yes, absolutely — let me pull up the details for you.<span class="ts">10:39 &middot; Priya (agent)</span></div>
+          <div class="bubble in">Hi! I saw your post about the Business plan, is it still available?<span class="ts">10:38</span></div>
+          <div class="bubble out">Yes, absolutely, let me pull up the details for you.<span class="ts">10:39 &middot; Priya (agent)</span></div>
           <div class="bubble in">Hey, can I get the pro plan invoice for this month?<span class="ts">10:42</span></div>
-          <div class="bubble out">On it — sending the PDF to this number now.<span class="ts">10:43 &middot; Priya (agent)</span></div>
+          <div class="bubble out">On it, sending the PDF to this number now.<span class="ts">10:43 &middot; Priya (agent)</span></div>
           <div class="bubble in">Perfect, thank you!<span class="ts">10:44</span></div>
           <div class="composer">
             <span class="composer-text">Type a message&hellip;</span>
@@ -383,7 +486,7 @@ const LANDING_BODY_HTML = `
         </div>
       </div>
     </div>
-    <p class="how-caption">Every panel above is <span class="mono">Repeat Grow</span> — no separate invoicing tool, no separate pipeline tool.</p>
+    <p class="how-caption">Every panel above is <span class="mono">Repeat Grow</span>, no separate invoicing tool, no separate pipeline tool.</p>
   </div>
 </section>
 
@@ -393,7 +496,7 @@ const LANDING_BODY_HTML = `
     <div class="section-head reveal">
       <span class="eyebrow">Pricing</span>
       <h2>Simple, published pricing</h2>
-      <p>Plans that scale with your contacts and team — starting at &#8377;499/month. No hidden fees. We handle WhatsApp Business API setup on every plan.</p>
+      <p>Every account starts with a 7-day free trial. Plans scale with your contacts and team, from &#8377;499/month. No hidden fees. We handle WhatsApp Business API setup on every plan.</p>
       <div class="hero-ctas" style="justify-content:center; margin-top:28px;">
         <a href="/pricing" class="btn btn-primary">See plans &amp; pricing</a>
       </div>
@@ -407,7 +510,7 @@ const LANDING_BODY_HTML = `
     <div class="section-head reveal">
       <span class="eyebrow">Built for your team</span>
       <h2>WhatsApp CRM for every customer-facing team</h2>
-      <p>The same shared inbox, pipeline, and automation engine — configured for how your industry actually sells and supports on WhatsApp.</p>
+      <p>The same shared inbox, pipeline, and automation engine, configured for how your industry actually sells and supports on WhatsApp.</p>
     </div>
     <div class="usecase-grid reveal">
       <a href="/whatsapp-crm-for-ecommerce" class="usecase-card">
@@ -442,14 +545,28 @@ const LANDING_BODY_HTML = `
   </div>
 </section>
 
+<!-- ============================= FROM THE BLOG ============================= -->
+<section id="guides">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Guides</span>
+      <h2>Learn how to sell on WhatsApp</h2>
+      <p>Practical guides on the WhatsApp Business API, templates, payments and automation.</p>
+    </div>
+    <div class="usecase-grid reveal">${BLOG_CARDS_HTML}
+    </div>
+  </div>
+</section>
+
 <!-- ============================= FINAL CTA BAND ============================= -->
 <section class="cta-band">
   <div class="container">
     <span class="eyebrow" style="justify-content:center;">Ready when you are</span>
     <h2 style="margin-top:18px;">Turn WhatsApp into your best sales channel.</h2>
-    <p>Start free, or message us on WhatsApp and we'll get your team set up on Repeat Grow — usually live within days.</p>
+    <p>Start free, or message us on WhatsApp and we'll get your team set up on Repeat Grow, usually live within days.</p>
     <div class="hero-ctas">
-      <a href="/signup" class="btn btn-primary">Start Free Trial</a>
+      <a href="/demo" class="btn btn-primary">Book a demo</a>
+      <a href="/signup" class="btn btn-ghost">Start free trial</a>
       <a href="https://wa.me/916377568749" target="_blank" rel="noopener" class="btn btn-ghost">Message us on WhatsApp</a>
     </div>
   </div>

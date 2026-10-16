@@ -3,7 +3,7 @@ import { DEFAULT_DESCRIPTION } from "@/lib/seo";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Repeat Grow — WhatsApp CRM",
+    name: "Repeat Grow, WhatsApp CRM",
     short_name: "Repeat Grow",
     description: DEFAULT_DESCRIPTION,
     start_url: "/login",

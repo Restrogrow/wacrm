@@ -166,6 +166,10 @@ export const RATE_LIMITS = {
    *  enabling brute-force token enumeration. With 256-bit tokens the
    *  enumeration risk is theoretical; this is belt-and-braces. */
   invitationPeek: { limit: 30, windowMs: 60_000 },
+  /** Demo request form (public, per-IP). 5 an hour is plenty for a real
+   *  visitor (including a retry after a typo) and stops a script from
+   *  filling the table or the inbox. */
+  demoRequest: { limit: 5, windowMs: 60 * 60_000 },
   /** Invitation redeem (authed, per-IP+user). Tighter than peek —
    *  successful redemption mutates two profiles and an invite row, so
    *  the abuse surface is "spam join attempts." */

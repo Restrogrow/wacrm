@@ -12,12 +12,14 @@ export const LANDING_NAV_HTML = `
     </a>
     <div class="nav-links">
       <a href="/#features">Features</a>
+      <a href="/#integrations">Integrations</a>
       <a href="/#why-us">Why Us</a>
       <a href="/pricing">Pricing</a>
       <a href="/docs">Docs</a>
     </div>
     <div class="nav-right">
       <a href="/login" class="nav-login">Login</a>
+      <a href="/demo" class="btn btn-primary btn-sm nav-demo">Book a demo</a>
       <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobileNav">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
@@ -27,10 +29,12 @@ export const LANDING_NAV_HTML = `
 <div class="mobile-nav" id="mobileNav">
   <div class="container">
     <a href="/#features">Features</a>
+    <a href="/#integrations">Integrations</a>
     <a href="/#why-us">Why Us</a>
     <a href="/pricing">Pricing</a>
     <a href="/docs">Docs</a>
     <a href="/login">Login</a>
+    <a href="/demo" class="btn btn-primary btn-sm">Book a demo</a>
   </div>
 </div>
 `;
@@ -44,14 +48,16 @@ export const LANDING_FOOTER_HTML = `
           <img src="/_next/image?url=%2Flogo-v2.png&w=64&q=75" alt="Repeat Grow" class="brand-mark" width="26" height="26" loading="lazy" decoding="async">
           <span class="brand-word">Repeat<span class="dim">Grow</span></span>
         </a>
-        <p>WhatsApp CRM for sales and support teams — built on the official WhatsApp Business API, set up and supported for you.</p>
+        <p>WhatsApp CRM for sales and support teams, built on the official WhatsApp Business API, set up and supported for you.</p>
       </div>
       <div class="footer-col">
         <h4>Product</h4>
         <ul>
           <li><a href="/#features">Features</a></li>
+          <li><a href="/#integrations">Integrations</a></li>
           <li><a href="/#why-us">Why Us</a></li>
           <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/demo">Book a demo</a></li>
           <li><a href="/login">Login</a></li>
         </ul>
       </div>

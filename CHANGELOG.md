@@ -11,6 +11,17 @@ and polish.
 
 ## [Unreleased]
 
+### Added
+
+- **Book a demo.** A public `/demo` page with a short form. Requests are
+  saved to `demo_requests` (read them in the Supabase table editor) and
+  emailed to `sales@repeatgrow.com` (override with `DEMO_REQUEST_EMAIL`). "Book a demo" is now the main button on
+  the home page, pricing, use-case pages, blog posts and the site nav.
+  **Migration required:** `supabase/migrations/054_demo_requests.sql`.
+- Search: explicit rules for AI crawlers in `robots.txt`, a refreshed
+  `llms.txt`, `/demo` in the sitemap and links to the blog guides on the
+  home page.
+
 ## [0.5.0] — 2026-10-16
 
 Repeat Grow release: plans and trials, WhatsApp calling, number health,

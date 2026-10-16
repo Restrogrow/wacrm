@@ -11,7 +11,7 @@ const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
 
 const PAGE_TITLE = "WhatsApp CRM vs. the WhatsApp Business App: What's the Difference?";
 const PAGE_DESCRIPTION =
-  "The free WhatsApp Business app works for one person on one phone. Here's what changes — shared inbox, pipelines, automation, and the official API — once a team needs more than that.";
+  "The free WhatsApp Business app works for one person on one phone. Here's what changes (shared inbox, pipelines, automation and the official API) once a team needs more than that.";
 
 export const metadata: Metadata = {
   title: PAGE_TITLE,
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/whatsapp-crm-vs-whatsapp-business-app",
-    title: `${PAGE_TITLE} — Repeat Grow`,
+    title: `${PAGE_TITLE} | Repeat Grow`,
     description: PAGE_DESCRIPTION,
   },
   robots: {
@@ -93,7 +93,7 @@ export default function WhatsappCrmVsBusinessAppPage() {
             Both still run on WhatsApp
           </h2>
           <p className="mt-2">
-            A WhatsApp CRM like Repeat Grow doesn&apos;t replace WhatsApp —
+            A WhatsApp CRM like Repeat Grow doesn&apos;t replace WhatsApp.
             it connects to the official WhatsApp Business API (the same
             platform behind the Business app) and adds the team inbox,
             pipeline, and automation layer on top.
@@ -103,10 +103,16 @@ export default function WhatsappCrmVsBusinessAppPage() {
 
       <div className="mt-12 flex flex-wrap gap-3">
         <Link
-          href="/signup"
+          href="/demo"
           className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
         >
-          Start Free Trial
+          Book a demo
+        </Link>
+        <Link
+          href="/signup"
+          className="rounded-md border px-5 py-2.5 text-sm font-semibold text-foreground"
+        >
+          Start free trial
         </Link>
         <Link
           href="/pricing"

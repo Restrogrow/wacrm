@@ -11,7 +11,7 @@ import { BRAND_KEYWORDS, SITE_URL, buildBreadcrumbNode } from "@/lib/seo";
 
 const PRICING_TITLE = "Pricing";
 const PRICING_DESCRIPTION =
-  "Repeat Grow pricing — Starter, Growth, and Enterprise plans for WhatsApp CRM teams. Transparent pricing, no hidden fees, setup included.";
+  "Repeat Grow pricing: Starter, Growth, and Enterprise plans for WhatsApp CRM teams. Transparent pricing, no hidden fees, setup included.";
 
 const PRICING_PLANS = [
   { name: "Starter", price: "499" },
@@ -56,12 +56,12 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/pricing",
-    title: `${PRICING_TITLE} — Repeat Grow`,
+    title: `${PRICING_TITLE} | Repeat Grow`,
     description: PRICING_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${PRICING_TITLE} — Repeat Grow`,
+    title: `${PRICING_TITLE} | Repeat Grow`,
     description: PRICING_DESCRIPTION,
   },
   robots: {
@@ -78,7 +78,7 @@ const PRICING_BODY_HTML = `
     <div class="section-head">
       <span class="eyebrow">Pricing</span>
       <h1>Pricing that fits your business</h1>
-      <p>Simple, published plans that scale with your contacts and team. No hidden fees. We handle WhatsApp Business API setup on every plan.</p>
+      <p>Every new account gets a <b>7-day free trial</b> with Growth limits. Then pick a simple, published plan that scales with your contacts and team. No hidden fees. We handle WhatsApp Business API setup on every plan.</p>
     </div>
   </div>
 </header>
@@ -223,13 +223,50 @@ const PRICING_BODY_HTML = `
   </div>
 </section>
 
+<section class="section-alt">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">On every plan</span>
+      <h2>Every feature on every plan</h2>
+      <p>Starter, Growth and Enterprise all include the full product. Plans differ in limits (contacts, broadcasts, automations, custom fields, team members) and in the level of support.</p>
+    </div>
+    <div class="usecase-grid reveal">
+      <div class="usecase-card">
+        <h3>Inbox &amp; calling</h3>
+        <p>Shared inbox, saved replies, voice notes, in-browser WhatsApp voice calls and coexistence with the WhatsApp Business app.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Sales &amp; payments</h3>
+        <p>Pipelines, orders with WhatsApp Pay or UPI, catalog sharing and WhatsApp forms.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Campaigns &amp; automation</h3>
+        <p>Scheduled broadcasts, carousel templates, automations, chatbot flows and the AI chatbot.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Integrations</h3>
+        <p>Shopify, Calendly, Connect RepeatGrow, the public REST API and signed webhooks.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>Insights &amp; safety</h3>
+        <p>Live dashboard, daily summary email, WhatsApp number health checks and opt-out handling.</p>
+      </div>
+      <div class="usecase-card">
+        <h3>After the trial</h3>
+        <p>If a trial or paid period ends, your account becomes read-only: messages still arrive, but sending pauses until you choose a plan. Plans are activated after UPI or bank transfer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="cta-band">
   <div class="container">
     <span class="eyebrow" style="justify-content:center;">Not sure which plan fits?</span>
     <h2 style="margin-top:18px;">Message us and we'll help you pick.</h2>
-    <p>Tell us about your team and WhatsApp volume — we'll point you at the right plan or start your free trial.</p>
+    <p>Tell us about your team and WhatsApp volume and we'll point you at the right plan or start your free trial.</p>
     <div class="hero-ctas">
-      <a href="/signup" class="btn btn-primary">Start Free Trial</a>
+      <a href="/demo" class="btn btn-primary">Book a demo</a>
+      <a href="/signup" class="btn btn-ghost">Start free trial</a>
       <a href="https://wa.me/916377568749" target="_blank" rel="noopener" class="btn btn-ghost">Message us on WhatsApp</a>
     </div>
   </div>

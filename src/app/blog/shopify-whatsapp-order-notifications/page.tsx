@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'article',
     url: `/blog/${POST.slug}`,
-    title: `${POST.title} — Repeat Grow`,
+    title: `${POST.title} | Repeat Grow`,
     description: POST.description,
     publishedTime: POST.datePublished,
     section: POST.category,
@@ -72,7 +72,7 @@ export default function ShopifyWhatsAppPost() {
   return (
     <BlogPostLayout post={POST} toc={TOC} faq={FAQ}>
       <p>
-        Your customer just paid. Now they wait — and wonder. Is the order confirmed? When will it
+        Your customer just paid. Now they wait and wonder. Is the order confirmed? When will it
         ship? Where is it now? Most stores answer those questions by email, but for a lot of
         Indian shoppers the inbox they actually check is <strong>WhatsApp</strong>. This guide
         covers exactly which WhatsApp messages a Shopify store should send, what each template
@@ -155,14 +155,14 @@ export default function ShopifyWhatsAppPost() {
       </table>
       <p>
         You don&apos;t need all six on day one. Start with the order confirmation and the shipped
-        message — they answer the two questions customers ask most — then add the rest.
+        message. They answer the two questions customers ask most, then add the rest.
       </p>
 
       <h2 id="templates">Template examples you can copy</h2>
       <p>
         Business-initiated WhatsApp messages must use a template that Meta has approved. Variables
         like <code>{'{{1}}'}</code> are filled from the order each time. Keep templates short,
-        specific and clearly about the order — that&apos;s what gets them approved as Utility. (More on
+        specific and clearly about the order; that&apos;s what gets them approved as Utility. (More on
         approvals in{' '}
         <Link href="/blog/whatsapp-broadcast-template-rules">WhatsApp template rules explained</Link>
         .)
@@ -173,7 +173,7 @@ Total: {{3}}
 We'll message you here when it ships. View your order: {{4}}`}
       </TemplateExample>
       <TemplateExample label="order_shipped" category="Utility">
-        {`Good news, {{1}} — order {{2}} is on its way with {{3}}.
+        {`Good news, {{1}}, order {{2}} is on its way with {{3}}.
 Track it here: {{4}}`}
       </TemplateExample>
       <TemplateExample label="order_delivered" category="Utility">
@@ -186,8 +186,8 @@ Reply here if anything isn't right.`}
 Complete your order here: {{3}}`}
       </TemplateExample>
       <p>
-        In Repeat Grow you map each <code>{'{{n}}'}</code> to a store value — customer first name,
-        order number, total, items, tracking link, courier, order status link or checkout link —
+        In Repeat Grow you map each <code>{'{{n}}'}</code> to a store value (customer first name,
+        order number, total, items, tracking link, courier, order status link or checkout link)
         and see a live preview before switching the message on.
       </p>
 
@@ -203,7 +203,7 @@ Complete your order here: {{3}}`}
       </TemplateExample>
       <p>
         Add two <strong>quick-reply buttons</strong> to the template. When the customer taps one, the
-        reply lands in your inbox and can trigger an automation — for example, tag the contact
+        reply lands in your inbox and can trigger an automation, for example, tag the contact
         &ldquo;COD confirmed&rdquo; or alert your team to call the ones who cancelled. Ship the confirmed
         orders first; follow up on the silent ones before dispatch.
       </p>
@@ -216,7 +216,7 @@ Complete your order here: {{3}}`}
         </li>
         <li>
           <strong>Get opt-in for marketing.</strong> Abandoned-cart reminders and offers need the
-          customer&apos;s permission — a WhatsApp opt-in checkbox at checkout works well.
+          customer&apos;s permission: a WhatsApp opt-in checkbox at checkout works well.
         </li>
         <li>
           <strong>Honour opt-outs.</strong> When a customer replies STOP or taps &ldquo;Stop
@@ -224,7 +224,7 @@ Complete your order here: {{3}}`}
         </li>
         <li>
           <strong>Send one message per event.</strong> Duplicates annoy customers and hurt your
-          number&apos;s quality rating — make sure retries from Shopify are de-duplicated.
+          number&apos;s quality rating: make sure retries from Shopify are de-duplicated.
         </li>
         <li>
           <strong>Fix phone numbers.</strong> Add +91 to numbers saved without a country code, or
@@ -245,7 +245,7 @@ Complete your order here: {{3}}`}
         <li>
           <strong>Connect your store.</strong> In Settings → Shopify, click{' '}
           <strong>Connect Shopify</strong>, or choose <strong>Connect with webhooks</strong> and paste
-          your store&apos;s webhook signing key — Repeat Grow lists exactly which webhooks to add.
+          your store&apos;s webhook signing key. Repeat Grow lists exactly which webhooks to add.
         </li>
         <li>
           <strong>Map each event.</strong> Switch on the events you want, pick the approved template,

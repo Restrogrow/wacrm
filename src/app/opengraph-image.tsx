@@ -6,7 +6,7 @@ import {
 } from "@/lib/og-image";
 
 export const runtime = "edge";
-export const alt = "Repeat Grow — WhatsApp CRM for sales & support teams";
+export const alt = "Repeat Grow, WhatsApp CRM for sales & support teams";
 export const size = OG_IMAGE_SIZE;
 export const contentType = OG_IMAGE_CONTENT_TYPE;
 

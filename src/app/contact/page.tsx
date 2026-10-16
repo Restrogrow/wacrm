@@ -7,7 +7,7 @@ const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
 ]);
 
 const CONTACT_DESCRIPTION =
-  "Contact Repeat Grow for WhatsApp CRM support, sales, and onboarding — email, phone, or WhatsApp, we reply fast.";
+  "Contact Repeat Grow for WhatsApp CRM support, sales, and onboarding. Email, phone or WhatsApp, we reply fast.";
 
 export const metadata: Metadata = {
   title: "Contact Us",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/contact",
-    title: "Contact Us — Repeat Grow",
+    title: "Contact Us | Repeat Grow",
     description: CONTACT_DESCRIPTION,
   },
   robots: {

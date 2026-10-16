@@ -1,42 +1,53 @@
 # Repeat Grow
 
-> Repeat Grow is a WhatsApp CRM for sales and support teams, built on the official WhatsApp Business API (Meta Cloud API) — shared inbox, contacts, sales pipelines, broadcasts, no-code automations, and a public REST API, with setup done for you.
+> Repeat Grow is a WhatsApp CRM and WhatsApp Business API platform for Indian sales and support teams. It includes a shared inbox, contacts, sales pipelines, scheduled broadcasts, no-code automations, an AI chatbot, orders and payments (WhatsApp Pay and UPI), WhatsApp forms, browser voice calls, Shopify and Calendly integrations, and a public REST API. Setup is done for you.
 
-Repeat Grow is not a WhatsApp Business app replacement add-on and not an unofficial/jailbroken WhatsApp client — it connects directly to Meta's official WhatsApp Business API, so the number stays compliant. Teams are typically live within days because Repeat Grow handles WhatsApp Business verification, number registration, and data import.
+Repeat Grow is built on Meta's official WhatsApp Business API (Cloud API). It is not an unofficial or jailbroken WhatsApp client, so the number stays compliant. Teams are typically live within days because Repeat Grow handles WhatsApp Business verification, number registration and data import. Prices are in Indian rupees. Every new account gets a 7-day free trial.
 
 ## Product
 
-- Shared inbox: multiple agents on one WhatsApp Business number, with per-conversation assignment, status, and internal notes.
-- Contacts: custom fields, CSV import, automatic deduplication, full conversation and deal history per contact.
-- Sales pipelines: Kanban boards with deals linked directly to WhatsApp conversations.
-- Broadcasts: Meta-approved message templates with delivery/read tracking and per-recipient variable substitution.
-- No-code automations: visual builder triggered by inbound messages, new contacts, keywords, or schedule — branches, waits, tags, webhooks.
-- Real-time dashboard: response times, daily volume, pipeline value, cross-module activity feed.
-- Team accounts: invite by link, role-based access (owner / admin / agent / viewer).
-- Public REST API: scoped, revocable API keys for building custom automations on top of CRM data.
+- Shared inbox: multiple agents on one WhatsApp Business number, with assignment, status, internal notes, saved replies, voice notes and in-browser WhatsApp voice calls. Works alongside the WhatsApp Business app (coexistence).
+- Contacts: custom fields, CSV import and export, deduplication, opt-out (STOP) handling, full conversation and deal history.
+- Sales pipelines: Kanban boards with deals linked to WhatsApp conversations. Default currency is Indian rupees.
+- Broadcasts: Meta-approved templates, including carousel templates. Send now or schedule, with delivery and read tracking and per-recipient variables.
+- Automations and flows: visual builder with triggers, branches, waits, tags, deals and webhooks. Chatbot flows can be generated with AI.
+- AI chatbot: answers from the business's own knowledge base, knows opening hours, hands over to a human on request.
+- Orders and payments: send an order with a payment request in chat using WhatsApp Pay (Razorpay, PayU, BillDesk, Zaakpay) or a UPI ID. Share a catalog and turn catalog carts into orders.
+- WhatsApp forms: forms that open inside WhatsApp, with answers saved to the contact.
+- Integrations: Shopify (order, shipping, delivery and abandoned-cart messages), Calendly (confirmations and reminders), Connect RepeatGrow for partner apps.
+- Public REST API with scoped, revocable API keys, signed outbound webhooks and an OpenAPI 3.1 spec.
+- Reporting: real-time dashboard, daily summary email, WhatsApp number health checks.
+- Team accounts with roles: owner, admin, agent, viewer.
+- Privacy: users can download their data and request account deletion (DPDP Act and GDPR aware).
 
 ## Pricing
 
-Plans are published at https://repeatgrow.com/pricing and start at ₹499/month (Starter), ₹999/month (Growth), and ₹1,999/month (Enterprise), billed monthly or yearly (10% discount). WhatsApp Business API setup is included on every plan; Meta's own per-conversation messaging fees are billed separately by Meta. Plans differ by contact limits, broadcasts/month, automation flows, custom fields, and team members — Enterprise is uncapped on all of these.
+Plans are published at https://repeatgrow.com/pricing: Starter at Rs 499 per month, Growth at Rs 999 per month and Enterprise at Rs 1,999 per month, with a 10% discount for yearly billing. WhatsApp Business API setup is included on every plan. Meta's own per-conversation fees are billed separately by Meta. All features are on every plan; plans differ in limits (contacts, broadcasts per month, automations and flows, custom fields, team members) and support level.
 
-## Docs
+## Pages
 
-- [Homepage](https://repeatgrow.com/): product overview, features, FAQ.
-- [Pricing](https://repeatgrow.com/pricing): plans, limits, and billing cycles.
-- [About](https://repeatgrow.com/about): company background.
-- [Contact](https://repeatgrow.com/contact): support contact details.
-- [Security](https://repeatgrow.com/security): security practices and data handling.
-- [Help Center](https://repeatgrow.com/docs): how to use Repeat Grow — WhatsApp setup, inbox, contacts, pipelines, broadcasts, automations, team roles.
-- [API reference](https://repeatgrow.com/docs/api): REST API guide with authentication, endpoints, webhooks, and code examples.
-- [OpenAPI spec](https://repeatgrow.com/api/v1/openapi.json): machine-readable OpenAPI 3.1 description of the public API.
+- [Home](https://repeatgrow.com/): product overview, features, integrations, FAQ.
+- [Book a demo](https://repeatgrow.com/demo): free 20-minute demo request form.
+- [Pricing](https://repeatgrow.com/pricing): plans, limits and billing cycles.
+- [WhatsApp CRM for e-commerce](https://repeatgrow.com/whatsapp-crm-for-ecommerce)
+- [WhatsApp CRM for real estate](https://repeatgrow.com/whatsapp-crm-for-real-estate)
+- [WhatsApp CRM for coaching and education](https://repeatgrow.com/whatsapp-crm-for-education)
+- [WhatsApp CRM vs the WhatsApp Business app](https://repeatgrow.com/whatsapp-crm-vs-whatsapp-business-app)
+- [Official vs unofficial WhatsApp API](https://repeatgrow.com/official-vs-unofficial-whatsapp-api)
+- [Blog](https://repeatgrow.com/blog): guides on the WhatsApp Business API, templates, Shopify order notifications, appointment reminders, payments and voice calling.
+- [Help Center](https://repeatgrow.com/docs): setup and how-to guides for every feature.
+- [API reference](https://repeatgrow.com/docs/api): REST API guide with authentication, endpoints, webhooks and code examples.
+- [OpenAPI spec](https://repeatgrow.com/api/v1/openapi.json): machine-readable description of the public API.
+- [About](https://repeatgrow.com/about), [Contact](https://repeatgrow.com/contact), [Security](https://repeatgrow.com/security)
 
 ## Legal
 
 - [Privacy Policy](https://repeatgrow.com/privacy)
-- [Terms & Conditions](https://repeatgrow.com/terms)
+- [Terms and Conditions](https://repeatgrow.com/terms)
 - [Disclaimer](https://repeatgrow.com/disclaimer)
 
 ## Contact
 
 - Support email: support@repeatgrow.com
 - WhatsApp: https://wa.me/916377568749
+- Phone: +91 63775 68749

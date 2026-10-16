@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/official-vs-unofficial-whatsapp-api",
-    title: `${PAGE_TITLE} — Repeat Grow`,
+    title: `${PAGE_TITLE} | Repeat Grow`,
     description: PAGE_DESCRIPTION,
   },
   robots: {
@@ -57,7 +57,7 @@ export default function OfficialVsUnofficialApiPage() {
           </h2>
           <p className="mt-2">
             Unofficial tools typically automate a real WhatsApp account by
-            scraping or driving a logged-in session — the same thing as
+            scraping or driving a logged-in session, which is the same thing as
             running a bot through your personal WhatsApp Web login. This is
             against WhatsApp&apos;s Terms of Service, and Meta actively
             detects and bans numbers used this way, often without warning.
@@ -84,7 +84,7 @@ export default function OfficialVsUnofficialApiPage() {
           <p className="mt-2">
             A number on an unofficial tool can be banned at any time,
             taking every saved contact and conversation history with it. A
-            number on the official API doesn&apos;t carry that risk — it&apos;s
+            number on the official API doesn&apos;t carry that risk. It&apos;s
             the same infrastructure WhatsApp itself expects businesses to
             use at scale.
           </p>
@@ -96,7 +96,7 @@ export default function OfficialVsUnofficialApiPage() {
           </h2>
           <p className="mt-2">
             Repeat Grow is built entirely on the official WhatsApp Business
-            API — there is no unofficial or session-based mode. We handle
+            API. There is no unofficial or session-based mode. We handle
             the Business verification and number registration as part of
             setup, so you get the shared inbox, pipelines, and automation
             without the ban risk.
@@ -106,10 +106,16 @@ export default function OfficialVsUnofficialApiPage() {
 
       <div className="mt-12 flex flex-wrap gap-3">
         <Link
-          href="/signup"
+          href="/demo"
           className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
         >
-          Start Free Trial
+          Book a demo
+        </Link>
+        <Link
+          href="/signup"
+          className="rounded-md border px-5 py-2.5 text-sm font-semibold text-foreground"
+        >
+          Start free trial
         </Link>
         <Link
           href="/pricing"

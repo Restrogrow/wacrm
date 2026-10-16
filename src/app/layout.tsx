@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: "Repeat Grow",
-    template: "%s — Repeat Grow",
+    template: "%s | Repeat Grow",
   },
   description: DEFAULT_DESCRIPTION,
   keywords: BRAND_KEYWORDS,

@@ -9,7 +9,7 @@ export interface BlogPost {
   title: string;
   /** Meta description and card excerpt — keep it under ~160 characters. */
   description: string;
-  category: 'E-commerce' | 'Bookings' | 'WhatsApp API' | 'Templates';
+  category: 'E-commerce' | 'Bookings' | 'WhatsApp API' | 'Templates' | 'Payments';
   datePublished: string;
   dateModified?: string;
   readMinutes: number;
@@ -21,10 +21,46 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'whatsapp-pay-upi-payments-india',
+    title: 'How to Take Payments on WhatsApp in India: WhatsApp Pay and UPI',
+    description:
+      'Send an order with a payment request inside a WhatsApp chat, WhatsApp Pay with Razorpay, PayU, BillDesk or Zaakpay, or a simple UPI ID, plus catalog sharing and order updates.',
+    category: 'Payments',
+    datePublished: '2026-10-16',
+    readMinutes: 7,
+    cover: '/blog/whatsapp-pay-upi-payments-india/cover.svg',
+    coverAlt: 'A WhatsApp order summary with a Review and pay button',
+    keywords: [
+      'whatsapp pay india',
+      'accept payments on whatsapp',
+      'whatsapp upi payment',
+      'whatsapp catalog orders',
+      'whatsapp order payment request',
+    ],
+  },
+  {
+    slug: 'whatsapp-business-voice-calling',
+    title: 'WhatsApp Business Voice Calling: How Customers Can Call Your Team',
+    description:
+      'How the WhatsApp Business Calling API works, customer calls ringing every agent in the browser, calling customers back with permission, requirements, costs and limits.',
+    category: 'WhatsApp API',
+    datePublished: '2026-10-16',
+    readMinutes: 6,
+    cover: '/blog/whatsapp-business-voice-calling/cover.svg',
+    coverAlt: 'An incoming WhatsApp call ringing on a team inbox with an Answer button',
+    keywords: [
+      'whatsapp business calling api',
+      'whatsapp voice calls for business',
+      'whatsapp calling crm',
+      'receive whatsapp calls in browser',
+      'whatsapp call permission',
+    ],
+  },
+  {
     slug: 'shopify-whatsapp-order-notifications',
     title: 'Shopify WhatsApp Order Notifications: The Complete Guide for Indian Stores',
     description:
-      'The six WhatsApp messages every Shopify store should send — order confirmation, COD confirmation, shipping, delivery and abandoned cart — with template examples and setup steps.',
+      'The six WhatsApp messages every Shopify store should send: order confirmation, COD confirmation, shipping, delivery and abandoned cart, with template examples and setup steps.',
     category: 'E-commerce',
     datePublished: '2026-10-13',
     readMinutes: 9,
@@ -43,7 +79,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: 'whatsapp-appointment-reminders',
     title: 'How to Reduce No-Shows with WhatsApp Appointment Reminders',
     description:
-      'A simple WhatsApp reminder schedule for Calendly bookings — confirmation, 24-hour and 1-hour reminders, and follow-ups — with ready-to-use templates for clinics, coaches and salons.',
+      'A simple WhatsApp reminder schedule for Calendly bookings: confirmation, 24-hour and 1-hour reminders, and follow-ups, with ready-to-use templates for clinics, coaches and salons.',
     category: 'Bookings',
     datePublished: '2026-10-13',
     readMinutes: 8,
@@ -61,7 +97,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: 'whatsapp-business-api-verification-guide',
     title: 'How to Get WhatsApp Business API Verified: A Step-by-Step Guide',
     description:
-      'What Meta Business verification and WhatsApp Business API approval actually require, in order — from a Meta Business Manager account to your first approved number.',
+      'What Meta Business verification and WhatsApp Business API approval actually require, in order, from a Meta Business Manager account to your first approved number.',
     category: 'WhatsApp API',
     datePublished: '2026-10-05',
     readMinutes: 5,

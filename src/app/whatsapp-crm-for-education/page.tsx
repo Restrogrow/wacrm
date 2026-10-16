@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/whatsapp-crm-for-education",
-    title: `${PAGE_TITLE} — Repeat Grow`,
+    title: `${PAGE_TITLE} | Repeat Grow`,
     description: PAGE_DESCRIPTION,
   },
   robots: {
@@ -53,7 +53,7 @@ export default function EducationUseCasePage() {
             From enquiry to enrollment, tracked in one pipeline
           </h2>
           <p className="mt-2">
-            Every enquiry — from ads, your website, or a walk-in referral —
+            Every enquiry, from ads, your website, or a walk-in referral,
             lands in the shared inbox and moves through stages like
             enquiry, demo scheduled, trial attended, and enrolled, with the
             full conversation attached.
@@ -66,8 +66,8 @@ export default function EducationUseCasePage() {
           </h2>
           <p className="mt-2">
             No-code automations can confirm a demo-class booking, remind a
-            student the day before, and follow up afterward — or send a
-            fee-due reminder on a schedule — without a counselor having to
+            student the day before, and follow up afterward, or send a
+            fee-due reminder on a schedule, without a counselor having to
             remember each one manually.
           </p>
         </section>
@@ -103,7 +103,7 @@ export default function EducationUseCasePage() {
                 Can we separate enquiries by course or batch?
               </p>
               <p className="mt-1 text-foreground/80">
-                Yes — use tags and custom fields to segment contacts by
+                Yes. Use tags and custom fields to segment contacts by
                 course, batch, or counselor, and build pipelines and
                 broadcasts around those segments.
               </p>
@@ -116,7 +116,7 @@ export default function EducationUseCasePage() {
               <p className="mt-1 text-foreground/80">
                 Broadcasts use Meta-approved message templates on the
                 official WhatsApp Business API, which requires recipient
-                opt-in and template approval — the same compliance model
+                opt-in and template approval. That is the same compliance model
                 any official WhatsApp broadcast follows.
               </p>
             </div>
@@ -126,10 +126,16 @@ export default function EducationUseCasePage() {
 
       <div className="mt-12 flex flex-wrap gap-3">
         <Link
-          href="/signup"
+          href="/demo"
           className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
         >
-          Start Free Trial
+          Book a demo
+        </Link>
+        <Link
+          href="/signup"
+          className="rounded-md border px-5 py-2.5 text-sm font-semibold text-foreground"
+        >
+          Start free trial
         </Link>
         <Link
           href="/pricing"

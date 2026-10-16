@@ -259,7 +259,7 @@ export default function DocsPage() {
               <li>The contact panel shows the customer&apos;s details, tags, and deals beside the chat.</li>
               <li>
                 <b>WhatsApp calls:</b> when a customer calls your WhatsApp number, a call card rings on every
-                agent&apos;s screen — click <b>Answer</b> to talk in the browser (allow the microphone the first
+                agent&apos;s screen. Click <b>Answer</b> to talk in the browser (allow the microphone the first
                 time). Click the <b>phone icon</b> in a chat to call the customer; if they haven&apos;t allowed calls
                 yet, you can send them a permission request. An admin turns calling on in{" "}
                 <Ui to="/settings?tab=whatsapp">Settings → WhatsApp</Ui>.
@@ -329,7 +329,7 @@ export default function DocsPage() {
             </ol>
             <p>
               <b>Carousels:</b> choose <b>Template type → Carousel</b> to send a message followed by 2–10 swipeable
-              cards — each with an image or video, a short line of text and up to two buttons (for example
+              cards, each with an image or video, a short line of text and up to two buttons (for example
               &ldquo;Shop now&rdquo;). Great for showing several products in one broadcast. Every card uses the same kind
               of media and the same buttons; carousels are Marketing templates.
             </p>
@@ -355,7 +355,7 @@ export default function DocsPage() {
             <ol className="steps">
               <Step title="Choose how customers pay">
                 In <Ui to="/settings?tab=commerce">Settings → Orders & payments</Ui>, pick <b>WhatsApp Pay</b> (customers
-                pay by UPI, card or netbanking inside WhatsApp — set up a payment configuration with Razorpay, PayU,
+                pay by UPI, card or netbanking inside WhatsApp; set up a payment configuration with Razorpay, PayU,
                 BillDesk or Zaakpay in WhatsApp Manager first) or <b>UPI ID</b> (we send your UPI ID with the order).
               </Step>
               <Step title="Send an order from a chat">
@@ -364,7 +364,7 @@ export default function DocsPage() {
                 <b>Mark paid</b> when the money arrives.
               </Step>
               <Step title="Update the order">
-                Change the status to processing, shipped or delivered — the customer gets a message each time.
+                Change the status to processing, shipped or delivered. The customer gets a message each time.
               </Step>
             </ol>
             <p>
@@ -514,8 +514,8 @@ export default function DocsPage() {
                 activate it as soon as it&apos;s paid.
               </li>
               <li>
-                We email the account owner 2 days before the trial ends, on the last day, and when it ends — and, on a
-                paid plan, 3 days before your paid-until date.
+                We email the account owner 2 days before the trial ends, on the last day, and when it ends. On a
+                paid plan, we email 3 days before your paid-until date.
               </li>
               <li>WhatsApp conversation fees are billed by Meta directly, separately from your plan.</li>
             </ul>
@@ -541,7 +541,7 @@ export default function DocsPage() {
               <li>
                 If you <b>own</b> the business, deleting your account permanently deletes the business and all of its
                 data, and disconnects WhatsApp, Shopify and Calendly. Remove your teammates or transfer ownership in{" "}
-                <Ui to="/settings?tab=members">Team members</Ui> first. Download your data before you delete — it
+                <Ui to="/settings?tab=members">Team members</Ui> first. Download your data before you delete it. It
                 can&apos;t be undone.
               </li>
               <li>

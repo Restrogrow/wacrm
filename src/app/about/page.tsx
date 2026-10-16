@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/about",
-    title: "About Us — Repeat Grow",
+    title: "About Us | Repeat Grow",
     description: ABOUT_DESCRIPTION,
   },
   robots: {
@@ -42,14 +42,15 @@ export default function AboutPage() {
 
       <div className="mt-10 space-y-6 text-sm leading-relaxed text-foreground/90">
         <p>
-          Repeat Grow is a WhatsApp CRM built for sales and support teams —
-          a shared inbox, contacts, sales pipelines, broadcasts, and
-          no-code automations, all built on the official WhatsApp Business
-          API.
+          Repeat Grow is a WhatsApp CRM built for sales and support teams:
+          a shared inbox with voice calls, contacts, sales pipelines,
+          scheduled broadcasts, no-code automations, an AI chatbot, orders
+          and payments, and Shopify and Calendly integrations, all built
+          on the official WhatsApp Business API.
         </p>
         <p>
           Most WhatsApp tools stop at messaging. We built Repeat Grow
-          because a conversation on its own doesn&apos;t grow a business —
+          because a conversation on its own doesn&apos;t grow a business;
           what turns a first-time chat into a repeat customer is knowing
           who you talked to, what they wanted, and what happens next. That&apos;s
           the gap Repeat Grow fills: every conversation is tied to a
@@ -57,13 +58,13 @@ export default function AboutPage() {
         </p>
         <p>
           Rather than handing you a self-serve tool and walking away, we
-          set the platform up for you — connecting your WhatsApp Business
+          set the platform up for you, connecting your WhatsApp Business
           number, importing your contacts, and getting your team trained
           and working from the shared inbox in days.
         </p>
         <p>
           Have questions about who we are or how Repeat Grow works? Reach
-          out any time — see our{" "}
+          out any time. See our{" "}
           <Link href="/contact" className="underline">
             Contact Us
           </Link>{" "}

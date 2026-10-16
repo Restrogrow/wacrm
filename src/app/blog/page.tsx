@@ -6,7 +6,7 @@ import { SITE_URL, buildBreadcrumbSchema } from '@/lib/seo';
 import { BLOG_POSTS, formatPostDate, type BlogPost } from '@/lib/blog';
 
 const PAGE_DESCRIPTION =
-  'Practical guides on the official WhatsApp Business API, message templates, Shopify order notifications, appointment reminders and running sales and support on WhatsApp — from the Repeat Grow team.';
+  'Practical guides on the official WhatsApp Business API, message templates, Shopify order notifications, appointment reminders and running sales and support on WhatsApp, from the Repeat Grow team.';
 
 const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([{ name: 'Blog', path: '/blog' }]);
 
@@ -26,13 +26,13 @@ const BLOG_SCHEMA = {
 };
 
 export const metadata: Metadata = {
-  title: 'Blog — WhatsApp Business guides',
+  title: 'Blog: WhatsApp Business guides',
   description: PAGE_DESCRIPTION,
   alternates: { canonical: '/blog' },
   openGraph: {
     type: 'website',
     url: '/blog',
-    title: 'Blog — Repeat Grow',
+    title: 'Blog | Repeat Grow',
     description: PAGE_DESCRIPTION,
   },
   robots: { index: true, follow: true },
@@ -43,7 +43,7 @@ const GUIDES = [
     href: '/whatsapp-crm-vs-whatsapp-business-app',
     title: 'WhatsApp CRM vs. the WhatsApp Business App: What’s the Difference?',
     description:
-      'What changes — shared inbox, pipelines, automation — once a team outgrows the free WhatsApp Business app.',
+      'What changes (shared inbox, pipelines, automation) once a team outgrows the free WhatsApp Business app.',
   },
   {
     href: '/official-vs-unofficial-whatsapp-api',
@@ -181,8 +181,14 @@ export default function BlogIndexPage() {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
-            href="/signup"
+            href="/demo"
             className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+          >
+            Book a demo
+          </Link>
+          <Link
+            href="/signup"
+            className="rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-muted"
           >
             Start free trial
           </Link>

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'article',
     url: `/blog/${POST.slug}`,
-    title: `${POST.title} — Repeat Grow`,
+    title: `${POST.title} | Repeat Grow`,
     description: POST.description,
     publishedTime: POST.datePublished,
     section: POST.category,
@@ -46,7 +46,7 @@ const FAQ: FaqItem[] = [
   {
     question: 'Which documents does Meta accept?',
     answer:
-      'Typically a business registration certificate, GST certificate or similar tax document, or a utility bill in the business’s legal name — plus a website on a domain you own that shows the same name.',
+      'Typically a business registration certificate, GST certificate or similar tax document, or a utility bill in the business’s legal name, plus a website on a domain you own that shows the same name.',
   },
 ];
 
@@ -68,7 +68,7 @@ export default function VerificationGuidePost() {
 
       <h2 id="business-verification">2. Submit Meta Business verification</h2>
       <p>
-        Meta checks your legal business name, address and website against official documents —
+        Meta checks your legal business name, address and website against official documents,
         typically a business registration or tax document and proof that the domain or website is
         yours. Mismatches between your legal name and what&apos;s shown publicly are the most common
         cause of delay here.
@@ -77,7 +77,7 @@ export default function VerificationGuidePost() {
       <h2 id="phone-number">3. Register and verify your phone number</h2>
       <p>
         The number you connect to the WhatsApp Business API cannot already be active on the regular
-        WhatsApp or WhatsApp Business app on a phone — it needs to be migrated or freed up first.
+        WhatsApp or WhatsApp Business app on a phone. It needs to be migrated or freed up first.
         Verification is a one-time code sent by call or SMS during setup.
       </p>
 
@@ -85,20 +85,20 @@ export default function VerificationGuidePost() {
       <p>
         Your business display name (what recipients see) goes through its own review, separate from
         business verification. Message templates for broadcasts also need individual approval before
-        they can be sent — see{' '}
+        they can be sent. See{' '}
         <Link href="/blog/whatsapp-broadcast-template-rules">WhatsApp template rules explained</Link>.
       </p>
 
       <h2 id="timeline">How long this actually takes</h2>
       <p>
         Business verification can take anywhere from under a day to around a week depending on
-        document clarity and request volume. Template approval is typically much faster — often
+        document clarity and request volume. Template approval is typically much faster, often
         minutes to a few hours. Repeat Grow&apos;s guided setup connects your number through
         Meta&apos;s embedded signup, so most of these steps happen in one flow.
       </p>
       <p>
         Want this handled for you instead of doing it manually?{' '}
-        <Link href="/pricing">See Repeat Grow&apos;s plans</Link> — WhatsApp Business API setup is
+        <Link href="/pricing">See Repeat Grow&apos;s plans</Link>. WhatsApp Business API setup is
         included on every one.
       </p>
     </BlogPostLayout>

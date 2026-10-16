@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'article',
     url: `/blog/${POST.slug}`,
-    title: `${POST.title} — Repeat Grow`,
+    title: `${POST.title} | Repeat Grow`,
     description: POST.description,
     publishedTime: POST.datePublished,
     section: POST.category,
@@ -64,7 +64,7 @@ const FAQ: FaqItem[] = [
   {
     question: 'What if someone books an hour before the meeting?',
     answer:
-      'Then the 24-hour reminder is skipped — they just booked, and the confirmation has the details. Good reminder systems only send a reminder if the booking was made comfortably before that reminder point.',
+      'Then the 24-hour reminder is skipped. They just booked, and the confirmation has the details. Good reminder systems only send a reminder if the booking was made comfortably before that reminder point.',
   },
 ];
 
@@ -72,7 +72,7 @@ export default function AppointmentRemindersPost() {
   return (
     <BlogPostLayout post={POST} toc={TOC} faq={FAQ}>
       <p>
-        An empty slot costs the same as a full one — the room, the staff, the time you blocked
+        An empty slot costs the same as a full one: the room, the staff, the time you blocked
         out. Most no-shows aren&apos;t rude; people simply forget, or meant to reschedule and never
         got round to it. A short, well-timed reminder on the app they check most fixes a large share
         of that. Here&apos;s a reminder schedule you can use for any booking, the exact WhatsApp
@@ -88,7 +88,7 @@ export default function AppointmentRemindersPost() {
           <strong>Plans changed</strong> and cancelling felt like more effort than not turning up.
         </li>
         <li>
-          <strong>They couldn&apos;t find the details</strong> — the meeting link, the address, the
+          <strong>They couldn&apos;t find the details</strong>: the meeting link, the address, the
           time in their time zone.
         </li>
       </ul>
@@ -105,7 +105,7 @@ export default function AppointmentRemindersPost() {
       />
       <ol>
         <li>
-          <strong>Confirmation — right after booking.</strong> Date, time, meeting link or address,
+          <strong>Confirmation, right after booking.</strong> Date, time, meeting link or address,
           and a reschedule link.
         </li>
         <li>
@@ -113,7 +113,7 @@ export default function AppointmentRemindersPost() {
           rescheduling the easy option instead of silently not showing up.
         </li>
         <li>
-          <strong>1 hour before.</strong> &ldquo;Starting soon&rdquo; plus the join link or address —
+          <strong>1 hour before.</strong> &ldquo;Starting soon&rdquo; plus the join link or address.
           this catches the people who simply forgot.
         </li>
         <li>
@@ -124,7 +124,7 @@ export default function AppointmentRemindersPost() {
 
       <h2 id="templates">Reminder templates you can copy</h2>
       <p>
-        These are Utility templates — they&apos;re about a booking the customer made. Keep them short,
+        These are Utility templates. They&apos;re about a booking the customer made. Keep them short,
         and always include the time and a way to reschedule.
       </p>
       <TemplateExample label="booking_confirmed" category="Utility">
@@ -152,7 +152,7 @@ Join here: {{4}}`}
       <h2 id="phone-number">Collect the phone number at booking</h2>
       <p>
         A reminder can only go to a number you have. Calendly doesn&apos;t ask for a phone number by
-        default, so add a booking question of type <strong>Phone number</strong> — label it
+        default, so add a booking question of type <strong>Phone number</strong>. Label it
         &ldquo;WhatsApp number&rdquo; so people know why you&apos;re asking. Turning on Calendly&apos;s text
         reminders also collects a number. Numbers saved without a country code get your default
         (for example +91) added automatically.
@@ -161,18 +161,18 @@ Join here: {{4}}`}
       <h2 id="who">Who this works for</h2>
       <ul>
         <li>
-          <strong>Clinics and therapists</strong> — fewer empty slots, and patients arrive with the
+          <strong>Clinics and therapists</strong>: fewer empty slots, and patients arrive with the
           right details.
         </li>
         <li>
-          <strong>Coaches, tutors and online classes</strong> — the join link arrives an hour before,
+          <strong>Coaches, tutors and online classes</strong>: the join link arrives an hour before,
           in the app they&apos;re already using.
         </li>
         <li>
-          <strong>Salons and studios</strong> — rescheduling becomes a tap instead of a no-show.
+          <strong>Salons and studios</strong>: rescheduling becomes a tap instead of a no-show.
         </li>
         <li>
-          <strong>Real estate and sales demos</strong> — site visits and calls happen on time.
+          <strong>Real estate and sales demos</strong>: site visits and calls happen on time.
         </li>
       </ul>
 
@@ -202,7 +202,7 @@ Join here: {{4}}`}
       </ol>
       <p>
         Reminders are skipped for cancelled meetings and for bookings made after the reminder point,
-        and every message lands in your shared inbox — so when a customer replies &ldquo;running 10
+        and every message lands in your shared inbox, so when a customer replies &ldquo;running 10
         minutes late&rdquo;, your team sees it. Details are in the{' '}
         <Link href="/docs#calendly">Calendly section of the Help Center</Link>.
       </p>

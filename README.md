@@ -430,6 +430,8 @@ automatically.
 
 Current articles:
 
+- Taking payments on WhatsApp in India (WhatsApp Pay, UPI, catalog)
+- WhatsApp Business voice calling
 - Shopify WhatsApp order notifications (e-commerce, COD confirmation)
 - WhatsApp appointment reminders (Calendly, fewer no-shows)
 - WhatsApp Business API verification guide
@@ -509,6 +511,7 @@ baked in at build time — **redeploy after changing them**.
 | `CHATBOT_TIMEZONE` | Optional | Chatbot's "are you open now?" time zone (default `Asia/Kolkata`) |
 | `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET` | Optional | Shopify one-click connect (Client ID / secret) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Optional | Outgoing email (daily summary, deletion request emails) |
+| `DEMO_REQUEST_EMAIL` | Optional | Who is emailed when someone requests a demo on `/demo` (comma-separated; default sales@repeatgrow.com) |
 | `ADMIN_ALERT_EMAIL` | Optional | Who is emailed about account deletion requests (comma-separated; default support@repeatgrow.com) |
 | `NEXT_PUBLIC_SENTRY_DSN` | Optional | Turns on Sentry error monitoring |
 | `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | Optional | Environment label in Sentry (defaults to `NODE_ENV`) |
@@ -549,6 +552,7 @@ is idempotent where possible. Recent ones:
 | `051_carousel_templates` | Carousel templates (`message_templates.carousel_cards`) |
 | `052_whatsapp_forms` | WhatsApp forms (Meta Flows) and their responses |
 | `053_orders_and_payments` | Catalog / payment settings and orders (WhatsApp Pay or UPI ID) |
+| `054_demo_requests` | Demo requests from the public `/demo` page (service-role only) |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -641,6 +645,18 @@ URL) is forwarded to `/auth/callback`.
 Supabase → Authentication → Emails → SMTP: host `smtp.gmail.com`, port
 `465`, user `support@repeatgrow.com`, password = a Google Workspace App
 Password. Add SPF, DKIM and DMARC records for repeatgrow.com.
+
+### Email addresses
+Repeat Grow uses three addresses on Google Workspace (added as "Send mail
+as" aliases):
+
+| Address | Used for |
+|---|---|
+| `support@repeatgrow.com` | Default sender (SMTP login), customer support, security reports, account deletion alerts |
+| `sales@repeatgrow.com` | Demo requests from `/demo` are emailed here |
+| `info@repeatgrow.com` | General enquiries and public listings |
+
+All app email is sent through the `support@` SMTP account (see below).
 
 ### App email (daily summary)
 Set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`,

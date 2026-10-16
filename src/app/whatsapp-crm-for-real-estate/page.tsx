@@ -8,7 +8,7 @@ const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
 
 const PAGE_TITLE = "WhatsApp CRM for Real Estate Teams";
 const PAGE_DESCRIPTION =
-  "Capture property leads straight into a WhatsApp pipeline, automate site-visit follow-ups, and broadcast new listings on the official WhatsApp Business API — with your whole sales team on one shared number.";
+  "Capture property leads straight into a WhatsApp pipeline, automate site-visit follow-ups, and broadcast new listings on the official WhatsApp Business API, with your whole sales team on one shared number.";
 
 export const metadata: Metadata = {
   title: PAGE_TITLE,
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/whatsapp-crm-for-real-estate",
-    title: `${PAGE_TITLE} — Repeat Grow`,
+    title: `${PAGE_TITLE} | Repeat Grow`,
     description: PAGE_DESCRIPTION,
   },
   robots: {
@@ -54,8 +54,8 @@ export default function RealEstateUseCasePage() {
           </h2>
           <p className="mt-2">
             Every inbound enquiry lands in the shared inbox and can be moved
-            through pipeline stages — new enquiry, site visit scheduled,
-            negotiation, closed — with the full chat history attached to the
+            through pipeline stages: new enquiry, site visit scheduled,
+            negotiation, closed, with the full chat history attached to the
             deal.
           </p>
         </section>
@@ -66,8 +66,7 @@ export default function RealEstateUseCasePage() {
           </h2>
           <p className="mt-2">
             No-code automations can send a confirmation after a site visit
-            is booked, a reminder the day before, and a follow-up afterward
-            — so leads don&apos;t go cold between visits because nobody
+            is booked, a reminder the day before, and a follow-up afterward, so leads don&apos;t go cold between visits because nobody
             remembered to text back.
           </p>
         </section>
@@ -89,7 +88,7 @@ export default function RealEstateUseCasePage() {
           </h2>
           <p className="mt-2">
             Assign conversations to specific agents, see who&apos;s handling
-            what, and transfer a lead without losing its history — all on
+            what, and transfer a lead without losing its history, all on
             one shared WhatsApp Business number instead of individual agent
             phones.
           </p>
@@ -103,7 +102,7 @@ export default function RealEstateUseCasePage() {
                 Can different agents handle leads for different properties?
               </p>
               <p className="mt-1 text-foreground/80">
-                Yes — use tags and pipeline stages per property or project,
+                Yes. Use tags and pipeline stages per property or project,
                 and assign conversations to the agent responsible for that
                 listing.
               </p>
@@ -124,10 +123,16 @@ export default function RealEstateUseCasePage() {
 
       <div className="mt-12 flex flex-wrap gap-3">
         <Link
-          href="/signup"
+          href="/demo"
           className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
         >
-          Start Free Trial
+          Book a demo
+        </Link>
+        <Link
+          href="/signup"
+          className="rounded-md border px-5 py-2.5 text-sm font-semibold text-foreground"
+        >
+          Start free trial
         </Link>
         <Link
           href="/pricing"

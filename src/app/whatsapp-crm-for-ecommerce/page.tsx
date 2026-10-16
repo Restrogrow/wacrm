@@ -8,7 +8,7 @@ const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
 
 const PAGE_TITLE = "WhatsApp CRM for E-commerce & D2C Brands";
 const PAGE_DESCRIPTION =
-  "Run order updates, COD confirmations, abandoned cart follow-ups, and promo broadcasts on the official WhatsApp Business API — with every customer tied to their order history in one shared inbox.";
+  "Run order updates, COD confirmations, abandoned cart follow-ups, and promo broadcasts on the official WhatsApp Business API, with every customer tied to their order history in one shared inbox.";
 
 export const metadata: Metadata = {
   title: PAGE_TITLE,
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/whatsapp-crm-for-ecommerce",
-    title: `${PAGE_TITLE} — Repeat Grow`,
+    title: `${PAGE_TITLE} | Repeat Grow`,
     description: PAGE_DESCRIPTION,
   },
   robots: {
@@ -43,7 +43,7 @@ export default function EcommerceUseCasePage() {
       <p className="mt-4 text-sm leading-relaxed text-foreground/80">
         For online stores and D2C brands, WhatsApp is where order questions,
         COD confirmations, and repeat-purchase conversations actually
-        happen. Repeat Grow turns that into a CRM instead of a chat log —
+        happen. Repeat Grow turns that into a CRM instead of a chat log:
         every customer stays linked to their order history, tags, and next
         follow-up.
       </p>
@@ -68,8 +68,22 @@ export default function EcommerceUseCasePage() {
           <p className="mt-2">
             No-code automations can trigger a WhatsApp follow-up on an
             abandoned cart, a post-delivery check-in, or a win-back message
-            for customers who haven&apos;t ordered in a while — tagged and
+            for customers who haven&apos;t ordered in a while, tagged and
             tracked in the same pipeline as every other conversation.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold tracking-tight">
+            Connect Shopify and take payments in the chat
+          </h2>
+          <p className="mt-2">
+            Connect your Shopify store in one click and send order placed,
+            COD confirmation, shipped, out-for-delivery, delivered and
+            abandoned-cart messages automatically. Customers can also pay
+            inside WhatsApp: send an order with a payment request through
+            WhatsApp Pay or your UPI ID, share your catalog, and turn
+            catalog carts into orders.
           </p>
         </section>
 
@@ -80,7 +94,7 @@ export default function EcommerceUseCasePage() {
           <p className="mt-2">
             Support volume spikes around sales and launches. A shared inbox
             on your official WhatsApp Business number means multiple agents
-            can work the same number with per-conversation assignment —
+            can work the same number with per-conversation assignment,
             instead of one phone passed between people.
           </p>
         </section>
@@ -93,7 +107,7 @@ export default function EcommerceUseCasePage() {
                 Can I send order and shipping updates automatically?
               </p>
               <p className="mt-1 text-foreground/80">
-                Yes — automations can trigger a template message on events
+                Yes, automations can trigger a template message on events
                 like a new order, a status change, or a schedule, using
                 Meta-approved templates.
               </p>
@@ -105,8 +119,8 @@ export default function EcommerceUseCasePage() {
               <p className="mt-1 text-foreground/80">
                 Repeat Grow is a shared WhatsApp inbox and CRM, not a
                 helpdesk ticketing system. Most e-commerce teams use it
-                specifically for the WhatsApp channel — support, order
-                updates, and broadcasts — alongside their existing store
+                specifically for the WhatsApp channel (support, order
+                updates, and broadcasts) alongside their existing store
                 platform.
               </p>
             </div>
@@ -116,10 +130,16 @@ export default function EcommerceUseCasePage() {
 
       <div className="mt-12 flex flex-wrap gap-3">
         <Link
-          href="/signup"
+          href="/demo"
           className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
         >
-          Start Free Trial
+          Book a demo
+        </Link>
+        <Link
+          href="/signup"
+          className="rounded-md border px-5 py-2.5 text-sm font-semibold text-foreground"
+        >
+          Start free trial
         </Link>
         <Link
           href="/pricing"

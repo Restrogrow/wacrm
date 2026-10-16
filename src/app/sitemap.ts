@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }> = [
     { path: "/", changeFrequency: "weekly", priority: 1 },
     { path: "/pricing", changeFrequency: "weekly", priority: 0.9 },
+    { path: "/demo", changeFrequency: "monthly", priority: 0.9 },
     { path: "/whatsapp-crm-for-ecommerce", changeFrequency: "monthly", priority: 0.7 },
     { path: "/whatsapp-crm-for-real-estate", changeFrequency: "monthly", priority: 0.7 },
     { path: "/whatsapp-crm-for-education", changeFrequency: "monthly", priority: 0.7 },

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'article',
     url: `/blog/${POST.slug}`,
-    title: `${POST.title} — Repeat Grow`,
+    title: `${POST.title} | Repeat Grow`,
     description: POST.description,
     publishedTime: POST.datePublished,
     section: POST.category,
@@ -71,16 +71,16 @@ export default function TemplateRulesPost() {
         category, so miscategorizing a template (for example, dressing up a promo as a utility
         update) is both a rejection risk and a billing issue.
       </p>
-      <TemplateExample label="order_shipped — approved" category="Utility">
+      <TemplateExample label="order_shipped, approved" category="Utility">
         {`Hi {{1}}, your order {{2}} has shipped.
 Track it here: {{3}}`}
       </TemplateExample>
-      <TemplateExample label="diwali_sale — submitted as Utility, rejected" category="Marketing">
+      <TemplateExample label="diwali_sale, submitted as Utility, rejected" category="Marketing">
         {`Big Diwali sale! 50% off everything today.
 Shop now: {{1}}`}
       </TemplateExample>
       <p>
-        The second one is a perfectly good <em>Marketing</em> template — it just can&apos;t pretend to
+        The second one is a perfectly good <em>Marketing</em> template. It just can&apos;t pretend to
         be Utility.
       </p>
 
@@ -101,19 +101,19 @@ Shop now: {{1}}`}
         <li>Content that breaks WhatsApp&apos;s commerce and business policies.</li>
       </ul>
       <p>
-        Approved templates can&apos;t be freely edited once they&apos;re live — a changed template goes
+        Approved templates can&apos;t be freely edited once they&apos;re live. A changed template goes
         back through review.
       </p>
 
       <h2 id="tracking">Delivery and read tracking</h2>
       <p>
         Once approved, each broadcast send reports delivery and read status per recipient back
-        through the API — useful for confirming an order-update broadcast actually reached
+        through the API, useful for confirming an order-update broadcast actually reached
         customers, not just that it was sent.
       </p>
       <p>
         Repeat Grow&apos;s broadcast tool manages templates, variable substitution, scheduling and
-        per-recipient tracking in one place — see <Link href="/pricing">pricing and plan limits</Link>{' '}
+        per-recipient tracking in one place. see <Link href="/pricing">pricing and plan limits</Link>{' '}
         for broadcast volume per plan, or read how stores use templates for{' '}
         <Link href="/blog/shopify-whatsapp-order-notifications">Shopify order notifications</Link>.
       </p>

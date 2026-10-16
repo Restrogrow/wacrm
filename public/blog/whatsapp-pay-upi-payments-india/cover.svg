@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-labelledby="t">
+  <title id="t">A WhatsApp order summary with a Review and pay button</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#020617"/>
+      <stop offset="0.6" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#052e1e"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g opacity="0.08" stroke="#34d399" fill="none">
+    <circle cx="1040" cy="560" r="240"/>
+    <circle cx="1040" cy="560" r="340"/>
+    <circle cx="120" cy="60" r="160"/>
+  </g>
+
+  <g transform="translate(140 110)" filter="url(#soft)" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+    <rect width="520" height="410" rx="28" fill="#f8fafc"/>
+    <text x="36" y="62" font-size="26" font-weight="700" fill="#0f172a">Order #1042</text>
+    <line x1="36" y1="88" x2="484" y2="88" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="36" y="132" font-size="22" fill="#334155">Cotton kurta × 2</text>
+    <text x="484" y="132" text-anchor="end" font-size="22" fill="#334155">₹1,998</text>
+    <text x="36" y="172" font-size="22" fill="#334155">Shipping</text>
+    <text x="484" y="172" text-anchor="end" font-size="22" fill="#334155">₹60</text>
+    <line x1="36" y1="204" x2="484" y2="204" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="36" y="250" font-size="26" font-weight="700" fill="#0f172a">Total</text>
+    <text x="484" y="250" text-anchor="end" font-size="26" font-weight="700" fill="#059669">₹2,058</text>
+    <rect x="36" y="290" width="448" height="76" rx="16" fill="#10b981"/>
+    <text x="260" y="338" text-anchor="middle" font-size="26" font-weight="700" fill="#ffffff">Review and pay</text>
+  </g>
+
+  <path d="M690 315 C 740 315, 770 260, 820 250" stroke="#34d399" stroke-width="5" fill="none" stroke-dasharray="2 14" stroke-linecap="round"/>
+  <path d="M690 315 C 740 315, 770 380, 820 390" stroke="#34d399" stroke-width="5" fill="none" stroke-dasharray="2 14" stroke-linecap="round"/>
+
+  <g font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" filter="url(#soft)">
+    <g transform="translate(820 190)">
+      <rect width="260" height="110" rx="22" fill="#d1fae5"/>
+      <text x="26" y="52" font-size="22" font-weight="700" fill="#064e3b">WhatsApp Pay</text>
+      <text x="26" y="84" font-size="18" fill="#065f46">UPI · card · netbanking</text>
+    </g>
+    <g transform="translate(820 340)">
+      <rect width="260" height="110" rx="22" fill="#d1fae5"/>
+      <text x="26" y="52" font-size="22" font-weight="700" fill="#064e3b">UPI ID</text>
+      <text x="26" y="84" font-size="18" fill="#065f46">shop@upi · marked paid</text>
+    </g>
+  </g>
+</svg>

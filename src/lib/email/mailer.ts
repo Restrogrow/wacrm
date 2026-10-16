@@ -43,6 +43,8 @@ export async function sendEmail(message: {
   subject: string;
   html: string;
   text: string;
+  /** Where replies go (for example the person who filled in a form). */
+  replyTo?: string;
 }): Promise<void> {
   const from =
     process.env.SMTP_FROM || `Repeat Grow <${process.env.SMTP_USER}>`;
