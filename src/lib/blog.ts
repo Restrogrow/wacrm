@@ -7,6 +7,8 @@
 export interface BlogPost {
   slug: string;
   title: string;
+  /** Shorter <title> for search results when `title` is over ~60 characters. */
+  seoTitle?: string;
   /** Meta description and card excerpt — keep it under ~160 characters. */
   description: string;
   category: 'E-commerce' | 'Bookings' | 'WhatsApp API' | 'Templates' | 'Payments';
@@ -23,8 +25,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'whatsapp-pay-upi-payments-india',
     title: 'How to Take Payments on WhatsApp in India: WhatsApp Pay and UPI',
+    seoTitle: 'WhatsApp Pay & UPI: Take Payments on WhatsApp in India',
     description:
-      'Send an order with a payment request inside a WhatsApp chat, WhatsApp Pay with Razorpay, PayU, BillDesk or Zaakpay, or a simple UPI ID, plus catalog sharing and order updates.',
+      'Take payments inside WhatsApp chats in India: WhatsApp Pay with Razorpay, PayU, BillDesk or Zaakpay, or a UPI ID, plus catalog orders.',
     category: 'Payments',
     datePublished: '2026-10-16',
     readMinutes: 7,
@@ -41,8 +44,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'whatsapp-business-voice-calling',
     title: 'WhatsApp Business Voice Calling: How Customers Can Call Your Team',
+    seoTitle: 'WhatsApp Business Voice Calling: How It Works',
     description:
-      'How the WhatsApp Business Calling API works, customer calls ringing every agent in the browser, calling customers back with permission, requirements, costs and limits.',
+      'How WhatsApp Business calling works: customer calls ring every agent in the browser, call-back permission, Meta requirements and costs.',
     category: 'WhatsApp API',
     datePublished: '2026-10-16',
     readMinutes: 6,
@@ -59,8 +63,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'shopify-whatsapp-order-notifications',
     title: 'Shopify WhatsApp Order Notifications: The Complete Guide for Indian Stores',
+    seoTitle: 'Shopify WhatsApp Order Notifications: India Guide',
     description:
-      'The six WhatsApp messages every Shopify store should send: order confirmation, COD confirmation, shipping, delivery and abandoned cart, with template examples and setup steps.',
+      'The six WhatsApp messages every Shopify store should send, from order and COD confirmation to delivery and abandoned cart, with templates.',
     category: 'E-commerce',
     datePublished: '2026-10-13',
     readMinutes: 9,
@@ -78,8 +83,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'whatsapp-appointment-reminders',
     title: 'How to Reduce No-Shows with WhatsApp Appointment Reminders',
+    seoTitle: 'WhatsApp Appointment Reminders That Cut No-Shows',
     description:
-      'A simple WhatsApp reminder schedule for Calendly bookings: confirmation, 24-hour and 1-hour reminders, and follow-ups, with ready-to-use templates for clinics, coaches and salons.',
+      'A WhatsApp reminder schedule for Calendly bookings: confirmation, 24-hour and 1-hour reminders and follow-ups, with ready-to-use templates.',
     category: 'Bookings',
     datePublished: '2026-10-13',
     readMinutes: 8,
@@ -96,8 +102,9 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'whatsapp-business-api-verification-guide',
     title: 'How to Get WhatsApp Business API Verified: A Step-by-Step Guide',
+    seoTitle: 'WhatsApp Business API Verification: Step by Step',
     description:
-      'What Meta Business verification and WhatsApp Business API approval actually require, in order, from a Meta Business Manager account to your first approved number.',
+      'What Meta Business verification and WhatsApp Business API approval need, step by step, from Business Manager to your first approved number.',
     category: 'WhatsApp API',
     datePublished: '2026-10-05',
     readMinutes: 5,
@@ -113,7 +120,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: 'whatsapp-broadcast-template-rules',
     title: 'WhatsApp Broadcast Template Rules Explained',
     description:
-      'What Meta actually checks before approving a WhatsApp message template, the categories that affect pricing, and the most common reasons templates get rejected.',
+      'What Meta checks before approving a WhatsApp template, how categories affect pricing, and the most common reasons templates get rejected.',
     category: 'Templates',
     datePublished: '2026-10-05',
     readMinutes: 4,

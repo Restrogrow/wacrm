@@ -37,10 +37,10 @@ export const COMPARE_PAGES: ComparePageData[] = [
   {
     slug: "wati-alternative",
     navName: "WATI alternative",
-    title: "WATI Alternative for Indian Businesses: Repeat Grow vs WATI",
+    title: "WATI Alternative in India: Repeat Grow vs WATI (2026)",
     h1: "WATI alternative for Indian businesses",
     description:
-      "Repeat Grow vs WATI: plans, prices in rupees, AI, chatbots, integrations and what each tool is best for. Compared from WATI's public pricing page, October 2026.",
+      "Repeat Grow vs WATI: rupee prices, AI, chatbots, integrations and who each suits. From WATI's public pricing page, October 2026.",
     intro:
       "WATI is a well-known WhatsApp platform with an omnichannel inbox and AI agents. If you are weighing it against Repeat Grow, here is a plain comparison of price, features and who each one suits.",
     quickAnswer:
@@ -113,10 +113,10 @@ export const COMPARE_PAGES: ComparePageData[] = [
   {
     slug: "interakt-alternative",
     navName: "Interakt alternative",
-    title: "Interakt Alternative for Indian Businesses: Repeat Grow vs Interakt",
+    title: "Interakt Alternative in India: Repeat Grow vs Interakt",
     h1: "Interakt alternative for Indian businesses",
     description:
-      "Repeat Grow vs Interakt: plans, rupee prices, chatbot flows, payments, API access and who each is best for. Compared from Interakt's public pricing page, October 2026.",
+      "Repeat Grow vs Interakt: rupee prices, chatbot flows, payments, API access and who each suits. From Interakt's pricing page, October 2026.",
     intro:
       "Interakt is a well-known WhatsApp platform used by many Indian businesses. Here is how it compares with Repeat Grow on price, features and fit.",
     quickAnswer:
@@ -190,10 +190,10 @@ export const COMPARE_PAGES: ComparePageData[] = [
   {
     slug: "aisensy-alternative",
     navName: "AiSensy alternative",
-    title: "AiSensy Alternative for Indian Businesses: Repeat Grow vs AiSensy",
+    title: "AiSensy Alternative in India: Repeat Grow vs AiSensy",
     h1: "AiSensy alternative for Indian businesses",
     description:
-      "Repeat Grow vs AiSensy: plans, rupee prices, AI agent and chatbot add-ons, broadcasts and what each is best for. Compared from AiSensy's public pricing page, October 2026.",
+      "Repeat Grow vs AiSensy: rupee prices, AI agent and chatbot add-ons, broadcasts and who each suits. From AiSensy's pricing page, October 2026.",
     intro:
       "AiSensy is a popular choice for WhatsApp marketing in India, with a free plan and a Click-to-WhatsApp ads manager. Here is how it compares with Repeat Grow.",
     quickAnswer:
@@ -272,10 +272,10 @@ export const COMPARE_PAGES: ComparePageData[] = [
   {
     slug: "wati-vs-interakt-vs-aisensy",
     navName: "WATI vs Interakt vs AiSensy",
-    title: "WATI vs Interakt vs AiSensy vs Repeat Grow: Pricing and Features (2026)",
+    title: "WATI vs Interakt vs AiSensy: Pricing Compared (2026)",
     h1: "WATI vs Interakt vs AiSensy vs Repeat Grow",
     description:
-      "Side-by-side comparison of WATI, Interakt, AiSensy and Repeat Grow in India: starting prices in rupees, AI, chatbots, team size, integrations and who each suits. Checked October 2026.",
+      "WATI, Interakt, AiSensy and Repeat Grow compared for India: starting prices in rupees, AI, chatbots, team size and integrations. October 2026.",
     intro:
       "Choosing a WhatsApp Business API platform in India usually comes down to three popular tools and a few newer ones. This page compares WATI, Interakt, AiSensy and Repeat Grow using each provider's public pricing page.",
     quickAnswer:

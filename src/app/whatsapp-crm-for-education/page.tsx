@@ -1,17 +1,33 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buildBreadcrumbSchema } from "@/lib/seo";
+import { buildBreadcrumbSchema, buildFAQNode } from "@/lib/seo";
 
 const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
   { name: "WhatsApp CRM for Education", path: "/whatsapp-crm-for-education" },
 ]);
 
+// Same questions as the FAQ section below, as FAQPage structured data.
+const FAQ_SCHEMA = {
+  "@context": "https://schema.org",
+  ...buildFAQNode([
+    {
+      "question": "Can we separate enquiries by course or batch?",
+      "answer": "Yes. Use tags and custom fields to segment contacts by course, batch, or counselor, and build pipelines and broadcasts around those segments."
+    },
+    {
+      "question": "Is this compliant for sending reminders to parents and students?",
+      "answer": "Broadcasts use Meta-approved message templates on the official WhatsApp Business API, which requires recipient opt-in and template approval. That is the same compliance model any official WhatsApp broadcast follows."
+    }
+  ]),
+};
+
 const PAGE_TITLE = "WhatsApp CRM for Coaching Institutes & Education Businesses";
+const SEO_TITLE = "WhatsApp CRM for Coaching & Education";
 const PAGE_DESCRIPTION =
-  "Turn enquiries into enrollments with a WhatsApp pipeline, automate demo-class and fee-due follow-ups, and broadcast timetables and batch updates on the official WhatsApp Business API.";
+  "Turn enquiries into enrollments: a WhatsApp pipeline, demo-class and fee reminders, and batch broadcasts on the official WhatsApp Business API.";
 
 export const metadata: Metadata = {
-  title: PAGE_TITLE,
+  title: SEO_TITLE,
   description: PAGE_DESCRIPTION,
   alternates: {
     canonical: "/whatsapp-crm-for-education",
@@ -34,6 +50,10 @@ export default function EducationUseCasePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
       />
       <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
         &larr; Back to Repeat Grow

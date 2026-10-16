@@ -11,7 +11,7 @@ import { BRAND_KEYWORDS, SITE_URL, buildBreadcrumbNode } from "@/lib/seo";
 
 const DEMO_TITLE = "Book a Demo";
 const DEMO_DESCRIPTION =
-  "Book a free 20-minute Repeat Grow demo. See the WhatsApp shared inbox, AI chatbot, broadcasts, Shopify and Calendly integrations, and payments on your own use case.";
+  "Book a free 20-minute Repeat Grow demo and see the WhatsApp inbox, AI chatbot, broadcasts, payments and integrations on your own use case.";
 
 const DEMO_STRUCTURED_DATA = {
   "@context": "https://schema.org",

@@ -10,11 +10,12 @@ const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
 ]);
 
 const PAGE_TITLE = "WhatsApp CRM vs. the WhatsApp Business App: What's the Difference?";
+const SEO_TITLE = "WhatsApp CRM vs WhatsApp Business App";
 const PAGE_DESCRIPTION =
-  "The free WhatsApp Business app works for one person on one phone. Here's what changes (shared inbox, pipelines, automation and the official API) once a team needs more than that.";
+  "The free WhatsApp Business app works for one person on one phone. See what a WhatsApp CRM adds: shared inbox, pipelines, automation and the API.";
 
 export const metadata: Metadata = {
-  title: PAGE_TITLE,
+  title: SEO_TITLE,
   description: PAGE_DESCRIPTION,
   alternates: {
     canonical: "/whatsapp-crm-vs-whatsapp-business-app",

@@ -12,7 +12,7 @@ import {
 const POST = getPost('whatsapp-broadcast-template-rules');
 
 export const metadata: Metadata = {
-  title: POST.title,
+  title: POST.seoTitle ? { absolute: POST.seoTitle } : POST.title,
   description: POST.description,
   keywords: POST.keywords,
   alternates: { canonical: `/blog/${POST.slug}` },

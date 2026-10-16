@@ -13,7 +13,7 @@ import {
 const POST = getPost('whatsapp-appointment-reminders');
 
 export const metadata: Metadata = {
-  title: POST.title,
+  title: POST.seoTitle ? { absolute: POST.seoTitle } : POST.title,
   description: POST.description,
   keywords: POST.keywords,
   alternates: { canonical: `/blog/${POST.slug}` },

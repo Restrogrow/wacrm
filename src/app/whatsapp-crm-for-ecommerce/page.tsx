@@ -1,17 +1,33 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buildBreadcrumbSchema } from "@/lib/seo";
+import { buildBreadcrumbSchema, buildFAQNode } from "@/lib/seo";
 
 const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
   { name: "WhatsApp CRM for E-commerce", path: "/whatsapp-crm-for-ecommerce" },
 ]);
 
+// Same questions as the FAQ section below, as FAQPage structured data.
+const FAQ_SCHEMA = {
+  "@context": "https://schema.org",
+  ...buildFAQNode([
+    {
+      "question": "Can I send order and shipping updates automatically?",
+      "answer": "Yes, automations can trigger a template message on events like a new order, a status change, or a schedule, using Meta-approved templates."
+    },
+    {
+      "question": "Does this replace my helpdesk or marketing tool?",
+      "answer": "Repeat Grow is a shared WhatsApp inbox and CRM, not a helpdesk ticketing system. Most e-commerce teams use it specifically for the WhatsApp channel (support, order updates, and broadcasts) alongside their existing store platform."
+    }
+  ]),
+};
+
 const PAGE_TITLE = "WhatsApp CRM for E-commerce & D2C Brands";
+const SEO_TITLE = "WhatsApp CRM for E-commerce & D2C";
 const PAGE_DESCRIPTION =
-  "Run order updates, COD confirmations, abandoned cart follow-ups, and promo broadcasts on the official WhatsApp Business API, with every customer tied to their order history in one shared inbox.";
+  "Send order updates, COD confirmations and abandoned-cart reminders on the official WhatsApp Business API, with Shopify and WhatsApp Pay built in.";
 
 export const metadata: Metadata = {
-  title: PAGE_TITLE,
+  title: SEO_TITLE,
   description: PAGE_DESCRIPTION,
   alternates: {
     canonical: "/whatsapp-crm-for-ecommerce",
@@ -34,6 +50,10 @@ export default function EcommerceUseCasePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
       />
       <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
         &larr; Back to Repeat Grow

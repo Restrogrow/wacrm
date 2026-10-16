@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buildBreadcrumbSchema } from "@/lib/seo";
+import { buildBreadcrumbSchema, LINKEDIN_URL, TRUSTPILOT_URL } from "@/lib/seo";
 
 const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
   { name: "About Us", path: "/about" },
@@ -69,6 +69,17 @@ export default function AboutPage() {
             Contact Us
           </Link>{" "}
           page.
+        </p>
+        <p>
+          Follow us on{" "}
+          <a href={LINKEDIN_URL} target="_blank" rel="noopener" className="underline">
+            LinkedIn
+          </a>{" "}
+          and read what customers say on{" "}
+          <a href={TRUSTPILOT_URL} target="_blank" rel="noopener" className="underline">
+            Trustpilot
+          </a>
+          .
         </p>
       </div>
     </div>

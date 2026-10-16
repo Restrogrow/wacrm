@@ -1,17 +1,33 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { buildBreadcrumbSchema } from "@/lib/seo";
+import { buildBreadcrumbSchema, buildFAQNode } from "@/lib/seo";
 
 const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
   { name: "WhatsApp CRM for Real Estate", path: "/whatsapp-crm-for-real-estate" },
 ]);
 
+// Same questions as the FAQ section below, as FAQPage structured data.
+const FAQ_SCHEMA = {
+  "@context": "https://schema.org",
+  ...buildFAQNode([
+    {
+      "question": "Can different agents handle leads for different properties?",
+      "answer": "Yes. Use tags and pipeline stages per property or project, and assign conversations to the agent responsible for that listing."
+    },
+    {
+      "question": "What happens if an agent leaves the team?",
+      "answer": "Conversations and deal history stay with the business number and pipeline, not the individual agent, so reassigning a lead doesn't mean losing its context."
+    }
+  ]),
+};
+
 const PAGE_TITLE = "WhatsApp CRM for Real Estate Teams";
+const SEO_TITLE = "WhatsApp CRM for Real Estate Teams";
 const PAGE_DESCRIPTION =
-  "Capture property leads straight into a WhatsApp pipeline, automate site-visit follow-ups, and broadcast new listings on the official WhatsApp Business API, with your whole sales team on one shared number.";
+  "Capture property leads in a WhatsApp pipeline, automate site-visit reminders and broadcast new listings on the official WhatsApp Business API.";
 
 export const metadata: Metadata = {
-  title: PAGE_TITLE,
+  title: SEO_TITLE,
   description: PAGE_DESCRIPTION,
   alternates: {
     canonical: "/whatsapp-crm-for-real-estate",
@@ -34,6 +50,10 @@ export default function RealEstateUseCasePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
       />
       <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
         &larr; Back to Repeat Grow

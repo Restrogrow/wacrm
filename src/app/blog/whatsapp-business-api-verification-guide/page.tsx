@@ -7,7 +7,7 @@ import { BlogPostLayout, type FaqItem, type TocItem } from '@/components/blog/po
 const POST = getPost('whatsapp-business-api-verification-guide');
 
 export const metadata: Metadata = {
-  title: POST.title,
+  title: POST.seoTitle ? { absolute: POST.seoTitle } : POST.title,
   description: POST.description,
   keywords: POST.keywords,
   alternates: { canonical: `/blog/${POST.slug}` },

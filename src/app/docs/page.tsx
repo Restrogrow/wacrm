@@ -21,10 +21,18 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { buildBreadcrumbSchema, SITE_URL, SUPPORT_EMAIL, SUPPORT_PHONE } from "@/lib/seo";
+import { buildBreadcrumbSchema, buildFAQNode, SITE_URL, SUPPORT_EMAIL, SUPPORT_PHONE } from "@/lib/seo";
 import { Toc } from "./docs-ui";
 
 const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([{ name: "Docs", path: "/docs" }]);
+
+// FAQ is defined below; the structured data is built from the same list.
+function faqSchema() {
+  return {
+    "@context": "https://schema.org",
+    ...buildFAQNode(FAQ.map(({ q, a }) => ({ question: q, answer: a }))),
+  };
+}
 
 export const metadata: Metadata = {
   title: "Help Center",
@@ -62,7 +70,7 @@ const FAQ = [
   },
   {
     q: "Can I keep using the WhatsApp app on my phone with the same number?",
-    a: "A number registered on the WhatsApp Business API is used through Repeat Grow rather than the phone app. Contact us before moving a number you rely on today and we'll walk you through it.",
+    a: "Yes, if you use the WhatsApp Business app. With coexistence, the same number works in both the Business app and Repeat Grow, and messages you send from the phone sync in. A personal WhatsApp number can't be connected this way. Contact us before moving a number you rely on today and we'll walk you through it.",
   },
   {
     q: "Why didn't my message deliver?",
@@ -142,6 +150,10 @@ export default function DocsPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB_SCHEMA) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema()) }}
       />
 
       <header className="docs-hero">

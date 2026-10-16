@@ -969,6 +969,14 @@ export const LANDING_CSS = `
   max-width: 32ch;
   line-height: 1.6;
 }
+.lp-page .footer-social{ display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.lp-page .footer-social a{
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.24); border-radius: 999px; padding: 6px 12px;
+  transition: border-color .15s ease, color .15s ease;
+}
+.lp-page .footer-social a:hover{ color: #fff; border-color: rgba(255,255,255,0.6); }
 .lp-page .footer-col h4{
   font-family: var(--font-mono);
   font-size: 11.5px;

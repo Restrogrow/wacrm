@@ -10,11 +10,12 @@ const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
 ]);
 
 const PAGE_TITLE = "Official WhatsApp Business API vs. Unofficial WhatsApp Tools";
+const SEO_TITLE = "Official vs Unofficial WhatsApp API";
 const PAGE_DESCRIPTION =
-  "Unofficial WhatsApp automation tools can get a business number banned. Here's the real difference between the official WhatsApp Business API and unofficial/session-based tools.";
+  "Unofficial WhatsApp tools can get your number banned. The real difference between the official WhatsApp Business API and session-based tools.";
 
 export const metadata: Metadata = {
-  title: PAGE_TITLE,
+  title: SEO_TITLE,
   description: PAGE_DESCRIPTION,
   alternates: {
     canonical: "/official-vs-unofficial-whatsapp-api",

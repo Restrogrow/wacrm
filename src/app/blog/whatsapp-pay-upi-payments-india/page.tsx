@@ -7,7 +7,7 @@ import { BlogPostLayout, type FaqItem, type TocItem } from '@/components/blog/po
 const POST = getPost('whatsapp-pay-upi-payments-india');
 
 export const metadata: Metadata = {
-  title: POST.title,
+  title: POST.seoTitle ? { absolute: POST.seoTitle } : POST.title,
   description: POST.description,
   keywords: POST.keywords,
   alternates: { canonical: `/blog/${POST.slug}` },

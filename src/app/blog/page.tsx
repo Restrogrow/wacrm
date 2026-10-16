@@ -6,7 +6,7 @@ import { SITE_URL, buildBreadcrumbSchema } from '@/lib/seo';
 import { BLOG_POSTS, formatPostDate, type BlogPost } from '@/lib/blog';
 
 const PAGE_DESCRIPTION =
-  'Practical guides on the official WhatsApp Business API, message templates, Shopify order notifications, appointment reminders and running sales and support on WhatsApp, from the Repeat Grow team.';
+  'Practical guides on the WhatsApp Business API, templates, Shopify notifications, payments and selling on WhatsApp in India, from Repeat Grow.';
 
 const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([{ name: 'Blog', path: '/blog' }]);
 

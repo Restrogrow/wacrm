@@ -10,7 +10,9 @@
 **App:** [repeatgrow.com/login](https://repeatgrow.com/login) ·
 **Help Center:** [repeatgrow.com/docs](https://repeatgrow.com/docs) ·
 **API reference:** [repeatgrow.com/docs/api](https://repeatgrow.com/docs/api) ·
-**Support:** [support@repeatgrow.com](mailto:support@repeatgrow.com)
+**Support:** [support@repeatgrow.com](mailto:support@repeatgrow.com) ·
+**LinkedIn:** [repeat-grow](https://www.linkedin.com/company/repeat-grow) ·
+**Reviews:** [Trustpilot](https://www.trustpilot.com/review/repeatgrow.com)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](./LICENSE)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org)

@@ -23,6 +23,11 @@ export const BRAND_KEYWORDS = [
 export const SUPPORT_EMAIL = "support@repeatgrow.com";
 export const SUPPORT_PHONE = "+916377568749";
 
+/** Official profiles, used for the Organization `sameAs` and site links. */
+export const LINKEDIN_URL = "https://www.linkedin.com/company/repeat-grow";
+export const TRUSTPILOT_URL = "https://www.trustpilot.com/review/repeatgrow.com";
+export const SOCIAL_PROFILES = [LINKEDIN_URL, TRUSTPILOT_URL];
+
 /** Organization node, standalone-valid (carries "@context") for use as its own JSON-LD block. */
 export const ORGANIZATION_SCHEMA = {
   "@context": "https://schema.org",
@@ -38,6 +43,10 @@ export function buildOrganizationNode() {
     alternateName: "RepeatGrow",
     url: SITE_URL,
     logo: `${SITE_URL}/logo-v2.png`,
+    description:
+      "WhatsApp CRM and official WhatsApp Business API platform for Indian businesses: shared inbox, AI chatbot, broadcasts, payments, Shopify and Calendly.",
+    areaServed: { "@type": "Country", name: "India" },
+    sameAs: SOCIAL_PROFILES,
     email: SUPPORT_EMAIL,
     contactPoint: [
       {

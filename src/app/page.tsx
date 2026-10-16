@@ -10,9 +10,9 @@ import {
 import { BLOG_POSTS } from "@/lib/blog";
 import { BRAND_KEYWORDS, SITE_URL, buildFAQNode, buildOrganizationNode } from "@/lib/seo";
 
-const HOME_TITLE = "Repeat Grow: WhatsApp CRM for sales & support teams.";
+const HOME_TITLE = "Repeat Grow: WhatsApp CRM & API for Indian Businesses";
 const HOME_DESCRIPTION =
-  "Repeat Grow is a WhatsApp CRM built on the official WhatsApp Business API: shared inbox with voice calls, sales pipelines, scheduled broadcasts, AI chatbot, orders & payments, Shopify and Calendly. 7-day free trial.";
+  "WhatsApp CRM on the official WhatsApp Business API: shared inbox, AI chatbot, broadcasts, payments, Shopify and Calendly. 7-day free trial.";
 
 const HOME_FAQS = [
   {
@@ -26,9 +26,9 @@ const HOME_FAQS = [
       "Most teams are live in days, not months. We handle WhatsApp Business verification, number registration, and data import for you, so your team starts working from the shared inbox almost immediately.",
   },
   {
-    question: "Do I need the regular WhatsApp Business app too?",
+    question: "Can I keep using the WhatsApp Business app on my phone?",
     answer:
-      "No. Repeat Grow replaces it. Once your number is connected through the official API, all conversations, contacts, and broadcasts are managed from Repeat Grow's shared inbox instead of the WhatsApp Business app.",
+      "Yes. With coexistence, one number works in both the WhatsApp Business app and Repeat Grow. Contacts, chat history and messages you send from the phone sync into the shared inbox, so your team sees everything. You can also move fully to Repeat Grow if you prefer.",
   },
   {
     question: "What does Repeat Grow cost?",

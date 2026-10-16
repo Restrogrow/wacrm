@@ -6,7 +6,7 @@ import { SITE_URL, buildBreadcrumbNode, buildFAQNode } from "@/lib/seo";
 
 export function compareMetadata(page: ComparePageData): Metadata {
   return {
-    title: page.title,
+    title: { absolute: page.title },
     description: page.description,
     alternates: { canonical: `/${page.slug}` },
     openGraph: {
