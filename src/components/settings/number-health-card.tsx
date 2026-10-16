@@ -183,11 +183,13 @@ export function NumberHealthCard() {
                 label="Can send messages"
                 tone={send === 'AVAILABLE' ? 'good' : send === 'LIMITED' ? 'warn' : send === 'BLOCKED' ? 'bad' : 'muted'}
                 value={send === 'AVAILABLE' ? 'Yes' : send === 'LIMITED' ? 'Limited' : send === 'BLOCKED' ? 'Blocked' : 'Unknown'}
-                help={
-                  h.health_errors?.length
-                    ? h.health_errors.map((e) => [e.error_description, e.possible_solution].filter(Boolean).join(' — ')).join(' ')
-                    : 'Whether Meta currently lets this number send messages.'
-                }
+                help={(() => {
+                  // SIP calling warnings don't apply: calls run over WebRTC.
+                  const errs = (h.health_errors ?? []).filter((e) => !/\bSIP\b/.test(e.error_description ?? ''));
+                  return errs.length
+                    ? errs.map((e) => [e.error_description, e.possible_solution].filter(Boolean).join(' — ')).join(' ')
+                    : 'Whether Meta currently lets this number send messages.';
+                })()}
               />
               <Row
                 label="Display name"

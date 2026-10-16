@@ -161,3 +161,19 @@ describe('isCallingNotEnabledError', () => {
     expect(isCallingNotEnabledError(new Error('calling not enabled'))).toBe(false)
   })
 })
+
+describe('coexistence numbers (Meta #141000)', () => {
+  it('recognises the error and explains it in plain words', async () => {
+    const { CallingError, callingHelpFor, isCallingNotEnabledError, isCoexistenceCallingError, CALLING_COEXISTENCE_HELP } =
+      await import('./calling')
+    const err = new CallingError('(#141000) The phone number is not a valid Cloud API number', 400, undefined, 141000)
+    expect(isCoexistenceCallingError(err)).toBe(true)
+    expect(isCallingNotEnabledError(err)).toBe(true)
+    expect(callingHelpFor(err)).toBe(CALLING_COEXISTENCE_HELP)
+    expect(CALLING_COEXISTENCE_HELP).toMatch(/WhatsApp Business app/)
+
+    const other = new CallingError('Calling is not enabled for this phone number', 400)
+    expect(isCoexistenceCallingError(other)).toBe(false)
+    expect(callingHelpFor(other)).not.toBe(CALLING_COEXISTENCE_HELP)
+  })
+})

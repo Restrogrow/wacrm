@@ -187,9 +187,32 @@ export interface CallingSettings {
   callbackPermissionStatus: string | null
 }
 
+/**
+ * Meta error #141000 "The phone number is not a valid Cloud API number":
+ * the number is also used in the WhatsApp Business app (coexistence),
+ * and the Calling API only works on Cloud-API-only numbers.
+ */
+export function isCoexistenceCallingError(err: unknown): boolean {
+  return (
+    err instanceof CallingError &&
+    (err.metaCode === 141000 || /not a valid Cloud API number|#141000/i.test(err.message))
+  )
+}
+
 /** Meta's "calling not enabled for this phone number" family of errors. */
 export function isCallingNotEnabledError(err: unknown): boolean {
-  return err instanceof CallingError && /calling (is )?not (enabled|available)|not eligible/i.test(err.message)
+  return (
+    isCoexistenceCallingError(err) ||
+    (err instanceof CallingError && /calling (is )?not (enabled|available)|not eligible/i.test(err.message))
+  )
+}
+
+export const CALLING_COEXISTENCE_HELP =
+  'This number is also used in the WhatsApp Business app on a phone (coexistence). Meta’s Calling API only works on numbers that use the Cloud API alone, so WhatsApp calling can’t be turned on for it. To take WhatsApp calls in Repeat Grow, connect a separate number that uses only the API, or stop using this number in the WhatsApp Business app.'
+
+/** The right explanation for a "can't enable calling" error. */
+export function callingHelpFor(err: unknown): string {
+  return isCoexistenceCallingError(err) ? CALLING_COEXISTENCE_HELP : CALLING_NOT_ALLOWED_HELP
 }
 
 /** What to tell an admin when Meta won't switch calling on. */

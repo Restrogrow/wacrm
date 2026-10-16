@@ -139,7 +139,11 @@ export async function fetchNumberHealthFromMeta(phoneNumberId: string, token: st
       | { can_send_message?: string; entities?: { errors?: NumberHealth['health_errors'] }[] }
       | undefined
     canSend = h?.can_send_message ?? null
-    const errs = (h?.entities ?? []).flatMap((e) => e.errors ?? []) as NonNullable<NumberHealth['health_errors']>
+    // 138024 / 138025 are about SIP calling, which Repeat Grow doesn't
+    // use (calls run over WebRTC in the browser), so they only confuse.
+    const errs = ((h?.entities ?? []).flatMap((e) => e.errors ?? []) as NonNullable<NumberHealth['health_errors']>).filter(
+      (e) => e.error_code !== 138024 && e.error_code !== 138025,
+    )
     healthErrors = errs.length ? errs : null
   } catch {
     // health_status not available for this number / API version.

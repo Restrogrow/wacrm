@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 
 import { requireRole, toErrorResponse, type AccountContext } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
-import { CallingError, isCallingNotEnabledError } from '@/lib/whatsapp/calling'
+import { CALLING_COEXISTENCE_HELP, CallingError, isCallingNotEnabledError, isCoexistenceCallingError } from '@/lib/whatsapp/calling'
 
 /** Agents and above can place and answer calls. */
 export async function requireCallingAgent(): Promise<AccountContext> {
@@ -35,6 +35,9 @@ export async function customerForConversation(accountId: string, conversationId:
 }
 
 export function callingErrorResponse(err: unknown): NextResponse {
+  if (isCoexistenceCallingError(err)) {
+    return NextResponse.json({ error: CALLING_COEXISTENCE_HELP, code: 'calling_unavailable' }, { status: 400 })
+  }
   if (isCallingNotEnabledError(err)) {
     return NextResponse.json(
       {

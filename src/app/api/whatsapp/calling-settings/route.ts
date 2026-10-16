@@ -16,7 +16,7 @@ import { NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import {
-  CALLING_NOT_ALLOWED_HELP,
+  callingHelpFor,
   CallingError,
   getCallingSettings,
   isCallingNotEnabledError,
@@ -33,7 +33,7 @@ export async function GET() {
       return NextResponse.json(await getCallingSettings(cfg))
     } catch (err) {
       if (isCallingNotEnabledError(err)) {
-        return NextResponse.json({ status: 'DISABLED', notice: CALLING_NOT_ALLOWED_HELP })
+        return NextResponse.json({ status: 'DISABLED', notice: callingHelpFor(err) })
       }
       throw err
     }
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     try {
       await setCallingEnabled(cfg, body.enabled)
     } catch (err) {
-      if (isCallingNotEnabledError(err)) throw new CallingError(CALLING_NOT_ALLOWED_HELP, 400, 'not_allowed')
+      if (isCallingNotEnabledError(err)) throw new CallingError(callingHelpFor(err), 400, 'not_allowed')
       throw err
     }
     return NextResponse.json(await getCallingSettings(cfg))
