@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { LANDING_CSS } from "@/lib/landing-css";
 import { LANDING_SCRIPT } from "@/lib/landing-script";
+import { HOME_CSS } from "@/lib/home-css";
+import { HOME_SCRIPT } from "@/lib/home-script";
 import {
   LANDING_NAV_HTML,
   LANDING_FOOTER_HTML,
@@ -87,25 +89,6 @@ const STRUCTURED_DATA = {
   ],
 };
 
-const BLOG_CARDS_HTML = BLOG_POSTS.slice(0, 6)
-  .map(
-    (post) => `
-      <a href="/blog/${post.slug}" class="usecase-card">
-        <h3>${post.title}</h3>
-        <p>${post.description}</p>
-        <span class="usecase-link">Read the guide &rarr;</span>
-      </a>`
-  )
-  .join("");
-
-const FAQ_HTML = HOME_FAQS.map(
-  (faq, index) => `
-      <details class="faq-item"${index === 0 ? " open" : ""}>
-        <summary>${faq.question}</summary>
-        <p>${faq.answer}</p>
-      </details>`
-).join("");
-
 // This route renders the Repeat Grow marketing homepage. It was migrated
 // from a standalone static HTML file (landing-page/index.html) so it can
 // live at the real site root and share the app's build/deploy pipeline
@@ -147,436 +130,428 @@ export const metadata: Metadata = {
 };
 
 
-const LANDING_BODY_HTML = `
+const ICON_CHECK =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';
+const ICON_ARROW =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const ICON_SEND =
+  '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>';
 
-<main id="top">
+const BLOG_CARDS_HTML = BLOG_POSTS.slice(0, 6)
+  .map(
+    (post, i) => `
+      <a href="/blog/${post.slug}" class="h-tile reveal" style="--d:${i % 3}">
+        <span class="cat">${post.category}</span>
+        <h3>${post.title}</h3>
+        <p>${post.description}</p>
+        <span class="more">Read the guide ${ICON_ARROW}</span>
+      </a>`
+  )
+  .join("");
+
+const FAQ_HTML = HOME_FAQS.map(
+  (faq, index) => `
+      <details class="faq-item"${index === 0 ? " open" : ""}>
+        <summary>${faq.question}</summary>
+        <p>${faq.answer}</p>
+      </details>`
+).join("");
+
+// Small product screens drawn in HTML/CSS (sharp at any size, no image
+// downloads). Sample names and numbers are illustrative.
+const UI_INBOX = `
+  <div class="ui-inbox">
+    <div class="ui-list">
+      <div class="ui-row on"><div class="ui-av" style="background:#0da968">RS</div><div class="t"><div class="n">Riya Shah</div><div class="p">Is the blue kurta in stock?</div></div><span class="tag">Priya</span></div>
+      <div class="ui-row"><div class="ui-av" style="background:#e0a33a">AK</div><div class="t"><div class="n">Amit Kulkarni</div><div class="p">Paid, thank you!</div></div></div>
+      <div class="ui-row"><div class="ui-av" style="background:#4f8fd6">MN</div><div class="t"><div class="n">Meera Naidu</div><div class="p">Can I book for Saturday?</div></div></div>
+      <div class="ui-row"><div class="ui-av" style="background:#c0608a">JT</div><div class="t"><div class="n">Jatin Thakur</div><div class="p">What's the bulk price?</div></div></div>
+      <div class="ui-row"><div class="ui-av" style="background:#7c62d4">SV</div><div class="t"><div class="n">Sneha Verma</div><div class="p">Where is my order?</div></div></div>
+    </div>
+    <div class="ui-thread full">
+      <div class="ui-b">Hi! Is the blue cotton kurta available in M?<small>10:41</small></div>
+      <div class="ui-b out">Yes, M is in stock. Want me to reserve one for you?<small>10:42 · Priya</small></div>
+      <div class="ui-b">Yes please, and can I pay by UPI?<small>10:43</small></div>
+      <div class="ui-b out">Of course. Sending your order now.<small>10:43 · Priya</small></div>
+      <div class="ui-composer"><span>Type a message or / for saved replies</span><span class="ui-send">${ICON_SEND}</span></div>
+    </div>
+  </div>`;
+
+const UI_BOT = `
+  <div class="ui-thread full">
+    <div class="ui-b">Hi, are you open on Sunday?<small>21:14</small></div>
+    <div class="ui-b out"><span class="who">✦ AI chatbot</span><br>Yes! We're open 10 am to 6 pm on Sundays. Would you like to book a slot?<small>21:14</small></div>
+    <div class="ui-chips"><span class="ui-chip">Book a slot</span><span class="ui-chip">See prices</span><span class="ui-chip">Talk to a human</span></div>
+    <div class="ui-b">Talk to a human</div>
+    <div class="ui-b out"><span class="who">✦ AI chatbot</span><br>Sure, connecting you to our team now.<small>21:15</small></div>
+    <div class="ui-b out ui-typing" aria-label="Agent is typing"><i></i><i></i><i></i></div>
+  </div>`;
+
+const UI_CAMPAIGN = `
+  <div class="ui-camp">
+    <div class="ui-camp-hd"><b>Diwali offer · 1,240 contacts</b><span class="ui-pill">Sent</span></div>
+    <div class="ui-tpl"><b>Hi Riya,</b> our Diwali sale is live: 20% off everything until Sunday. Tap below to shop. 🪔</div>
+    <div class="ui-bars">
+      <div class="ui-bar"><span>Sent</span><div class="tr"><div class="fl" style="width:100%"></div></div><b>1,240</b></div>
+      <div class="ui-bar"><span>Delivered</span><div class="tr"><div class="fl" style="width:96%"></div></div><b>1,198</b></div>
+      <div class="ui-bar"><span>Read</span><div class="tr"><div class="fl" style="width:82%"></div></div><b>1,021</b></div>
+      <div class="ui-bar"><span>Replied</span><div class="tr"><div class="fl" style="width:15%"></div></div><b>186</b></div>
+    </div>
+  </div>`;
+
+const UI_PAYMENT = `
+  <div class="ui-thread full">
+    <div class="ui-b">Please send the order, I'll pay now.<small>11:02</small></div>
+    <div class="ui-order">
+      <div class="hd">Order #1042</div>
+      <div class="ln"><span>Cotton kurta × 2</span><span>₹1,998</span></div>
+      <div class="ln"><span>Shipping</span><span>₹60</span></div>
+      <div class="tot"><span>Total</span><span>₹2,058</span></div>
+      <span class="pay">Review and pay</span>
+    </div>
+    <span class="ui-paid">✓ Paid with UPI · order confirmed</span>
+    <div class="ui-b out">Thank you! It ships today. We'll send tracking here.<small>11:05</small></div>
+  </div>`;
+
+const UI_FLOW = `
+  <div class="ui-flow">
+    <div class="ui-node"><span class="k" style="background:#e8f7f0">⚡</span><div>New message contains "price"<small>Trigger</small></div></div>
+    <div class="ui-link"></div>
+    <div class="ui-node"><span class="k" style="background:#eef3fb">🏷️</span><div>Tag contact "hot lead"<small>Action</small></div></div>
+    <div class="ui-link"></div>
+    <div class="ui-node"><span class="k" style="background:#fff6e5">✉️</span><div>Send price list template<small>WhatsApp</small></div></div>
+    <div class="ui-link"></div>
+    <div class="ui-node"><span class="k" style="background:#f3eefc">⏱</span><div>Wait 1 day, then follow up<small>Delay</small></div></div>
+  </div>`;
+
+const UI_KANBAN = `
+  <div class="ui-kanban">
+    <div class="ui-col"><span>New</span><div class="ui-deal">Riya Shah<small>₹4,200</small></div><div class="ui-deal">Jatin T.<small>₹12,000</small></div></div>
+    <div class="ui-col"><span>Demo</span><div class="ui-deal">Meera N.<small>₹8,500</small></div></div>
+    <div class="ui-col"><span>Won</span><div class="ui-deal">Amit K.<small>₹2,058</small></div></div>
+  </div>`;
+
+const UI_CALL = `
+  <div class="ui-call">
+    <div class="ui-ring"><div class="ui-av" style="background:#0da968">RS</div></div>
+    <div style="margin-top:12px;font-weight:700;color:#0b1620;font-size:14px">Riya Shah is calling</div>
+    <div style="font-size:12px;color:#5f6a7a">WhatsApp voice call · ringing 4 agents</div>
+    <div class="ui-call-btns"><span class="ok">Answer</span><span class="no">Decline</span></div>
+  </div>`;
+
+const UI_CODE = `<div class="ui-code"><span class="c"># Send a WhatsApp message from your app</span>
+curl -X POST https://repeatgrow.com/api/v1/messages \\
+  -H <span class="s">"Authorization: Bearer $REPEATGROW_API_KEY"</span> \\
+  -d <span class="s">'{ "to": "+919876543210", "text": "Your order shipped" }'</span>
+
+<span class="k">→ 201</span> { "data": { "status": <span class="s">"sent"</span> } }</div>`;
+
+const INTEGRATIONS = [
+  ["WhatsApp Business API", "#25d366"],
+  ["Shopify", "#5e8e3e"],
+  ["Calendly", "#006bff"],
+  ["WhatsApp Pay", "#0da968"],
+  ["UPI", "#ff7a00"],
+  ["Razorpay", "#0c2451"],
+  ["PayU", "#a6c307"],
+  ["BillDesk", "#e2231a"],
+  ["Zaakpay", "#1e88e5"],
+  ["Google Gemini AI", "#7b61ff"],
+  ["REST API & webhooks", "#16212c"],
+];
+const MARQUEE_HTML = INTEGRATIONS.map(
+  ([name, color]) => `<span class="h-logo"><i style="--c:${color}"></i>${name}</span>`
+).join("");
+
+const LANDING_BODY_HTML = `
+<main id="top" class="home">
 
 <!-- ============================= HERO ============================= -->
-<header class="hero">
-  <div class="container">
-    <div class="hero-copy">
-      <span class="eyebrow">Official WhatsApp Business API &middot; Done-for-you setup</span>
-      <h1>Turn one-time chats into <span class="accent-text">repeat</span> customers.</h1>
-      <p class="hero-sub">Repeat Grow is a WhatsApp CRM for sales and support teams: shared inbox with voice calls, pipelines, scheduled broadcasts, an AI chatbot, orders and payments, and Shopify and Calendly built in, all on the official WhatsApp Business API. We set it up for your business, so your team is selling on WhatsApp in days.</p>
-      <div class="hero-ctas">
-        <a href="/demo" class="btn btn-primary">Book a demo</a>
-        <a href="/signup" class="btn btn-ghost">Start free trial</a>
-        <a href="https://wa.me/916377568749" target="_blank" rel="noopener" class="btn btn-ghost">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2zm5.8 14.16c-.24.68-1.4 1.3-1.93 1.38-.49.08-1.11.11-1.8-.11-.41-.13-.94-.31-1.62-.6-2.85-1.23-4.71-4.1-4.85-4.29-.14-.19-1.16-1.54-1.16-2.94s.73-2.09.99-2.37c.26-.29.56-.36.75-.36l.53.01c.17.01.4-.06.62.48.24.58.81 2 .88 2.15.07.15.12.32.02.52-.09.19-.14.31-.28.48-.14.17-.29.37-.42.5-.14.14-.28.29-.12.57.16.28.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.24 1.38.28.14.44.12.6-.07.16-.19.68-.79.87-1.06.19-.28.37-.23.62-.14.26.09 1.63.77 1.91.91.28.14.47.21.53.33.07.12.07.68-.17 1.36z"/></svg>
-          Message us on WhatsApp
-        </a>
+<header class="h-hero">
+  <div class="h-hero-bg" aria-hidden="true"></div>
+  <div class="container h-hero-grid">
+    <div class="h-hero-copy">
+      <a href="/blog/whatsapp-pay-upi-payments-india" class="h-badge"><span class="h-badge-new">New</span>Take UPI &amp; WhatsApp Pay payments in chat <span aria-hidden="true">&rarr;</span></a>
+      <h1>Turn every WhatsApp chat into a <span class="h-grad">repeat customer</span>.</h1>
+      <p class="h-sub">One shared WhatsApp inbox for your whole team, with an AI chatbot, broadcasts, payments and Shopify built in. On the official WhatsApp Business API, and we set it up for you.</p>
+      <div class="h-ctas">
+        <a href="/demo" class="btn btn-primary h-btn h-btn-glow">Book a free demo ${ICON_ARROW}</a>
+        <a href="/signup" class="btn btn-ghost h-btn h-btn-ghost">Start 7-day free trial</a>
       </div>
-      <p class="hero-note">7-day free trial, no credit card required.</p>
-      <div class="hero-meta">
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Official WhatsApp Business API</span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Managed setup &amp; onboarding</span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg> Dedicated support</span>
+      <ul class="h-checks">
+        <li>${ICON_CHECK}No credit card</li>
+        <li>${ICON_CHECK}Setup done for you</li>
+        <li>${ICON_CHECK}Plans from &#8377;499/month</li>
+      </ul>
+    </div>
+
+    <div class="h-hero-visual">
+      <div class="h-device" role="region" aria-roledescription="carousel" aria-label="Repeat Grow product preview">
+        <div class="h-device-bar"><div class="h-dots"><i></i><i></i><i></i></div><div class="h-url">repeatgrow.com/inbox</div></div>
+        <div class="h-stage">
+          <div class="h-slide is-active" data-url="repeatgrow.com/inbox" role="group" aria-label="Shared inbox">${UI_INBOX}</div>
+          <div class="h-slide" data-url="repeatgrow.com/inbox · AI chatbot" role="group" aria-label="AI chatbot">${UI_BOT}</div>
+          <div class="h-slide" data-url="repeatgrow.com/broadcasts" role="group" aria-label="Broadcasts">${UI_CAMPAIGN}</div>
+          <div class="h-slide" data-url="repeatgrow.com/inbox · payments" role="group" aria-label="Payments">${UI_PAYMENT}</div>
+        </div>
+      </div>
+      <div class="h-float f1" aria-hidden="true"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></span><div><b>Payment received</b><span>&#8377;2,058 · UPI</span></div></div>
+      <div class="h-float f2" aria-hidden="true"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span><div><b>Incoming WhatsApp call</b><span>Riya Shah · tap to answer</span></div></div>
+      <div class="h-slider-nav" role="tablist" aria-label="Choose a preview">
+        <button type="button" role="tab" aria-selected="true">Shared inbox</button>
+        <button type="button" role="tab" aria-selected="false">AI chatbot</button>
+        <button type="button" role="tab" aria-selected="false">Broadcasts</button>
+        <button type="button" role="tab" aria-selected="false">Payments</button>
       </div>
     </div>
   </div>
 </header>
 
-<!-- ============================= TRUST STRIP ============================= -->
-<div class="trust-strip">
+<!-- ============================= PROOF STRIP ============================= -->
+<section class="h-proof" aria-label="Why teams trust Repeat Grow">
   <div class="container">
-    <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>Official WhatsApp Business API</span>
-    <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>Trusted by growing teams</span>
-    <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6M12 19h8"/></svg>Live in days, not months</span>
-    <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="1"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secure &amp; fully managed</span>
-  </div>
-</div>
-
-<!-- ============================= FEATURES ============================= -->
-<section id="features">
-  <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">What's inside</span>
-      <h2>Everything a WhatsApp sales &amp; support team needs</h2>
-      <p>One product covering the full loop, from first inbound message to closed deal, without stitching together three SaaS tools.</p>
+    <div class="h-stats reveal">
+      <div class="h-stat"><b>Official</b><span>Meta WhatsApp Cloud API, no ban risk from unofficial tools</span></div>
+      <div class="h-stat"><b>&#8377;499</b><span>per month to start, every feature included</span></div>
+      <div class="h-stat"><b>7 days</b><span>free trial, no credit card needed</span></div>
+      <div class="h-stat"><b>Days</b><span>to go live, with API setup done for you</span></div>
     </div>
-
-    <div class="feature-grid reveal">
-      <article class="feature-card wide">
-        <div>
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2 3h4l2-3h4"/><path d="M4 12l2-7h12l2 7v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6z"/></svg>
-          </div>
-          <h3>Shared inbox</h3>
-          <p>Official WhatsApp Business API on one shared number. Multiple agents, assignment, status, internal notes, saved replies, voice notes and in-browser voice calls. Works alongside the WhatsApp Business app.</p>
-        </div>
-        <div class="mini-inbox">
-          <div class="mini-inbox-row"><div class="mini-avatar" style="background:#3ecf8e">RS</div><span class="who">Riya Shah</span><span class="mini-badge">Assigned</span></div>
-          <div class="mini-inbox-row"><div class="mini-avatar" style="background:#e0b95a">AK</div><span class="who">Amit K.</span><span class="snip">Open</span></div>
-          <div class="mini-inbox-row"><div class="mini-avatar" style="background:#5a9bd4">MN</div><span class="who">M. Naidu</span><span class="snip">Resolved</span></div>
-        </div>
-      </article>
-
-      <article class="feature-card">
-        <span class="feature-num mono">02</span>
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.5a2 2 0 0 0 0-1L19 8.4a2 2 0 0 0-1.8-1.1H6.8A2 2 0 0 0 5 8.4L3.4 11.5a2 2 0 0 0 0 1L5 15.6a2 2 0 0 0 1.8 1.1h10.4a2 2 0 0 0 1.8-1.1l1.6-3.1z"/><circle cx="12" cy="12" r="2.2"/></svg>
-        </div>
-        <h3>Contacts &amp; tags</h3>
-        <p>Custom fields, CSV import and export, automatic deduplication, and STOP / opt-out handling. Every contact keeps its full conversation and deal history.</p>
-      </article>
-
-      <article class="feature-card">
-        <span class="feature-num mono">03</span>
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M9 4v16M15 4v16"/></svg>
-        </div>
-        <h3>Sales pipelines</h3>
-        <p>Kanban boards with deals linked directly to conversations. See chat history without leaving the pipeline.</p>
-      </article>
-
-      <article class="feature-card">
-        <span class="feature-num mono">04</span>
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-7-7 18-3-8-8-3z"/></svg>
-        </div>
-        <h3>Broadcasts</h3>
-        <p>Meta-approved templates, including carousels. Send now or schedule for later, with delivery and read tracking and per-recipient variables.</p>
-      </article>
-
-      <article class="feature-card">
-        <span class="feature-num mono">05</span>
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="12" cy="18" r="2.2"/><path d="M7.8 7.2L11 16M16.2 7.2L13 16M8 6h8"/></svg>
-        </div>
-        <h3>No-code automations</h3>
-        <p>Visual builder: trigger on messages, new contacts, keywords or tags. Branches, waits, tags, deals, webhooks. Plus chatbot flows you can generate with AI.</p>
-      </article>
-
-      <article class="feature-card">
-        <span class="feature-num mono">06</span>
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M11 19V5M18 19v-7"/><path d="M3 19h18"/></svg>
-        </div>
-        <h3>Real-time dashboard</h3>
-        <p>Response times, daily volume, pipeline value and a live activity feed, plus a daily summary email and WhatsApp number health checks.</p>
-      </article>
-
-      <article class="feature-card">
-        <span class="feature-num mono">07</span>
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 19c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><path d="M17 8.2a3.2 3.2 0 1 1 0 6.2M21.5 19c0-2.6-1.9-4.6-4.6-5.3"/></svg>
-        </div>
-        <h3>Team accounts</h3>
-        <p>Invite by link, role-based access (owner / admin / agent / viewer), ownership transfer. Solo use stays zero-setup.</p>
-      </article>
-
-      <article class="feature-card wide full">
-        <div>
-          <span class="feature-num mono">08</span>
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12"/></svg>
-          </div>
-          <h3>Public REST API</h3>
-          <p>Scoped, revocable API keys to send messages and templates, manage contacts and launch broadcasts, plus signed outbound webhooks for every incoming message and delivery status.</p>
-        </div>
-        <div class="mini-code">
-          <span class="mini-code-line"><span class="mc-prompt">$</span> curl https://repeatgrow.com/api/v1/contacts \\</span>
-          <span class="mini-code-line">&nbsp;&nbsp;-H "Authorization: Bearer rg_sk_live_••••"</span>
-          <span class="mc-out">{"contacts": 1842, "status": "ok"}</span>
-        </div>
-      </article>
+    <div class="h-marquee reveal" style="--d:1">
+      <p class="h-marquee-label">Works with the tools Indian businesses already use</p>
+      <div class="h-marquee-track">${MARQUEE_HTML}<span class="dup" aria-hidden="true" style="display:contents">${MARQUEE_HTML}</span></div>
     </div>
   </div>
 </section>
 
-<!-- ============================= MORE FEATURES ============================= -->
-<section id="more-features" class="section-alt">
+<!-- ============================= FEATURES (BENTO) ============================= -->
+<section id="features" class="h-section h-alt">
   <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">New &amp; built for India</span>
-      <h2>More than a shared inbox</h2>
-      <p>Calls, payments, forms, AI and more: everything your team needs to sell and support on WhatsApp, in one place.</p>
+    <div class="h-head reveal">
+      <span class="h-eyebrow">Everything in one place</span>
+      <h2>One inbox. Every tool your team needs to <span class="h-grad">sell on WhatsApp</span>.</h2>
+      <p>From the first message to the paid order, without stitching together three different apps.</p>
     </div>
-    <div class="usecase-grid reveal">
-      <div class="usecase-card">
-        <h3>Voice calls in the browser</h3>
-        <p>Customers call your WhatsApp number and every agent's browser rings. The first to answer takes it. Call customers back from the chat, no phone line needed.</p>
+
+    <div class="h-bento">
+      <article class="h-card w2 reveal">
+        <div class="h-card-visual" style="height:290px">${UI_INBOX}</div>
+        <div class="h-card-body"><span class="h-card-tag">Shared inbox</span><h3>Your whole team on one WhatsApp number</h3><p>Assign chats, add internal notes, use saved replies and voice notes, and see who is handling what. Works alongside the WhatsApp Business app.</p></div>
+      </article>
+      <article class="h-card reveal" style="--d:1">
+        <div class="h-card-visual" style="height:290px">${UI_BOT}</div>
+        <div class="h-card-body"><span class="h-card-tag">AI chatbot</span><h3>Replies at 2 am, hands over at 10</h3><p>Answers from your own FAQs, knows your opening hours and passes the chat to a person when asked.</p></div>
+      </article>
+
+      <article class="h-card reveal">
+        <div class="h-card-visual" style="height:250px">${UI_PAYMENT}</div>
+        <div class="h-card-body"><span class="h-card-tag">Orders &amp; payments</span><h3>Get paid inside the chat</h3><p>Send an order with WhatsApp Pay or your UPI ID, share your catalog and turn carts into orders.</p></div>
+      </article>
+      <article class="h-card reveal" style="--d:1">
+        <div class="h-card-visual" style="height:250px">${UI_CAMPAIGN}</div>
+        <div class="h-card-body"><span class="h-card-tag">Broadcasts</span><h3>Campaigns people actually read</h3><p>Approved templates and carousels, sent now or scheduled, with delivered, read and replied counts.</p></div>
+      </article>
+      <article class="h-card reveal" style="--d:2">
+        <div class="h-card-visual" style="height:250px">${UI_CALL}</div>
+        <div class="h-card-body"><span class="h-card-tag">Voice calls</span><h3>Customers call, every agent's browser rings</h3><p>The first to answer takes it. Call back from the chat. No phone line needed.</p></div>
+      </article>
+
+      <article class="h-card w2 reveal">
+        <div class="h-card-visual" style="height:300px">${UI_FLOW}</div>
+        <div class="h-card-body"><span class="h-card-tag">Automations &amp; flows</span><h3>The follow-ups happen even when you're busy</h3><p>Trigger on keywords, new contacts or tags. Tag, wait, branch, create deals and send templates, or describe a chatbot flow and let AI build it.</p></div>
+      </article>
+      <article class="h-card reveal" style="--d:1">
+        <div class="h-card-visual" style="height:300px;display:grid;align-items:center">${UI_KANBAN}</div>
+        <div class="h-card-body"><span class="h-card-tag">Pipelines</span><h3>Every chat tied to a deal</h3><p>Kanban boards in rupees, with the full conversation one click away.</p></div>
+      </article>
+
+      <article class="h-card w3 reveal">
+        <div class="h-wide">
+          <div class="h-card-body">
+            <span class="h-card-tag">Integrations &amp; API</span>
+            <h3>Plugs into your store, calendar and code</h3>
+            <p>Shopify order, COD, shipping and abandoned-cart messages. Calendly confirmations and reminders. A public REST API with scoped keys and signed webhooks for everything else.</p>
+            <div class="h-int-badges"><span>Shopify</span><span>Calendly</span><span>REST API</span><span>Webhooks</span><span>Connect RepeatGrow</span></div>
+          </div>
+          <div class="h-card-visual">${UI_CODE}</div>
+        </div>
+      </article>
+    </div>
+
+    <div class="h-more reveal">
+      <span>${ICON_CHECK}WhatsApp forms</span>
+      <span>${ICON_CHECK}Carousel templates</span>
+      <span>${ICON_CHECK}Scheduled broadcasts</span>
+      <span>${ICON_CHECK}STOP opt-outs</span>
+      <span>${ICON_CHECK}Number health checks</span>
+      <span>${ICON_CHECK}Daily summary email</span>
+      <span>${ICON_CHECK}Team roles</span>
+      <span>${ICON_CHECK}Data export &amp; deletion</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= PRODUCT TOUR (TABS) ============================= -->
+<section id="how-it-works" class="h-section">
+  <div class="container">
+    <div class="h-head reveal">
+      <span class="h-eyebrow">Product tour</span>
+      <h2>See how a chat becomes a <span class="h-grad">paying customer</span></h2>
+      <p>Click through the main screens your team will use every day.</p>
+    </div>
+    <div class="h-tour reveal">
+      <div class="h-tabs" role="tablist" aria-label="Product tour" aria-orientation="vertical">
+        <button type="button" class="h-tab" role="tab" id="tab-inbox" aria-controls="panel-inbox" aria-selected="true"><b><i>💬</i>Answer every chat</b><p>Every WhatsApp message lands in one shared inbox. Assign it, reply with saved replies, and never lose a lead to a busy phone.</p><span class="h-prog"></span></button>
+        <button type="button" class="h-tab" role="tab" id="tab-bot" aria-controls="panel-bot" aria-selected="false"><b><i>✦</i>Let AI handle the repeats</b><p>The AI chatbot answers common questions day and night, then hands over to your team when it matters.</p><span class="h-prog"></span></button>
+        <button type="button" class="h-tab" role="tab" id="tab-pay" aria-controls="panel-pay" aria-selected="false"><b><i>&#8377;</i>Close the sale in chat</b><p>Send the order with a payment request. Customers pay with WhatsApp Pay or UPI without leaving WhatsApp.</p><span class="h-prog"></span></button>
+        <button type="button" class="h-tab" role="tab" id="tab-camp" aria-controls="panel-camp" aria-selected="false"><b><i>📣</i>Bring them back</b><p>Broadcast offers and updates with approved templates, and see who read and replied.</p><span class="h-prog"></span></button>
+        <button type="button" class="h-tab" role="tab" id="tab-flow" aria-controls="panel-flow" aria-selected="false"><b><i>⚡</i>Automate the follow-up</b><p>Tag, wait and follow up automatically, so no warm lead goes cold.</p><span class="h-prog"></span></button>
       </div>
-      <div class="usecase-card">
-        <h3>Orders, payments &amp; catalog</h3>
-        <p>Send an order with a payment request in WhatsApp through WhatsApp Pay (Razorpay, PayU, BillDesk, Zaakpay) or your UPI ID. Share your catalog and turn carts into orders.</p>
+      <div class="h-panels">
+        <div class="h-panel-frame">
+          <div class="h-panel is-active" id="panel-inbox" role="tabpanel" aria-labelledby="tab-inbox">${UI_INBOX}</div>
+          <div class="h-panel" id="panel-bot" role="tabpanel" aria-labelledby="tab-bot">${UI_BOT}</div>
+          <div class="h-panel" id="panel-pay" role="tabpanel" aria-labelledby="tab-pay">${UI_PAYMENT}</div>
+          <div class="h-panel" id="panel-camp" role="tabpanel" aria-labelledby="tab-camp">${UI_CAMPAIGN}</div>
+          <div class="h-panel" id="panel-flow" role="tabpanel" aria-labelledby="tab-flow">${UI_FLOW}</div>
+        </div>
       </div>
-      <div class="usecase-card">
-        <h3>WhatsApp forms</h3>
-        <p>Build simple forms and send them in a chat. Customers fill them in without leaving WhatsApp, and answers save to the contact with a CSV download.</p>
-      </div>
-      <div class="usecase-card">
-        <h3>AI chatbot</h3>
-        <p>Answers chats from your own knowledge base, knows your opening hours and hands over to a human when asked. Build flows visually or generate them with AI.</p>
-      </div>
-      <div class="usecase-card">
-        <h3>Scheduled broadcasts &amp; carousels</h3>
-        <p>Schedule campaigns for later and let the server send them. Create swipeable carousel templates with up to 10 image or video cards.</p>
-      </div>
-      <div class="usecase-card">
-        <h3>Opt-outs &amp; number health</h3>
-        <p>STOP replies are honoured automatically. Daily checks on your number's quality rating and messaging limit warn you before Meta limits it.</p>
-      </div>
-      <div class="usecase-card">
-        <h3>Works with the WhatsApp Business app</h3>
-        <p>Use one number in both the app and Repeat Grow (coexistence). Contacts, history and messages sent from your phone sync in.</p>
-      </div>
-      <div class="usecase-card">
-        <h3>Daily summary email</h3>
-        <p>Get messages, new chats, broadcasts, deals won and opt-outs in your inbox every day, at the hour you choose.</p>
-      </div>
-      <div class="usecase-card">
-        <h3>Your data, your control</h3>
-        <p>Download your data any time and request account deletion from Settings (DPDP Act / GDPR). Credentials are encrypted and webhooks are signature-verified.</p>
-      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= HOW YOU GET STARTED ============================= -->
+<section id="setup" class="h-section h-alt">
+  <div class="container">
+    <div class="h-head reveal">
+      <span class="h-eyebrow">Live in days</span>
+      <h2>We do the setup. <span class="h-grad">You start selling.</span></h2>
+      <p>No developers, no Meta paperwork headaches.</p>
+    </div>
+    <div class="h-steps">
+      <div class="h-step reveal"><div class="n">1</div><h3>Book a free demo</h3><p>Tell us what you sell and how your team talks to customers. We show Repeat Grow on your use case.</p></div>
+      <div class="h-step reveal" style="--d:1"><div class="n">2</div><h3>We set up your WhatsApp API</h3><p>Business verification, number registration and importing your contacts, done for you.</p></div>
+      <div class="h-step reveal" style="--d:2"><div class="n">3</div><h3>Your team sells on WhatsApp</h3><p>Everyone works from one inbox, with automations, broadcasts and payments ready to switch on.</p></div>
     </div>
   </div>
 </section>
 
 <!-- ============================= INTEGRATIONS ============================= -->
-<section id="integrations">
+<section id="integrations" class="h-section">
   <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">Integrations</span>
+    <div class="h-head reveal">
+      <span class="h-eyebrow">Integrations</span>
       <h2>Connects to the tools you already use</h2>
       <p>Each event maps to an approved WhatsApp template, filled with live data, with a preview, a test send and a message log.</p>
     </div>
-    <div class="usecase-grid reveal">
-      <div class="usecase-card">
-        <h3>Shopify</h3>
-        <p>Order placed, COD confirmation, shipped with tracking, out for delivery, delivered, cancelled and abandoned-cart reminders. Connect in one click or with webhooks.</p>
-      </div>
-      <div class="usecase-card">
-        <h3>Calendly</h3>
-        <p>Booking confirmed, rescheduled and cancelled messages, no-show follow-ups, and reminders 24 hours and 1 hour before the meeting.</p>
-      </div>
-      <div class="usecase-card">
-        <h3>Connect RepeatGrow</h3>
-        <p>Partner apps connect with one click and send WhatsApp messages through the API. Or build your own with the REST API and webhooks.</p>
-        <a href="/docs/api" class="usecase-link">View the API docs &rarr;</a>
-      </div>
+    <div class="h-grid3">
+      <div class="h-tile hov reveal"><div class="ico logo" style="background:#5e8e3e">S</div><h3>Shopify</h3><p>Order placed, COD confirmation, shipped with tracking, out for delivery, delivered, cancelled and abandoned-cart reminders. Connect in one click or with webhooks.</p></div>
+      <div class="h-tile hov reveal" style="--d:1"><div class="ico logo" style="background:#006bff">C</div><h3>Calendly</h3><p>Booking confirmed, rescheduled and cancelled messages, no-show follow-ups, and reminders 24 hours and 1 hour before the meeting.</p></div>
+      <a href="/docs/api" class="h-tile reveal" style="--d:2"><div class="ico logo" style="background:#16212c">{ }</div><h3>Connect RepeatGrow &amp; API</h3><p>Partner apps connect with one click and send WhatsApp messages through the API. Or build your own with the REST API and webhooks.</p><span class="more">View the API docs ${ICON_ARROW}</span></a>
     </div>
   </div>
 </section>
 
 <!-- ============================= WHY REPEAT GROW ============================= -->
-<section id="why-us" class="why-fork section-alt">
+<section id="why-us" class="h-section h-alt h-why">
   <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">Why Repeat Grow</span>
-      <h2>Built to turn conversations into repeat revenue</h2>
-      <p>Most WhatsApp tools are just messaging apps. Repeat Grow is a CRM, every conversation is tied to a contact, a deal, and a next step, so no lead falls through the cracks.</p>
+    <div class="h-head reveal">
+      <span class="h-eyebrow">Why Repeat Grow</span>
+      <h2>Built to turn conversations into <span class="h-grad">repeat revenue</span></h2>
+      <p>Most WhatsApp tools are just messaging apps. Repeat Grow is a CRM: every conversation is tied to a contact, a deal and a next step.</p>
     </div>
-    <div class="fork-list reveal">
-      <div class="fork-item">
-        <span class="num mono">01</span>
-        <div>
-          <h3>Official WhatsApp Business API</h3>
-          <p>Verified, compliant messaging on your own business number, not a jailbroken app or a shared inbox that can get banned.</p>
-        </div>
-      </div>
-      <div class="fork-item">
-        <span class="num mono">02</span>
-        <div>
-          <h3>Live in days, not months</h3>
-          <p>We handle setup, WhatsApp verification, and data import for you. Your team starts working from the shared inbox almost immediately.</p>
-        </div>
-      </div>
-      <div class="fork-item">
-        <span class="num mono">03</span>
-        <div>
-          <h3>Built for repeat business</h3>
-          <p>Pipelines, tags, and automations keep every contact moving, so first-time buyers turn into repeat customers instead of one-off chats.</p>
-        </div>
-      </div>
-      <div class="fork-item">
-        <span class="num mono">04</span>
-        <div>
-          <h3>Secure by default</h3>
-          <p>Encrypted credentials, strict access controls, verified webhooks, and rate limiting protect your customer data around the clock.</p>
-        </div>
-      </div>
+    <div class="h-grid2">
+      <div class="h-tile reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.4 9.3-8 10-4.6-.7-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Official WhatsApp Business API</h3><p>Verified, compliant messaging on your own business number, not a jailbroken app or a tool that can get your number banned.</p></div>
+      <div class="h-tile reveal" style="--d:1"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></div><h3>Live in days, not months</h3><p>We handle setup, WhatsApp verification and data import. Your team starts working from the shared inbox almost immediately.</p></div>
+      <div class="h-tile reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5"/></svg></div><h3>Built for repeat business</h3><p>Pipelines, tags and automations keep every contact moving, so first-time buyers become repeat customers.</p></div>
+      <div class="h-tile reveal" style="--d:1"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>Secure by default</h3><p>Encrypted credentials, strict access controls, verified webhooks and rate limiting protect your customer data around the clock.</p></div>
     </div>
-  </div>
-</section>
-
-<!-- ============================= HOW IT WORKS ============================= -->
-<section id="how-it-works">
-  <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">Product tour</span>
-      <h2>One shared number. Every conversation, tied to a deal.</h2>
-      <p>Every inbound WhatsApp message lands in the shared inbox, and stays linked to its pipeline stage, so nobody's chasing context across tools.</p>
-    </div>
-
-    <div class="app-window reveal">
-      <div class="app-window-bar">
-        <div class="window-dots"><i></i><i></i><i></i></div>
-        <span class="app-url">repeatgrow.com/inbox</span>
-      </div>
-      <div class="app-window-body">
-        <div class="app-col">
-          <div class="app-col-head">Conversations</div>
-          <div class="conv-item active">
-            <div class="mini-avatar" style="background:#3ecf8e">RS</div>
-            <div class="meta"><div class="name">Riya Shah</div><div class="prev">Can I get the pro plan invoice?</div></div>
-            <div class="time">2m</div>
-          </div>
-          <div class="conv-item">
-            <div class="mini-avatar" style="background:#e0b95a">AK</div>
-            <div class="meta"><div class="name">Amit Kulkarni</div><div class="prev">Sure, sending payment now</div></div>
-            <div class="time">14m</div>
-          </div>
-          <div class="conv-item">
-            <div class="mini-avatar" style="background:#5a9bd4">MN</div>
-            <div class="meta"><div class="name">Meera Naidu</div><div class="prev">Thanks, that resolved it!</div></div>
-            <div class="time">1h</div>
-          </div>
-          <div class="conv-item">
-            <div class="mini-avatar" style="background:#c46e8e">JT</div>
-            <div class="meta"><div class="name">Jason Tan</div><div class="prev">What's the bulk pricing?</div></div>
-            <div class="time">3h</div>
-          </div>
-          <div class="conv-item">
-            <div class="mini-avatar" style="background:#8a6fd1">SW</div>
-            <div class="meta"><div class="name">Sara Wilson</div><div class="prev">Any updates on my order?</div></div>
-            <div class="time">5h</div>
-          </div>
-        </div>
-
-        <div class="thread">
-          <div class="bubble in">Hi! I saw your post about the Business plan, is it still available?<span class="ts">10:38</span></div>
-          <div class="bubble out">Yes, absolutely, let me pull up the details for you.<span class="ts">10:39 &middot; Priya (agent)</span></div>
-          <div class="bubble in">Hey, can I get the pro plan invoice for this month?<span class="ts">10:42</span></div>
-          <div class="bubble out">On it, sending the PDF to this number now.<span class="ts">10:43 &middot; Priya (agent)</span></div>
-          <div class="bubble in">Perfect, thank you!<span class="ts">10:44</span></div>
-          <div class="composer">
-            <span class="composer-text">Type a message&hellip;</span>
-            <span class="composer-send" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-            </span>
-          </div>
-        </div>
-
-        <div class="side-panel">
-          <div class="side-block">
-            <div class="label">Assigned to</div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div class="mini-avatar" style="width:24px;height:24px;font-size:10px;background:#3ecf8e;">PS</div>
-              <span style="font-size:13px;color:var(--text);font-weight:600;">Priya Sharma</span>
-            </div>
-          </div>
-          <div class="side-block">
-            <div class="label">Pipeline stage</div>
-            <div class="stage-track"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
-            <p style="font-size:12px;color:var(--text-dim);margin-top:8px;">Negotiation &middot; 3 of 5</p>
-          </div>
-          <div class="side-block">
-            <div class="label">Deal value</div>
-            <div class="deal-value">$4,200</div>
-          </div>
-          <div class="side-block">
-            <div class="label">Tags</div>
-            <div class="tag-row">
-              <span class="tag-chip">pro-plan</span>
-              <span class="tag-chip">renewal</span>
-              <span class="tag-chip">high-intent</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <p class="how-caption">Every panel above is <span class="mono">Repeat Grow</span>, no separate invoicing tool, no separate pipeline tool.</p>
   </div>
 </section>
 
 <!-- ============================= PRICING TEASER ============================= -->
-<section id="pricing" class="section-alt pricing-teaser">
+<section id="pricing" class="h-section">
   <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">Pricing</span>
-      <h2>Simple, published pricing</h2>
-      <p>Every account starts with a 7-day free trial. Plans scale with your contacts and team, from &#8377;499/month. No hidden fees. We handle WhatsApp Business API setup on every plan.</p>
-      <div class="hero-ctas" style="justify-content:center; margin-top:28px;">
-        <a href="/pricing" class="btn btn-primary">See plans &amp; pricing</a>
-      </div>
+    <div class="h-head reveal">
+      <span class="h-eyebrow">Pricing</span>
+      <h2>Every feature on every plan</h2>
+      <p>Start with a 7-day free trial. Plans only change the limits. WhatsApp API setup is included, and Meta's message fees are billed by Meta.</p>
+    </div>
+    <div class="h-plans reveal">
+      <div class="h-plan"><span>Starter</span><b>&#8377;499<small>/month</small></b><p>For a small team getting started</p></div>
+      <div class="h-plan pop"><span>Growth</span><b>&#8377;999<small>/month</small></b><p>More contacts, campaigns and people</p></div>
+      <div class="h-plan"><span>Enterprise</span><b>&#8377;1,999<small>/month</small></b><p>No caps and hands-on setup</p></div>
+    </div>
+    <p class="h-plans-note reveal">Save 10% with yearly billing.</p>
+    <div class="h-center reveal">
+      <a href="/pricing" class="btn btn-ghost h-btn">Compare plans ${ICON_ARROW}</a>
+      <a href="/demo" class="btn btn-primary h-btn">Book a free demo</a>
     </div>
   </div>
 </section>
 
 <!-- ============================= USE CASES ============================= -->
-<section id="use-cases">
+<section id="use-cases" class="h-section h-alt">
   <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">Built for your team</span>
+    <div class="h-head reveal">
+      <span class="h-eyebrow">Built for your team</span>
       <h2>WhatsApp CRM for every customer-facing team</h2>
-      <p>The same shared inbox, pipeline, and automation engine, configured for how your industry actually sells and supports on WhatsApp.</p>
+      <p>The same inbox, pipeline and automation engine, set up for how your industry sells and supports on WhatsApp.</p>
     </div>
-    <div class="usecase-grid reveal">
-      <a href="/whatsapp-crm-for-ecommerce" class="usecase-card">
-        <h3>E-commerce &amp; D2C</h3>
-        <p>Order updates, COD confirmations, abandoned-cart follow-ups, and promo broadcasts tied to each customer's order history.</p>
-        <span class="usecase-link">See the e-commerce use case &rarr;</span>
-      </a>
-      <a href="/whatsapp-crm-for-real-estate" class="usecase-card">
-        <h3>Real Estate</h3>
-        <p>Property leads land straight in a pipeline, with automated site-visit reminders and listing broadcasts.</p>
-        <span class="usecase-link">See the real estate use case &rarr;</span>
-      </a>
-      <a href="/whatsapp-crm-for-education" class="usecase-card">
-        <h3>Coaching &amp; Education</h3>
-        <p>Enquiry-to-enrollment pipeline, demo-class follow-ups, and batch broadcasts for timetables and fee reminders.</p>
-        <span class="usecase-link">See the education use case &rarr;</span>
-      </a>
+    <div class="h-grid3">
+      <a href="/whatsapp-crm-for-ecommerce" class="h-tile reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></div><h3>E-commerce &amp; D2C</h3><p>Order updates, COD confirmations, abandoned-cart follow-ups and in-chat payments tied to each customer's order history.</p><span class="more">See e-commerce ${ICON_ARROW}</span></a>
+      <a href="/whatsapp-crm-for-real-estate" class="h-tile reveal" style="--d:1"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></div><h3>Real estate</h3><p>Property leads land straight in a pipeline, with automated site-visit reminders and listing broadcasts.</p><span class="more">See real estate ${ICON_ARROW}</span></a>
+      <a href="/whatsapp-crm-for-education" class="h-tile reveal" style="--d:2"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg></div><h3>Coaching &amp; education</h3><p>Enquiry-to-enrollment pipeline, demo-class follow-ups and batch broadcasts for timetables and fee reminders.</p><span class="more">See education ${ICON_ARROW}</span></a>
     </div>
   </div>
 </section>
 
 <!-- ============================= FAQ ============================= -->
-<section id="faq" class="section-alt">
-  <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">FAQ</span>
+<section id="faq" class="h-section">
+  <div class="container h-faq">
+    <div class="h-faq-side reveal">
+      <span class="h-eyebrow">FAQ</span>
       <h2>Questions, answered</h2>
-      <p>Everything teams usually ask before switching their WhatsApp number to Repeat Grow.</p>
+      <p>Everything teams usually ask before moving their WhatsApp number to Repeat Grow. Still unsure? Talk to us.</p>
+      <a href="/demo" class="btn btn-primary h-btn">Book a free demo ${ICON_ARROW}</a>
     </div>
-    <div class="faq-list reveal">${FAQ_HTML}
+    <div class="faq-list reveal" style="--d:1">${FAQ_HTML}
     </div>
   </div>
 </section>
 
-<!-- ============================= FROM THE BLOG ============================= -->
-<section id="guides">
+<!-- ============================= GUIDES ============================= -->
+<section id="guides" class="h-section h-alt">
   <div class="container">
-    <div class="section-head reveal">
-      <span class="eyebrow">Guides</span>
+    <div class="h-head reveal">
+      <span class="h-eyebrow">Guides</span>
       <h2>Learn how to sell on WhatsApp</h2>
       <p>Practical guides on the WhatsApp Business API, templates, payments and automation.</p>
     </div>
-    <div class="usecase-grid reveal">${BLOG_CARDS_HTML}
+    <div class="h-grid3">${BLOG_CARDS_HTML}
     </div>
   </div>
 </section>
 
-<!-- ============================= FINAL CTA BAND ============================= -->
-<section class="cta-band">
+<!-- ============================= FINAL CTA ============================= -->
+<section class="h-final">
   <div class="container">
-    <span class="eyebrow" style="justify-content:center;">Ready when you are</span>
-    <h2 style="margin-top:18px;">Turn WhatsApp into your best sales channel.</h2>
-    <p>Start free, or message us on WhatsApp and we'll get your team set up on Repeat Grow, usually live within days.</p>
-    <div class="hero-ctas">
-      <a href="/demo" class="btn btn-primary">Book a demo</a>
-      <a href="/signup" class="btn btn-ghost">Start free trial</a>
-      <a href="https://wa.me/916377568749" target="_blank" rel="noopener" class="btn btn-ghost">Message us on WhatsApp</a>
+    <div class="h-final-box reveal">
+      <h2>Your customers are already on WhatsApp. Start selling there properly.</h2>
+      <p>Book a free 20-minute demo and see Repeat Grow on your own business, or start your trial today. We set up the WhatsApp Business API for you.</p>
+      <div class="h-ctas">
+        <a href="/demo" class="btn h-btn h-btn-white">Book a free demo ${ICON_ARROW}</a>
+        <a href="/signup" class="btn h-btn h-btn-line">Start 7-day free trial</a>
+      </div>
+      <div class="h-guarantee">
+        <span>${ICON_CHECK}No credit card for the trial</span>
+        <span>${ICON_CHECK}No lock-in contract</span>
+        <span>${ICON_CHECK}Setup included on every plan</span>
+      </div>
     </div>
   </div>
 </section>
 
 </main>
-
-
-
-
 `;
 
 
@@ -587,7 +562,7 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
       />
-      <style dangerouslySetInnerHTML={{ __html: LANDING_CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: LANDING_CSS + HOME_CSS }} />
       <div
         className="lp-page"
         dangerouslySetInnerHTML={{
@@ -601,7 +576,7 @@ export default function Home() {
       <Script
         id="landing-page-script"
         strategy="afterInteractive"
-        dangerouslySetInnerHTML={{ __html: LANDING_SCRIPT }}
+        dangerouslySetInnerHTML={{ __html: LANDING_SCRIPT + HOME_SCRIPT }}
       />
     </>
   );

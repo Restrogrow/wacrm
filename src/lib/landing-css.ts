@@ -1004,6 +1004,9 @@ export const LANDING_CSS = `
 
 
 @media (max-width: 980px){
+  /* Not enough room for links + Login + Book a demo; the demo link stays
+     in the mobile menu and throughout the page. */
+  .lp-page .nav-right .nav-demo{ display: none; }
   .lp-page .feature-grid{ grid-template-columns: repeat(2, 1fr); }
   .lp-page .feature-card.wide{ grid-column: span 2; grid-template-columns: 1fr; }
   .lp-page .fork-list{ grid-template-columns: 1fr; }
