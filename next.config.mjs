@@ -88,6 +88,7 @@ const PRIVATE_SECTIONS = [
   "automations",
   "flows",
   "notifications",
+  "calls",
   "settings",
   "admin",
   "onboarding",

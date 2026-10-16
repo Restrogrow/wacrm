@@ -22,6 +22,7 @@ const PRIVATE_PREFIXES = [
   "/automations",
   "/flows",
   "/notifications",
+  "/calls",
   "/settings",
   "/login",
   "/signup",

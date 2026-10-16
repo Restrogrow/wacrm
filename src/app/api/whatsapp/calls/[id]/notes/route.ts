@@ -70,6 +70,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       durationSeconds,
     })
 
+    // Keep the notes with the call (Calls page). Needs migration 057; if the
+    // column is missing the contact note below still saves.
+    const { error: callUpdateError } = await db
+      .from('whatsapp_calls')
+      .update({ ai_notes: notes, ai_notes_at: new Date().toISOString(), ai_notes_by: ctx.userId })
+      .eq('id', call.id)
+      .eq('account_id', ctx.accountId)
+    if (callUpdateError) console.warn('[call-notes] could not store notes on the call:', callUpdateError.message)
+
     let noteId: string | null = null
     if (call.contact_id) {
       const { data: note, error } = await db

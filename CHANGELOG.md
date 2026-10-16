@@ -13,6 +13,12 @@ and polish.
 
 ### Added
 
+- **Calls page.** Every WhatsApp call in one list (Calls in the sidebar)
+  with outcome, duration, who handled it and its AI call notes, plus
+  filters. Recent calls in the contact panel opens the notes too, and the
+  "notes saved" message has a View button. **Migration required:**
+  `supabase/migrations/057_call_ai_notes.sql`.
+
 - **AI call notes.** During a WhatsApp call, click the sparkles button on
   the call card to record it (opt-in, with a reminder to tell the
   customer). When the call ends, AI writes a summary, to-dos and a

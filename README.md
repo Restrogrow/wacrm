@@ -85,6 +85,11 @@
   follow-up, language and mood are saved as a note on the contact.
   `POST /api/whatsapp/calls/[id]/notes` (only the agent on the call; 14 MB
   cap, about an hour). Code: `src/lib/ai/call-notes.ts`.
+- **Calls page** (`/calls`, sidebar): every WhatsApp call with direction,
+  outcome, duration, who handled it and its AI notes; filters for calls
+  with AI notes and missed calls. The contact panel's Recent calls opens
+  the notes too. Notes are stored on the call (`whatsapp_calls.ai_notes`,
+  migration 057) and as a contact note.
 - **QR & WhatsApp link** (Settings → QR & WhatsApp link): a wa.me link and a
   printable QR code (PNG 1200 px with a caption, or SVG) with a ready-typed
   first message, prefilled with the connected number. Presets for shop
@@ -601,6 +606,7 @@ is idempotent where possible. Recent ones:
 | `054_demo_requests` | Demo requests from the public `/demo` page (service-role only) |
 | `055_lock_privileged_columns` | Security: users can't change their own account/role, and owners can't change their plan or billing columns, from the browser |
 | `056_pro_plan` | Pro plan (`plan = 'pro'`) and its limits in `plan_limit()` |
+| `057_call_ai_notes` | AI call notes stored on each call (`whatsapp_calls.ai_notes`) for the Calls page |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 

@@ -14,6 +14,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -116,6 +117,7 @@ async function postAction(rowId: string, body: Record<string, unknown>) {
 }
 
 export function CallProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const { user, canSendMessages } = useAuth();
   const [incoming, setIncoming] = useState<CallRow | null>(null);
   const [active, setActive] = useState<ActiveCall | null>(null);
@@ -186,7 +188,12 @@ export function CallProvider({ children }: { children: ReactNode }) {
         } else {
           toast.success(
             json?.note_id ? 'AI call notes saved to the contact’s notes.' : 'AI call notes are ready.',
-            { id: pending, description: json?.notes?.summary?.slice(0, 160) },
+            {
+              id: pending,
+              description: json?.notes?.summary?.slice(0, 160),
+              duration: 15000,
+              action: { label: 'View', onClick: () => router.push(`/calls?call=${rowId}`) },
+            },
           );
         }
       } catch {
@@ -195,7 +202,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         setAiNotes('off');
       }
     })();
-  }, []);
+  }, [router]);
 
   const cleanupMedia = useCallback(() => {
     pcRef.current?.close();

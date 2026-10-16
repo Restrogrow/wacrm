@@ -27,6 +27,7 @@ const PRIVATE_PATHS = [
   "/automations",
   "/flows",
   "/notifications",
+  "/calls",
   "/settings",
   "/login",
   "/signup",

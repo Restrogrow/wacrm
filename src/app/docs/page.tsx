@@ -301,7 +301,8 @@ export default function DocsPage() {
                 <b>AI call notes:</b> during a connected call, click the <b>sparkles button</b> on the call card. Tell
                 the customer the call is being recorded. When the call ends, AI writes a summary, what the customer
                 wants, to-dos and a follow-up, and saves them as a note on the contact. The recording is used once for
-                the notes and not kept.
+                the notes and not kept. Find every call and its notes later in{" "}
+                <Ui to="/calls">Calls</Ui> in the sidebar.
               </li>
               <li>
                 The newest conversations load first. Scroll to the bottom and click <b>Load older conversations</b>{" "}
