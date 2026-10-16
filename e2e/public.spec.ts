@@ -16,7 +16,9 @@ test.describe('marketing pages', () => {
   test('pricing shows the plans in rupees', async ({ page }) => {
     await page.goto('/pricing')
     await expect(page.getByText('Starter').first()).toBeVisible()
-    await expect(page.getByText('₹499').first()).toBeVisible()
+    await expect(page.getByText('₹999').first()).toBeVisible()
+    await expect(page.getByText('Pro').first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /Quarterly/ })).toBeVisible()
   })
 })
 
