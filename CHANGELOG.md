@@ -13,6 +13,16 @@ and polish.
 
 ### Added
 
+- **Voice-note AI.** Under every customer voice note, **Transcribe &
+  translate** shows what they said, an English translation, a summary and a
+  suggested reply you can send with one click. **Migration required:**
+  `supabase/migrations/058_voice_note_ai.sql`.
+
+### Fixed
+
+- Customers' documents and files showed as "unavailable" after the security
+  hardening: links to our own media proxy are allowed again.
+
 - **Calls page.** Every WhatsApp call in one list (Calls in the sidebar)
   with outcome, duration, who handled it and its AI call notes, plus
   filters. Recent calls in the contact panel opens the notes too, and the

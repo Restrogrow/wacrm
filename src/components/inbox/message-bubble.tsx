@@ -17,6 +17,7 @@ import {
 import { format } from "date-fns";
 import { ReplyQuote } from "./reply-quote";
 import { MessageReactions } from "./message-reactions";
+import { VoiceNoteAi } from "./voice-note-ai";
 
 interface MessageBubbleProps {
   message: Message;
@@ -27,9 +28,13 @@ interface MessageBubbleProps {
   onToggleReaction?: (emoji: string) => void;
 }
 
-/** Only web URLs become clickable links (never javascript: or data:). */
+/**
+ * Only web URLs and our own media proxy become clickable links (never
+ * javascript: or data:). Inbound customer files are stored as
+ * /api/whatsapp/media/<id>, which is same-origin and safe.
+ */
 function isWebUrl(url: string): boolean {
-  return /^https?:\/\//i.test(url);
+  return /^https?:\/\//i.test(url) || /^\/api\/whatsapp\/media\/\d+$/.test(url);
 }
 
 function StatusIcon({ status }: { status: Message["status"] }) {
@@ -177,6 +182,10 @@ function MessageContent({ message }: { message: Message }) {
             <audio src={message.media_url} controls className="max-w-60" />
           ) : (
             <MediaUnavailable label="Audio" />
+          )}
+          {/* Voice-note AI: customers only (agent voice notes need no transcript). */}
+          {message.sender_type === "customer" && (message.media_url || message.ai_transcript) && (
+            <VoiceNoteAi messageId={message.id} initial={message.ai_transcript} />
           )}
         </div>
       );

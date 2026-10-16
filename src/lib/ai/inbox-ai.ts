@@ -30,7 +30,7 @@ export class InboxAiError extends Error {}
  * prompts already describe the fields, and parseJsonObject reads the
  * object out of a plain reply.
  */
-async function chatJson(opts: AiChatOptions): Promise<Record<string, unknown> | null> {
+export async function chatJson(opts: AiChatOptions): Promise<Record<string, unknown> | null> {
   try {
     return parseJsonObject(await aiChat(opts))
   } catch (err) {

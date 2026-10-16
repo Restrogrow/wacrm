@@ -45,6 +45,7 @@ import {
 } from "@/lib/saved-replies";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { INSERT_REPLY_EVENT } from "./voice-note-ai";
 import {
   uploadAccountMedia,
   deleteAccountMedia,
@@ -280,6 +281,21 @@ export function MessageComposer({
     },
     [text, adjustHeight]
   );
+
+  // Voice-note AI (and others) can drop a suggested reply into the box.
+  useEffect(() => {
+    const onInsert = (e: Event) => {
+      const insert = (e as CustomEvent<{ text?: string }>).detail?.text;
+      if (!insert) return;
+      setText(insert);
+      requestAnimationFrame(() => {
+        adjustHeight();
+        textareaRef.current?.focus();
+      });
+    };
+    window.addEventListener(INSERT_REPLY_EVENT, onInsert);
+    return () => window.removeEventListener(INSERT_REPLY_EVENT, onInsert);
+  }, [adjustHeight]);
 
   const handleSend = useCallback(async () => {
     const trimmed = text.trim();

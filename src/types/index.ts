@@ -224,6 +224,8 @@ export interface Message {
    * cue (renders with a "↩ button reply" affordance).
    */
   interactive_reply_id?: string;
+  /** Voice-note AI result for a customer voice note (migration 058). */
+  ai_transcript?: import("@/lib/ai/voice-note").VoiceNoteAi | null;
 }
 
 export type ReactionActor = 'customer' | 'agent';

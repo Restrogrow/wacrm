@@ -318,9 +318,10 @@ already have an entry above are linked by number.
       language, recommends catalog products, sends the order with UPI /
       WhatsApp Pay, chases unpaid orders, hands hot leads to a human with
       a summary. Builds on the chatbot, catalog, orders and summary.
-- [ ] **Voice-note AI:** transcribe, translate and summarise customer voice
-      notes in the chat, suggest a reply; optionally let the chatbot answer
-      them. Needs #36 (save incoming media) first.
+- [x] **Voice-note AI** (done 2026-10-16): transcribe, translate, summarise
+      and suggest a reply under customer voice notes, kept on the message.
+      Still to do: let the chatbot answer voice notes, auto-transcribe, and
+      #36 (save incoming media) so audio older than 7 days can be replayed.
 - [ ] **Win-back radar:** score customers (likely to buy again, about to
       churn, gone quiet) from chats, orders and Shopify, then send each
       group a personalised WhatsApp written by AI from their history.

@@ -90,6 +90,13 @@
   with AI notes and missed calls. The contact panel's Recent calls opens
   the notes too. Notes are stored on the call (`whatsapp_calls.ai_notes`,
   migration 057) and as a contact note.
+- **Voice-note AI:** click **Transcribe & translate** under a customer's voice
+  note to get what they said in their own language, an English translation,
+  a one-line summary and a suggested reply with **Use this reply**. Kept on
+  the message (`messages.ai_transcript`, migration 058) so it stays after
+  Meta expires the audio (about 7 days) and is never paid for twice; the
+  audio is not stored. `POST /api/inbox/messages/[id]/transcribe`. Code:
+  `src/lib/ai/voice-note.ts`, `src/components/inbox/voice-note-ai.tsx`.
 - **QR & WhatsApp link** (Settings → QR & WhatsApp link): a wa.me link and a
   printable QR code (PNG 1200 px with a caption, or SVG) with a ready-typed
   first message, prefilled with the connected number. Presets for shop
@@ -607,6 +614,7 @@ is idempotent where possible. Recent ones:
 | `055_lock_privileged_columns` | Security: users can't change their own account/role, and owners can't change their plan or billing columns, from the browser |
 | `056_pro_plan` | Pro plan (`plan = 'pro'`) and its limits in `plan_limit()` |
 | `057_call_ai_notes` | AI call notes stored on each call (`whatsapp_calls.ai_notes`) for the Calls page |
+| `058_voice_note_ai` | Voice-note AI transcripts kept on the message (`messages.ai_transcript`) |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 

@@ -270,6 +270,12 @@ export default function DocsPage() {
               </li>
               <li>The contact panel shows the customer&apos;s details, tags, and deals beside the chat.</li>
               <li>
+                <b>Voice-note AI:</b> under a customer&apos;s voice note, click <b>Transcribe &amp; translate</b> to see what
+                they said, an English translation, a one-line summary and a suggested reply. Click <b>Use this reply</b> to
+                put it in the message box. It works for Hindi, Hinglish and other Indian languages, and the transcript is
+                kept in the chat.
+              </li>
+              <li>
                 <b>QR code &amp; WhatsApp link:</b> in <Ui to="/settings?tab=qr-link">Settings → QR &amp; WhatsApp link</Ui>,
                 pick where people will see it (shop counter, flyer, packaging…), adjust the first message, and download
                 a print-ready QR code. Customers scan it, tap send, and the chat arrives here.
