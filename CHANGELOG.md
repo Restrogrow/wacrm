@@ -13,6 +13,11 @@ and polish.
 
 ### Added
 
+- **AI call notes.** During a WhatsApp call, click the sparkles button on
+  the call card to record it (opt-in, with a reminder to tell the
+  customer). When the call ends, AI writes a summary, to-dos and a
+  follow-up into the contact's notes. The recording is not stored.
+
 - **QR & WhatsApp link generator** in Settings: a wa.me link and a
   print-ready QR code with a pre-filled first message, for shop counters,
   flyers, packaging and bios.

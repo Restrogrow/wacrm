@@ -75,6 +75,11 @@ export interface AiChatOptions {
   responseSchema?: Record<string, unknown>;
   /** Extra attempts on rate limits, 5xx and network errors (default 0). */
   retries?: number;
+  /**
+   * A file sent with the last user message, base64-encoded (e.g. a call
+   * recording as audio/ogg). Inline requests are capped at ~20 MB.
+   */
+  inlineData?: { mimeType: string; data: string };
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -102,6 +107,13 @@ async function aiChatOnce(opts: AiChatOptions): Promise<string> {
   const isGemini25 = opts.model.startsWith("gemini-2.5");
   const thinking = isGemini25 ? 512 : 0;
   const thinkingRoom = isGemini25 ? thinking : /^gemini-[3-9]/.test(opts.model) ? 2048 : 0;
+  const request = toGeminiRequest(opts.messages);
+  if (opts.inlineData) {
+    // Attach the file to the last user turn, before its text.
+    const lastUser = [...request.contents].reverse().find((c) => c.role === "user");
+    const part = { inlineData: { mimeType: opts.inlineData.mimeType, data: opts.inlineData.data } };
+    if (lastUser) (lastUser.parts as unknown[]).unshift(part);
+  }
   let res: Response;
   try {
     res = await fetch(`${GEMINI_BASE}/${encodeURIComponent(opts.model)}:generateContent`, {
@@ -111,7 +123,7 @@ async function aiChatOnce(opts: AiChatOptions): Promise<string> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        ...toGeminiRequest(opts.messages),
+        ...request,
         generationConfig: {
           temperature: opts.temperature ?? 0.4,
           maxOutputTokens: maxTokens + thinkingRoom,

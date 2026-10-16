@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Mic, MicOff, Phone, PhoneIncoming, PhoneOff } from 'lucide-react';
+import { Loader2, Mic, MicOff, Phone, PhoneIncoming, PhoneOff, Sparkles } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { useCalls } from './call-provider';
@@ -35,7 +35,7 @@ function Avatar({ label, pulse }: { label: string; pulse?: boolean }) {
 }
 
 export function CallOverlay() {
-  const { incoming, active, muted, answer, decline, hangup, toggleMute } = useCalls();
+  const { incoming, active, muted, answer, decline, hangup, toggleMute, aiNotes, startAiNotes } = useCalls();
 
   if (!incoming && !active) return null;
 
@@ -59,6 +59,12 @@ export function CallOverlay() {
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold text-foreground">{active.label}</p>
             <p className="text-xs text-muted-foreground">WhatsApp voice call · {status}</p>
+            {aiNotes === 'recording' && (
+              <p className="mt-0.5 flex items-center gap-1.5 text-[11px] font-medium text-red-600 dark:text-red-400">
+                <span className="size-1.5 animate-pulse rounded-full bg-red-600" aria-hidden />
+                Recording for AI notes · tell the customer
+              </p>
+            )}
           </div>
         </div>
         <div className="mt-4 flex items-center justify-between gap-2">
@@ -73,6 +79,28 @@ export function CallOverlay() {
             <span />
           )}
           <div className="flex gap-2">
+            {active.phase === 'connected' && (
+              <button
+                type="button"
+                onClick={() => void startAiNotes()}
+                disabled={aiNotes !== 'off'}
+                aria-pressed={aiNotes === 'recording'}
+                aria-label={aiNotes === 'recording' ? 'AI notes are recording' : 'Start AI notes for this call'}
+                title={
+                  aiNotes === 'recording'
+                    ? 'Recording. Notes are written when the call ends.'
+                    : 'AI notes: record this call and get a summary, to-dos and follow-up when it ends'
+                }
+                className={cn(
+                  'flex size-11 items-center justify-center rounded-full border transition-colors disabled:cursor-default',
+                  aiNotes === 'recording'
+                    ? 'border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-400'
+                    : 'border-border bg-muted text-foreground hover:bg-muted/70',
+                )}
+              >
+                {aiNotes === 'saving' ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
+              </button>
+            )}
             <button
               type="button"
               onClick={toggleMute}

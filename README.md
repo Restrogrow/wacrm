@@ -75,8 +75,16 @@
   header — if the customer hasn't allowed calls, it sends a WhatsApp
   call permission request instead. Mute, hang up, live timer, and
   **Recent calls** in the contact panel. Turn it on in **Settings →
-  WhatsApp → WhatsApp calling**. Nothing is recorded; audio goes browser
-  ↔ Meta directly. See [WhatsApp calling setup](#whatsapp-calling).
+  WhatsApp → WhatsApp calling**. Audio goes browser ↔ Meta directly and
+  is not recorded, unless the agent switches on **AI notes** for a call.
+  See [WhatsApp calling setup](#whatsapp-calling).
+- **AI call notes** (✦ button on a connected call): records both sides in
+  the agent's browser (Ogg/Opus, opt-in per call, with an on-screen
+  reminder to tell the customer). When the call ends the recording is sent
+  once to Gemini and discarded; the summary, customer wants, to-dos,
+  follow-up, language and mood are saved as a note on the contact.
+  `POST /api/whatsapp/calls/[id]/notes` (only the agent on the call; 14 MB
+  cap, about an hour). Code: `src/lib/ai/call-notes.ts`.
 - **QR & WhatsApp link** (Settings → QR & WhatsApp link): a wa.me link and a
   printable QR code (PNG 1200 px with a caption, or SVG) with a ready-typed
   first message, prefilled with the connected number. Presets for shop

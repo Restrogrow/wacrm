@@ -17,6 +17,12 @@ declare module "opus-recorder" {
     encoderBitRate?: number;
     /** When false (default), ondataavailable fires once with the full file. */
     streamPages?: boolean;
+    /**
+     * Record from this audio node instead of opening the microphone
+     * (used to record both sides of a call). The recorder then uses the
+     * node's AudioContext and leaves it open on stop.
+     */
+    sourceNode?: AudioNode;
   }
 
   export default class Recorder {

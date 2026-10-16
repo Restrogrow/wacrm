@@ -46,7 +46,7 @@ const HOME_FAQS = [
   {
     question: "Can customers call my business on WhatsApp?",
     answer:
-      "Yes. With WhatsApp calling turned on, customers can call your WhatsApp number and every agent's browser rings. The first to answer takes the call. Agents can also call customers from the chat. Nothing is recorded and no phone line is needed.",
+      "Yes. With WhatsApp calling turned on, customers can call your WhatsApp number and every agent's browser rings. The first to answer takes the call. Agents can also call customers from the chat, no phone line is needed, and calls are not recorded unless an agent switches on AI call notes, which write a summary and to-dos into the contact’s notes.",
   },
   {
     question: "Does it have an AI chatbot?",

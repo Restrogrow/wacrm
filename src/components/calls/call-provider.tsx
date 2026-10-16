@@ -59,6 +59,9 @@ export interface ActiveCall {
 
 export type StartCallResult = { ok: true } | { ok: false; needsPermission?: boolean; error: string };
 
+/** AI call notes: off, recording this call, or turning the recording into notes. */
+export type AiNotesState = 'off' | 'recording' | 'saving';
+
 interface CallContextValue {
   supported: boolean;
   incoming: CallRow | null;
@@ -69,6 +72,9 @@ interface CallContextValue {
   decline: () => Promise<void>;
   hangup: () => Promise<void>;
   toggleMute: () => void;
+  aiNotes: AiNotesState;
+  /** Start recording both sides for AI notes (connected calls only). */
+  startAiNotes: () => Promise<void>;
 }
 
 const CallContext = createContext<CallContextValue | null>(null);
@@ -82,6 +88,11 @@ export function useCalls(): CallContextValue {
 /** Ignore ringing rows older than this (Meta gives ~30–60 s to answer). */
 const RING_WINDOW_MS = 60_000;
 const FINISHED: CallStatus[] = ['ended', 'missed', 'rejected', 'failed'];
+
+/** Same encoder the voice-note recorder uses (served from /public). */
+const OPUS_ENCODER_PATH = '/opus/encoderWorker.min.js';
+/** Stop recording after an hour; notes are written from what was captured. */
+const AI_NOTES_MAX_MS = 60 * 60_000;
 
 const FINISH_MESSAGE: Partial<Record<CallStatus, string>> = {
   rejected: 'The customer declined the call.',
@@ -109,6 +120,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const [incoming, setIncoming] = useState<CallRow | null>(null);
   const [active, setActive] = useState<ActiveCall | null>(null);
   const [muted, setMuted] = useState(false);
+  const [aiNotes, setAiNotes] = useState<AiNotesState>('off');
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const micRef = useRef<MediaStream | null>(null);
@@ -116,6 +128,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const ringRef = useRef<{ stop: () => void } | null>(null);
   const activeRef = useRef<ActiveCall | null>(null);
   const incomingRef = useRef<CallRow | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
+  const recorderRef = useRef<import('opus-recorder').default | null>(null);
+  const notesCtxRef = useRef<AudioContext | null>(null);
+  const notesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const notesBytesRef = useRef<Uint8Array | null>(null);
 
   useEffect(() => {
     activeRef.current = active;
@@ -132,25 +149,76 @@ export function CallProvider({ children }: { children: ReactNode }) {
     ringRef.current = null;
   }, []);
 
+  // Stop the AI-notes recording (if any) and send it for notes. Runs on
+  // every call end; the upload continues after the call UI closes.
+  const finishAiNotes = useCallback((rowId: string | null | undefined) => {
+    const recorder = recorderRef.current;
+    if (!recorder) return;
+    recorderRef.current = null;
+    if (notesTimerRef.current) clearTimeout(notesTimerRef.current);
+    notesTimerRef.current = null;
+    setAiNotes('saving');
+    void (async () => {
+      try {
+        await recorder.stop();
+      } catch {
+        // already stopped
+      }
+      void notesCtxRef.current?.close().catch(() => {});
+      notesCtxRef.current = null;
+      const bytes = notesBytesRef.current;
+      notesBytesRef.current = null;
+      if (!rowId || !bytes || bytes.byteLength < 2000) {
+        setAiNotes('off');
+        if (rowId) toast.error('The call was too short for AI notes.');
+        return;
+      }
+      const pending = toast.loading('Writing AI call notes…');
+      try {
+        const res = await fetch(`/api/whatsapp/calls/${rowId}/notes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'audio/ogg' },
+          body: new Blob([bytes as BlobPart], { type: 'audio/ogg' }),
+        });
+        const json = await res.json().catch(() => null);
+        if (!res.ok) {
+          toast.error(json?.error ?? 'Could not write call notes.', { id: pending });
+        } else {
+          toast.success(
+            json?.note_id ? 'AI call notes saved to the contact’s notes.' : 'AI call notes are ready.',
+            { id: pending, description: json?.notes?.summary?.slice(0, 160) },
+          );
+        }
+      } catch {
+        toast.error('Could not write call notes.', { id: pending });
+      } finally {
+        setAiNotes('off');
+      }
+    })();
+  }, []);
+
   const cleanupMedia = useCallback(() => {
     pcRef.current?.close();
     pcRef.current = null;
     stopStream(micRef.current);
     micRef.current = null;
     if (audioRef.current) audioRef.current.srcObject = null;
+    remoteStreamRef.current = null;
     setMuted(false);
   }, []);
 
   const endLocally = useCallback(
     (message?: string) => {
+      finishAiNotes(activeRef.current?.rowId);
       cleanupMedia();
       setActive(null);
       if (message) toast(message);
     },
-    [cleanupMedia],
+    [cleanupMedia, finishAiNotes],
   );
 
   const onRemoteStream = useCallback((stream: MediaStream) => {
+    remoteStreamRef.current = stream;
     if (audioRef.current) {
       audioRef.current.srcObject = stream;
       void audioRef.current.play().catch(() => {});
@@ -355,9 +423,56 @@ export function CallProvider({ children }: { children: ReactNode }) {
     setMuted(!track.enabled);
   }, []);
 
+  // Record both sides of the connected call (mic + customer) as Ogg/Opus
+  // in this browser, for AI notes when the call ends. Opt-in per call.
+  const startAiNotes = useCallback(async () => {
+    const mic = micRef.current;
+    const remote = remoteStreamRef.current;
+    if (recorderRef.current || !mic || !remote || activeRef.current?.phase !== 'connected') {
+      toast.error('AI notes can start once the call is connected.');
+      return;
+    }
+    try {
+      const { default: Recorder } = await import('opus-recorder');
+      const ctx = new AudioContext();
+      const mix = ctx.createGain();
+      ctx.createMediaStreamSource(mic).connect(mix);
+      ctx.createMediaStreamSource(remote).connect(mix);
+      const recorder = new Recorder({
+        encoderPath: OPUS_ENCODER_PATH,
+        sourceNode: mix,
+        numberOfChannels: 1,
+        encoderApplication: 2048, // speech
+        encoderSampleRate: 16000, // small files; plenty for speech
+        streamPages: false,
+      });
+      notesBytesRef.current = null;
+      recorder.ondataavailable = (bytes) => {
+        notesBytesRef.current = bytes;
+      };
+      await recorder.start();
+      notesCtxRef.current = ctx;
+      recorderRef.current = recorder;
+      setAiNotes('recording');
+      notesTimerRef.current = setTimeout(() => {
+        // Keep the call going; just stop capturing after the cap.
+        const r = recorderRef.current;
+        if (r) void r.stop().catch(() => {});
+        toast('AI notes stopped recording after 60 minutes.');
+      }, AI_NOTES_MAX_MS);
+      toast.success('AI notes on. Let the customer know the call is being recorded.');
+    } catch {
+      void notesCtxRef.current?.close().catch(() => {});
+      notesCtxRef.current = null;
+      recorderRef.current = null;
+      setAiNotes('off');
+      toast.error('Could not start recording for AI notes in this browser.');
+    }
+  }, []);
+
   const value = useMemo<CallContextValue>(
-    () => ({ supported, incoming, active, muted, startCall, answer, decline, hangup, toggleMute }),
-    [supported, incoming, active, muted, startCall, answer, decline, hangup, toggleMute],
+    () => ({ supported, incoming, active, muted, startCall, answer, decline, hangup, toggleMute, aiNotes, startAiNotes }),
+    [supported, incoming, active, muted, startCall, answer, decline, hangup, toggleMute, aiNotes, startAiNotes],
   );
 
   return (

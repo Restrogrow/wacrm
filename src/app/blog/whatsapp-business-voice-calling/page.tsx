@@ -43,7 +43,7 @@ const FAQ: FaqItem[] = [
   {
     question: 'Are calls recorded?',
     answer:
-      'No. Repeat Grow does not record calls. Audio goes directly between the agent’s browser and Meta.',
+      'Not by default. Audio goes directly between the agent’s browser and Meta. If an agent switches on AI call notes for a call, the agent’s browser records it so AI can write a summary and to-dos; the recording is used once for the notes and not kept. Tell the customer when you turn it on.',
   },
   {
     question: 'Do I need a phone line or a SIM?',
@@ -162,8 +162,8 @@ export default function VoiceCallingPost() {
           STUN only, with no TURN server.
         </li>
         <li>
-          <strong>Nothing is recorded</strong>, so note down key points in the chat or contact
-          notes.
+          <strong>Calls are not recorded by default.</strong> Switch on AI call notes during a call
+          to get a summary and to-dos saved to the contact automatically.
         </li>
         <li>
           <strong>Permission requests are rationed</strong> by Meta (1 a day, 2 a week per

@@ -298,6 +298,12 @@ export default function DocsPage() {
                 <Ui to="/settings?tab=whatsapp">Settings → WhatsApp</Ui>.
               </li>
               <li>
+                <b>AI call notes:</b> during a connected call, click the <b>sparkles button</b> on the call card. Tell
+                the customer the call is being recorded. When the call ends, AI writes a summary, what the customer
+                wants, to-dos and a follow-up, and saves them as a note on the contact. The recording is used once for
+                the notes and not kept.
+              </li>
+              <li>
                 The newest conversations load first. Scroll to the bottom and click <b>Load older conversations</b>{" "}
                 for more; in a chat, click <b>Load earlier messages</b> at the top to see older history. Search and
                 filters cover the conversations that are loaded.

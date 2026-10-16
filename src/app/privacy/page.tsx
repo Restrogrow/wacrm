@@ -58,6 +58,13 @@ export default function PrivacyPolicyPage() {
               processed on behalf of the Customer, who controls it.
             </li>
             <li>
+              <span className="font-medium text-foreground">Call recordings for AI notes:</span> WhatsApp
+              voice calls are not recorded unless an agent switches on AI call notes for a call. Then the
+              agent&apos;s browser records the call, sends it once to our AI provider (Google Gemini) to write
+              the notes, and the recording is not stored by us. The notes are saved with the contact. The
+              business is responsible for telling the customer that the call is being recorded.
+            </li>
+            <li>
               <span className="font-medium text-foreground">Usage data:</span> log data, device and
               browser information, and general usage patterns that help us
               operate and improve the platform.

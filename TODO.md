@@ -309,3 +309,24 @@ already have an entry above are linked by number.
 - [ ] **Conversation cost tracking:** Meta's per-message fees per chat
       and per campaign. See #12.
 - [ ] **Instagram DM and Facebook Messenger** in the same shared inbox.
+
+## 🚀 Big AI features (picked 2026-10-16)
+
+- [x] **AI call notes** (done 2026-10-16): record a call (opt-in per call),
+      AI writes summary, to-dos and follow-up into the contact's notes.
+- [ ] **AI Sales Agent:** qualifies leads, answers in the customer's
+      language, recommends catalog products, sends the order with UPI /
+      WhatsApp Pay, chases unpaid orders, hands hot leads to a human with
+      a summary. Builds on the chatbot, catalog, orders and summary.
+- [ ] **Voice-note AI:** transcribe, translate and summarise customer voice
+      notes in the chat, suggest a reply; optionally let the chatbot answer
+      them. Needs #36 (save incoming media) first.
+- [ ] **Win-back radar:** score customers (likely to buy again, about to
+      churn, gone quiet) from chats, orders and Shopify, then send each
+      group a personalised WhatsApp written by AI from their history.
+- [ ] **Business brain:** owner asks questions about their chats and data
+      ("which product do people complain about most?") and gets answers
+      with numbers and links to chats.
+- [ ] **AI catalog stylist:** customer sends a photo or a need ("red kurta
+      under ₹1,500"), AI finds matching catalog products and sends them as a
+      carousel with Buy now and in-chat payment.
