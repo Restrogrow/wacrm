@@ -186,6 +186,21 @@ export default function CatalogPage() {
     }
   }
 
+  async function importFromWhatsApp() {
+    const json = await call('import-meta', '/api/catalog/meta-import', { method: 'POST', body: JSON.stringify({}) })
+    if (!json) return
+    if (json.ok) {
+      const created = json.created as number
+      if (created > 0) toast.success(`Imported ${created} product${created === 1 ? '' : 's'} from your WhatsApp catalog`)
+      else toast.info((json.fetched as number) === 0 ? 'Your WhatsApp catalog has no products yet.' : 'Nothing new to import. Those products are already here.')
+      if (json.message) toast.warning(json.message as string)
+      if (json.truncated) toast.info('Your catalog is large. Only the first 2,000 products were read.')
+      void load()
+    } else if (json.message) {
+      toast.error(json.message as string)
+    }
+  }
+
   async function sync(ids?: string[]) {
     const json = await call('sync', '/api/catalog/meta-sync', { method: 'POST', body: JSON.stringify(ids ? { ids } : {}) })
     if (!json) return
@@ -283,6 +298,10 @@ export default function CatalogPage() {
               className="w-full pl-8 sm:w-64"
             />
           </div>
+          <Button variant="outline" size="sm" onClick={() => importFromWhatsApp()} disabled={!canEdit || busy !== null || !data?.catalog_configured} title={data?.catalog_configured ? 'Bring in the products already in your WhatsApp catalog' : 'Add your catalog ID first'}>
+            {busy === 'import-meta' ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
+            Fetch from WhatsApp
+          </Button>
           <Button variant="outline" size="sm" onClick={() => sync()} disabled={!canEdit || busy !== null || !data?.catalog_configured} title={data?.catalog_configured ? undefined : 'Add your catalog ID first'}>
             {busy === 'sync' ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
             Sync to WhatsApp{needsSync > 0 ? ` (${needsSync})` : ''}
