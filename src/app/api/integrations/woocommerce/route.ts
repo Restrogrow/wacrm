@@ -11,6 +11,7 @@
 // ============================================================
 
 import { NextResponse } from 'next/server';
+import { recordAudit } from '@/lib/audit';
 
 import {
   getCurrentAccount,
@@ -123,6 +124,7 @@ export async function DELETE() {
     if (error) {
       return NextResponse.json({ error: 'Failed to disconnect' }, { status: 500 });
     }
+    await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: 'integration.disconnected', targetType: 'integration', targetId: 'woocommerce' })
     return NextResponse.json({ ok: true });
   } catch (err) {
     return toErrorResponse(err);

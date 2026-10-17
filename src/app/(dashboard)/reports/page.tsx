@@ -17,6 +17,7 @@ import { PageHero } from '@/components/layout/page-hero'
 import { DataTable, type Column } from '@/components/reports/data-table'
 import { RangePicker, type RangeSelection } from '@/components/reports/range-picker'
 import { Kpi, ReportPanel, SectionError } from '@/components/reports/report-panel'
+import { CsatSection } from '@/components/reports/csat-section'
 import { BarChart } from '@/components/tremor/bar-chart'
 import { useAuth } from '@/hooks/use-auth'
 import { formatCurrency } from '@/lib/currency'
@@ -127,6 +128,7 @@ export default function ReportsPage() {
       <AgentsSection section={agents} stamp={stamp} />
       <BroadcastsSection section={broadcasts} stamp={stamp} />
       <SalesSection section={sales} stamp={stamp} defaultCurrency={defaultCurrency} />
+      {ready ? <CsatSection accountId={accountId} from={range.from} to={range.to} stamp={stamp} /> : null}
     </div>
   )
 }

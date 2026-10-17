@@ -630,6 +630,28 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
         .update({ status: 'closed', updated_at: new Date().toISOString() })
         .eq('account_id', args.automation.account_id)
         .eq('contact_id', args.contactId)
+      // Optional CSAT rating request for the chat that was just closed (no-op
+      // unless the account turned it on). Failure-safe: never fails the step.
+      try {
+        const { data: closed } = await db
+          .from('conversations')
+          .select('id')
+          .eq('account_id', args.automation.account_id)
+          .eq('contact_id', args.contactId)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (closed) {
+          const { requestCsat } = await import('@/lib/csat/server')
+          await requestCsat({
+            accountId: args.automation.account_id,
+            conversationId: closed.id as string,
+            userId: args.automation.user_id,
+          })
+        }
+      } catch (err) {
+        console.warn('[automations] csat request skipped:', err instanceof Error ? err.message : err)
+      }
       return 'conversation closed'
     }
 

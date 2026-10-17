@@ -12,6 +12,7 @@
 // ============================================================
 
 import { NextResponse } from 'next/server'
+import { recordAudit } from '@/lib/audit'
 
 import { getCurrentAccount, requireRole, toErrorResponse } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
@@ -90,6 +91,8 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Could not save. Run migration 064_razorpay_payment_links.sql first.' }, { status: 500 })
     }
 
+    await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: 'integration.connected', targetType: 'integration', targetId: 'razorpay' }, request)
+
     return NextResponse.json({
       connected: true,
       key_id_masked: maskKeyId(keyId),
@@ -126,6 +129,7 @@ export async function DELETE() {
     const ctx = await requireRole('admin')
     const { error } = await supabaseAdmin().from('razorpay_credentials').delete().eq('account_id', ctx.accountId)
     if (error) return NextResponse.json({ error: 'Could not disconnect.' }, { status: 500 })
+    await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: 'integration.disconnected', targetType: 'integration', targetId: 'razorpay' })
     return NextResponse.json({ connected: false })
   } catch (err) {
     return toErrorResponse(err)

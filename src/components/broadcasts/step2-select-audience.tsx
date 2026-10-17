@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
+import { loadSegments, countSavedSegment, type SegmentRow } from '@/lib/segments/resolve';
 import { CustomField, Tag } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,13 +11,14 @@ import {
   Tags,
   Filter,
   Upload,
+  Layers,
   Loader2,
   ArrowRight,
   ArrowLeft,
   X,
 } from 'lucide-react';
 
-type AudienceType = 'all' | 'tags' | 'custom_field' | 'csv';
+type AudienceType = 'all' | 'tags' | 'custom_field' | 'csv' | 'segment';
 type CustomFieldOperator = 'is' | 'is_not' | 'contains';
 
 interface CustomFieldFilter {
@@ -26,6 +29,8 @@ interface CustomFieldFilter {
 
 interface AudienceConfig {
   type: AudienceType;
+  /** Saved segment (migration 068). */
+  segmentId?: string;
   tagIds?: string[];
   customField?: CustomFieldFilter;
   csvContacts?: { phone: string; name?: string }[];
@@ -58,6 +63,12 @@ const audienceOptions: {
     icon: Tags,
   },
   {
+    type: 'segment',
+    label: 'Saved Segment',
+    description: 'Send to a smart list you saved on the Contacts page',
+    icon: Layers,
+  },
+  {
     type: 'custom_field',
     label: 'Custom Field',
     description: 'Filter by a custom field value',
@@ -83,6 +94,9 @@ export function Step2SelectAudience({
   onNext,
   onBack,
 }: Step2Props) {
+  const { accountId } = useAuth();
+  const [segments, setSegments] = useState<SegmentRow[]>([]);
+  const [loadingSegments, setLoadingSegments] = useState(false);
   const [tags, setTags] = useState<Tag[]>([]);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
@@ -125,6 +139,27 @@ export function Step2SelectAudience({
     fetchFields();
   }, [audience.type]);
 
+  // Lazy-load saved segments only when that audience type is active.
+  useEffect(() => {
+    if (audience.type !== 'segment' || !accountId) return;
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoadingSegments(true);
+    loadSegments(createClient(), accountId)
+      .then((rows) => {
+        if (!cancelled) setSegments(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setSegments([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSegments(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [audience.type, accountId]);
+
   const fetchEstimatedCount = useCallback(async () => {
     setLoadingCount(true);
     try {
@@ -160,6 +195,11 @@ export function Step2SelectAudience({
         else q = q.ilike('value', `%${value}%`);
         const { data } = await q;
         baseIds = new Set((data ?? []).map((r) => r.contact_id));
+      } else if (audience.type === 'segment' && audience.segmentId && accountId) {
+        // Counted in SQL with opted-out contacts excluded, exactly as the send will.
+        const n = await countSavedSegment(supabase, accountId, audience.segmentId);
+        setEstimatedCount(n);
+        return;
       } else if (
         audience.type === 'csv' &&
         audience.csvContacts &&
@@ -202,9 +242,11 @@ export function Step2SelectAudience({
   }, [
     audience.type,
     audience.tagIds,
+    audience.segmentId,
     audience.customField,
     audience.csvContacts,
     audience.excludeTagIds,
+    accountId,
   ]);
 
   useEffect(() => {
@@ -238,6 +280,7 @@ export function Step2SelectAudience({
 
   const isValid =
     audience.type === 'all' ||
+    (audience.type === 'segment' && !!audience.segmentId) ||
     (audience.type === 'tags' && audience.tagIds && audience.tagIds.length > 0) ||
     (audience.type === 'custom_field' &&
       !!audience.customField?.fieldId &&
@@ -269,6 +312,7 @@ export function Step2SelectAudience({
                   // Wipe shape fields from other types to avoid stale
                   // config leaking across selections.
                   tagIds: option.type === 'tags' ? audience.tagIds : undefined,
+                  segmentId: option.type === 'segment' ? audience.segmentId : undefined,
                   customField:
                     option.type === 'custom_field'
                       ? audience.customField
@@ -302,6 +346,42 @@ export function Step2SelectAudience({
           );
         })}
       </div>
+
+      {audience.type === 'segment' && (
+        <div className="rounded-2xl border border-border bg-card/50 p-4">
+          <p className="mb-3 text-sm font-medium text-foreground">Choose a Segment</p>
+          {loadingSegments ? (
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          ) : segments.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              No saved segments yet. Create one with &ldquo;New segment&rdquo; on the Contacts page.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {segments.map((seg) => {
+                const isSelected = audience.segmentId === seg.id;
+                return (
+                  <button
+                    key={seg.id}
+                    onClick={() => onUpdate({ ...audience, segmentId: seg.id })}
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                      isSelected
+                        ? 'border-primary/30 bg-primary/10 text-primary'
+                        : 'border-border bg-muted text-muted-foreground hover:border-border'
+                    }`}
+                  >
+                    {seg.name}
+                    <span className="ml-1.5 text-[10px] opacity-70">{seg.contact_count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <p className="mt-3 text-xs text-muted-foreground">
+            Members are worked out when you send or schedule, and contacts who replied STOP are always left out.
+          </p>
+        </div>
+      )}
 
       {audience.type === 'tags' && (
         <div className="rounded-2xl border border-border bg-card/50 p-4">

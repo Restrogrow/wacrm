@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { recordAudit } from '@/lib/audit';
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 
@@ -25,7 +26,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await requirePlatformAdmin();
+  const admin = await requirePlatformAdmin();
   const { id } = await params;
 
   const body = (await request.json().catch(() => null)) as {
@@ -67,5 +68,9 @@ export async function PATCH(
       { status: 500 }
     );
   }
+  await recordAudit(
+    { accountId: id, actorUserId: admin.userId, action: 'plan.changed', targetType: 'account', targetId: id, metadata: { plan: body.plan, trial_ends_at: trialEndsAt ?? null, plan_expires_at: planExpiresAt ?? null, by: 'platform_admin' } },
+    request
+  );
   return NextResponse.json({ ok: true });
 }

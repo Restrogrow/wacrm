@@ -74,6 +74,12 @@ export interface SendMessageParams {
   /** Structured template params (header/body/buttons). */
   templateMessageParams?: unknown;
   replyToMessageId?: string | null;
+  /**
+   * The signed-in teammate sending from the dashboard. Stored as
+   * `messages.sender_id` so the inbox and Reports can attribute the reply.
+   * Omitted for API-key sends, which have no user.
+   */
+  senderId?: string | null;
 }
 
 export interface SendMessageResult {
@@ -185,6 +191,7 @@ export async function sendMessageToConversation(
     templateParams,
     templateMessageParams,
     replyToMessageId,
+    senderId,
   } = params;
 
   if (!conversationId) {
@@ -403,6 +410,7 @@ export async function sendMessageToConversation(
     .insert({
       conversation_id: conversationId,
       sender_type: 'agent',
+      sender_id: senderId || null,
       content_type: messageType,
       content_text: contentText || null,
       media_url: mediaUrl || null,

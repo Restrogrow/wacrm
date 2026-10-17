@@ -7,6 +7,7 @@
 // ============================================================
 
 import { cookies } from 'next/headers';
+import { recordAudit } from '@/lib/audit';
 import { NextResponse } from 'next/server';
 
 import { requireRole } from '@/lib/auth/account';
@@ -74,6 +75,7 @@ export async function GET(request: Request) {
       { onConflict: 'account_id' }
     );
     if (error) throw new Error(error.message);
+    await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: 'integration.connected', targetType: 'integration', targetId: 'google_sheets' })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Could not connect Google';
     console.error('[google-sheets/callback]', message);

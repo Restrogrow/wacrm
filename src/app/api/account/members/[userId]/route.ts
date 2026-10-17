@@ -18,6 +18,7 @@ import { NextResponse } from "next/server";
 import type { PostgrestError } from "@supabase/supabase-js";
 
 import { requireRole, toErrorResponse } from "@/lib/auth/account";
+import { recordAudit } from "@/lib/audit";
 import { isAccountRole } from "@/lib/auth/roles";
 import {
   checkRateLimit,
@@ -88,6 +89,10 @@ export async function PATCH(
 
     if (error) return rpcErrorToResponse(error);
 
+    await recordAudit(
+      { accountId: ctx.accountId, actorUserId: ctx.userId, action: "member.role_changed", targetType: "member", targetId: userId, metadata: { newRole: role } },
+      request,
+    );
     return NextResponse.json({ ok: true });
   } catch (err) {
     return toErrorResponse(err);
@@ -95,7 +100,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ userId: string }> },
 ) {
   try {
@@ -115,6 +120,10 @@ export async function DELETE(
 
     if (error) return rpcErrorToResponse(error);
 
+    await recordAudit(
+      { accountId: ctx.accountId, actorUserId: ctx.userId, action: "member.removed", targetType: "member", targetId: userId },
+      request,
+    );
     return NextResponse.json({ ok: true, newPersonalAccountId: data });
   } catch (err) {
     return toErrorResponse(err);

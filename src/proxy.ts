@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { SITE_URL } from '@/lib/seo'
 import { safeNextPath } from '@/lib/auth/safe-next'
 import { publicOrigin } from '@/lib/public-origin'
+import { hasVerifiedFactor, mfaDecision, needsMfaChallenge } from '@/lib/auth/mfa'
 
 // Google was indexing https://repeatgrow.com/ and https://www.repeatgrow.com/
 // as separate, un-deduplicated pages ("Duplicate without user-selected
@@ -144,6 +145,29 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return withRefreshedCookies(NextResponse.redirect(url))
+  }
+
+  // Two-factor login: a user with a verified TOTP factor must have passed
+  // the challenge (aal2) before using the app. Users without a factor are
+  // never affected (and the shared demo login has none).
+  if (user && hasVerifiedFactor(user.factors)) {
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    const decision = mfaDecision({
+      pathname: request.nextUrl.pathname,
+      needsChallenge: needsMfaChallenge({ factors: user.factors, currentLevel: aal?.currentLevel }),
+      enforcedPaths: [...protectedPaths, '/join', '/connect'],
+    })
+    const isRead = request.method === 'GET' || request.method === 'HEAD'
+    if (decision === 'deny' || (decision === 'redirect' && !isRead)) {
+      return withRefreshedCookies(NextResponse.json({ error: 'mfa_required' }, { status: 401 }))
+    }
+    if (decision === 'redirect') {
+      const url = request.nextUrl.clone()
+      const back = request.nextUrl.pathname + request.nextUrl.search
+      url.pathname = '/mfa'
+      url.search = `?next=${encodeURIComponent(back)}`
+      return withRefreshedCookies(NextResponse.redirect(url))
+    }
   }
 
   // API routes that need auth (not webhooks)

@@ -20,6 +20,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SlaBadge } from "@/components/inbox/sla-badge";
+import { BulkActionsBar } from "@/components/inbox/bulk-actions-bar";
+import { useCan } from "@/hooks/use-can";
+import { MAX_BULK } from "@/lib/inbox/bulk";
 
 interface ConversationListProps {
   activeConversationId: string | null;
@@ -91,6 +95,24 @@ export function ConversationList({
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+
+  // Bulk selection (agent role and above). Selected ids are kept as a Set;
+  // the server re-validates every id, this is only UI state.
+  const canBulk = useCan("send-messages");
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const toggleSelected = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else if (next.size < MAX_BULK) next.add(id);
+      return next;
+    });
+  }, []);
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }, []);
 
   // Keep the latest callback in a ref so the fetch effect below can
   // have a stable, empty-dep identity. Previously the fetch useCallback
@@ -302,6 +324,18 @@ export function ConversationList({
         </div>
 
         <div className="flex flex-wrap items-center gap-1">
+          {canBulk && (
+            <button
+              type="button"
+              onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
+              className={cn(
+                "order-last ml-auto inline-flex h-7 items-center rounded-lg px-2 text-xs font-medium hover:bg-muted",
+                selectMode ? "text-primary" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {selectMode ? "Done" : "Select"}
+            </button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger className="inline-flex items-center justify-center h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted">
                 {activeFilter?.label ?? "All"}
@@ -455,6 +489,24 @@ export function ConversationList({
         )}
       </div>
 
+      {selectMode && (
+        <>
+          <BulkActionsBar selectedIds={Array.from(selectedIds)} tags={tags} onDone={exitSelectMode} />
+          <div className="flex items-center justify-between border-b border-border px-3 py-1.5 text-[11px] text-muted-foreground">
+            <button
+              type="button"
+              className="font-medium text-primary hover:underline"
+              onClick={() => setSelectedIds(new Set(filtered.slice(0, MAX_BULK).map((c) => c.id)))}
+            >
+              Select all shown{filtered.length > MAX_BULK ? ` (first ${MAX_BULK})` : ""}
+            </button>
+            <button type="button" className="hover:text-foreground" onClick={() => setSelectedIds(new Set())}>
+              Clear
+            </button>
+          </div>
+        </>
+      )}
+
       {/* Conversation Items.
           `min-h-0` is load-bearing: a flex child defaults to
           min-height:auto, so without it this ScrollArea grows to fit
@@ -480,6 +532,9 @@ export function ConversationList({
                     conversation={conv}
                     isActive={conv.id === activeConversationId}
                     onSelect={handleSelect}
+                    selectMode={selectMode}
+                    checked={selectedIds.has(conv.id)}
+                    onToggle={toggleSelected}
                   />
                 ))}
               </div>
@@ -512,20 +567,28 @@ interface ConversationItemProps {
   conversation: Conversation;
   isActive: boolean;
   onSelect: (conversation: Conversation) => void;
+  /** Bulk-selection mode: clicking toggles a checkbox instead of opening. */
+  selectMode?: boolean;
+  checked?: boolean;
+  onToggle?: (id: string) => void;
 }
 
 function ConversationItem({
   conversation,
   isActive,
   onSelect,
+  selectMode,
+  checked,
+  onToggle,
 }: ConversationItemProps) {
   const contact = conversation.contact;
   const displayName = contact?.name || contact?.phone || "Unknown";
   const initials = displayName.charAt(0).toUpperCase();
 
   const handleClick = useCallback(() => {
-    onSelect(conversation);
-  }, [onSelect, conversation]);
+    if (selectMode) onToggle?.(conversation.id);
+    else onSelect(conversation);
+  }, [onSelect, conversation, selectMode, onToggle]);
 
   const timeAgo = conversation.last_message_at
     ? formatDistanceToNow(new Date(conversation.last_message_at), {
@@ -541,6 +604,17 @@ function ConversationItem({
         isActive && "bg-primary-soft shadow-sm"
       )}
     >
+      {selectMode && (
+        <span
+          aria-hidden
+          className={cn(
+            "mt-3 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] leading-none",
+            checked ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background",
+          )}
+        >
+          {checked ? "✓" : ""}
+        </span>
+      )}
       {/* Avatar */}
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
         {contact?.avatar_url ? (
@@ -570,6 +644,7 @@ function ConversationItem({
             {conversation.last_message_text || "No messages yet"}
           </p>
           <div className="flex shrink-0 items-center gap-1.5">
+            <SlaBadge conversationId={conversation.id} compact />
             {conversation.unread_count > 0 && (
               <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
                 {conversation.unread_count}

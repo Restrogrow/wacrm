@@ -8,6 +8,7 @@
 // ============================================================
 
 import { randomBytes } from 'node:crypto';
+import { recordAudit } from '@/lib/audit';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
@@ -120,6 +121,7 @@ export async function GET(request: Request) {
     if (saveErr) throw new Error(saveErr.message);
 
     await registerWebhooks(shop, tokens.accessToken);
+    await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: 'integration.connected', targetType: 'integration', targetId: 'shopify' }, request)
   } catch (err) {
     const message =
       err instanceof Error ? err.message : 'Could not connect the store';

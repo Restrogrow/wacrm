@@ -10,6 +10,7 @@
 // ============================================================
 
 import { NextResponse } from 'next/server';
+import { recordAudit } from '@/lib/audit';
 
 import { getCurrentAccount, requireRole, toErrorResponse } from '@/lib/auth/account';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
@@ -79,6 +80,7 @@ export async function DELETE() {
       .delete()
       .eq('account_id', ctx.accountId);
     if (error) return NextResponse.json({ error: 'Failed to disconnect' }, { status: 500 });
+    await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: 'integration.disconnected', targetType: 'integration', targetId: 'google_sheets' })
     return NextResponse.json({ ok: true });
   } catch (err) {
     return toErrorResponse(err);

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
+import { countSavedSegment } from '@/lib/segments/resolve';
 import { MessageTemplate } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +21,7 @@ import { cn } from '@/lib/utils';
 
 interface AudienceConfig {
   type: string;
+  segmentId?: string;
   tagIds?: string[];
   csvContacts?: { phone: string; name?: string }[];
 }
@@ -64,6 +67,7 @@ export function Step4ScheduleSend({
         minute: '2-digit',
       })
     : '';
+  const { accountId } = useAuth();
   const [estimatedReach, setEstimatedReach] = useState<number>(0);
   const [loadingReach, setLoadingReach] = useState(true);
 
@@ -86,6 +90,8 @@ export function Step4ScheduleSend({
 
           const uniqueIds = new Set((contactTags ?? []).map((ct) => ct.contact_id));
           setEstimatedReach(uniqueIds.size);
+        } else if (audience.type === 'segment' && audience.segmentId && accountId) {
+          setEstimatedReach((await countSavedSegment(supabase, accountId, audience.segmentId)) ?? 0);
         } else if (audience.type === 'csv' && audience.csvContacts) {
           setEstimatedReach(audience.csvContacts.length);
         } else {
@@ -97,7 +103,7 @@ export function Step4ScheduleSend({
     }
 
     calculateReach();
-  }, [audience]);
+  }, [audience, accountId]);
 
   const audienceLabel =
     audience.type === 'all'
@@ -106,7 +112,9 @@ export function Step4ScheduleSend({
         ? `Tags (${audience.tagIds?.length ?? 0} selected)`
         : audience.type === 'csv'
           ? 'CSV Upload'
-          : 'Custom';
+          : audience.type === 'segment'
+            ? 'Saved segment'
+            : 'Custom';
 
   return (
     <div className="space-y-6">

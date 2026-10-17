@@ -24,6 +24,7 @@ import {
   requireRole,
   toErrorResponse,
 } from '@/lib/auth/account';
+import { recordAudit } from '@/lib/audit'
 import { generateApiKey } from '@/lib/api-keys/keys';
 import { normalizeScopes } from '@/lib/api-keys/scopes';
 import {
@@ -166,6 +167,11 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+
+    await recordAudit(
+      { accountId: ctx.accountId, actorUserId: ctx.userId, action: 'api_key.created', targetType: 'api_key', targetId: data.id, metadata: { name: rawName, scopes, expiresAt } },
+      request
+    );
 
     return NextResponse.json(
       {

@@ -20,6 +20,7 @@
 import { NextResponse } from "next/server";
 
 import { requireRole, toErrorResponse } from "@/lib/auth/account";
+import { recordAudit } from "@/lib/audit";
 import {
   clampExpiryDays,
   generateInviteToken,
@@ -292,6 +293,11 @@ export async function POST(request: Request) {
         }
       }
     }
+
+    await recordAudit(
+      { accountId: ctx.accountId, actorUserId: ctx.userId, action: "member.invited", targetType: "invitation", targetId: data?.id, metadata: { role, email: inviteeEmail ?? null } },
+      request,
+    );
 
     return NextResponse.json(
       {

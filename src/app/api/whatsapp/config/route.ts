@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { recordAudit } from '@/lib/audit'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import {
@@ -416,6 +417,11 @@ export async function POST(request: Request) {
       }
     }
 
+    await recordAudit(
+      { accountId, actorUserId: user.id, action: 'whatsapp.config_changed', targetType: 'whatsapp', targetId: String(phone_number_id ?? ''), metadata: { phone_number_id, waba_id } },
+      request
+    )
+
     if (isCoexistence) {
       // Discovered only now that /register was rejected — this
       // number is on the WhatsApp Business app. Messaging already
@@ -513,6 +519,7 @@ export async function DELETE() {
       )
     }
 
+    await recordAudit({ accountId, actorUserId: user.id, action: 'whatsapp.config_removed', targetType: 'whatsapp' })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error in WhatsApp config DELETE:', error)

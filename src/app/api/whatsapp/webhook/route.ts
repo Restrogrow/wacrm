@@ -11,6 +11,7 @@ import { runAutomationsForTrigger } from '@/lib/automations/engine'
 import { dispatchInboundToFlows } from '@/lib/flows/engine'
 import { maybeReplyWithAI } from '@/lib/ai-chatbot/respond'
 import { recordAdAttribution } from '@/lib/ad-attribution-server'
+import { maybeSendAutoReply } from '@/lib/business-hours/auto-reply'
 import {
   detectOptKeyword,
   OPT_IN_CONFIRMATION,
@@ -22,6 +23,7 @@ import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import { recordWebhookFailure } from '@/lib/ops/monitoring'
 import { handleCallsWebhook, type CallWebhookValue } from '@/lib/whatsapp/calling'
 import { handleFormReply } from '@/lib/whatsapp/forms'
+import { handleCsatReply } from '@/lib/csat/server'
 import {
   createOrderFromCatalog,
   handlePaymentStatus,
@@ -935,6 +937,19 @@ async function processMessage(
     }
   }
 
+  // A tap on the CSAT rating buttons is the customer's answer to our
+  // "how did we do?" message: store it and stop flows/automations/the
+  // chatbot from also reacting to it. Failure-safe (never throws).
+  if (interactiveReplyId && !optHandled) {
+    optHandled = await handleCsatReply({
+      accountId,
+      conversationId: conversation.id,
+      contactId: contactRecord.id,
+      userId: configOwnerUserId,
+      replyId: interactiveReplyId,
+    })
+  }
+
   // ============================================================
   // Flow runner dispatch.
   //
@@ -1063,7 +1078,19 @@ async function processMessage(
     text: contentText,
   })
 
-  await Promise.all([...automationRuns, chatbotRun, messageReceived])
+  // Welcome / away auto-reply (Settings → Business hours). Never throws.
+  const autoReply = maybeSendAutoReply({
+    accountId,
+    ownerUserId: configOwnerUserId,
+    contactId: contactRecord.id,
+    conversationId: conversation.id,
+    contactName: contactRecord.name,
+    messageType: message.type,
+    isFirstInboundMessage,
+    suppressed: optHandled || flowConsumed,
+  })
+
+  await Promise.all([...automationRuns, chatbotRun, messageReceived, autoReply])
 }
 
 async function parseMessageContent(

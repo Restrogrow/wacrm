@@ -9,6 +9,7 @@
 // ============================================================
 
 import { randomBytes } from 'node:crypto';
+import { recordAudit } from '@/lib/audit';
 import { NextResponse } from 'next/server';
 
 import { requireRole, toErrorResponse } from '@/lib/auth/account';
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
       );
     }
 
+    await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: 'integration.connected', targetType: 'integration', targetId: 'shopify' }, request)
     return NextResponse.json({ webhook_url: manualWebhookUrl(ingestToken) });
   } catch (err) {
     return toErrorResponse(err);

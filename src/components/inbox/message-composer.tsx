@@ -52,6 +52,7 @@ import {
   MEDIA_MAX_BYTES_BY_KIND,
 } from "@/lib/storage/upload-media";
 import { ReplyQuote } from "./reply-quote";
+import { ScheduleMessageButton } from "./schedule-message-button";
 
 /** Media content types an agent can send from the composer. */
 export type ComposerMediaKind = "image" | "video" | "document" | "audio";
@@ -756,6 +757,13 @@ export function MessageComposer({
               "flex-1 resize-none rounded-2xl border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary/50",
               (sessionExpired || readOnly) && "cursor-not-allowed opacity-50"
             )}
+          />
+
+          {/* "Send later": schedule the typed text instead of sending now. */}
+          <ScheduleMessageButton
+            conversationId={conversationId}
+            text={text}
+            onScheduled={() => setText("")}
           />
 
           <GatedButton

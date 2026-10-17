@@ -12,6 +12,7 @@
 import { NextResponse } from 'next/server'
 
 import { getCurrentAccount, toErrorResponse } from '@/lib/auth/account'
+import { recordAudit } from '@/lib/audit'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { isMissingObject, notifyAdminsOfRequest, otherMemberCount } from '@/lib/account/deletion'
@@ -116,6 +117,11 @@ export async function POST(request: Request) {
       isOwner,
       reason,
     })
+
+    await recordAudit(
+      { accountId: ctx.accountId, actorUserId: ctx.userId, action: 'account.deletion_requested', targetType: 'account', targetId: ctx.accountId, metadata: { isOwner } },
+      request
+    )
 
     return NextResponse.json({ ok: true, pending_request: created })
   } catch (err) {

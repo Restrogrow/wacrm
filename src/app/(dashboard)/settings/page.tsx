@@ -10,11 +10,14 @@ import { SettingsOverview } from '@/components/settings/settings-overview';
 import { ProfileForm } from '@/components/settings/profile-form';
 import { BusinessDetailsCard } from '@/components/settings/business-details-card';
 import { SecurityPanel } from '@/components/settings/security-panel';
+import { ActivityLogPanel } from '@/components/settings/activity-log-panel';
 import { AppearancePanel } from '@/components/settings/appearance-panel';
 import { WhatsAppConfig } from '@/components/settings/whatsapp-config';
 import { CallingSettingsCard } from '@/components/settings/calling-settings-card';
 import { NumberHealthCard } from '@/components/settings/number-health-card';
 import { SavedRepliesSettings } from '@/components/settings/saved-replies-settings';
+import { CsatSettingsCard } from '@/components/settings/csat-settings-card';
+import { BusinessHoursPanel } from '@/components/settings/business-hours-settings';
 import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel';
 import { DealsSettings } from '@/components/settings/deals-settings';
 import { MembersTab } from '@/components/settings/members-tab';
@@ -81,6 +84,7 @@ export default function SettingsPage() {
       </div>
     ),
     security: <SecurityPanel />,
+    'activity-log': <ActivityLogPanel />,
     appearance: <AppearancePanel />,
     'your-data': <YourDataSettings />,
     whatsapp: (
@@ -92,7 +96,13 @@ export default function SettingsPage() {
         </div>
       </div>
     ),
-    'saved-replies': <SavedRepliesSettings />,
+    'saved-replies': (
+      <>
+        <SavedRepliesSettings />
+        <CsatSettingsCard />
+      </>
+    ),
+    'business-hours': <BusinessHoursPanel />,
     fields: <FieldsAndTagsPanel />,
     deals: <DealsSettings />,
     members: <MembersTab />,

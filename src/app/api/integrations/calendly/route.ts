@@ -11,6 +11,7 @@
 // ============================================================
 
 import { NextResponse } from 'next/server';
+import { recordAudit } from '@/lib/audit';
 
 import {
   getCurrentAccount,
@@ -157,6 +158,7 @@ export async function DELETE() {
         { error: 'Failed to disconnect' },
         { status: 500 }
       );
+    await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: 'integration.disconnected', targetType: 'integration', targetId: 'calendly' })
     return NextResponse.json({ ok: true });
   } catch (err) {
     return toErrorResponse(err);

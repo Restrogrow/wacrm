@@ -26,6 +26,8 @@ interface MessageBubbleProps {
   reactions?: MessageReaction[];
   currentUserId?: string;
   onToggleReaction?: (emoji: string) => void;
+  /** Teammate who sent this outbound message; shown subtly on team accounts. */
+  senderLabel?: string | null;
 }
 
 /**
@@ -265,6 +267,7 @@ export function MessageBubble({
   reactions,
   currentUserId,
   onToggleReaction,
+  senderLabel,
 }: MessageBubbleProps) {
   const isAgent = message.sender_type === "agent" || message.sender_type === "bot";
   const time = format(new Date(message.created_at), "HH:mm");
@@ -312,6 +315,11 @@ export function MessageBubble({
           >
             {time}
           </span>
+          {isAgent && senderLabel && (
+            <span className="max-w-[10rem] truncate text-[10px] text-primary-foreground/70">
+              · {senderLabel}
+            </span>
+          )}
           {isAgent && <StatusIcon status={message.status} />}
         </div>
       </div>

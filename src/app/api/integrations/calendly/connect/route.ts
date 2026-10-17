@@ -8,6 +8,7 @@
 // ============================================================
 
 import { randomBytes } from 'node:crypto';
+import { recordAudit } from '@/lib/audit';
 import { NextResponse } from 'next/server';
 
 import { requireRole, toErrorResponse } from '@/lib/auth/account';
@@ -108,6 +109,7 @@ export async function POST(request: Request) {
       );
     }
 
+    await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: 'integration.connected', targetType: 'integration', targetId: 'calendly' }, request)
     return NextResponse.json({ ok: true, user_name: user.name });
   } catch (err) {
     return toErrorResponse(err);

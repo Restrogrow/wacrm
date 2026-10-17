@@ -16,6 +16,7 @@
 import { NextResponse } from "next/server";
 
 import { requireRole, toErrorResponse } from "@/lib/auth/account";
+import { recordAudit } from "@/lib/audit";
 import {
   checkRateLimit,
   rateLimitResponse,
@@ -23,7 +24,7 @@ import {
 } from "@/lib/rate-limit";
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -66,6 +67,10 @@ export async function DELETE(
       );
     }
 
+    await recordAudit(
+      { accountId: ctx.accountId, actorUserId: ctx.userId, action: "member.invite_revoked", targetType: "invitation", targetId: id },
+      request,
+    );
     return NextResponse.json({ ok: true });
   } catch (err) {
     return toErrorResponse(err);

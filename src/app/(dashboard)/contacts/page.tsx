@@ -60,6 +60,9 @@ import { exportContacts } from '@/lib/contacts/export-csv';
 import { useCan } from '@/hooks/use-can';
 import { GatedButton } from '@/components/ui/gated-button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { SegmentBar } from '@/components/contacts/segment-bar';
+import { useAuth } from '@/hooks/use-auth';
+import type { SegmentRow } from '@/lib/segments/resolve';
 
 const PAGE_SIZE = 25;
 
@@ -99,6 +102,9 @@ export default function ContactsPage() {
   const [totalCount, setTotalCount] = useState(0);
   // Tag filter — contacts shown must have ANY of these tags (OR).
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const { accountId } = useAuth();
+  // Saved smart list currently shown (migration 068); null = all contacts.
+  const [activeSegment, setActiveSegment] = useState<SegmentRow | null>(null);
 
   // Modals
   const [formOpen, setFormOpen] = useState(false);
@@ -155,7 +161,26 @@ export default function ContactsPage() {
     let contactRows: Contact[];
     let count: number;
 
-    if (selectedTagIds.length > 0) {
+    if (activeSegment && accountId) {
+      // Saved segment active — evaluated in SQL (segment_contacts, 068),
+      // same row shape and windowed total as the tag filter below.
+      const { data, error } = await supabase.rpc('segment_contacts', {
+        p_account_id: accountId,
+        p_rules: activeSegment.rules,
+        p_search: term || null,
+        p_limit: PAGE_SIZE,
+        p_offset: from,
+      });
+      if (seq !== fetchSeq.current) return; // superseded by a newer fetch
+      if (error) {
+        toast.error('Failed to load this segment');
+        setLoading(false);
+        return;
+      }
+      const rows = (data ?? []) as { contact: Contact; total_count: number }[];
+      contactRows = rows.map((r) => r.contact);
+      count = rows.length > 0 ? Number(rows[0].total_count) : 0;
+    } else if (selectedTagIds.length > 0) {
       // Tag filter active — resolve it server-side (join + distinct +
       // windowed total count + pagination) so a tag covering many
       // contacts can't silently truncate the result or overflow an IN
@@ -231,7 +256,7 @@ export default function ContactsPage() {
 
     setContacts(enriched);
     setLoading(false);
-  }, [supabase, page, search, selectedTagIds, tagsMap]);
+  }, [supabase, page, search, selectedTagIds, tagsMap, activeSegment, accountId]);
 
   // Load-once-on-mount-ish data fetches. Each setter inside runs
   // inside an async promise completion (Supabase await), not
@@ -330,6 +355,14 @@ export default function ContactsPage() {
       toast.error('Failed to delete contacts');
     } else {
       toast.success(`${ids.length} contact${ids.length === 1 ? '' : 's'} deleted`);
+      // Best-effort activity-log entry; the deletion itself already happened.
+      if (ids.length > 1) {
+        void fetch('/api/account/security-events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: 'contacts_bulk_deleted', count: ids.length }),
+        }).catch(() => {});
+      }
       setSelected(new Set());
       fetchContacts();
     }
@@ -347,7 +380,8 @@ export default function ContactsPage() {
   const allTags = Object.values(tagsMap).sort((a, b) =>
     a.name.localeCompare(b.name)
   );
-  const hasActiveFilters = search.trim().length > 0 || selectedTagIds.length > 0;
+  const hasActiveFilters =
+    search.trim().length > 0 || selectedTagIds.length > 0 || activeSegment !== null;
 
   function toggleTagFilter(tagId: string) {
     setSelectedTagIds((prev) =>
@@ -414,6 +448,18 @@ export default function ContactsPage() {
                   </GatedButton>
                 </div>
         }
+      />
+
+      {/* Saved segments, duplicate finder, merge */}
+      <SegmentBar
+        active={activeSegment}
+        onSelect={(segment) => {
+          setActiveSegment(segment);
+          setPage(0);
+        }}
+        selectedIds={[...selected]}
+        onContactsChanged={fetchContacts}
+        canEdit={canEdit}
       />
 
       {/* Search + tag filter */}

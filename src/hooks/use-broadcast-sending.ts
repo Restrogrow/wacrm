@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { Contact, MessageTemplate } from '@/types';
 import { planLimitMessage } from '@/lib/billing/plans';
+import { resolveSegmentContacts } from '@/lib/segments/resolve';
 
 export type CustomFieldOperator = 'is' | 'is_not' | 'contains';
 
@@ -15,8 +16,10 @@ export interface CustomFieldFilter {
 }
 
 export interface AudienceConfig {
-  type: 'all' | 'tags' | 'custom_field' | 'csv';
+  type: 'all' | 'tags' | 'custom_field' | 'csv' | 'segment';
   tagIds?: string[];
+  /** Saved segment (migration 068); members are resolved at send/schedule time. */
+  segmentId?: string;
   customField?: CustomFieldFilter;
   csvContacts?: { phone: string; name?: string }[];
   /** Contacts carrying any of these tags are subtracted from the result. */
@@ -192,6 +195,10 @@ export function useBroadcastSending(): UseBroadcastSendingReturn {
       contacts = await resolveCustomFieldAudience(supabase, audience.customField);
     } else if (audience.type === 'csv' && audience.csvContacts) {
       contacts = await upsertCsvContacts(supabase, audience.csvContacts);
+    } else if (audience.type === 'segment' && audience.segmentId) {
+      if (!accountId) throw new Error('Your profile is not linked to an account.');
+      // Rules are read from the database and opted-out contacts are dropped there.
+      contacts = await resolveSegmentContacts(supabase, accountId, audience.segmentId);
     }
 
     // Apply exclude tags (works across all contact-derived audience
@@ -367,6 +374,7 @@ export function useBroadcastSending(): UseBroadcastSendingReturn {
           template_variables: payload.variables,
           audience_filter: {
             type: payload.audience.type,
+            segmentId: payload.audience.segmentId,
             tagIds: payload.audience.tagIds,
             customField: payload.audience.customField,
             excludeTagIds: payload.audience.excludeTagIds,
@@ -625,6 +633,7 @@ export function useBroadcastSending(): UseBroadcastSendingReturn {
           template_variables: payload.variables,
           audience_filter: {
             type: payload.audience.type,
+            segmentId: payload.audience.segmentId,
             tagIds: payload.audience.tagIds,
             customField: payload.audience.customField,
             excludeTagIds: payload.audience.excludeTagIds,

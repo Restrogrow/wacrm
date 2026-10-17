@@ -14,6 +14,7 @@ import { PaymentLinkButton } from "@/components/inbox/payment-link-button";
 import { SummaryButton } from "@/components/inbox/summary-button";
 import { ShareChatButton } from "@/components/inbox/share-chat-button";
 import { AdSourceBadge } from "@/components/contacts/ad-source-badge";
+import { SlaBadge } from "@/components/inbox/sla-badge";
 import type {
   Conversation,
   Message,
@@ -45,6 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MessageBubble } from "./message-bubble";
 import { MessageActions } from "./message-actions";
+import { CsatBadge } from "./csat-badge";
 import {
   MessageComposer,
   CHAT_MEDIA_BUCKET,
@@ -55,6 +57,11 @@ import { contactPhoneLabel } from "@/lib/whatsapp/phone-utils";
 import { TemplatePicker } from "./template-picker";
 import { buildReplyPreview } from "./reply-quote";
 import { toast } from "sonner";
+import { useCan } from "@/hooks/use-can";
+import type { MentionMember } from "@/lib/inbox/mentions";
+import { useConversationNotes, type ConversationNote } from "./use-conversation-notes";
+import { NoteBubble } from "./note-bubble";
+import { NoteComposer } from "./note-composer";
 
 interface ReplyDraft {
   id: string;
@@ -129,8 +136,8 @@ function formatDateSeparator(dateStr: string): string {
   return format(date, "MMMM d, yyyy");
 }
 
-function groupMessagesByDate(messages: Message[]) {
-  const groups: { date: string; messages: Message[] }[] = [];
+function groupMessagesByDate<T extends { created_at: string }>(messages: T[]) {
+  const groups: { date: string; messages: T[] }[] = [];
   let currentDate = "";
 
   for (const msg of messages) {
@@ -280,6 +287,17 @@ export function MessageThread({
 
   const conversationId = conversation?.id;
   const hasUnread = (conversation?.unread_count ?? 0) > 0;
+
+  // Internal notes (migration 067) live in their own table, so they are
+  // merged into the timeline for display only and never touch `messages`
+  // (sends, previews, unread counts and reports never see them).
+  const canNote = useCan("send-messages");
+  const canModerateNotes = useCan("manage-members");
+  // The composer mode resets to "reply" whenever another chat is opened.
+  const [composeState, setComposeState] = useState<{ id?: string; mode: "reply" | "note" }>({ mode: "reply" });
+  const composeMode = composeState.id === conversationId ? composeState.mode : "reply";
+  const setComposeMode = (mode: "reply" | "note") => setComposeState({ id: conversationId, mode });
+  const { notes, addNote, removeNote } = useConversationNotes(conversationId, resyncToken);
 
   // Fetch messages whenever the selected conversation changes. Kept
   // separate from the unread-reset effect so that incoming messages
@@ -505,6 +523,7 @@ export function MessageThread({
         id: tempId,
         conversation_id: conversation.id,
         sender_type: "agent",
+        sender_id: user?.id,
         content_type: "text",
         content_text: text,
         status: "sending",
@@ -548,7 +567,7 @@ export function MessageThread({
         onUpdateMessage(tempId, { status: "failed" });
       }
     },
-    [conversation, onNewMessage, onUpdateMessage]
+    [conversation, onNewMessage, onUpdateMessage, user?.id]
   );
 
   const handleSendMedia = useCallback(
@@ -568,6 +587,7 @@ export function MessageThread({
         id: tempId,
         conversation_id: conversation.id,
         sender_type: "agent",
+        sender_id: user?.id,
         content_type: payload.kind,
         content_text: contentText,
         media_url: payload.mediaUrl,
@@ -614,7 +634,7 @@ export function MessageThread({
         void deleteAccountMedia(CHAT_MEDIA_BUCKET, payload.path).catch(() => {});
       }
     },
-    [conversation, onNewMessage, onUpdateMessage],
+    [conversation, onNewMessage, onUpdateMessage, user?.id],
   );
 
   const handleStatusChange = useCallback(
@@ -628,6 +648,16 @@ export function MessageThread({
         .eq("id", conversation.id);
 
       onStatusChange(conversation.id, status);
+
+      // Closing a chat may trigger the CSAT rating request (if the account
+      // turned it on). Fire and forget: it never blocks or fails the close.
+      if (status === "closed") {
+        void fetch("/api/csat/request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conversation_id: conversation.id }),
+        }).catch(() => {});
+      }
     },
     [conversation, onStatusChange]
   );
@@ -654,6 +684,7 @@ export function MessageThread({
         id: tempId,
         conversation_id: conversation.id,
         sender_type: "agent",
+        sender_id: user?.id,
         content_type: "template",
         content_text: renderedBody,
         template_name: template.name,
@@ -703,7 +734,7 @@ export function MessageThread({
         onUpdateMessage(tempId, { status: "failed" });
       }
     },
-    [conversation, onNewMessage, onUpdateMessage],
+    [conversation, onNewMessage, onUpdateMessage, user?.id],
   );
 
   // Build a quick id → Message map so reply quotes can be rendered without
@@ -854,7 +885,37 @@ export function MessageThread({
   }
 
   const displayName = contact.name || contact.phone;
-  const messageGroups = groupMessagesByDate(messages);
+  // Notes are merged in for display only (see the notes hook above).
+  type TimelineEntry =
+    | Message
+    | { kind: "note"; id: string; created_at: string; note: ConversationNote };
+  const timeline: TimelineEntry[] =
+    notes.length === 0
+      ? messages
+      : [
+          ...messages,
+          ...notes.map((n) => ({ kind: "note" as const, id: n.id, created_at: n.created_at, note: n })),
+        ].sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
+  const messageGroups = groupMessagesByDate(timeline);
+  const personName = (id?: string | null) => {
+    const p = id ? profiles.find((x) => x.user_id === id) : undefined;
+    return p ? p.full_name || p.email : null;
+  };
+  // Only label senders on team accounts (more than one member).
+  const showSender = profiles.length > 1;
+  const mentionableMembers: MentionMember[] = profiles
+    .filter((p) => p.user_id !== user?.id)
+    .map((p) => ({ id: p.user_id, name: p.full_name || p.email }))
+    .filter((m) => m.name);
+  const handleDeleteNote = async (id: string) => {
+    try {
+      const res = await fetch(`/api/inbox/notes/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      removeNote(id);
+    } catch {
+      toast.error("Could not delete the note");
+    }
+  };
   const currentStatus = STATUS_OPTIONS.find(
     (s) => s.value === conversation.status
   );
@@ -897,6 +958,7 @@ export function MessageThread({
             <h2 className="truncate text-sm font-semibold text-foreground">{displayName}</h2>
             <p className="truncate text-xs text-muted-foreground">{contactPhoneLabel(contact)}</p>
             <AdSourceBadge contact={contact} className="mt-0.5" />
+            <SlaBadge conversationId={conversationId} className="mt-0.5" />
           </div>
           {/* Session timer badge — hidden on the narrowest phones so
               the name + back arrow keep their room. */}
@@ -991,6 +1053,9 @@ export function MessageThread({
               />
             </button>
           )}
+
+          {/* Customer's satisfaction rating for this chat, if one was asked for. */}
+          <CsatBadge conversationId={conversation.id} status={conversation.status} />
 
           {/* Status dropdown */}
           <DropdownMenu>
@@ -1122,6 +1187,20 @@ export function MessageThread({
                 {/* Messages */}
                 <div className="space-y-2">
                   {group.messages.map((msg) => {
+                    if ("kind" in msg) {
+                      return (
+                        <NoteBubble
+                          key={msg.id}
+                          note={msg.note}
+                          authorName={personName(msg.note.author_id) ?? "A teammate"}
+                          mentionNames={msg.note.mentions
+                            .map((id) => personName(id))
+                            .filter((n): n is string => !!n)}
+                          canDelete={msg.note.author_id === user?.id || canModerateNotes}
+                          onDelete={handleDeleteNote}
+                        />
+                      );
+                    }
                     const parent = msg.reply_to_message_id
                       ? messagesById.get(msg.reply_to_message_id)
                       : null;
@@ -1158,6 +1237,7 @@ export function MessageThread({
                           reactions={msgReactions}
                           currentUserId={user?.id}
                           onToggleReaction={handlePillToggle}
+                          senderLabel={showSender ? personName(msg.sender_id) : null}
                         />
                       </MessageActions>
                     );
@@ -1169,17 +1249,48 @@ export function MessageThread({
         )}
       </div>
 
-      {/* Composer */}
-      <MessageComposer
-        conversationId={conversation.id}
-        sessionExpired={sessionInfo.expired}
-        onSend={handleSend}
-        onSendMedia={handleSendMedia}
-        onOpenTemplates={handleOpenTemplates}
-        replyTo={replyTo}
-        onClearReply={() => setReplyTo(null)}
-        contactName={contact?.name}
-      />
+      {/* Composer. The reply composer stays mounted (just hidden) while a
+          note is being written, so a half-typed reply is not lost. */}
+      {canNote && (
+        <div className="flex gap-1 border-t border-border bg-card px-3 pt-2">
+          {(["reply", "note"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setComposeMode(mode)}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                composeMode === mode
+                  ? mode === "note"
+                    ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
+                    : "bg-primary-soft text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {mode === "reply" ? "Reply" : "Internal note"}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className={composeMode === "note" && canNote ? "hidden" : undefined}>
+        <MessageComposer
+          conversationId={conversation.id}
+          sessionExpired={sessionInfo.expired}
+          onSend={handleSend}
+          onSendMedia={handleSendMedia}
+          onOpenTemplates={handleOpenTemplates}
+          replyTo={replyTo}
+          onClearReply={() => setReplyTo(null)}
+          contactName={contact?.name}
+        />
+      </div>
+      {composeMode === "note" && canNote && (
+        <NoteComposer
+          conversationId={conversation.id}
+          members={mentionableMembers}
+          onSaved={addNote}
+        />
+      )}
 
       <TemplatePicker
         open={templateModalOpen}

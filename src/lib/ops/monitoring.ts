@@ -17,11 +17,13 @@ export const MONITORED_JOBS = {
   'flows-cron': { label: 'Flows cron', maxAgeMinutes: 30 },
   'automation-steps': { label: 'Delayed automation steps', maxAgeMinutes: 10 },
   'scheduled-broadcasts': { label: 'Scheduled broadcasts', maxAgeMinutes: 10 },
+  'scheduled-messages': { label: 'Scheduled chat messages', maxAgeMinutes: 10 },
   'shopify-reminders': { label: 'Shopify abandoned carts', maxAgeMinutes: 10 },
   'calendly-reminders': { label: 'Calendly reminders', maxAgeMinutes: 10 },
   'daily-summaries': { label: 'Daily summary emails', maxAgeMinutes: 10 },
   'number-health': { label: 'WhatsApp number health', maxAgeMinutes: 10 },
   'billing-reminders': { label: 'Trial & renewal reminder emails', maxAgeMinutes: 10 },
+  'sla-alerts': { label: 'Reply-time (SLA) alerts', maxAgeMinutes: 10 },
 } as const
 
 export type MonitoredJob = keyof typeof MONITORED_JOBS

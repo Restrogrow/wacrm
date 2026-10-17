@@ -6,10 +6,12 @@ import type { AutomationContext } from '@/lib/automations/engine'
 import { processDueCheckouts } from '@/lib/shopify/process'
 import { processDueCalendlyReminders } from '@/lib/calendly/process'
 import { processScheduledBroadcasts } from '@/lib/broadcasts/scheduled'
+import { processScheduledMessages } from '@/lib/scheduled-messages/process'
 import { processDailySummaries } from '@/lib/summary/daily'
 import { withHeartbeat } from '@/lib/ops/monitoring'
 import { processDueNumberHealth } from '@/lib/whatsapp/number-health'
 import { processBillingReminders } from '@/lib/billing/reminders'
+import { processSlaAlerts } from '@/lib/business-hours/sla-server'
 
 /**
  * Drain due `automation_pending_executions` rows. Meant to be hit
@@ -70,6 +72,12 @@ async function runCron() {
     return 0
   })
 
+  // "Send later" chat messages scheduled from the inbox composer.
+  const scheduledMessageSends = await withHeartbeat('scheduled-messages', processScheduledMessages).catch((err) => {
+    console.error('[cron] scheduled messages failed:', err)
+    return 0
+  })
+
   const dailySummaries = await withHeartbeat('daily-summaries', processDailySummaries).catch((err) => {
     console.error('[cron] daily summaries failed:', err)
     return 0
@@ -87,11 +95,19 @@ async function runCron() {
     return 0
   })
 
+  // First-response SLA: notify when a chat has waited too long for a human reply.
+  const slaAlerts = await withHeartbeat('sla-alerts', processSlaAlerts).catch((err) => {
+    console.error('[cron] sla alerts failed:', err)
+    return 0
+  })
+
   return {
     processed,
+    sla_alerts: slaAlerts,
     number_health_checks: numberHealthChecks,
     billing_reminders: billingReminders,
     scheduled_broadcast_sends: scheduledBroadcastSends,
+    scheduled_message_sends: scheduledMessageSends,
     daily_summaries: dailySummaries,
     shopify_reminders: shopifyReminders,
     calendly_reminders: calendlyReminders,
