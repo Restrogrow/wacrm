@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Bell,
   Bot,
   FileSpreadsheet,
@@ -16,6 +17,7 @@ import {
   Radio,
   Settings,
   ShoppingBag,
+  ShoppingCart,
   Users,
   Workflow,
   Zap,
@@ -46,6 +48,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/notifications", label: "Notifications", icon: Bell },
       { href: "/calls", label: "Calls", icon: Phone },
       { href: "/daily-summary", label: "Daily summary", icon: Mail },
+      { href: "/reports", label: "Reports", icon: BarChart3 },
     ],
   },
   {
@@ -72,6 +75,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Integrations",
     items: [
       { href: "/integrations/shopify", label: "Shopify", icon: ShoppingBag },
+      { href: "/integrations/woocommerce", label: "WooCommerce", icon: ShoppingCart },
       { href: "/integrations/calendly", label: "Calendly", icon: CalendarCheck },
       { href: "/integrations/google-sheets", label: "Google Sheets", icon: FileSpreadsheet },
       { href: "/integrations/apps", label: "Connected apps", icon: Plug },

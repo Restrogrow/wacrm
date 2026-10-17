@@ -10,6 +10,7 @@ import { verifyMetaWebhookSignature } from '@/lib/whatsapp/webhook-signature'
 import { runAutomationsForTrigger } from '@/lib/automations/engine'
 import { dispatchInboundToFlows } from '@/lib/flows/engine'
 import { maybeReplyWithAI } from '@/lib/ai-chatbot/respond'
+import { recordAdAttribution } from '@/lib/ad-attribution-server'
 import {
   detectOptKeyword,
   OPT_IN_CONFIRMATION,
@@ -104,6 +105,8 @@ interface WhatsAppMessage {
   }
   /** Present when the customer swipe-replies to one of our messages. */
   context?: { id: string }
+  /** Click-to-WhatsApp ad / post referral (first message of an ad chat). Untrusted; parsed in ad-attribution.ts. */
+  referral?: unknown
 }
 
 interface WhatsAppWebhookEntry {
@@ -711,6 +714,18 @@ async function processMessage(
   })
   if (!contactOutcome) return
   const contactRecord = contactOutcome.contact
+
+  // Click-to-WhatsApp: remember which ad/post this customer came from
+  // (first touch only) and tag them. Never blocks the message.
+  if (message.referral) {
+    await recordAdAttribution(supabaseAdmin(), {
+      accountId,
+      ownerUserId: configOwnerUserId,
+      contactId: contactRecord.id,
+      alreadyAttributed: !!contactRecord.ad_first_seen_at,
+      rawReferral: message.referral,
+    })
+  }
 
   // Find or create conversation
   const convResult = await findOrCreateConversation(

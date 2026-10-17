@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { rupees } from '@/lib/whatsapp/commerce-core';
 import { OrderRow, type OrderRowData } from '@/components/commerce/order-row';
 import { SettingsPanelHead } from './settings-panel-head';
+import { RazorpayLinksCard } from './razorpay-links-card';
 
 interface Settings {
   catalog_id: string;
@@ -276,6 +277,9 @@ export function CommerceSettings() {
           </Card>
         </div>
       )}
+
+      {/* Razorpay payment links sent from chats */}
+      <RazorpayLinksCard />
 
       {/* Recent orders */}
       <Card>

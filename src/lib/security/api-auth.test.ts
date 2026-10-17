@@ -24,6 +24,8 @@ const GUARDS = [
   /verifyMetaWebhookSignature\(/, // WhatsApp webhook
   /verifyShopifyWebhook\(|verifyShopifyHmac|verifyOAuthState|hmac/i, // Shopify webhooks / OAuth
   /verifyCalendlySignature\(/, // Calendly webhook
+  /verifyWooCommerceWebhook\(/, // WooCommerce webhook
+  /verifyRazorpaySignature\(/, // Razorpay webhook (per-account secret)
 ]
 
 /** Routes that are public on purpose. Keep the reason honest. */
@@ -81,6 +83,7 @@ describe('API route authentication', () => {
       'integrations/shopify/webhooks/route.ts',
       'integrations/shopify/webhooks/[token]/route.ts',
       'integrations/calendly/webhooks/[token]/route.ts',
+      'integrations/woocommerce/webhooks/[token]/route.ts',
     ]) {
       const src = fs.readFileSync(path.join(API_DIR, rel), 'utf8')
       expect(src, rel).toMatch(/webhookBlocked\(/)

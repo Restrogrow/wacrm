@@ -26,7 +26,7 @@ export const MONITORED_JOBS = {
 
 export type MonitoredJob = keyof typeof MONITORED_JOBS
 
-export type WebhookSource = 'whatsapp' | 'shopify' | 'calendly'
+export type WebhookSource = 'whatsapp' | 'shopify' | 'calendly' | 'woocommerce'
 
 function errorMessage(err: unknown): string {
   if (err instanceof Error) return err.message

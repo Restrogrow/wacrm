@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { RecentCalls } from "@/components/calls/recent-calls";
+import { AdSourceBadge } from "@/components/contacts/ad-source-badge";
 
 interface ContactSidebarProps {
   contact: Contact | null;
@@ -153,6 +154,7 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
             {contact.company && (
               <p className="text-xs text-muted-foreground">{contact.company}</p>
             )}
+            <AdSourceBadge contact={contact} className="mt-2" />
           </div>
 
           {/* Phone */}

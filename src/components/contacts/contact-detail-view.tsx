@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { AdSourceBadge } from '@/components/contacts/ad-source-badge';
 import {
   Phone,
   Mail,
@@ -424,6 +425,7 @@ export function ContactDetailView({
                         Opted out
                       </span>
                     ) : null}
+                    <AdSourceBadge contact={contact} className="ml-2 align-middle" />
                   </SheetDescription>
                   <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                     <button

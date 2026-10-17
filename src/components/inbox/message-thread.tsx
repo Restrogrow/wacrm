@@ -10,8 +10,10 @@ import { cn } from "@/lib/utils";
 import { CallButton } from "@/components/calls/call-button";
 import { SendFormButton } from "@/components/inbox/send-form-button";
 import { OrderButton } from "@/components/inbox/order-button";
+import { PaymentLinkButton } from "@/components/inbox/payment-link-button";
 import { SummaryButton } from "@/components/inbox/summary-button";
 import { ShareChatButton } from "@/components/inbox/share-chat-button";
+import { AdSourceBadge } from "@/components/contacts/ad-source-badge";
 import type {
   Conversation,
   Message,
@@ -894,6 +896,7 @@ export function MessageThread({
           <div className="min-w-0">
             <h2 className="truncate text-sm font-semibold text-foreground">{displayName}</h2>
             <p className="truncate text-xs text-muted-foreground">{contactPhoneLabel(contact)}</p>
+            <AdSourceBadge contact={contact} className="mt-0.5" />
           </div>
           {/* Session timer badge — hidden on the narrowest phones so
               the name + back arrow keep their room. */}
@@ -954,6 +957,9 @@ export function MessageThread({
 
           {/* Orders, payment requests and catalog sharing. */}
           <OrderButton conversationId={conversation.id} />
+
+          {/* Razorpay payment link. */}
+          <PaymentLinkButton conversationId={conversation.id} />
 
           {/* Send a WhatsApp form (Flows). */}
           <SendFormButton conversationId={conversation.id} />

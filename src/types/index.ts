@@ -106,6 +106,14 @@ export interface Contact {
   avatar_url?: string;
   /** Set when the contact replied STOP (migration 036); broadcasts skip them. */
   opted_out_at?: string | null;
+  /** Click-to-WhatsApp first-touch attribution (migration 062). */
+  ad_source_type?: 'ad' | 'post' | 'other' | null;
+  ad_source_id?: string | null;
+  ad_source_url?: string | null;
+  ad_headline?: string | null;
+  ad_body?: string | null;
+  ad_ctwa_clid?: string | null;
+  ad_first_seen_at?: string | null;
   created_at: string;
   updated_at: string;
   /** Hydrated by queries that embed `contact_tags(tags(*))` (e.g. the
