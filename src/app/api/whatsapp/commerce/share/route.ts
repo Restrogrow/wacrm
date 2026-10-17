@@ -1,6 +1,8 @@
 // ============================================================
 // POST /api/whatsapp/commerce/share — share the catalog or a product.
 // { conversation_id, kind: 'catalog' | 'product', retailer_id?, text? }
+// { conversation_id, kind: 'product_list', retailer_ids?: string[], collection_id?: string, text? }
+//   → interactive multi-product message (1-30 products, grouped by category).
 // Needs a catalog ID in Settings → Orders & payments and an open
 // 24-hour window. Agents and above.
 // ============================================================
@@ -15,6 +17,13 @@ import { customerForConversation } from '@/lib/whatsapp/calling-server'
 import { CallingError } from '@/lib/whatsapp/calling'
 import { catalogMessage, loadCommerce, productMessage, sendWhatsApp } from '@/lib/whatsapp/commerce'
 import { logOutgoing } from '@/lib/whatsapp/commerce-server'
+import {
+  ProductListError,
+  buildProductListMessage,
+  groupIntoSections,
+  normaliseRetailerIds,
+  type ProductListSection,
+} from '@/lib/catalog/messages'
 
 export async function POST(request: Request) {
   try {
@@ -39,6 +48,54 @@ export async function POST(request: Request) {
     } catch (err) {
       if (err instanceof CallingError) return NextResponse.json({ error: err.message }, { status: err.status })
       throw err
+    }
+
+    // Several products in one message (picked in the inbox, or a saved collection).
+    if (b.kind === 'product_list') {
+      let sections: ProductListSection[]
+      let header = 'Our products'
+      try {
+        if (typeof b.collection_id === 'string' && b.collection_id) {
+          const { data: collection } = await db
+            .from('catalog_collections')
+            .select('id, name')
+            .eq('id', b.collection_id)
+            .eq('account_id', ctx.accountId)
+            .maybeSingle()
+          if (!collection) return NextResponse.json({ error: 'Collection not found.' }, { status: 404 })
+          const { data: items } = await db
+            .from('catalog_collection_items')
+            .select('retailer_id, position')
+            .eq('collection_id', collection.id)
+            .eq('account_id', ctx.accountId)
+            .order('position', { ascending: true })
+          header = collection.name as string
+          sections = [{ title: collection.name as string, retailer_ids: normaliseRetailerIds((items ?? []).map((i) => i.retailer_id)) }]
+        } else {
+          const ids = normaliseRetailerIds(b.retailer_ids)
+          // Group by category when the product library knows them.
+          const { data: known } = ids.length
+            ? await db.from('products').select('retailer_id, category').eq('account_id', ctx.accountId).in('retailer_id', ids)
+            : { data: [] as { retailer_id: string; category: string | null }[] }
+          const category = new Map((known ?? []).map((k) => [k.retailer_id as string, (k.category as string | null) ?? null]))
+          sections = groupIntoSections(ids.map((id) => ({ retailer_id: id, category: category.get(id) ?? null })))
+        }
+        const body = typeof b.text === 'string' && b.text.trim() ? b.text.trim() : 'Take a look and order right here on WhatsApp.'
+        const message = buildProductListMessage({ catalogId: settings.catalog_id, header, body, sections })
+        const wamid = await sendWhatsApp(creds, customer.phone, message)
+        const count = sections.reduce((n, s) => n + s.retailer_ids.length, 0)
+        await logOutgoing(db, {
+          conversationId: customer.conversationId,
+          userId: ctx.userId,
+          text: `🛍️ ${count} product${count === 1 ? '' : 's'} shared: ${header}
+${body}`,
+          wamid,
+        })
+        return NextResponse.json({ ok: true })
+      } catch (err) {
+        if (err instanceof ProductListError) return NextResponse.json({ error: err.message }, { status: 400 })
+        return NextResponse.json({ error: err instanceof Error ? err.message : 'Could not send.' }, { status: 400 })
+      }
     }
 
     const text = typeof b.text === 'string' && b.text.trim() ? b.text.trim() : 'Browse our catalog and order right here on WhatsApp.'

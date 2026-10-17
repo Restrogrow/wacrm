@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import type { Notification } from "@/types";
-import { AlarmClock, AtSign, Bell, CheckCheck, Loader2, UserPlus } from "lucide-react";
+import { AlarmClock, AtSign, Bell, CheckCheck, Loader2, Package, UserPlus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ const TYPE_ICON: Partial<Record<Notification["type"], typeof Bell>> = {
   conversation_assigned: UserPlus,
   sla_breach: AlarmClock,
   mention: AtSign,
+  low_stock: Package,
 };
 
 export default function NotificationsPage() {
@@ -120,6 +121,8 @@ export default function NotificationsPage() {
       if (!n.read_at) markRead(n.id);
       if (n.conversation_id) {
         router.push(`/inbox?c=${n.conversation_id}`);
+      } else if (n.type === "low_stock") {
+        router.push("/catalog");
       }
     },
     [markRead, router],

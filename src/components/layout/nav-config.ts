@@ -14,6 +14,7 @@ import {
   IndianRupee,
   LayoutDashboard,
   MessageSquare,
+  Package,
   Phone,
   Plug,
   Radio,
@@ -61,6 +62,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/contacts", label: "Contacts", icon: Users },
       { href: "/pipelines", label: "Pipelines", icon: GitBranch },
       { href: "/orders", label: "Orders & payments", icon: IndianRupee },
+      { href: "/catalog", label: "Catalog", icon: Package },
     ],
   },
   {

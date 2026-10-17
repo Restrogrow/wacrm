@@ -20,6 +20,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { decrypt } from '@/lib/whatsapp/encryption'
+import { lookupCartProducts } from '@/lib/catalog/order-stock'
+import { checkCartStock, stockIssueLines } from '@/lib/catalog/stock'
 
 const GRAPH = 'https://graph.facebook.com/v21.0'
 
@@ -225,6 +227,16 @@ export async function createOrderFromCatalog(
     }))
     .filter((i) => Number.isFinite(i.unit_price))
   if (!items.length) return null
+
+  // Product library (catalog): real names on the order, and a stock check.
+  // Informational only — the order is always saved as the customer placed it.
+  const known = await lookupCartProducts(db, args.accountId, items.map((i) => i.retailer_id))
+  for (const it of items) {
+    const p = it.retailer_id ? known[it.retailer_id] : undefined
+    if (p?.title) it.name = p.title.slice(0, 60)
+  }
+  const stockLines = stockIssueLines(checkCartStock(items, known))
+
   const amounts = computeAmounts(items)
   const referenceId = newReferenceId()
   const { error } = await db.from('whatsapp_orders').insert({
@@ -242,8 +254,8 @@ export async function createOrderFromCatalog(
     console.warn('[commerce] catalog order not saved:', error.message)
     return null
   }
-  const lines = items.map((i) => `• ${i.retailer_id} × ${i.quantity} — ${rupees(i.unit_price * i.quantity)}`)
-  return `🛒 New order ${referenceId}\n${lines.join('\n')}\nTotal: ${rupees(amounts.total)}${args.order.text ? `\n“${args.order.text}”` : ''}`
+  const lines = items.map((i) => `• ${i.retailer_id && known[i.retailer_id] ? i.name : i.retailer_id} × ${i.quantity} — ${rupees(i.unit_price * i.quantity)}`)
+  return `🛒 New order ${referenceId}\n${lines.join('\n')}\nTotal: ${rupees(amounts.total)}${args.order.text ? `\n“${args.order.text}”` : ''}${stockLines.length ? `\n${stockLines.join('\n')}` : ''}`
 }
 
 export interface PaymentStatusEvent {

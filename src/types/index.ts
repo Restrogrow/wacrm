@@ -181,7 +181,7 @@ export interface Conversation {
 // Notifications (migration 027)
 // ============================================================
 
-export type NotificationType = 'conversation_assigned' | 'sla_breach' | 'mention';
+export type NotificationType = 'conversation_assigned' | 'sla_breach' | 'mention' | 'low_stock';
 
 export interface Notification {
   id: string;

@@ -55,6 +55,7 @@ import {
 import { ReplyQuote } from "./reply-quote";
 import { ScheduleMessageButton } from "./schedule-message-button";
 import { InsertShortLinkButton } from "./insert-short-link-button";
+import { ProductPickerButton } from "./product-picker-button";
 
 /** Media content types an agent can send from the composer. */
 export type ComposerMediaKind = "image" | "video" | "document" | "audio";
@@ -763,6 +764,8 @@ export function MessageComposer({
               (sessionExpired || readOnly) && "cursor-not-allowed opacity-50"
             )}
           />
+
+          <ProductPickerButton conversationId={conversationId} disabled={sessionExpired || readOnly} />
 
           <InsertShortLinkButton
             disabled={sessionExpired || readOnly}

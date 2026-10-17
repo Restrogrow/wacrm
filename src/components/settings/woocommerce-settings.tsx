@@ -12,6 +12,7 @@
 // ============================================================
 
 import { IconChip } from '@/components/icon-chip';
+import { WooApiKeysCard } from '@/components/settings/woocommerce-api-keys-card';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -652,6 +653,8 @@ export function WooCommerceSettings() {
           </div>
         )}
       </div>
+
+      <WooApiKeysCard connected={!!connected} readOnly={readOnly} />
 
       {/* ---------------- Activity ---------------- */}
       <IntegrationActivity

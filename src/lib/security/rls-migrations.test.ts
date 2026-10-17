@@ -26,6 +26,7 @@ const ALLOWED_UNSCOPED: Record<string, string> = {
   'storage.objects.Chat media is publicly readable': 'WhatsApp fetches outgoing media by URL',
   'storage.objects.Flow media is publicly readable': 'WhatsApp fetches flow media by URL',
   'storage.objects.Blog media is publicly readable': 'images in published blog posts; uploads are service-role only',
+  'storage.objects.Catalog media is publicly readable': 'product photos Meta fetches into the WhatsApp catalog; uploads are service-role only',
 }
 
 /** Tables that intentionally have no RLS (none today). */
