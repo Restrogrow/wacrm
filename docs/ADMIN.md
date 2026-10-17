@@ -32,7 +32,7 @@ report anything that looks wrong.
 
 - [ ] **1. Set the environment variables in Hostinger hPanel, then redeploy.**
   - Demo login: `DEMO_LOGIN_EMAIL` (the demo workspace **admin**, e.g. `support.repeatgrow+anjali@gmail.com`) and
-    `DEMO_LOGIN_PASSWORD` (that account's password; it is in `wacrm/.env.demo-login`). Without them, typing
+    `DEMO_LOGIN_PASSWORD` (that account's current password, which you set in Supabase; the old `.env.demo-login` file was deleted). Without them, typing
     `demo` / `demo` on `/login` says the demo isn't enabled. Normal login is unaffected.
   - `GEMINI_KEY`: without it the AI buttons (suggest reply, lead score, chatbot, assistant) show "AI is not set up".
   - App email: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_USER=support@repeatgrow.com`,
@@ -61,7 +61,7 @@ report anything that looks wrong.
 - [ ] **8. Check the cron jobs exist on Hostinger** (see [Crons](#crons-background-jobs)) and that
   `AUTOMATION_CRON_SECRET` is set. Open `/admin/system`: every job (now 14, including `sla-alerts`,
   `scheduled-messages`, `journeys`, `ai-analysis`, `calcom-reminders`) should say OK.
-- [ ] **9. Delete the plain-text demo passwords.** `wacrm/.env.demo-login` and `demo-login.txt` (one folder above the
+- [x] **9. Delete the plain-text demo passwords. DONE 17 Oct 2026** (the demo admin password was reset). Original task: `wacrm/.env.demo-login` and `demo-login.txt` (one folder above the
   repo) sit in OneDrive. Move them to a password manager and delete both files. If the demo workspace is on the
   production database (it is), change those five passwords. See [Demo account](#demo-account) for the public
   `demo` / `demo` login risks.
@@ -244,10 +244,19 @@ after changing them. Where they live: **Hostinger hPanel** for production, **`wa
 
 ## 8. Demo account
 
+> **Public demo login — quick reference**
+>
+> - **Visitors:** on `/login` type `demo` / `demo`. They become **Anjali Rao**, admin of the demo workspace (sample data only; not a platform admin).
+> - **Account:** `support.repeatgrow+anjali@gmail.com` (the `+anjali` is part of the address; it lands in the `support.repeatgrow@gmail.com` inbox). Type it exactly, no quotes.
+> - **Where the password lives:** only in Hostinger env vars `DEMO_LOGIN_EMAIL` and `DEMO_LOGIN_PASSWORD` (and `wacrm/.env.local` locally). It was reset on 17 Oct 2026 when the old password file was deleted. Never put it in the repo or docs.
+> - **Turn off:** delete the two env vars and redeploy, or change the user's password in Supabase.
+> - **Change password:** Supabase → Authentication → Users → the demo admin → new password; update `DEMO_LOGIN_PASSWORD` on Hostinger; redeploy.
+> - **Risks:** anyone can use it, so they can edit demo data, invite teammates (invite emails go from your domain) and create API keys *inside the demo workspace only*. Rate limited to 20 attempts/hour/IP. Keep real customer data out of it.
+
 A fully populated test workspace on the **production** Supabase project, for previewing the UI.
 
-- **Owner:** `support.repeatgrow+demo@gmail.com`. **Passwords** are in `wacrm/.env.demo-login` (git-ignored) and in
-  `demo-login.txt` one folder above the repo. Never commit them.
+- **Owner:** `support.repeatgrow+demo@gmail.com`. **Passwords** are no longer stored in plain-text files (deleted 17 Oct 2026). Keep them in a password
+  manager. Never commit them.
 - **Teammates:** Priya Sharma (agent), Rahul Verma (agent), Anjali Rao (admin), Kabir Khan (viewer).
 - **Data:** 12 contacts, 7 chats with messages, 9 deals, templates, broadcasts, automations, forms, orders, saved
   replies, AI chatbot knowledge, notifications. Shopify, Calendly and WhatsApp are **not** connected; Flows are not seeded.

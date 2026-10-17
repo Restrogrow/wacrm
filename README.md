@@ -718,10 +718,22 @@ npm run dev
 
 ## Demo account (local testing)
 
+> **Public demo login — quick reference**
+>
+> | | |
+> |---|---|
+> | **How a visitor uses it** | On `/login` type `demo` as the email and `demo` as the password, then Sign in |
+> | **Who they become** | **Anjali Rao**, the *admin* of the demo workspace (sample data only, not a platform admin) |
+> | **Account email** | `support.repeatgrow+anjali@gmail.com` (the `+anjali` is part of the address; mail goes to `support.repeatgrow@gmail.com`) |
+> | **Where the real password lives** | Only in the server env vars `DEMO_LOGIN_EMAIL` and `DEMO_LOGIN_PASSWORD` (Hostinger, and `wacrm/.env.local` locally). It is never in the repo or the browser |
+> | **Turn it off** | Remove the two env vars and redeploy (the login then says the demo isn't enabled), or change the account's password in Supabase |
+> | **Change the password** | Supabase → Authentication → Users → the demo admin → set a new password, then update `DEMO_LOGIN_PASSWORD` on Hostinger and redeploy |
+> | **Limits** | Route `POST /api/demo-login`, 20 attempts per hour per IP. Treat the workspace as public: keep real data out of it |
+
 A fully populated demo workspace (contacts, chats, deals, broadcasts, templates, automations, forms, orders, AI chatbot) for previewing the UI.
 
 - **Email:** `support.repeatgrow+demo@gmail.com`
-- **Password:** stored in `.env.demo-login` (gitignored, never committed).
+- **Password:** set in Supabase for that user and kept in your password manager (the old `.env.demo-login` file was deleted on 17 Oct 2026). Never commit it.
 - **Re-create it:** delete the demo user in Supabase, then run `node scripts/seed-demo.mjs` (it refuses to touch an existing demo user older than an hour). It uses the service-role key from `.env.local`, only writes inside the demo account, and sends no WhatsApp messages.
 - Shopify, Calendly and WhatsApp are intentionally not connected in the demo account, and Flows are not seeded.
 - **Public `demo` / `demo` login:** on `/login`, typing `demo` as both
