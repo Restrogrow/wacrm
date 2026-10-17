@@ -5,6 +5,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyAuthError, useTurnstile } from "@/components/auth/turnstile";
 import { safeNextPath } from "@/lib/auth/safe-next";
 import { AuthDivider, GoogleButton } from "@/components/auth/google-button";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ function LoginPageInner() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const captcha = useTurnstile();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +60,11 @@ function LoginPageInner() {
     const isDemo = email.trim().toLowerCase() === "demo" && password === "demo";
     let authError: string | null = null;
     if (isDemo) {
-      const res = await fetch("/api/demo-login", { method: "POST" });
+      const res = await fetch("/api/demo-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ captchaToken: captcha.token }),
+      });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         authError =
@@ -70,12 +76,14 @@ function LoginPageInner() {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: captcha.captchaOptions,
       });
-      authError = error ? error.message : null;
+      authError = error ? friendlyAuthError(error.message) : null;
     }
 
     if (authError) {
       setError(authError);
+      captcha.reset();
       setLoading(false);
       return;
     }
@@ -185,6 +193,8 @@ function LoginPageInner() {
               </button>
             </div>
           </div>
+
+          {captcha.widget}
 
           <Button
             type="submit"

@@ -4,6 +4,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyAuthError, useTurnstile } from "@/components/auth/turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,7 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const supabase = createClient();
+  const captcha = useTurnstile();
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,10 +32,12 @@ export default function ForgotPasswordPage() {
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      ...captcha.captchaOptions,
     });
 
     if (error) {
-      setError(error.message);
+      captcha.reset();
+      setError(friendlyAuthError(error.message));
       setLoading(false);
       return;
     }
@@ -106,6 +110,8 @@ export default function ForgotPasswordPage() {
                 className="h-12 rounded-2xl border-border bg-card text-base text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/20"
               />
             </div>
+
+            {captcha.widget}
 
             <Button
               type="submit"

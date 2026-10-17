@@ -34,7 +34,7 @@ export const FINDINGS: Finding[] = [
     title: 'No captcha or bot protection on signup, login and password reset',
     risk: 'Bots can create unlimited trial accounts and use your Google mailbox to mail-bomb victims with confirmation and reset emails (hurting your sending quota and domain reputation).',
     status: 'action',
-    note: 'Needs your dashboard: Supabase → Authentication → Attack Protection → turn on Captcha (Cloudflare Turnstile is free), then tell me and I will wire the captcha widget into the three forms. Also lower Auth → Rate Limits (emails per hour, sign-ins per 5 min).',
+    note: 'The Turnstile widget exists and the forms (signup, login, forgot password, Settings password, demo login) already send the token. To switch it on: add NEXT_PUBLIC_TURNSTILE_SITE_KEY on Hostinger and redeploy, check the box shows on /login, then Supabase → Authentication → Attack Protection → Turnstile + the secret key. Also lower Auth → Rate Limits (emails per hour, sign-ins per 5 min).',
   },
   {
     id: 'F3',
@@ -191,7 +191,7 @@ export const PLAYBOOK: Layer[] = [
       'Supabase blocks plan, trial-end and owner changes from the browser (migration 055).',
     ],
     todo: [
-      'Turn on Turnstile captcha in Supabase Attack Protection (free) and ask me to add it to the forms.',
+      'Turn on Turnstile captcha in Supabase Attack Protection after adding the public site key on Hostinger and redeploying (the forms already send the token).',
       'Lower Supabase Auth rate limits: emails per hour (start at 10), sign-ins per 5 minutes.',
       'Optional: require a mobile number OTP before starting the trial.',
     ],

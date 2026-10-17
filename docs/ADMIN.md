@@ -43,11 +43,16 @@ report anything that looks wrong.
   `scripts/run-migration.mjs`, so resetting it does not affect the site. The service-role key is used by the site:
   after rotating it, update `SUPABASE_SERVICE_ROLE_KEY` in Hostinger **and** `wacrm/.env.local` at the same time, or
   server features fail until you do. Never paste either into a chat again; keep `SUPABASE_DB_URL` in `.env.local` only.
-- [ ] **3. Captcha (Cloudflare Turnstile).** Plan: (a) create a Turnstile widget (hostnames `repeatgrow.com` and
-  `localhost`, mode Managed); (b) give the **site key** (public) to the developer, who adds the widget to the signup,
-  login and forgot-password forms; (c) deploy; (d) **only then** turn on Supabase → Authentication → Attack
-  Protection → Turnstile and paste the **secret key**. **Do not enable it in Supabase first**: the forms don't send a
-  token yet, so every signup and login would fail. Also tick "Prevent leaked passwords" if your plan has it.
+- [ ] **3. Captcha (Cloudflare Turnstile).** **Built and ready; only switching it on is left.** The Turnstile widget
+  "Repeat Grow" exists in the Cloudflare account (hostnames `repeatgrow.com`, `www.repeatgrow.com`, `localhost`, mode
+  Managed). The signup, login, forgot-password, Settings password form and the `demo` / `demo` login already send
+  the captcha token. Steps: (a) add the **public** variable `NEXT_PUBLIC_TURNSTILE_SITE_KEY` on Hostinger (it is in
+  `wacrm/.env.local`; it is baked in at build time, so **redeploy**); (b) open repeatgrow.com/login and check the
+  security-check box appears; (c) **only then** go to Supabase → Authentication → Attack Protection, choose
+  Turnstile and paste the **secret key** (kept in `wacrm/.env.local` as `TURNSTILE_SECRET_KEY`, used only here, never
+  by the app, never in docs); (d) log in once to confirm. **Never do (c) before (a) and (b)**, or every signup and
+  login fails. If you get locked out, untick Captcha in Supabase. Also tick "Prevent leaked passwords" if your plan
+  has it.
 - [ ] **4. Lower the Supabase Auth rate limits** (Authentication → Rate Limits: emails per hour, sign-ins per IP).
 - [ ] **5. Turn on app email (SMTP) and test it.** Add the `SMTP_*` variables (item 1) and restart. Then open
   `/admin/emails` → **Send all test emails** (they land in `restrogrow@gmail.com` marked `[TEST]`; check your phone

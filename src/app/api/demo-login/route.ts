@@ -20,8 +20,17 @@ export async function POST(request: Request) {
   const limit = checkRateLimit(`demo-login:${getClientIp(request)}`, { limit: 20, windowMs: 60 * 60_000 });
   if (!limit.success) return rateLimitResponse(limit);
 
+  // Supabase checks the captcha on every password sign-in once Attack Protection is on,
+  // so the login page passes the visitor's Turnstile token along.
+  const body = (await request.json().catch(() => null)) as { captchaToken?: unknown } | null;
+  const captchaToken = typeof body?.captchaToken === 'string' && body.captchaToken ? body.captchaToken : undefined;
+
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+    ...(captchaToken ? { options: { captchaToken } } : {}),
+  });
   if (error) {
     console.error('[demo-login] sign-in failed:', error.message);
     return NextResponse.json({ error: 'The demo is unavailable right now. Please try again later.' }, { status: 503 });

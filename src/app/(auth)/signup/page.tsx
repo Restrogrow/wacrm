@@ -5,6 +5,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyAuthError, useTurnstile } from "@/components/auth/turnstile";
 import { safeNextPath } from "@/lib/auth/safe-next";
 import { AuthDivider, GoogleButton } from "@/components/auth/google-button";
 import {
@@ -72,6 +73,7 @@ function SignupPageInner() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const supabase = createClient();
+  const captcha = useTurnstile();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +130,7 @@ function SignupPageInner() {
               team_size: teamSize,
             },
         ...(emailRedirectTo ? { emailRedirectTo } : {}),
+        ...captcha.captchaOptions,
       },
     });
 
@@ -135,10 +138,11 @@ function SignupPageInner() {
       // The signup guard (migration 061) rejects disposable emails and
       // mailboxes that already had a trial; Supabase surfaces that as a
       // generic "Database error saving new user".
+      captcha.reset();
       setError(
         /signup_blocked|database error saving new user/i.test(error.message)
           ? 'We could not create an account with this email. Use your real work email, or log in if you already have an account. Need help? Email support@repeatgrow.com.'
-          : error.message,
+          : friendlyAuthError(error.message),
       );
       setLoading(false);
       return;
@@ -455,6 +459,8 @@ function SignupPageInner() {
             </div>
             </>
             )}
+
+            {captcha.widget}
 
             <Button
               type="submit"

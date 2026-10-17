@@ -7,6 +7,7 @@ import { Loader2, KeyRound } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 
 import { createClient } from '@/lib/supabase/client';
+import { friendlyAuthError, useTurnstile } from '@/components/auth/turnstile';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +42,7 @@ function hasPasswordLogin(user: User | null): boolean {
 export function PasswordForm() {
   const { profile, user } = useAuth();
   const supabase = createClient();
+  const captcha = useTurnstile();
   const [justSet, setJustSet] = useState(false);
   // Google-only accounts set a first password without a current one.
   const settingFirst = !hasPasswordLogin(user) && !justSet;
@@ -77,9 +79,11 @@ export function PasswordForm() {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: profile.email,
           password: current,
+          options: captcha.captchaOptions,
         });
         if (signInError) {
-          toast.error('Current password is incorrect');
+          captcha.reset();
+          toast.error(/captcha/i.test(signInError.message) ? friendlyAuthError(signInError.message) : 'Current password is incorrect');
           return;
         }
       }
@@ -181,6 +185,8 @@ export function PasswordForm() {
               {confirmError}
             </p>
           )}
+
+          {!settingFirst && captcha.widget}
 
           <div className="flex justify-end">
             <Button
