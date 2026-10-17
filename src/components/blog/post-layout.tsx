@@ -29,11 +29,16 @@ export function BlogPostLayout({
   post,
   toc,
   faq,
+  related: relatedOverride,
+  author,
   children,
 }: {
   post: BlogPost;
   toc: TocItem[];
   faq?: FaqItem[];
+  /** Database posts pass their own list; hand-coded posts use the static one. */
+  related?: BlogPost[];
+  author?: string;
   children: ReactNode;
 }) {
   const path = `/blog/${post.slug}`;
@@ -48,13 +53,13 @@ export function BlogPostLayout({
       path,
       datePublished: post.datePublished,
       dateModified: post.dateModified,
-      image: `${path}/opengraph-image`,
+      image: post.cover.startsWith('http') ? post.cover : `${path}/opengraph-image`,
       keywords: post.keywords,
       section: post.category,
     }),
     ...(faq?.length ? [{ '@context': 'https://schema.org', ...buildFAQNode(faq) }] : []),
   ];
-  const related = relatedPosts(post.slug);
+  const related = relatedOverride ?? relatedPosts(post.slug);
 
   return (
     <article className="mx-auto max-w-3xl px-5 py-12 sm:px-6 sm:py-16">
@@ -86,7 +91,7 @@ export function BlogPostLayout({
         </h1>
         <p className="mt-4 text-base leading-relaxed text-foreground/80">{post.description}</p>
         <p className="mt-4 text-xs text-muted-foreground">
-          By the Repeat Grow team · <time dateTime={post.datePublished}>{formatPostDate(post.datePublished)}</time>
+          By {author ?? 'the Repeat Grow team'} · <time dateTime={post.datePublished}>{formatPostDate(post.datePublished)}</time>
           {post.dateModified && (
             <>
               {' '}· Updated <time dateTime={post.dateModified}>{formatPostDate(post.dateModified)}</time>
@@ -265,7 +270,7 @@ export function TemplateExample({
 }
 
 /** Typography for the article body (no @tailwindcss/typography dependency). */
-function BlogProseStyles() {
+export function BlogProseStyles() {
   return (
     <style>{`
       .blog-prose { font-size: 1rem; line-height: 1.75; color: color-mix(in oklab, var(--foreground) 90%, transparent); }

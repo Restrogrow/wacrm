@@ -130,7 +130,7 @@ export async function POST(
         .update({ status: 'draft', updated_at: new Date().toISOString() })
         .in('id', conflicts.map((c) => c.id))
       if (pauseErr) {
-        return NextResponse.json({ error: pauseErr.message }, { status: 500 })
+        return NextResponse.json({ error: (console.error('[api] database error:', pauseErr.message), 'Something went wrong. Please try again.') }, { status: 500 })
       }
     }
   }
@@ -142,7 +142,7 @@ export async function POST(
     .select()
     .maybeSingle()
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: (console.error('[api] database error:', error.message), 'Something went wrong. Please try again.') }, { status: 500 })
   }
   return NextResponse.json({ flow: updated })
 }

@@ -49,7 +49,7 @@ export async function GET(
     .eq('user_id', ctx.userId)
     .maybeSingle()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (console.error('[api] database error:', error.message), 'Something went wrong. Please try again.') }, { status: 500 })
   if (!automation) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const steps = await loadStepsTree(id)
@@ -126,7 +126,7 @@ export async function PATCH(
       .update(update)
       .eq('id', id)
       .eq('account_id', ctx.accountId)
-    if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 })
+    if (updErr) return NextResponse.json({ error: (console.error('[api] database error:', updErr.message), 'Something went wrong. Please try again.') }, { status: 500 })
   }
 
   if (Array.isArray(body.steps)) {
@@ -152,6 +152,6 @@ export async function DELETE(
     .eq('id', id)
     .eq('account_id', ctx.accountId)
     .eq('user_id', ctx.userId)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (console.error('[api] database error:', error.message), 'Something went wrong. Please try again.') }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

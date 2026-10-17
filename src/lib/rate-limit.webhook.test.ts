@@ -18,8 +18,13 @@ function req(ip?: string) {
 beforeEach(() => __resetRateLimitForTests())
 
 describe('getClientIp', () => {
-  it('takes the leftmost forwarded address', () => {
-    expect(getClientIp(req('203.0.113.7'))).toBe('203.0.113.7')
+  it('takes the rightmost forwarded address (the one our proxy appended), never the client-supplied first one', () => {
+    const forged = new Request('https://x', { headers: { 'x-forwarded-for': '1.2.3.4, 203.0.113.7' } })
+    expect(getClientIp(forged)).toBe('203.0.113.7')
+  })
+  it('prefers the edge-set cf-connecting-ip header', () => {
+    const r = new Request('https://x', { headers: { 'cf-connecting-ip': '198.51.100.9', 'x-forwarded-for': '1.2.3.4' } })
+    expect(getClientIp(r)).toBe('198.51.100.9')
   })
   it('falls back to x-real-ip, then "unknown"', () => {
     expect(getClientIp(new Request('https://x', { headers: { 'x-real-ip': '198.51.100.2' } }))).toBe('198.51.100.2')

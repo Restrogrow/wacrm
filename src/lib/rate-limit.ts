@@ -113,15 +113,22 @@ export function rateLimitResponse(result: RateLimitResult): NextResponse {
 }
 
 /**
- * Best-effort client IP: leftmost `x-forwarded-for` entry (set by the
- * reverse proxy — Hostinger, Cloudflare, Vercel), then `x-real-ip`,
- * else "unknown" (local dev, where the limit is effectively global).
+ * Best-effort client IP for rate limiting. Prefers headers the edge sets
+ * itself (Cloudflare / x-real-ip), then the RIGHTMOST `x-forwarded-for`
+ * entry: our reverse proxy appends the address it actually saw, so the
+ * leftmost entries are whatever the client chose to send and must never
+ * be trusted. Falls back to "unknown" (local dev: effectively global).
  */
 export function getClientIp(request: Request): string {
-  const xff = request.headers.get('x-forwarded-for');
-  if (xff) return xff.split(',')[0].trim();
+  const cf = request.headers.get('cf-connecting-ip');
+  if (cf) return cf.trim();
   const xri = request.headers.get('x-real-ip');
   if (xri) return xri.trim();
+  const xff = request.headers.get('x-forwarded-for');
+  if (xff) {
+    const parts = xff.split(',').map((p) => p.trim()).filter(Boolean);
+    if (parts.length) return parts[parts.length - 1];
+  }
   return 'unknown';
 }
 

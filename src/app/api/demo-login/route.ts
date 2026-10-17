@@ -1,0 +1,30 @@
+import { NextResponse } from 'next/server';
+
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
+import { createClient } from '@/lib/supabase/server';
+
+/**
+ * POST /api/demo-login — signs the visitor into the shared demo workspace.
+ *
+ * The login page calls this when someone types "demo" / "demo". The real
+ * credentials live only in server env (DEMO_LOGIN_EMAIL / DEMO_LOGIN_PASSWORD),
+ * never in the browser bundle. Point them at an account in the demo workspace (sample data only, never a real customer; an
+ * admin or agent, not the owner) because anyone on the internet can use it.
+ * Unset env = feature off (404).
+ */
+export async function POST(request: Request) {
+  const email = process.env.DEMO_LOGIN_EMAIL;
+  const password = process.env.DEMO_LOGIN_PASSWORD;
+  if (!email || !password) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  const limit = checkRateLimit(`demo-login:${getClientIp(request)}`, { limit: 20, windowMs: 60 * 60_000 });
+  if (!limit.success) return rateLimitResponse(limit);
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    console.error('[demo-login] sign-in failed:', error.message);
+    return NextResponse.json({ error: 'The demo is unavailable right now. Please try again later.' }, { status: 503 });
+  }
+  return NextResponse.json({ ok: true });
+}

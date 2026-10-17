@@ -117,7 +117,7 @@ export async function POST(request: Request) {
   if (nodesErr) {
     // Don't leave an empty draft behind.
     await admin.from('flows').delete().eq('id', created.id)
-    return NextResponse.json({ error: nodesErr.message }, { status: 500 })
+    return NextResponse.json({ error: (console.error('[api] database error:', nodesErr.message), 'Something went wrong. Please try again.') }, { status: 500 })
   }
 
   return NextResponse.json({ flow: created }, { status: 201 })

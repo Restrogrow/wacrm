@@ -3,27 +3,33 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { SITE_URL, buildBreadcrumbSchema } from '@/lib/seo';
-import { BLOG_POSTS, formatPostDate, type BlogPost } from '@/lib/blog';
+import { formatPostDate, type BlogPost } from '@/lib/blog';
+import { getAllPosts } from '@/lib/blog-db';
+
+// Database posts come and go from /admin/blog; re-check every minute.
+export const revalidate = 60;
 
 const PAGE_DESCRIPTION =
   'Practical guides on the WhatsApp Business API, templates, Shopify notifications, payments and selling on WhatsApp in India, from Repeat Grow.';
 
 const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([{ name: 'Blog', path: '/blog' }]);
 
-const BLOG_SCHEMA = {
-  '@context': 'https://schema.org',
-  '@type': 'Blog',
-  name: 'Repeat Grow Blog',
-  url: `${SITE_URL}/blog`,
-  description: PAGE_DESCRIPTION,
-  blogPost: BLOG_POSTS.map((post) => ({
-    '@type': 'BlogPosting',
-    headline: post.title,
-    url: `${SITE_URL}/blog/${post.slug}`,
-    datePublished: post.datePublished,
-    image: `${SITE_URL}${post.cover}`,
-  })),
-};
+function buildBlogSchema(posts: BlogPost[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'Repeat Grow Blog',
+    url: `${SITE_URL}/blog`,
+    description: PAGE_DESCRIPTION,
+    blogPost: posts.map((post) => ({
+      '@type': 'BlogPosting',
+      headline: post.title,
+      url: `${SITE_URL}/blog/${post.slug}`,
+      datePublished: post.datePublished,
+      image: post.cover.startsWith('http') ? post.cover : `${SITE_URL}${post.cover}`,
+    })),
+  };
+}
 
 export const metadata: Metadata = {
   title: 'Blog: WhatsApp Business guides',
@@ -62,8 +68,13 @@ function PostMeta({ post }: { post: BlogPost }) {
   );
 }
 
-export default function BlogIndexPage() {
-  const [featured, ...rest] = BLOG_POSTS;
+export default async function BlogIndexPage() {
+  const posts = await getAllPosts();
+  // A post marked "featured" in the admin takes the hero slot; otherwise the newest one does.
+  const pinned = posts.find((p) => p.featured);
+  const featured = pinned ?? posts[0];
+  const rest = posts.filter((p) => p !== featured);
+  const BLOG_SCHEMA = buildBlogSchema(posts);
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 sm:px-6 sm:py-16">

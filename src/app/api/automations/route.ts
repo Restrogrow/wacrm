@@ -21,7 +21,7 @@ export async function GET() {
     .from('automations')
     .select('*')
     .order('created_at', { ascending: false })
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: (console.error('[api] database error:', error.message), 'Something went wrong. Please try again.') }, { status: 500 })
   return NextResponse.json({ automations: data ?? [] })
 }
 

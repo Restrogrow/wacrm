@@ -32,6 +32,7 @@ const PUBLIC_ROUTES: Record<string, string> = {
   'v1/openapi.json/route.ts': 'public API description',
   'invitations/[token]/peek/route.ts': 'invite preview by unguessable token, rate limited per IP',
   'v1/connect/token/route.ts': 'OAuth-style code exchange with client secret, rate limited',
+  'demo-login/route.ts': 'public "demo / demo" login; credentials only in server env for a sample-data account, rate limited per IP, off when env unset',
   'demo-request/route.ts': 'public demo request form; honeypot, validation and rate limit per IP, writes with the service role',
 }
 

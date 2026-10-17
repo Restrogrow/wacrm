@@ -105,7 +105,11 @@ async function handleCompliance(
   const db = supabaseAdmin();
   try {
     if (topic === 'shop/redact') {
-      await db.from('shopify_stores').delete().eq('shop_domain', shop);
+      await db
+        .from('shopify_stores')
+        .delete()
+        .eq('shop_domain', shop)
+        .eq('connection_type', 'oauth');
       return;
     }
     if (topic !== 'customers/redact') return;
@@ -113,7 +117,8 @@ async function handleCompliance(
     const { data: stores } = await db
       .from('shopify_stores')
       .select('id')
-      .eq('shop_domain', shop);
+      .eq('shop_domain', shop)
+      .eq('connection_type', 'oauth');
     const storeIds = (stores ?? []).map((s) => s.id as string);
     if (storeIds.length === 0) return;
 

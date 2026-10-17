@@ -53,13 +53,29 @@ function LoginPageInner() {
     setError(null);
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Public demo: typing demo / demo opens the shared demo workspace.
+    // The real credentials stay on the server (/api/demo-login).
+    const isDemo = email.trim().toLowerCase() === "demo" && password === "demo";
+    let authError: string | null = null;
+    if (isDemo) {
+      const res = await fetch("/api/demo-login", { method: "POST" });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        authError =
+          res.status === 404
+            ? "The demo login is not enabled."
+            : json.error || "The demo is unavailable right now.";
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      authError = error ? error.message : null;
+    }
 
-    if (error) {
-      setError(error.message);
+    if (authError) {
+      setError(authError);
       setLoading(false);
       return;
     }
@@ -119,8 +135,9 @@ function LoginPageInner() {
               <Mail className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="email"
-                type="email"
-                autoComplete="email"
+                type="text"
+                inputMode="email"
+                autoComplete="username"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -179,7 +196,12 @@ function LoginPageInner() {
           </Button>
         </form>
 
-        <p className="mt-8 text-center text-sm text-muted-foreground">
+        <p className="mt-5 text-center text-xs text-muted-foreground">
+          Just looking around? Type <span className="font-semibold">demo</span> as both email and
+          password to explore a sample workspace.
+        </p>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link
             href={

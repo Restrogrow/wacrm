@@ -132,7 +132,14 @@ function SignupPageInner() {
     });
 
     if (error) {
-      setError(error.message);
+      // The signup guard (migration 061) rejects disposable emails and
+      // mailboxes that already had a trial; Supabase surfaces that as a
+      // generic "Database error saving new user".
+      setError(
+        /signup_blocked|database error saving new user/i.test(error.message)
+          ? 'We could not create an account with this email. Use your real work email, or log in if you already have an account. Need help? Email support@repeatgrow.com.'
+          : error.message,
+      );
       setLoading(false);
       return;
     }

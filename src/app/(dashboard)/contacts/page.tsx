@@ -182,8 +182,10 @@ export default function ContactsPage() {
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      if (term) {
-        const like = `%${term}%`;
+      // Strip characters that could break out of the PostgREST .or() grammar.
+      const safeTerm = term.replace(/[^\p{L}\p{N} +@.\-_]/gu, '').trim();
+      if (safeTerm) {
+        const like = `%${safeTerm}%`;
         query = query.or(`name.ilike.${like},phone.ilike.${like},email.ilike.${like}`);
       }
 

@@ -117,6 +117,17 @@ export async function POST(request: Request) {
       template_params,
     } = body
 
+    // Hard cap per request: stops one call from blasting an unbounded list
+    // (the public v1 API uses the same 1000 limit).
+    const MAX_RECIPIENTS = 1000
+    const submitted = Array.isArray(newRecipients) ? newRecipients.length : Array.isArray(phone_numbers) ? phone_numbers.length : 0
+    if (submitted > MAX_RECIPIENTS) {
+      return NextResponse.json(
+        { error: `Too many recipients. Send at most ${MAX_RECIPIENTS} per request.` },
+        { status: 400 }
+      )
+    }
+
     // Normalize to a list of {phone, params} regardless of shape.
     let recipients: NewRecipient[]
     if (Array.isArray(newRecipients) && newRecipients.length > 0) {

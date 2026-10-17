@@ -24,7 +24,7 @@ export async function POST(
     .eq('account_id', ctx.accountId)
     .eq('user_id', ctx.userId)
     .maybeSingle()
-  if (origErr) return NextResponse.json({ error: origErr.message }, { status: 500 })
+  if (origErr) return NextResponse.json({ error: (console.error('[api] database error:', origErr.message), 'Something went wrong. Please try again.') }, { status: 500 })
   if (!original) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const { data: copy, error: copyErr } = await admin
@@ -72,7 +72,7 @@ export async function POST(
       position: row.position,
     }))
     const { error: insErr } = await admin.from('automation_steps').insert(rows)
-    if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 })
+    if (insErr) return NextResponse.json({ error: (console.error('[api] database error:', insErr.message), 'Something went wrong. Please try again.') }, { status: 500 })
   }
 
   return NextResponse.json({ automation: copy }, { status: 201 })

@@ -36,7 +36,7 @@ export async function GET() {
       .eq('account_id', accountId)
       .maybeSingle()
     if (isMissingTable(error)) return MISSING
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return NextResponse.json({ error: (console.error('[api] database error:', error.message), 'Something went wrong. Please try again.') }, { status: 500 })
     return NextResponse.json({
       settings: data ? normalizeChatbotSettings(data) : DEFAULT_CHATBOT_SETTINGS,
       ai_configured: !!aiApiKey(),
@@ -72,7 +72,7 @@ export async function PUT(request: Request) {
       .select()
       .single()
     if (isMissingTable(error)) return MISSING
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return NextResponse.json({ error: (console.error('[api] database error:', error.message), 'Something went wrong. Please try again.') }, { status: 500 })
     return NextResponse.json({ settings: normalizeChatbotSettings(data) })
   } catch (err) {
     return toErrorResponse(err)

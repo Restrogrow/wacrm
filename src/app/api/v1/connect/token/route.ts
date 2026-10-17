@@ -28,15 +28,7 @@ import {
 } from '@/lib/connect/store';
 import { decrypt } from '@/lib/whatsapp/encryption';
 import { verifyPhoneNumber } from '@/lib/whatsapp/meta-api';
-import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
-
-function getClientIp(request: Request): string {
-  const xff = request.headers.get('x-forwarded-for');
-  if (xff) return xff.split(',')[0].trim();
-  const xri = request.headers.get('x-real-ip');
-  if (xri) return xri.trim();
-  return 'unknown';
-}
+import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit';
 
 /** The connected number in display form (Graph API), or null. */
 async function getPhoneNumber(accountId: string): Promise<string | null> {

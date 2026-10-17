@@ -11,7 +11,8 @@ export interface BlogPost {
   seoTitle?: string;
   /** Meta description and card excerpt — keep it under ~160 characters. */
   description: string;
-  category: 'E-commerce' | 'Bookings' | 'WhatsApp API' | 'Templates' | 'Payments';
+  /** Free text; hand-coded posts use E-commerce, Bookings, WhatsApp API, Templates, Payments. */
+  category: string;
   datePublished: string;
   dateModified?: string;
   readMinutes: number;

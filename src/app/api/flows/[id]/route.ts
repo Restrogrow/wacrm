@@ -102,6 +102,19 @@ export async function PUT(
   if (!body) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
+  if (
+    body.trigger_type !== undefined &&
+    !['keyword', 'first_inbound_message', 'manual'].includes(body.trigger_type)
+  ) {
+    return NextResponse.json({ error: 'Invalid trigger_type' }, { status: 400 })
+  }
+  if (
+    body.entry_node_id !== undefined &&
+    body.entry_node_id !== null &&
+    typeof body.entry_node_id !== 'string'
+  ) {
+    return NextResponse.json({ error: 'Invalid entry_node_id' }, { status: 400 })
+  }
   if (body.name !== undefined && !body.name.trim()) {
     return NextResponse.json(
       { error: 'name cannot be empty' },
@@ -133,7 +146,7 @@ export async function PUT(
     .update(flowPatch)
     .eq('id', id)
   if (updErr) {
-    return NextResponse.json({ error: updErr.message }, { status: 500 })
+    return NextResponse.json({ error: (console.error('[api] database error:', updErr.message), 'Something went wrong. Please try again.') }, { status: 500 })
   }
 
   if (body.nodes !== undefined) {
@@ -144,7 +157,7 @@ export async function PUT(
       .delete()
       .eq('flow_id', id)
     if (delErr) {
-      return NextResponse.json({ error: delErr.message }, { status: 500 })
+      return NextResponse.json({ error: (console.error('[api] database error:', delErr.message), 'Something went wrong. Please try again.') }, { status: 500 })
     }
     if (body.nodes.length > 0) {
       const { error: insErr } = await admin.from('flow_nodes').insert(
@@ -158,7 +171,7 @@ export async function PUT(
         })),
       )
       if (insErr) {
-        return NextResponse.json({ error: insErr.message }, { status: 500 })
+        return NextResponse.json({ error: (console.error('[api] database error:', insErr.message), 'Something went wrong. Please try again.') }, { status: 500 })
       }
     }
   }
@@ -194,7 +207,7 @@ export async function DELETE(
   // free up the contact for new triggers immediately.
   const { error } = await supabaseAdmin().from('flows').delete().eq('id', id)
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: (console.error('[api] database error:', error.message), 'Something went wrong. Please try again.') }, { status: 500 })
   }
   return NextResponse.json({ ok: true })
 }

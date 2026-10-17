@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Activity, RefreshCw, Mail } from 'lucide-react';
+import { Activity, FileText, RefreshCw, Mail, ShieldCheck } from 'lucide-react';
 
 import { loadAdminDashboard } from '@/lib/admin/dashboard';
 import { formatDelta } from '@/lib/admin/time';
@@ -51,6 +51,22 @@ export default async function PlatformAdminPage() {
           </p>
         </div>
         <div className="flex gap-2 self-start">
+          <Link
+            href="/admin/security"
+            prefetch={false}
+            className="border-border text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm"
+          >
+            <ShieldCheck className="size-3.5" />
+            Security
+          </Link>
+          <Link
+            href="/admin/blog"
+            prefetch={false}
+            className="border-border text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm"
+          >
+            <FileText className="size-3.5" />
+            Blog
+          </Link>
           <Link
             href="/admin/emails"
             prefetch={false}

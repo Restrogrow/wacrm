@@ -41,7 +41,7 @@ export async function GET() {
     .select('*')
     .order('created_at', { ascending: false })
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: (console.error('[api] database error:', error.message), 'Something went wrong. Please try again.') }, { status: 500 })
   }
   return NextResponse.json({ flows: data ?? [] })
 }
@@ -141,7 +141,7 @@ export async function POST(request: Request) {
         // (probably zero) nodes too.
         await admin.from('flows').delete().eq('id', flow.id)
         return NextResponse.json(
-          { error: nodesErr.message },
+          { error: (console.error('[api] database error:', nodesErr.message), 'Something went wrong. Please try again.') },
           { status: 500 },
         )
       }

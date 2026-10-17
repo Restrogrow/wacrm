@@ -43,6 +43,30 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // CSRF defence for cookie-authenticated API calls: a state-changing
+  // request that carries a browser Origin must come from our own site.
+  // Webhooks and API-key clients send no Origin (or no session cookie), so
+  // they are unaffected.
+  if (
+    request.nextUrl.pathname.startsWith('/api/') &&
+    !['GET', 'HEAD', 'OPTIONS'].includes(request.method)
+  ) {
+    const origin = request.headers.get('origin')
+    const hasSession = request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
+    if (origin && hasSession) {
+      let originHost = ''
+      try {
+        originHost = new URL(origin).host
+      } catch {}
+      const siteHost = new URL(SITE_URL).host
+      const reqHost = request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? ''
+      const allowed = new Set([siteHost, `www.${siteHost}`, reqHost])
+      if (!allowed.has(originHost)) {
+        return NextResponse.json({ error: 'Cross-site request blocked' }, { status: 403 })
+      }
+    }
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
