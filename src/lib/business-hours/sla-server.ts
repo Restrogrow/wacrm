@@ -13,6 +13,7 @@
 // reply starts a new episode.
 // ============================================================
 
+import { fireTeamAlert } from '@/lib/alerts/server'
 import { supabaseAdmin } from '@/lib/automations/admin-client'
 import { isSlaBreached, rowToSettings } from './hours'
 
@@ -148,6 +149,15 @@ async function processAccount(row: Record<string, unknown>): Promise<number> {
   if (notifications.length > 0) {
     const { error: nErr } = await db.from('notifications').insert(notifications)
     if (nErr) console.error('[sla] notifications failed:', nErr.message)
+  }
+
+  // Team alert (Slack / Discord / Telegram): one summary line per breached chat, capped.
+  for (const b of breached.slice(0, 5)) {
+    const waitedMin = Math.max(1, Math.round((now.getTime() - new Date(b.waiting_since).getTime()) / 60_000))
+    await fireTeamAlert(accountId, 'sla_breach', {
+      contactName: b.contact_id ? (names.get(b.contact_id) ?? null) : null,
+      minutes: waitedMin,
+    })
   }
   return count
 }

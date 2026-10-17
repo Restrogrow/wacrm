@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SlaBadge } from "@/components/inbox/sla-badge";
+import { LeadBadge } from "@/components/inbox/lead-badge";
 import { BulkActionsBar } from "@/components/inbox/bulk-actions-bar";
 import { useCan } from "@/hooks/use-can";
 import { MAX_BULK } from "@/lib/inbox/bulk";
@@ -645,6 +646,7 @@ function ConversationItem({
           </p>
           <div className="flex shrink-0 items-center gap-1.5">
             <SlaBadge conversationId={conversation.id} compact />
+            <LeadBadge conversationId={conversation.id} compact />
             {conversation.unread_count > 0 && (
               <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
                 {conversation.unread_count}

@@ -11,6 +11,7 @@ import {
   parseReferral,
   referralToColumns,
 } from '@/lib/ad-attribution';
+import { fireTeamAlert } from '@/lib/alerts/server';
 
 /**
  * @returns true when this call recorded the contact's first ad touch.
@@ -80,6 +81,18 @@ export async function recordAdAttribution(
           { onConflict: 'contact_id,tag_id', ignoreDuplicates: true },
         );
     }
+    // Team alert (Slack / Discord / Telegram). Never throws.
+    const { data: lead } = await db
+      .from('contacts')
+      .select('name, phone')
+      .eq('id', args.contactId)
+      .eq('account_id', args.accountId)
+      .maybeSingle();
+    await fireTeamAlert(args.accountId, 'ad_lead', {
+      contactName: (lead?.name as string | undefined) ?? null,
+      phone: (lead?.phone as string | undefined) ?? null,
+      source: referral.headline ?? (referral.id ? `Ad ${referral.id}` : null),
+    });
     return true;
   } catch (err) {
     console.error('[ad-attribution] failed:', err instanceof Error ? err.message : err);

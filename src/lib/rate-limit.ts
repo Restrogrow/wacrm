@@ -245,6 +245,10 @@ export const RATE_LIMITS = {
   aiTranslate: { limit: 60, windowMs: 60_000 },
   /** Inbox "Summarise this chat", per user. */
   aiSummary: { limit: 20, windowMs: 60_000 },
+  /** Inbox "Suggest reply" (3 drafts), per user. Each is a Gemini request. */
+  aiSuggest: { limit: 20, windowMs: 60_000 },
+  /** Inbox "Score this chat" refresh, per user. */
+  aiAnalyze: { limit: 20, windowMs: 60_000 },
   /** Inbox voice-note transcription, per user. Each is a Gemini audio request. */
   aiTranscribe: { limit: 30, windowMs: 60_000 },
 } as const;

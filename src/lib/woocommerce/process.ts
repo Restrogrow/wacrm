@@ -23,6 +23,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { fireTeamAlert } from '@/lib/alerts/server';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 import { isUniqueViolation } from '@/lib/contacts/dedupe';
 import { normalizeIntegrationPhone } from '@/lib/integrations/phone';
@@ -292,6 +293,16 @@ async function onOrder(
 
   const cod = isWooCashOnDelivery(order);
   const ctx = wooOrderContext(order, store.store_url, store.store_name);
+
+  // Team alert (Slack / Discord / Telegram), once per order. Never throws.
+  if (topic === 'order.created') {
+    await fireTeamAlert(store.account_id, 'order_placed', {
+      contactName: names.full,
+      phone,
+      orderNumber: wooOrderNumberOf(order),
+      amountRupees: order.total ? `${order.currency ?? ''} ${order.total}`.trim() : null,
+    });
+  }
 
   for (const event of eventsForStatus(order.status, cod)) {
     const placed = event === 'order_placed' || event === 'cod_order_placed';

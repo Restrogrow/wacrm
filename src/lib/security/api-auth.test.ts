@@ -25,7 +25,10 @@ const GUARDS = [
   /verifyShopifyWebhook\(|verifyShopifyHmac|verifyOAuthState|hmac/i, // Shopify webhooks / OAuth
   /verifyCalendlySignature\(/, // Calendly webhook
   /verifyWooCommerceWebhook\(/, // WooCommerce webhook
+  /verifyShiprocketWebhook\(/, // Shiprocket webhook (token in x-api-key)
+  /verifyCalComWebhook\(/, // Cal.com webhook
   /verifyRazorpaySignature\(/, // Razorpay webhook (per-account secret)
+  /verifyInboundHookToken\(/, // Inbound webhook (hashed token in the URL)
 ]
 
 /** Routes that are public on purpose. Keep the reason honest. */
@@ -35,6 +38,8 @@ const PUBLIC_ROUTES: Record<string, string> = {
   'invitations/[token]/peek/route.ts': 'invite preview by unguessable token, rate limited per IP',
   'v1/connect/token/route.ts': 'OAuth-style code exchange with client secret, rate limited',
   'demo-login/route.ts': 'public "demo / demo" login; credentials only in server env for a sample-data account, rate limited per IP, off when env unset',
+  'widget/[publicId]/route.ts': 'public website-widget config for visitors; returns only a non-sensitive subset, rate limited per IP',
+  'widget/[publicId]/event/route.ts': 'public website-widget impression/click counter; no visitor data stored, rate limited per IP+widget',
   'demo-request/route.ts': 'public demo request form; honeypot, validation and rate limit per IP, writes with the service role',
 }
 
@@ -84,6 +89,9 @@ describe('API route authentication', () => {
       'integrations/shopify/webhooks/[token]/route.ts',
       'integrations/calendly/webhooks/[token]/route.ts',
       'integrations/woocommerce/webhooks/[token]/route.ts',
+      'integrations/shipping-updates/webhooks/[token]/route.ts',
+      'integrations/calcom/webhooks/[token]/route.ts',
+      'hooks/in/[token]/route.ts',
     ]) {
       const src = fs.readFileSync(path.join(API_DIR, rel), 'utf8')
       expect(src, rel).toMatch(/webhookBlocked\(/)

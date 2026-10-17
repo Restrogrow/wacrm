@@ -24,6 +24,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { recordWebhookFailure } from '@/lib/ops/monitoring';
 
+import { fireTeamAlert } from '@/lib/alerts/server';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 import { isUniqueViolation } from '@/lib/contacts/dedupe';
 import { isPhoneOptedOut } from '@/lib/contacts/opt-out';
@@ -354,6 +355,14 @@ async function onOrderCreated(
       .eq('checkout_token', order.checkout_token)
       .is('completed_at', null);
   }
+
+  // Team alert (Slack / Discord / Telegram), once per order. Never throws.
+  await fireTeamAlert(store.account_id, 'order_placed', {
+    contactName: names.full,
+    phone,
+    orderNumber: order.name ?? null,
+    amountRupees: order.total_price ? `${order.currency ?? ''} ${order.total_price}`.trim() : null,
+  });
 
   const cod = isCashOnDelivery(order);
   const outcome = await sendShopifyEvent(store, {

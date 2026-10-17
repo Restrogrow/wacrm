@@ -34,6 +34,8 @@ export const ASSISTANT_PAGES: AssistantPage[] = [
   { href: "/qr-link", label: "QR & WhatsApp link", about: "Make a wa.me link and printable QR code with a ready-typed first message." },
   { href: "/integrations/shopify", label: "Shopify", about: "Connect a store to send order, shipping, delivery and abandoned-cart WhatsApp messages." },
   { href: "/integrations/woocommerce", label: "WooCommerce", about: "Connect a WooCommerce store with a webhook to send order, completed, cancelled and refund WhatsApp messages." },
+  { href: "/integrations/calcom", label: "Cal.com", about: "Booking confirmations, 24h/1h reminders and cancellation messages from Cal.com bookings, via a webhook." },
+  { href: "/integrations/shiprocket", label: "Shiprocket", about: "WhatsApp shipment updates (shipped, out for delivery, delivered, delivery failed, return) from Shiprocket tracking webhooks." },
   { href: "/integrations/calendly", label: "Calendly", about: "Booking confirmations, 24h/1h reminders, cancellation and no-show messages (needs a paid Calendly plan)." },
   { href: "/integrations/apps", label: "Connected apps", about: "Apps that were connected to your account; disconnect them here." },
   { href: "/settings?tab=whatsapp", label: "WhatsApp connection", about: "Connect or reconnect your WhatsApp Business number; number health and calling." },

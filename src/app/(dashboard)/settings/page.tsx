@@ -18,6 +18,8 @@ import { NumberHealthCard } from '@/components/settings/number-health-card';
 import { SavedRepliesSettings } from '@/components/settings/saved-replies-settings';
 import { CsatSettingsCard } from '@/components/settings/csat-settings-card';
 import { BusinessHoursPanel } from '@/components/settings/business-hours-settings';
+import { WebsiteWidgetSettings } from '@/components/settings/website-widget-settings';
+import { ShortLinksSettings } from '@/components/settings/short-links-settings';
 import { FieldsAndTagsPanel } from '@/components/settings/fields-and-tags-panel';
 import { DealsSettings } from '@/components/settings/deals-settings';
 import { MembersTab } from '@/components/settings/members-tab';
@@ -103,6 +105,8 @@ export default function SettingsPage() {
       </>
     ),
     'business-hours': <BusinessHoursPanel />,
+    'website-widget': <WebsiteWidgetSettings />,
+    'short-links': <ShortLinksSettings />,
     fields: <FieldsAndTagsPanel />,
     deals: <DealsSettings />,
     members: <MembersTab />,

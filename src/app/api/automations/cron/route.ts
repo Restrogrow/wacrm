@@ -5,6 +5,7 @@ import { resumePendingExecution } from '@/lib/automations/engine'
 import type { AutomationContext } from '@/lib/automations/engine'
 import { processDueCheckouts } from '@/lib/shopify/process'
 import { processDueCalendlyReminders } from '@/lib/calendly/process'
+import { processDueCalComReminders } from '@/lib/calcom/process'
 import { processScheduledBroadcasts } from '@/lib/broadcasts/scheduled'
 import { processScheduledMessages } from '@/lib/scheduled-messages/process'
 import { processDailySummaries } from '@/lib/summary/daily'
@@ -12,6 +13,8 @@ import { withHeartbeat } from '@/lib/ops/monitoring'
 import { processDueNumberHealth } from '@/lib/whatsapp/number-health'
 import { processBillingReminders } from '@/lib/billing/reminders'
 import { processSlaAlerts } from '@/lib/business-hours/sla-server'
+import { processJourneys } from '@/lib/journeys/process'
+import { processAiAnalysis } from '@/lib/ai/analyze-server'
 
 /**
  * Drain due `automation_pending_executions` rows. Meant to be hit
@@ -67,6 +70,11 @@ async function runCron() {
     return 0
   })
 
+  const calcomReminders = await withHeartbeat('calcom-reminders', processDueCalComReminders).catch((err) => {
+    console.error('[cron] cal.com reminders failed:', err)
+    return 0
+  })
+
   const scheduledBroadcastSends = await withHeartbeat('scheduled-broadcasts', processScheduledBroadcasts).catch((err) => {
     console.error('[cron] scheduled broadcasts failed:', err)
     return 0
@@ -101,8 +109,23 @@ async function runCron() {
     return 0
   })
 
+  // AI lead scoring (intent, sentiment, 0-100 score): a few chats a minute,
+  // quota-limited, and a no-op without a Gemini key.
+  const aiScored = await withHeartbeat('ai-analysis', () => processAiAnalysis()).catch((err) => {
+    console.error('[cron] ai analysis failed:', err)
+    return 0
+  })
+
+  // Birthday / drip / win-back journeys (quiet hours, caps and opt-outs apply).
+  const journeySends = await withHeartbeat('journeys', processJourneys).catch((err) => {
+    console.error('[cron] journeys failed:', err)
+    return 0
+  })
+
   return {
     processed,
+    journey_sends: journeySends,
+    ai_scored: aiScored,
     sla_alerts: slaAlerts,
     number_health_checks: numberHealthChecks,
     billing_reminders: billingReminders,
@@ -111,6 +134,7 @@ async function runCron() {
     daily_summaries: dailySummaries,
     shopify_reminders: shopifyReminders,
     calendly_reminders: calendlyReminders,
+    calcom_reminders: calcomReminders,
   }
 }
 

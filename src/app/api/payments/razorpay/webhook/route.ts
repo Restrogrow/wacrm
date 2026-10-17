@@ -15,6 +15,7 @@
 
 import { NextResponse } from 'next/server'
 
+import { fireTeamAlert } from '@/lib/alerts/server'
 import { accountCanSend } from '@/lib/billing/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import {
@@ -103,6 +104,9 @@ export async function POST(request: Request) {
           .eq('id', payment.order_id)
           .eq('account_id', accountId)
       }
+
+      // Team alert (Slack / Discord / Telegram). Never throws.
+      await fireTeamAlert(accountId, 'payment_received', { amountRupees: rupees(payment.amount as number) })
 
       // "Payment received" note in the chat. Free-form text only works inside
       // the 24-hour window; outside it WhatsApp refuses and we just skip it.

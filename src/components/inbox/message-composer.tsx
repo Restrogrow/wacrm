@@ -46,6 +46,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { INSERT_REPLY_EVENT } from "./voice-note-ai";
+import { SuggestRepliesButton } from "./suggest-replies-button";
 import {
   uploadAccountMedia,
   deleteAccountMedia,
@@ -53,6 +54,7 @@ import {
 } from "@/lib/storage/upload-media";
 import { ReplyQuote } from "./reply-quote";
 import { ScheduleMessageButton } from "./schedule-message-button";
+import { InsertShortLinkButton } from "./insert-short-link-button";
 
 /** Media content types an agent can send from the composer. */
 export type ComposerMediaKind = "image" | "video" | "document" | "audio";
@@ -735,6 +737,9 @@ export function MessageComposer({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* AI draft replies (3 options; never auto-sent). */}
+          <SuggestRepliesButton conversationId={conversationId} disabled={inputsDisabled} />
+
           <textarea
             ref={textareaRef}
             value={text}
@@ -757,6 +762,11 @@ export function MessageComposer({
               "flex-1 resize-none rounded-2xl border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary/50",
               (sessionExpired || readOnly) && "cursor-not-allowed opacity-50"
             )}
+          />
+
+          <InsertShortLinkButton
+            disabled={sessionExpired || readOnly}
+            onInsert={(url) => setText((t) => (t && !/\s$/.test(t) ? `${t} ${url}` : `${t}${url}`))}
           />
 
           {/* "Send later": schedule the typed text instead of sending now. */}

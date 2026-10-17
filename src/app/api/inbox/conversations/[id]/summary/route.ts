@@ -14,6 +14,7 @@ import { getCurrentAccount, toErrorResponse } from '@/lib/auth/account'
 import { InboxAiError, messageAsText, summarizeConversation, type TranscriptLine } from '@/lib/ai/inbox-ai'
 import { AiRateLimitError } from '@/lib/ai/gemini'
 import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limit'
+import { consumeAiQuota } from '@/lib/ai/quota'
 
 /** Latest messages included in a summary. */
 const MAX_MESSAGES = 120
@@ -36,6 +37,9 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       .eq('account_id', ctx.accountId)
       .maybeSingle()
     if (!conversation) return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
+
+    const quota = await consumeAiQuota(ctx.accountId, 'summary')
+    if (!quota.allowed) return NextResponse.json({ error: quota.message, code: 'ai_quota' }, { status: 429 })
 
     const { data: rows, error } = await ctx.supabase
       .from('messages')

@@ -12,6 +12,7 @@ import { dispatchInboundToFlows } from '@/lib/flows/engine'
 import { maybeReplyWithAI } from '@/lib/ai-chatbot/respond'
 import { recordAdAttribution } from '@/lib/ad-attribution-server'
 import { maybeSendAutoReply } from '@/lib/business-hours/auto-reply'
+import { fireTeamAlert } from '@/lib/alerts/server'
 import {
   detectOptKeyword,
   OPT_IN_CONFIRMATION,
@@ -746,6 +747,11 @@ async function processMessage(
     await dispatchWebhookEvent(supabaseAdmin(), accountId, 'conversation.created', {
       conversation_id: conversation.id,
       contact_id: contactRecord.id,
+    })
+    // Team alert (Slack / Discord / Telegram). Never throws.
+    await fireTeamAlert(accountId, 'new_conversation', {
+      contactName: contactRecord.name,
+      phone: contactRecord.phone,
     })
   }
 

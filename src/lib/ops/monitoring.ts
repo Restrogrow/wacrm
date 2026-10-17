@@ -20,15 +20,18 @@ export const MONITORED_JOBS = {
   'scheduled-messages': { label: 'Scheduled chat messages', maxAgeMinutes: 10 },
   'shopify-reminders': { label: 'Shopify abandoned carts', maxAgeMinutes: 10 },
   'calendly-reminders': { label: 'Calendly reminders', maxAgeMinutes: 10 },
+  'calcom-reminders': { label: 'Cal.com reminders', maxAgeMinutes: 10 },
   'daily-summaries': { label: 'Daily summary emails', maxAgeMinutes: 10 },
   'number-health': { label: 'WhatsApp number health', maxAgeMinutes: 10 },
   'billing-reminders': { label: 'Trial & renewal reminder emails', maxAgeMinutes: 10 },
   'sla-alerts': { label: 'Reply-time (SLA) alerts', maxAgeMinutes: 10 },
+  journeys: { label: 'Journeys (lifecycle messages)', maxAgeMinutes: 10 },
+  'ai-analysis': { label: 'AI lead scoring', maxAgeMinutes: 10 },
 } as const
 
 export type MonitoredJob = keyof typeof MONITORED_JOBS
 
-export type WebhookSource = 'whatsapp' | 'shopify' | 'calendly' | 'woocommerce'
+export type WebhookSource = 'whatsapp' | 'shopify' | 'calendly' | 'woocommerce' | 'shiprocket' | 'calcom'
 
 function errorMessage(err: unknown): string {
   if (err instanceof Error) return err.message

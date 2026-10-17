@@ -47,8 +47,13 @@ export async function proxy(request: NextRequest) {
   // request that carries a browser Origin must come from our own site.
   // Webhooks and API-key clients send no Origin (or no session cookie), so
   // they are unaffected.
+  // /api/widget/* is the public website-widget beacon: customers embed it on
+  // their own sites, so a cross-origin POST (which sendBeacon sends WITH the
+  // visitor's repeatgrow.com cookies if they are logged in) is expected and
+  // harmless — it only bumps a counter and needs no session.
   if (
     request.nextUrl.pathname.startsWith('/api/') &&
+    !request.nextUrl.pathname.startsWith('/api/widget/') &&
     !['GET', 'HEAD', 'OPTIONS'].includes(request.method)
   ) {
     const origin = request.headers.get('origin')
@@ -139,7 +144,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Protected pages - redirect to login if not authenticated
-  const protectedPaths = ['/dashboard', '/inbox', '/contacts', '/pipelines', '/broadcasts', '/automations', '/flows', '/notifications', '/calls', '/ai-chatbot', '/forms', '/templates', '/qr-link', '/daily-summary', '/orders', '/reports', '/integrations', '/settings', '/admin', '/onboarding']
+  const protectedPaths = ['/dashboard', '/inbox', '/contacts', '/pipelines', '/broadcasts', '/automations', '/flows', '/notifications', '/calls', '/ai-chatbot', '/forms', '/templates', '/qr-link', '/daily-summary', '/orders', '/reports', '/journeys', '/integrations', '/settings', '/admin', '/onboarding']
   if (!user && protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'

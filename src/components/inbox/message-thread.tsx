@@ -15,6 +15,7 @@ import { SummaryButton } from "@/components/inbox/summary-button";
 import { ShareChatButton } from "@/components/inbox/share-chat-button";
 import { AdSourceBadge } from "@/components/contacts/ad-source-badge";
 import { SlaBadge } from "@/components/inbox/sla-badge";
+import { LeadBadge } from "@/components/inbox/lead-badge";
 import type {
   Conversation,
   Message,
@@ -959,6 +960,7 @@ export function MessageThread({
             <p className="truncate text-xs text-muted-foreground">{contactPhoneLabel(contact)}</p>
             <AdSourceBadge contact={contact} className="mt-0.5" />
             <SlaBadge conversationId={conversationId} className="mt-0.5" />
+            <LeadBadge conversationId={conversationId} className="mt-0.5" />
           </div>
           {/* Session timer badge — hidden on the narrowest phones so
               the name + back arrow keep their room. */}
