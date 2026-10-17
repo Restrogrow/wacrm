@@ -12,7 +12,7 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 
 ## 🔴 Do first — the website promises these
 
-- [ ] **#1 Billing — payment gateway. NOT DONE (checked 2026-10-17).** Razorpay *payment links inside chats* shipped for customers, but Repeat Grow's own plan billing is still manual. Plans, Settings → Plan & billing
+- [ ] **#1 Billing — payment gateway. DECIDED 17 Oct 2026: NOT NOW, do not ask about it.** Plans are activated by hand after UPI / bank transfer until the owner decides otherwise. **NOT DONE (checked 2026-10-17).** Razorpay *payment links inside chats* shipped for customers, but Repeat Grow's own plan billing is still manual. Plans, Settings → Plan & billing
       and manual activation from /admin are done (migration 041); "Choose"
       opens WhatsApp/email to support and plans are activated by hand
       after UPI / bank transfer. Still to do: a gateway (Razorpay
