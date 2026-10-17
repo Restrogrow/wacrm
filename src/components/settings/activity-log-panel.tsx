@@ -42,7 +42,7 @@ function describe(e: Entry): string {
 
 /**
  * Settings > Activity log: who did what (team changes, API keys, integrations,
- * plan edits, 2FA…), newest first. Owners and admins only; the API enforces it.
+ * plan edits…), newest first. Owners and admins only; the API enforces it.
  */
 export function ActivityLogPanel() {
   const [rows, setRows] = useState<Entry[]>([]);

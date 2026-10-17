@@ -2,7 +2,7 @@
 -- 070_audit_log.sql — append-only activity log for sensitive actions
 --
 -- Who did what, when: team and role changes, API keys, integration
--- connects, plan edits, ownership transfers, 2FA changes…
+-- connects, plan edits, ownership transfers, security changes…
 --
 -- Append-only by construction: RLS lets account owners/admins READ
 -- their own account's rows and defines NO insert/update/delete policy,

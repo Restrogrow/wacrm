@@ -2,7 +2,6 @@
 
 import { PasswordForm } from './password-form';
 import { SessionsCard } from './sessions-card';
-import { TwoFactorCard } from './two-factor-card';
 import { SettingsPanelHead } from './settings-panel-head';
 
 /**
@@ -18,7 +17,6 @@ export function SecurityPanel() {
       />
       <div className="space-y-4">
         <PasswordForm />
-        <TwoFactorCard />
         <SessionsCard />
       </div>
     </section>

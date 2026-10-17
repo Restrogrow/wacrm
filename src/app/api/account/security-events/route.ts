@@ -6,12 +6,9 @@ import { recordAudit } from '@/lib/audit'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 
 /**
- * POST /api/account/security-events  { event: '2fa_enabled' | '2fa_disabled' | 'contacts_bulk_deleted', count? }
+ * POST /api/account/security-events  { event: 'contacts_bulk_deleted', count? }
  *
- * The browser talks to Supabase MFA directly, so the server can't see when
- * two-factor is switched on or off. The settings card calls this afterwards.
- * It never trusts the claim: it re-reads the caller's factors and only logs
- * what is actually true, so the log can't be filled with made-up events.
+ * Contacts are deleted straight from the browser, so the server learns about it here.
  */
 export async function POST(request: Request) {
   try {
@@ -36,20 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true })
     }
 
-    if (event !== '2fa_enabled' && event !== '2fa_disabled') {
-      return NextResponse.json({ error: 'Unknown event' }, { status: 400 })
-    }
-
-    const { data, error } = await ctx.supabase.auth.mfa.listFactors()
-    if (error) return NextResponse.json({ error: 'Could not check factors' }, { status: 500 })
-    const hasVerified = (data?.totp ?? []).length > 0 // listFactors().totp only lists verified factors
-
-    if (event === '2fa_enabled' && hasVerified) {
-      await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: '2fa.enabled' }, request)
-    } else if (event === '2fa_disabled' && !hasVerified) {
-      await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: '2fa.disabled' }, request)
-    }
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ error: 'Unknown event' }, { status: 400 })
   } catch (err) {
     return toErrorResponse(err)
   }

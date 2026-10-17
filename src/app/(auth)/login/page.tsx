@@ -80,18 +80,6 @@ function LoginPageInner() {
       return;
     }
 
-    // Two-factor login: people who turned it on must pass the authenticator
-    // check (a full navigation, so the server sees the upgraded session)
-    // before reaching the app. The proxy enforces this too.
-    if (!isDemo) {
-      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (aal && aal.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
-        const dest = inviteToken ? `/join/${encodeURIComponent(inviteToken)}` : nextPath;
-        window.location.assign(`/mfa?next=${encodeURIComponent(dest)}`);
-        return;
-      }
-    }
-
     if (inviteToken) {
       router.push(`/join/${encodeURIComponent(inviteToken)}`);
     } else if (nextPath.startsWith("/api/")) {

@@ -17,8 +17,6 @@ export const AUDIT_ACTIONS = [
   'plan.changed',
   'contact.bulk_deleted',
   'account.deletion_requested',
-  '2fa.enabled',
-  '2fa.disabled',
 ] as const
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number]
@@ -38,8 +36,6 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   'plan.changed': 'Plan changed',
   'contact.bulk_deleted': 'Deleted contacts in bulk',
   'account.deletion_requested': 'Requested account deletion',
-  '2fa.enabled': 'Turned on two-factor login',
-  '2fa.disabled': 'Turned off two-factor login',
 }
 
 export function auditActionLabel(action: string): string {
