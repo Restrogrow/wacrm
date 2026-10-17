@@ -9,6 +9,118 @@ Versions follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Pre-1.0, `MINOR` bumps cover new modules; `PATCH` bumps cover bug fixes
 and polish.
 
+## [0.6.0] — 2026-10-17
+
+**Migrations required, in order:** `059_google_sheets.sql` (if not yet
+applied), `060_blog.sql`, `061_security_hardening.sql`,
+`062_ad_attribution.sql`, `063_woocommerce.sql`,
+`064_razorpay_payment_links.sql`, `065_reports.sql`,
+`066_business_hours_sla.sql`, `067_inbox_notes_mentions.sql`,
+`068_segments_merge.sql`, `069_scheduled_messages_csat.sql`,
+`070_audit_log.sql`, `071_inbound_hooks_alerts.sql`,
+`072_shiprocket_calcom.sql`, `073_widget_shortlinks.sql`,
+`074_ai_features.sql`, `075_journeys.sql`, `076_products_catalog.sql`,
+`077_catalog_collections_stock.sql`. Run them with the SQL Editor or
+`node scripts/run-migration.mjs <files>` (see `docs/OPERATIONS.md`). If you
+re-run `063`, re-run `072` right after it (it widens the
+`webhook_failures.source` check that `063` resets).
+
+### Added
+
+- **Blog manager** (`/admin/blog`, platform admins): write, schedule and
+  publish posts with a markdown editor, live preview, image upload, SEO
+  checklist and Google preview, FAQ, categories and tags. Posts are served
+  at `/blog/<slug>` and listed in `/blog` and the sitemap next to the
+  hand-coded posts. Migration 060.
+- **Security & fraud report** (`/admin/security`): audit findings, owner
+  to-do list and a scam / fake-trial prevention playbook.
+- **Public demo login:** typing `demo` / `demo` on `/login` opens the demo
+  workspace (server env `DEMO_LOGIN_EMAIL` / `DEMO_LOGIN_PASSWORD`; off when
+  unset).
+- **Catalog** (`/catalog`): product library with photos, prices and stock;
+  CSV import / export (reads Shopify and WooCommerce exports); **Sync to
+  WhatsApp** and **Fetch from WhatsApp** with your Meta catalog; product
+  sync from Shopify and WooCommerce; inbox product picker with
+  multi-product lists and saved collections; stock-aware catalog orders
+  with stock reduced on payment and low-stock alerts. Migrations 076, 077.
+- **Reports** (`/reports`): messaging, conversations and response times,
+  agents, broadcasts, deals and orders, CSAT, date ranges and CSV export.
+  Migration 065.
+- **Click-to-WhatsApp ad attribution:** first ad touch saved on the
+  contact, an *Ad lead* tag, and a *Lead sources* dashboard card.
+  Migration 062.
+- **Business hours, welcome and away messages, and first-response SLA
+  alerts** with an "SLA breached" badge. Migration 066.
+- **Internal notes and @mentions** in the chat thread, **bulk inbox
+  actions** (assign, close, tag, mark read), and the sending agent is now
+  recorded on messages. Migration 067.
+- **Saved segments** (also usable as a broadcast audience), **duplicate
+  finder and contact merge**. Migration 068.
+- **Scheduled messages** ("Send later") and **CSAT surveys** (Great / Okay /
+  Bad on chat close). Migration 069.
+- **Activity log** (Settings → Activity log): append-only record of
+  sensitive account actions. Migration 070.
+- **WooCommerce** (order messages from signed webhooks; optional REST keys
+  for product sync), **Razorpay payment links** in chats,
+  **Shiprocket** shipment updates and **Cal.com** bookings and reminders.
+  Migrations 063, 064, 072.
+- **Inbound webhooks** (Zapier, Make, n8n, Google Forms, Typeform) and
+  **team alerts** to Slack, Discord and Telegram. Migration 071.
+- **Website chat widget** (one script tag) and **tracked short links** with
+  click stats and QR codes. Migration 073.
+- **AI suggestions:** *Suggest reply* (three drafts, never auto-sent) and an
+  intent / sentiment / lead-score badge, with daily per-account caps by
+  plan; sensitive data (card numbers, OTPs, passwords) is stripped before
+  text reaches the model. Needs `GEMINI_KEY`. Migration 074.
+- **Journeys:** date-based messages (birthdays, renewals), drip sequences
+  and win-back messages, with quiet hours, frequency caps, opt-out respect
+  and a dry-run audience preview. Migration 075.
+- Cron tasks `scheduled-messages`, `sla-alerts`, `ai-analysis`,
+  `calcom-reminders` and `journeys` (each with a heartbeat on
+  `/admin/system`).
+- `scripts/run-migration.mjs` to apply migrations from a developer
+  machine (needs `SUPABASE_DB_URL` in `.env.local`).
+- New documentation: `docs/FEATURES.md` (feature guide).
+
+### Security
+
+- **Sign-up abuse guard** (migration 061): disposable-email domains are
+  refused and a real mailbox (Gmail dots and `+tags` collapsed) gets one
+  free trial. `record_webhook_failure` is no longer callable from the
+  public API.
+- **Rate limits use the proxy-set client IP** (`cf-connecting-ip`,
+  `x-real-ip` or the last `x-forwarded-for` entry), not the client-
+  supplied first one; the duplicated per-route helpers were removed.
+- **CSRF origin check** on cookie-authenticated state-changing `/api`
+  requests (webhooks and API-key clients are unaffected; widget routes are
+  exempt).
+- Broadcast send requests are capped at 1,000 recipients.
+- Shopify privacy-redact handlers only touch OAuth-connected stores.
+- Automation, flow, AI chatbot and blog routes no longer return raw
+  database error text.
+- Dashboard contact search strips filter characters; flow settings are
+  validated.
+
+### Changed
+
+- The signup page shows a friendly message when an email is refused by the
+  sign-up guard.
+- Typing a non-email in the login email box is allowed (needed for the
+  `demo` login); Supabase still validates real emails.
+
+### Removed
+
+- **Two-factor login (TOTP)** was built during this release and then
+  removed at the owner's request; no 2FA code or screens remain.
+
+### Known gaps
+
+See `TODO.md` ("Not built yet"): monthly broadcast cap on the direct send
+API, invite / trial-send daily caps, suspend-account button, enforcing the
+CSP, hiding the WhatsApp token column from viewers, webhook DNS-rebinding
+guard, exposed database helper functions, captcha, Shopify `read_products`
+scope for stock counts, Facebook Lead Ads, Instagram / Messenger inbox.
+
 ## [Unreleased]
 
 ### Added

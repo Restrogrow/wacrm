@@ -45,11 +45,76 @@ The invitee's phone comes from a booking question (type **Phone
 number**, e.g. "WhatsApp number"), the SMS-reminder number, or an
 outbound-call location — Calendly doesn't collect one by default.
 
+### WooCommerce
+
+Order placed / COD order placed, completed, cancelled and refunded
+messages, driven by order status. Integrations → WooCommerce. Code:
+`src/lib/woocommerce/`, migrations `063_woocommerce.sql` and
+`077_catalog_collections_stock.sql`.
+
+| Keys | |
+|---|---|
+| **Customer** | Repeat Grow shows a webhook URL and a secret. In WooCommerce → Settings → Advanced → Webhooks create `order.created` and `order.updated` (REST API v3) with that URL and secret; we verify `X-WC-Webhook-Signature` (base64 HMAC-SHA256). Optional: a REST API **consumer key + secret** (`ck_…` / `cs_…`), stored encrypted, to sync products into the catalog. |
+| **Server** | None. |
+
+No abandoned-cart message: core WooCommerce has no such event.
+
+### Razorpay payment links (in chats)
+
+Request a payment in a chat; a Razorpay Payment Link is sent and a signed
+webhook marks it paid / expired / failed (and the linked order paid) and
+sends a confirmation. Settings → Orders & payments → Razorpay card. Code:
+`src/lib/payments/razorpay.ts`, migration `064_razorpay_payment_links.sql`.
+
+| Keys | |
+|---|---|
+| **Customer** | Razorpay **Key ID + Key Secret** (Dashboard → Account & Settings → API Keys). Repeat Grow generates a webhook secret and shows the URL once; in Razorpay → Webhooks add the events `payment_link.paid`, `payment_link.expired`, `payment_link.cancelled`, `payment.failed`. |
+| **Server** | None. (Our *own* plan billing is still manual: TODO #1.) |
+
+### Shiprocket
+
+Shipped, in transit, out for delivery, delivered, delivery failed and
+return-started messages. Integrations → Shiprocket. Code:
+`src/lib/shiprocket/`, migration `072_shiprocket_calcom.sql`.
+
+| Keys | |
+|---|---|
+| **Customer** | In Shiprocket → Settings → API → Webhooks, paste the URL (path `shipping-updates`, because Shiprocket rejects `sr` / `kr` in URLs) and the token (sent in `x-api-key`). Shiprocket sends no phone number, so the order must also come from a connected Shopify or WooCommerce store. |
+| **Server** | None. |
+
+### Cal.com
+
+Booking confirmed, rescheduled, cancelled, and reminders 24 h and 1 h
+before. Integrations → Cal.com. Code: `src/lib/calcom/`, migration
+`072_shiprocket_calcom.sql`.
+
+| Keys | |
+|---|---|
+| **Customer** | Cal.com → Settings → Developer → Webhooks: paste the URL and secret, tick `BOOKING_CREATED`, `BOOKING_RESCHEDULED`, `BOOKING_CANCELLED`; we verify `X-Cal-Signature-256` (HMAC-SHA256). Add a "Phone number" question to the event type. |
+| **Server** | None. |
+
+### Inbound webhooks and team alerts
+
+**Inbound webhooks** (Integrations → Webhooks & alerts): a per-account
+URL `POST /api/hooks/in/<token>` creates / updates a contact, adds tags,
+adds a note and can send an approved template. This is how Zapier, Make,
+n8n, Google Forms and Typeform connect today, without a native app.
+**Team alerts** post to Slack, Discord or Telegram. Code:
+`src/lib/inbound-hooks/`, `src/lib/alerts/`, migration
+`071_inbound_hooks_alerts.sql`. Keys: customer-supplied only (Slack /
+Discord webhook URL, Telegram bot token + chat id), stored encrypted.
+
+### Google Sheets
+
+Connect a Google account (Integrations → Google Sheets). Code:
+`src/lib/google-sheets/`, migration `059_google_sheets.sql`. Server keys:
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
+
 ---
 
 ## 🛒 E-commerce (planned)
 
-### WooCommerce
+### WooCommerce — now live (see above)
 Same messages as Shopify (order placed / COD / shipped / delivered /
 cancelled / abandoned cart*).
 
@@ -93,7 +158,7 @@ Order placed / shipped / cancelled, abandoned cart.
 
 ## 💳 Payments (planned)
 
-### Razorpay
+### Razorpay — payment links are live (see above); our own billing is not
 Payment links inside WhatsApp, "payment received" receipts,
 failed-payment and unpaid-link reminders. Also needed for **our own
 billing** (TODO #1).
@@ -189,7 +254,7 @@ exists: the public REST API (`/api/v1`) and signed outbound webhooks.
   triggers (new message, new contact, conversation created) and actions
   (send message, send template, create/update contact).
 
-### Google Sheets
+### Google Sheets (native import / export: not built; the connection is live, see above)
 - **Export:** add each new contact / lead / order as a row; **import:**
   send a template to every row (mini broadcast).
 - **Server keys:** same Google OAuth client (`GOOGLE_CLIENT_ID`,
@@ -206,7 +271,7 @@ exists: the public REST API (`/api/v1`) and signed outbound webhooks.
 |---|---|---|
 | `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET` | Shopify one-click connect | Optional now (webhook option works without) |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Our own billing | Needed for TODO #1 |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Calendar, Meet, Sheets | Planned |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Sheets (live); Calendar, Meet (planned) | Optional |
 | `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`, `ZOOM_WEBHOOK_SECRET_TOKEN` | Zoom | Planned |
 | `CALENDLY_CLIENT_ID`, `CALENDLY_CLIENT_SECRET` | Calendly one-click OAuth (not built; the live token version needs none) | Optional |
 | `TYPEFORM_CLIENT_ID`, `TYPEFORM_CLIENT_SECRET` | Typeform one-click | Optional |
@@ -215,9 +280,9 @@ exists: the public REST API (`/api/v1`) and signed outbound webhooks.
 
 ## Suggested order
 
-1. **Razorpay** (customer payment links + our own billing)
-2. **WooCommerce** (reuses the Shopify engine: events → templates)
-3. **Google Calendar / Cal.com** reminders (Calendly ✅ done — same engine)
+1. **Razorpay for our own billing** (customer payment links ✅ done)
+2. ~~WooCommerce~~ ✅ done (reuses the Shopify engine: events → templates)
+3. **Google Calendar** reminders (Calendly ✅ and Cal.com ✅ done — same engine)
 4. **Zapier / Make / Pabbly** apps (covers Dukaan, Wix, forms, Sheets
    for everyone else)
 5. Typeform / Tally / Google Forms, Zoom / Meet, Cashfree, Wix,

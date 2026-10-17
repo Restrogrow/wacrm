@@ -3,8 +3,10 @@
 > WhatsApp CRM for Indian businesses, built on the official WhatsApp
 > Business API (Meta Cloud API). A shared team inbox, contacts,
 > pipelines, broadcasts, no-code automations and flows, an AI chatbot,
-> Shopify and Calendly integrations, plans with a free trial, and a
-> public REST API.
+> a product catalog, reports, journeys (drip and win-back messages),
+> Shopify, WooCommerce, Calendly, Cal.com, Shiprocket and Razorpay
+> integrations, inbound webhooks, plans with a free trial, and a public
+> REST API.
 
 **Website:** [repeatgrow.com](https://repeatgrow.com) ·
 **App:** [repeatgrow.com/login](https://repeatgrow.com/login) ·
@@ -15,7 +17,8 @@
 **Reviews:** [Trustpilot](https://www.trustpilot.com/review/repeatgrow.com)
 
 > **Running the platform?** Read the private **[Admin handbook](./docs/ADMIN.md)** — every mailbox, service, cron job,
-> email and the **⚠️ important to-do list** (SMTP, email templates, crons, merging the redesign) live there.
+> email and the **⚠️ important to-do list** (env vars, captcha, key rotation, SMTP) live there.
+> **Looking for a feature?** The **[Feature guide](./docs/FEATURES.md)** says where each one is in the app, how to set it up and what role it needs.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](./LICENSE)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org)
@@ -187,6 +190,29 @@
 - Amounts are stored in paise (`whatsapp_orders`). Code:
   `src/lib/whatsapp/commerce.ts`, `src/app/api/whatsapp/commerce/`,
   `src/components/inbox/order-button.tsx` (migration 053).
+- **Razorpay payment links** (Settings → Orders & payments → Razorpay
+  card): in a chat, request a payment of any amount (link icon in the chat header); a Razorpay Payment
+  Link is sent in the conversation and a signed webhook marks it (and any
+  linked order) paid, expired or failed and sends a confirmation. Keys
+  are stored encrypted. Migration 064.
+
+### Catalog (product library)
+- **Catalog** (sidebar → CRM → Catalog, `/catalog`): add and edit
+  products (photo, price, sale price, stock, availability), import and
+  export CSV (Shopify and WooCommerce export files are understood), and
+  use bulk actions.
+- **Meta sync both ways:** *Sync to WhatsApp* pushes products to your
+  Meta catalog; *Fetch from WhatsApp* brings in products that already
+  exist there. Needs the catalog ID in Settings → Orders & payments and a
+  token with `catalog_management`.
+- **Store sync:** pull products from Shopify and WooCommerce (WooCommerce
+  needs optional REST API keys).
+- **In a chat:** a product picker (bag icon next to the composer) shares one product, a
+  multi-product list or a saved **collection**, or starts an order.
+- **Stock-aware orders:** catalog orders show a stock warning; stock is
+  reduced when an order is paid and restored on cancel / refund; owners
+  and admins get a low-stock notification. Migrations 076–077. Details
+  and Meta setup: [Feature guide](./docs/FEATURES.md#catalog).
 
 ### WhatsApp forms (Meta Flows)
 - **Settings → WhatsApp forms:** build a form from simple fields —
@@ -240,6 +266,60 @@
   emails cover yesterday, afternoon/evening ones today so far: messages
   received and sent, new conversations and contacts, chats waiting for a
   reply, broadcasts, deals created and won, opt-outs.
+
+### Reports
+- **Reports** (sidebar, `/reports`): messaging volume and delivery
+  rates, conversations and first-response / resolution times, agent
+  performance, broadcast results, deals and orders, and customer
+  satisfaction (CSAT), with a date range (up to 365 days) and CSV export
+  per table. Viewers can read reports. Some metrics are approximate
+  (see the notes on the page). Migration 065.
+
+### Inbox productivity
+- **Business hours, welcome and away messages** (Settings → Business
+  hours) and a **first-response SLA** with an "SLA breached" badge and
+  in-app alerts for the assigned agent or the admins. Migration 066.
+- **Internal notes and @mentions** inside the chat thread (never sent to
+  the customer, never counted as a reply), **bulk actions** on selected
+  conversations (assign, close, tag, mark read), and messages now record
+  which agent sent them. Migration 067.
+- **Scheduled messages** ("Send later" in the composer) and **CSAT
+  surveys** (a Great / Okay / Bad rating asked when a chat is closed;
+  results in Reports). Migration 069.
+- **Activity log** (Settings → Activity log, owners and admins): who
+  changed roles, API keys, integrations, billing and so on. Append-only.
+  Migration 070.
+- **AI suggestions:** *Suggest reply* (3 drafts, never auto-sent) and an
+  intent / sentiment / lead-score badge on chats. Daily per-account caps
+  by plan; works only when `GEMINI_KEY` is set. Migration 074.
+
+### Contacts: segments, merge, duplicates
+- **Segments:** saved smart lists (match all / any of up to 20
+  conditions: tags, name / phone / email, dates, ad source, opt-out,
+  open conversation, custom fields) with live counts; usable as a
+  broadcast audience.
+- **Merge and duplicates:** a duplicate finder (same email or same last
+  10 phone digits) and a safe two-contact merge. Migration 068.
+- **Ad attribution:** when a customer starts a chat from a Click-to-
+  WhatsApp ad, the first ad touch is saved on the contact, the contact is
+  tagged *Ad lead*, and the dashboard shows a *Lead sources* card.
+  Migration 062.
+
+### Journeys (lifecycle messages)
+- **Journeys** (sidebar → Automate & engage): date-based messages
+  (birthdays, anniversaries, renewals), drip sequences that stop when the
+  customer replies, and win-back messages to inactive contacts. Quiet
+  hours (default 21:00–09:00), one journey message per contact per day,
+  daily caps, approved templates only outside the 24-hour window, and a
+  dry-run audience preview. Migration 075.
+
+### Website tools
+- **Website chat widget** (Settings → Website chat widget): a one-line
+  script that adds a floating WhatsApp button to any website, with
+  impression and click stats.
+- **Short links** (Settings → Short links): `/l/<code>` redirects with
+  click counts, UTM tags and a QR code, and an *Insert short link*
+  button in the composer. Migration 073.
 
 ### Accounts, sign-in and team
 - Sign up with **email** or **Google**. Google sign-ups complete the same
@@ -338,10 +418,17 @@ Limits must match `plan_limit()` in the database (migration 056).
 |---|---|---|
 | **Shopify** | Live | Order placed, COD order placed, shipped (tracking), out for delivery, delivered, cancelled, abandoned cart |
 | **Calendly** | Live | Booking confirmed / rescheduled / cancelled, no-show follow-up, reminders 24 h and 1 h before |
+| **WooCommerce** | Live | Order placed / COD, completed, cancelled and refunded messages from signed store webhooks; optional REST keys to sync products |
+| **Razorpay payment links** | Live | Request a payment inside a chat; a signed webhook marks it paid / expired / failed |
+| **Shiprocket** | Live | Shipped, in transit, out for delivery, delivered, delivery failed and return-started messages |
+| **Cal.com** | Live | Booking confirmed / rescheduled / cancelled, reminders 24 h and 1 h before |
+| **Inbound webhooks** | Live | Zapier, Make, n8n, Google Forms or Typeform can create contacts, tag them and send a template |
+| **Team alerts** | Live | New chats, overdue replies, ad leads, payments and orders posted to Slack, Discord or Telegram |
+| **Google Sheets** | Live | Connect a Google account (needs `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`) |
 | **Connect RepeatGrow** | Live | Partner apps (RestroGrow) connect with one click and send WhatsApp via the API |
-| WooCommerce, Razorpay, Cashfree, Wix, BigCommerce, forms, Google Calendar, Zoom/Meet, Zapier/Make/Pabbly, Google Sheets | Planned | See [docs/INTEGRATIONS.md](./docs/INTEGRATIONS.md) for the plan and the keys each needs |
+| Cashfree, Wix, BigCommerce, Google Calendar, Zoom/Meet, native Zapier/Make/Pabbly apps, Instagram / Messenger | Planned | See [docs/INTEGRATIONS.md](./docs/INTEGRATIONS.md) for the plan and the keys each needs |
 
-Both live integrations share one engine: each event maps to an approved
+The order, booking and shipping integrations share one engine: each event maps to an approved
 WhatsApp template, and the template's `{{1}}`, `{{2}}`… are filled from
 event data chosen in Settings, with a live preview, **Send test**, and a
 "Recent messages" log. Messages appear in the inbox; deliveries and sends
@@ -375,6 +462,36 @@ per-connection country code).
   from a "Phone number" booking question, the SMS-reminder number, or an
   outbound-call location.
 - Code: `src/lib/calendly/`, `src/app/api/integrations/calendly/`.
+
+### WooCommerce, Shiprocket and Cal.com (Integrations in the sidebar)
+- All three connect by **webhook**: Repeat Grow shows an unguessable URL
+  and a secret / token; the merchant pastes them into the other service.
+  Deliveries are signature- or token-verified in constant time, replays
+  are ignored, and IPs that keep failing are blocked (like Shopify).
+- **WooCommerce** — WooCommerce → Settings → Advanced → Webhooks, topics
+  `order.created` and `order.updated`; signature `X-WC-Webhook-Signature`.
+  Migration 063. Code: `src/lib/woocommerce/`.
+- **Shiprocket** — Settings → API → Webhooks; the token goes in
+  `x-api-key`. The URL path is `shipping-updates` (Shiprocket rejects
+  `sr` / `kr` in webhook URLs). Shiprocket sends no phone number, so the
+  order must also come from a connected Shopify or WooCommerce store.
+  Migration 072. Code: `src/lib/shiprocket/`.
+- **Cal.com** — Settings → Developer → Webhooks, triggers
+  `BOOKING_CREATED`, `BOOKING_RESCHEDULED`, `BOOKING_CANCELLED`;
+  signature `X-Cal-Signature-256`; add a "Phone number" question to the
+  event. Migration 072. Code: `src/lib/calcom/`.
+
+### Inbound webhooks and team alerts (Integrations → Webhooks & alerts)
+- **Inbound webhooks:** admins create named hooks; each gets a URL
+  `POST /api/hooks/in/<token>` shown once (only a hash is stored).
+  Payload: `phone` (required) plus optional `name`, `email`, `company`,
+  `tags`, `custom_fields`, `note`, `message_template`. JSON or
+  form-encoded; 64 KB cap; rate limited per hook; sending a template is
+  off by default per hook. Up to 10 hooks per account.
+- **Team alerts:** up to 5 channels per account (Slack or Discord
+  webhook URL, Telegram bot token + chat id), stored encrypted, with a
+  *Send test* button. Only `hooks.slack.com`, `discord.com` and
+  `api.telegram.org` are allowed. Migration 071.
 
 ---
 
@@ -432,10 +549,19 @@ rate limited; marketing templates to opted-out contacts are refused.
   (designed or plain text, desktop or phone width), see when it goes out
   and who gets it, and send a `[TEST]` copy — one at a time or all of them
   — to the test inbox (`restrogrow@gmail.com`). See [Email system](#email-system).
+- **Blog** (`/admin/blog`): write, schedule and manage posts without
+  code — markdown editor with live preview, image upload, SEO checklist
+  and Google preview, FAQ, categories and tags, featured post, draft /
+  publish / schedule. Posts appear on `/blog` next to the hand-coded
+  ones. Migration 060. See [Blog](#blog).
+- **Security & fraud report** (`/admin/security`): the 2026-10-17 audit
+  findings with status, a to-do list for the owner and a playbook for
+  preventing scams, fraud and fake trials. Content lives in
+  `src/lib/security-report.ts`.
 - **System health** (`/admin/system`): database, required env vars,
   every background job (last success, duration, last error — "Not
   running" if a job hasn't succeeded recently) and the last 50 failed
-  inbound webhooks (WhatsApp, Shopify, Calendly) with the account and
+  inbound webhooks (WhatsApp, Shopify, Calendly, WooCommerce, Shiprocket, Cal.com) with the account and
   error. Failed webhooks are kept for 30 days.
 
 ---
@@ -457,7 +583,7 @@ breaks, releases, testing).
 
 - **Background jobs** report a heartbeat every run (`system_heartbeats`);
   `/admin/system` shows OK / Failing / Not running per job.
-- **Failed webhooks** (WhatsApp, Shopify, Calendly) are saved to
+- **Failed webhooks** (WhatsApp, Shopify, Calendly, WooCommerce, Shiprocket, Cal.com) are saved to
   `webhook_failures` for 30 days and sent to Sentry, tagged
   `webhook:<source>`; cron errors are tagged `job:<name>`.
 - Code: [`src/lib/ops/`](./src/lib/ops), [`src/app/api/health`](./src/app/api/health/route.ts),
@@ -526,7 +652,14 @@ Current articles:
 - WhatsApp Business API verification guide
 - WhatsApp template rules explained
 
-**Adding a post:**
+**Writing a post without code (recommended):** sign in as a platform
+admin and use **`/admin/blog`** (see [Platform admin](#platform-admin)).
+Database posts are served by `src/app/blog/[slug]/page.tsx`, are listed
+on `/blog` and in the sitemap, and use the same layout (table of
+contents, FAQ schema, related posts). A slug can't reuse a hand-coded
+post's slug. Run migration `060_blog.sql` first.
+
+**Adding a hand-coded post:**
 
 1. Add an entry at the top of `BLOG_POSTS` in `src/lib/blog.ts` (slug,
    title, description, category, dates, reading time, cover, keywords).
@@ -569,7 +702,8 @@ npm run dev
 ```
 
 1. Run every SQL file in [`supabase/migrations`](./supabase/migrations)
-   **in order** in the Supabase SQL Editor (see
+   **in order** (001 to 077) in the Supabase SQL Editor, or with
+   `node scripts/run-migration.mjs <file> ...` (see
    [Database migrations](#database-migrations)).
 2. Open <http://localhost:3000>. Signed-out visitors see the marketing
    site; `/login` signs in to the app.
@@ -587,6 +721,14 @@ A fully populated demo workspace (contacts, chats, deals, broadcasts, templates,
 - **Password:** stored in `.env.demo-login` (gitignored, never committed).
 - **Re-create it:** delete the demo user in Supabase, then run `node scripts/seed-demo.mjs` (it refuses to touch an existing demo user older than an hour). It uses the service-role key from `.env.local`, only writes inside the demo account, and sends no WhatsApp messages.
 - Shopify, Calendly and WhatsApp are intentionally not connected in the demo account, and Flows are not seeded.
+- **Public `demo` / `demo` login:** on `/login`, typing `demo` as both
+  email and password signs the visitor into the demo workspace through
+  `POST /api/demo-login`. The real credentials live only in the server
+  env vars `DEMO_LOGIN_EMAIL` / `DEMO_LOGIN_PASSWORD` (point them at the
+  demo **admin**, never a real customer or the owner); unset means the
+  feature is off. Anyone on the internet can use it, so treat that
+  account as public, keep real data out of the demo workspace, and change
+  its password to cut access. Rate limited per IP.
 
 ## Environment variables
 
@@ -604,7 +746,10 @@ baked in at build time — **redeploy after changing them**.
 | `NEXT_PUBLIC_SITE_URL` | Yes (prod) | Public origin, `https://repeatgrow.com` (local: `http://localhost:3000`); used for redirects, OAuth callbacks and webhook URLs |
 | `AUTOMATION_CRON_SECRET` | Yes (prod) | Shared secret for the cron endpoints (`x-cron-secret` header) |
 | `META_APP_ID`, `NEXT_PUBLIC_META_APP_ID`, `NEXT_PUBLIC_META_CONFIG_ID` | Optional | WhatsApp Embedded Signup ("Connect with Facebook") |
-| `GEMINI_KEY` (`GEMINI_API_KEY` also accepted), `GEMINI_MODEL` | Optional | AI chatbot, AI flows, AI templates; model defaults to `gemini-3.8-flash` |
+| `GEMINI_KEY` (`GEMINI_API_KEY` also accepted), `GEMINI_MODEL` | Optional | AI chatbot, AI flows, AI templates, help assistant, reply suggestions and lead scoring; model defaults to `gemini-3.8-flash`. Without a key those features show "AI is not set up" and nothing else breaks |
+| `DEMO_LOGIN_EMAIL`, `DEMO_LOGIN_PASSWORD` | Optional | Account that the public `demo` / `demo` login on `/login` signs into (server-only). Use a demo-workspace **admin** with sample data only. Unset = the feature is off |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional | Google Sheets integration (OAuth client; redirect `<site>/api/integrations/google-sheets/callback`) |
+| `SUPABASE_DB_URL` | Script only | Postgres connection string used **only** by `scripts/run-migration.mjs` on your own machine (in `.env.local`). Never set it on the server; it holds the database password |
 | `ALLOWED_INVITE_HOSTS` | Optional | Comma-separated hostnames allowed in team invite links (extra protection on bare deployments) |
 | `CHATBOT_TIMEZONE` | Optional | Chatbot's "are you open now?" time zone (default `Asia/Kolkata`) |
 | `SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET` | Optional | Shopify one-click connect (Client ID / secret) |
@@ -657,8 +802,35 @@ is idempotent where possible. Recent ones:
 | `056_pro_plan` | Pro plan (`plan = 'pro'`) and its limits in `plan_limit()` |
 | `057_call_ai_notes` | AI call notes stored on each call (`whatsapp_calls.ai_notes`) for the Calls page |
 | `058_voice_note_ai` | Voice-note AI transcripts kept on the message (`messages.ai_transcript`) |
+| `059_google_sheets` | Google Sheets connection (one per account, encrypted tokens) |
+| `060_blog` | Database blog (`blog_posts`) and the public `blog-media` image bucket |
+| `061_security_hardening` | Disposable-email blocklist, one free trial per real mailbox (signup guard), locks `record_webhook_failure` to the server |
+| `062_ad_attribution` | Click-to-WhatsApp ad source columns on contacts |
+| `063_woocommerce` | WooCommerce stores, event rules, orders, events (also resets the `webhook_failures.source` check, so re-run 072 after it) |
+| `064_razorpay_payment_links` | Razorpay credentials (server-only) and `payment_links` |
+| `065_reports` | Report SQL functions behind `/reports` |
+| `066_business_hours_sla` | Business hours, welcome / away auto-replies, SLA breach tracking; notification types |
+| `067_inbox_notes_mentions` | Internal chat notes and @mentions (`conversation_notes`) |
+| `068_segments_merge` | Saved segments, duplicate finder and contact merge functions |
+| `069_scheduled_messages_csat` | Scheduled inbox messages and CSAT settings / responses |
+| `070_audit_log` | Append-only `audit_log` |
+| `071_inbound_hooks_alerts` | Inbound webhooks and Slack / Discord / Telegram alert channels |
+| `072_shiprocket_calcom` | Shiprocket and Cal.com tables; widens `webhook_failures.source` to all six sources |
+| `073_widget_shortlinks` | Website chat widget and short links with daily click counters |
+| `074_ai_features` | Per-conversation AI scores and the daily AI quota counter |
+| `075_journeys` | Journeys: steps, enrollments, send ledger, sending rules |
+| `076_products_catalog` | Product library (`products`) and the `catalog-media` image bucket |
+| `077_catalog_collections_stock` | Collections, stock ledger, stock trigger on paid orders, optional WooCommerce REST keys |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
+
+**Running migrations from your computer:** put the Postgres connection
+string (Supabase > Project Settings > Database > Connection string) in
+`.env.local` as `SUPABASE_DB_URL`, then
+`node scripts/run-migration.mjs 075_journeys.sql 076_products_catalog.sql`.
+Each file runs in its own transaction, so a failing file changes nothing
+and the script stops at the first failure. Apply them in order; see
+[docs/OPERATIONS.md](./docs/OPERATIONS.md#running-migrations).
 
 ---
 
@@ -669,12 +841,13 @@ Hostinger calls these every minute with the header
 
 | Endpoint | Runs |
 |---|---|
-| `GET /api/automations/cron` | Delayed automation steps, **scheduled broadcasts** (batched, leased), **Shopify abandoned-cart reminders**, **Calendly 24 h / 1 h reminders**, **daily summary emails**, **WhatsApp number health** (daily per account, 10 per run), **trial / renewal reminder emails** |
+| `GET /api/automations/cron` | Delayed automation steps (`automation-steps`), **scheduled broadcasts** (`scheduled-broadcasts`, batched, leased), **scheduled chat messages** (`scheduled-messages`), **Shopify abandoned-cart reminders** (`shopify-reminders`), **Calendly** and **Cal.com 24 h / 1 h reminders** (`calendly-reminders`, `calcom-reminders`), **daily summary emails** (`daily-summaries`), **WhatsApp number health** (`number-health`, daily per account, 10 per run), **trial / renewal reminder emails** (`billing-reminders`), **reply-time SLA alerts** (`sla-alerts`), **AI lead scoring** (`ai-analysis`, a few chats per run) and **Journeys** (`journeys`) |
 | `GET /api/flows/cron` | Flow waits and timeouts (every 5 minutes is enough) |
 | `GET /api/health` | No secret; hit it from an uptime monitor every 5 minutes |
 
-Each job is idempotent (claims before sending), so overlapping or
-retried runs never send twice.
+Every task records a heartbeat (`system_heartbeats`), shown on
+`/admin/system`. Each job is idempotent (claims before sending), so
+overlapping or retried runs never send twice.
 
 ---
 
@@ -838,6 +1011,16 @@ src/lib/calendly/        Calendly events, API client, reminders
 src/lib/billing/         Plans, limits, trial / read-only checks
 src/lib/broadcasts/      Scheduled broadcast sender
 src/lib/summary/         Daily summary email
+src/lib/catalog/         Product library, CSV, Meta catalog sync / import, store sync, stock
+src/lib/reports/         Report queries, CSV writer, date ranges
+src/lib/journeys/        Journeys engine;  src/lib/segments/ saved segments
+src/lib/business-hours/  Hours, auto-replies, SLA alerts
+src/lib/csat/            CSAT surveys;  src/lib/scheduled-messages/ send-later
+src/lib/inbound-hooks/   Inbound webhooks;  src/lib/alerts/ Slack / Discord / Telegram
+src/lib/woocommerce/, shiprocket/, calcom/   Webhook integrations;  src/lib/payments/ Razorpay links
+src/lib/widget/, short-links/   Website chat widget and tracked short links
+src/lib/ai/              Gemini helpers: suggestions, lead scoring, safety, quotas
+src/lib/audit.ts         Audit log helper (never throws)
 src/lib/admin/           Admin dashboard data
 src/lib/ops/             Health check, job heartbeats, webhook failure log
 src/lib/account/         Data export ("Download my data")
@@ -846,9 +1029,10 @@ src/app/admin/system/    System health page;  src/app/api/health/ health check
 src/lib/integrations/    Shared integration helpers (phone normalisation)
 src/app/blog/            Blog posts;  src/lib/blog.ts post list;  public/blog/ images
 supabase/migrations/     Database schema, in order
+scripts/                 seed-demo.mjs, run-migration.mjs, check-isolation.mjs, ...
 e2e/                     Playwright end-to-end tests (playwright.config.ts)
 shopify/                 Shopify app config (shopify.app.toml) + App Store checklist
-docs/                    Operations runbook, public API, embedded signup, integrations, RestroGrow connect
+docs/                    Admin handbook, feature guide, operations runbook, public API, embedded signup, integrations, RestroGrow connect
 ```
 
 ---
@@ -897,15 +1081,20 @@ local build.
   form, order, catalog and call-permission sends per user — on top of
   the existing message, broadcast, API-key, invite and admin limits.
   Login, sign-up and password-reset limits are Supabase Auth's
-  (Authentication → Rate Limits; turn on CAPTCHA there for extra
-  protection).
+  (Authentication → Rate Limits). Captcha (Cloudflare Turnstile) is
+  planned but **not** on yet: do not enable it in Supabase before the
+  login, signup and forgot-password forms send the token, or nobody can
+  sign in.
 - WhatsApp tokens, integration tokens and signing keys are encrypted
   with AES-256-GCM (`ENCRYPTION_KEY`).
 - Row-level security on every table; integration tables are
   service-role only.
 - Webhooks are signature-verified: Meta (HMAC-SHA256), Shopify
   (`X-Shopify-Hmac-Sha256`), Calendly (`Calendly-Webhook-Signature`,
-  replay window); outbound webhooks are signed.
+  replay window), WooCommerce (`X-WC-Webhook-Signature`), Cal.com
+  (`X-Cal-Signature-256`), Razorpay (`X-Razorpay-Signature`, per-account
+  secret), Shiprocket (`x-api-key` token) and inbound hooks (hashed URL
+  token); outbound webhooks are signed.
 - OAuth redirects are validated (state nonce, HMAC, anchored shop
   domains); post-login redirects are same-origin only.
 - API keys are scoped and revocable; API and admin actions are rate
@@ -914,6 +1103,23 @@ local build.
   Your data); exports never include secrets, deletion requests are
   confirmed by typing the email and only take effect when a platform
   admin approves them, and both are rate limited.
+- **Sign-up abuse guard** (migration 061): disposable-email domains are
+  refused and a real mailbox gets one free trial (Gmail dots and `+tags`
+  count as the same mailbox). The team's own `@repeatgrow.com` and
+  `support.repeatgrow+...@gmail.com` addresses are exempt.
+- **Trusted client IP:** rate limits read the address the proxy sets
+  (`cf-connecting-ip`, `x-real-ip`, or the **last** `x-forwarded-for`
+  entry), never the client-supplied first one (`getClientIp` in
+  `src/lib/rate-limit.ts`).
+- **CSRF origin check:** state-changing `/api/*` requests that carry a
+  session cookie and a foreign `Origin` are rejected (`src/proxy.ts`); the
+  public widget routes are exempt.
+- **Audit log:** sensitive actions are recorded in an append-only table;
+  secrets are redacted before they are stored.
+- **Generic API errors:** automation, flow, AI and blog routes log the
+  database error and return a generic message.
+- **Still open:** the CSP is report-only, and captcha is not yet enabled
+  (see [TODO.md](./TODO.md) and [docs/ADMIN.md](./docs/ADMIN.md)).
 - Cron endpoints check `x-cron-secret` in constant time. `/api/health`
   returns states only — error text and env var names are shown on
   `/admin/system` to platform admins only; the monitoring tables are
@@ -927,6 +1133,7 @@ Report vulnerabilities privately to
 
 ## More documentation
 
+- [docs/FEATURES.md](./docs/FEATURES.md) — **feature guide**: where each feature is, how to set it up, who can use it, known limits
 - [docs/ADMIN.md](./docs/ADMIN.md) — **admin handbook (private)**: mailboxes, services, emails, crons, demo account, ⚠️ important to-do list
 - [docs/OPERATIONS.md](./docs/OPERATIONS.md) — **admin runbook**: monitoring, alerts, incidents, releases, testing
 - [CHANGELOG.md](./CHANGELOG.md) — what changed and which migrations it needs

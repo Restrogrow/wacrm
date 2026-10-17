@@ -6,7 +6,7 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 
 ## 🔴 Do first — the website promises these
 
-- [ ] **#1 Billing — payment gateway.** Plans, Settings → Plan & billing
+- [ ] **#1 Billing — payment gateway. NOT DONE (checked 2026-10-17).** Razorpay *payment links inside chats* shipped for customers, but Repeat Grow's own plan billing is still manual. Plans, Settings → Plan & billing
       and manual activation from /admin are done (migration 041); "Choose"
       opens WhatsApp/email to support and plans are activated by hand
       after UPI / bank transfer. Still to do: a gateway (Razorpay
@@ -136,9 +136,14 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 ## 🟡 Security and trust
 
 - [ ] **#21 Two-factor login** (Supabase MFA / TOTP), optionally
-      required by the owner for the whole team.
-- [ ] **#22 Audit log:** who deleted contacts, exported data, changed
-      roles, created/revoked keys, connected/disconnected apps.
+      required by the owner for the whole team. *Built on 2026-10-17 and
+      then removed at the owner's request; no 2FA code remains. Not
+      planned unless asked again.*
+- [x] **#22 Audit log.** Done 2026-10-17 (migration 070, Settings →
+      Activity log): role changes, API keys, WhatsApp config, integration
+      connects, ownership transfer, deletion requests, plan edits and
+      bulk contact deletes. Gaps: some disconnect handlers log without an
+      IP; rows are never pruned; contact merge is not logged yet.
 - [ ] **#23 Enforce the CSP.** `next.config.mjs` ships it as
       report-only. Fix violations, then enforce (add partner redirect
       origins such as restrogrow.com to `form-action` for Connect).
@@ -175,8 +180,10 @@ each needs a backwards-compatible rollout.
 ## 🟢 Growth
 
 - [ ] **#26 Smarter AI:** chatbot creates leads/deals and tags
-      customers; reply suggestions and chat summaries for agents;
-      knowledge base from a website URL or PDF instead of pasted text.
+      customers; knowledge base from a website URL or PDF instead of
+      pasted text. (Reply suggestions, lead scoring and chat summaries
+      shipped; migration 074. Not yet: suggestions on every inbound
+      message, scores usable as segment / automation fields.)
 - [ ] **#32 Daily WhatsApp summary.** Email version done (migration
       044, Settings → Daily summary, owner picks on/off, hour, recipients).
       Still to do: the WhatsApp version. Original note: every day at 12 pm, send the
@@ -191,18 +198,25 @@ each needs a backwards-compatible rollout.
       (`CHATBOT_TIMEZONE` today); needs an approved UTILITY template
       because the owner may not have messaged the number in the last
       24 hours; record each send so it isn't sent twice in a day.
-- [ ] **#27 Analytics:** per-agent response times, broadcast
-      click/revenue tracking, inbox → won-deal funnel.
-- [ ] **#28 More ways in:** Click-to-WhatsApp ad leads (Facebook /
-      Instagram), website chat widget, QR codes.
-- [ ] **#29 Integrations:** WooCommerce, Razorpay / Cashfree, Wix,
-      Dukaan, BigCommerce, Google Forms / Typeform / Tally, Google
-      Calendar / Calendly, Zoom / Google Meet, Zapier / Make / Pabbly
-      Connect, Google Sheets. Plan and keys: `docs/INTEGRATIONS.md`.
-      (Shopify shipped — see #45.)
+- [x] **#27 Analytics.** Done 2026-10-17 (migration 065, `/reports`):
+      volume, delivery, response / resolution times, per-agent table,
+      broadcasts, deals, orders, CSAT, CSV export. Some figures are
+      approximate (no per-status timestamps); broadcast click / revenue
+      tracking and an inbox → won-deal funnel are still open.
+- [x] **#28 More ways in.** Done 2026-10-17: Click-to-WhatsApp ad
+      attribution (migration 062), website chat widget and short links
+      (migration 073), QR codes. Still open: Facebook Lead Ads (needs Meta
+      app review).
+- [ ] **#29 Integrations.** Shipped: Shopify (#45), WooCommerce,
+      Razorpay payment links in chat, Shiprocket, Cal.com, Google Sheets,
+      Calendly, **inbound webhooks** (Zapier / Make / n8n / Google Forms /
+      Typeform can call them) and Slack / Discord / Telegram alerts.
+      Still open: Cashfree, Wix, Dukaan, BigCommerce, Google Calendar,
+      Zoom / Google Meet, and native Zapier / Make / Pabbly apps. Plan and
+      keys: `docs/INTEGRATIONS.md`.
 - [ ] **#46 Calendly follow-ups.** Token integration shipped (Settings
-      → Calendly, migration 040). Next: Cal.com (free webhooks, same
-      engine), Google Calendar reminders, one-click Calendly OAuth,
+      → Calendly, migration 040); Cal.com shipped 2026-10-17 (migration
+      072). Next: Google Calendar reminders, one-click Calendly OAuth,
       organization-wide subscriptions for team accounts, and configurable
       reminder times.
 - [ ] **#45 Shopify follow-ups.** Core integration shipped (Settings →
@@ -269,9 +283,11 @@ titles and descriptions, LinkedIn + Trustpilot in `sameAs` and footer.
 All confirmed audit findings are fixed (migration 055, role guards, SSRF,
 media proxy, webhook block). Still open, lower risk:
 - [ ] Enforce the CSP (now report-only) after testing every page.
-- [ ] Demo form / invite peek rate limits key on the leftmost
-      `X-Forwarded-For`, which can be spoofed. Use a trusted proxy header
-      once Hostinger's setup is confirmed.
+- [x] Rate limits keyed on the leftmost `X-Forwarded-For` (spoofable):
+      fixed 2026-10-17, they now use `cf-connecting-ip`, `x-real-ip` or
+      the last `x-forwarded-for` entry. **Verify on production** that
+      Hostinger's proxy puts the visitor last (submit the demo form twice
+      from a normal browser; it must not be throttled for everyone).
 - [ ] Shared rate-limit store (Redis/Upstash) if we run more than one instance.
 - [ ] Optional recipient cap on dashboard broadcasts.
 - [ ] Dev-only npm advisories (shadcn CLI, eslint-config-next): upgrade
@@ -293,19 +309,22 @@ already have an entry above are linked by number.
 - [x] **Auto-translate chats** (done 2026-10-16: message → English, reply → 14 languages) both ways (Hindi, Tamil, Marathi, etc.):
       agent writes in English, customer gets their language.
 - [ ] **Broadcast failed-message auto-retry** with a retry log.
-- [ ] **Saved audience segments** (tags + custom fields + opt-in) that can
-      be reused across broadcasts.
-- [ ] **Agent performance reports + downloadable reports:** first
-      response time, chats handled, resolution per agent; CSV export. See #27.
-- [ ] **Customer satisfaction rating** after a chat is closed (1–5 rating
-      question on WhatsApp, shown per agent and over time).
+- [x] **Saved audience segments** (done 2026-10-17, migration 068; usable as
+      a broadcast audience).
+- [x] **Agent performance reports + downloadable reports** (done 2026-10-17,
+      `/reports`; per-agent numbers are accurate for assigned chats; messages
+      sent before 2026-10-17 have no sender recorded). See #27.
+- [x] **Customer satisfaction rating** after a chat is closed (done
+      2026-10-17, migration 069; 3 levels: Great / Okay / Bad, because Meta
+      allows three reply buttons).
 - [x] **QR code + wa.me link generator** (done 2026-10-16, Settings → QR & WhatsApp link) with a pre-filled message, for
       shops, flyers and packaging (Settings → Growth tools).
-- [ ] **Zapier, Make, Pabbly and Google Sheets** connectors. See #29.
-- [ ] **WooCommerce integration** (order, COD, shipping, abandoned cart,
-      same engine as Shopify). See #29.
-- [ ] **Drip sequences screen:** ready "Day 1 / Day 3 / Day 7" campaign
-      builder on top of automations + waits.
+- [ ] **Zapier, Make, Pabbly** native connectors. Inbound webhooks and
+      Google Sheets shipped (migrations 071, 059). See #29.
+- [x] **WooCommerce integration** (done 2026-10-17, migration 063; no
+      abandoned-cart event because WooCommerce has none). See #29.
+- [x] **Drip sequences screen** (done 2026-10-17 as **Journeys**,
+      migration 075: date-based, drip and win-back).
 - [ ] **Conversation cost tracking:** Meta's per-message fees per chat
       and per campaign. See #12.
 - [ ] **Instagram DM and Facebook Messenger** in the same shared inbox.
@@ -322,7 +341,8 @@ already have an entry above are linked by number.
       and suggest a reply under customer voice notes, kept on the message.
       Still to do: let the chatbot answer voice notes, auto-transcribe, and
       #36 (save incoming media) so audio older than 7 days can be replayed.
-- [ ] **Win-back radar:** score customers (likely to buy again, about to
+- [ ] **Win-back radar** (the basic win-back message exists in Journeys,
+      migration 075; the scoring part is not built): score customers (likely to buy again, about to
       churn, gone quiet) from chats, orders and Shopify, then send each
       group a personalised WhatsApp written by AI from their history.
 - [ ] **Business brain:** owner asks questions about their chats and data
@@ -331,3 +351,46 @@ already have an entry above are linked by number.
 - [ ] **AI catalog stylist:** customer sends a photo or a need ("red kurta
       under ₹1,500"), AI finds matching catalog products and sends them as a
       carousel with Buy now and in-chat payment.
+
+## 🧱 Not built yet (known gaps after the 2026-10-17 release)
+
+Security and abuse
+- [ ] **Captcha (Cloudflare Turnstile)** on signup, login and forgot
+      password. Needs the site key, then widget wiring, deploy, and only
+      then enabling it in Supabase (enabling it first locks everyone out).
+- [ ] **Monthly broadcast cap on the direct send API**
+      (`/api/whatsapp/broadcast` only caps one request at 1,000 recipients;
+      the plan's monthly broadcast count is enforced in the dashboard path).
+- [ ] **Daily caps on invite emails and trial-account sends** (trial users
+      can send up to 30 invitation emails a minute through our SMTP).
+- [ ] **Suspend-account button** for confirmed abusers on
+      `/admin/accounts/[id]`.
+- [ ] **Enforce the CSP** (report-only today; also replace
+      `unsafe-inline` / `unsafe-eval` with nonces later).
+- [ ] **Hide the encrypted WhatsApp token column from viewers**
+      (`whatsapp_config_select` lets any member read the ciphertext).
+- [ ] **DNS-rebinding guard for outbound webhooks** (resolve once and pin
+      the IP, or use an egress proxy).
+- [ ] **Exposed database helper functions:** `_bcast_bump`,
+      `recompute_broadcast_counts`, `account_effective_plan` are callable by
+      signed-in users; revoke after a staging test (some run inside
+      triggers).
+- [ ] **Validate `ENCRYPTION_KEY` length at startup** and retire the legacy
+      AES-CBC read path.
+
+Product
+- [ ] **Un-tagging in inbox bulk actions** (bulk tag only adds).
+- [ ] **Mention notification preferences** (mentions can't be switched off
+      per person yet).
+- [ ] **Media and templates in scheduled messages** (text only today).
+- [ ] **Shopify `read_products` scope** so product sync can read stock
+      counts (today it uses the public product feed without stock).
+- [ ] **Facebook Lead Ads** into contacts (needs Meta app review).
+- [ ] **Instagram DM and Messenger** in the shared inbox (needs Meta app
+      review).
+- [ ] **Per-account time zone setting** (scheduled messages use the
+      browser's time zone; business hours and journeys have their own).
+- [ ] **Hindi / regional-language interface** and the installable PWA
+      (see #30).
+- [ ] **Retry for failed team alerts** (Slack / Discord / Telegram) and a
+      retry log for failed broadcast sends.

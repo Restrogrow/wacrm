@@ -18,16 +18,19 @@ export interface AssistantPage {
 /** Every page the assistant may link to. Links outside this list are dropped. */
 export const ASSISTANT_PAGES: AssistantPage[] = [
   { href: "/dashboard", label: "Dashboard", about: "Live numbers: active chats, new contacts, open deals value, messages sent, charts and recent activity." },
-  { href: "/inbox", label: "Inbox", about: "Shared WhatsApp inbox. Reply, assign chats, change status, add notes/tags, send templates, saved replies (type /), orders (₹ icon), WhatsApp forms, AI summary, voice call, and share a chat." },
-  { href: "/notifications", label: "Notifications", about: "Alerts when a teammate assigns a conversation to you." },
+  { href: "/inbox", label: "Inbox", about: "Shared WhatsApp inbox. Reply, assign chats, change status, add tags, send templates, saved replies (type /), orders and payment requests (₹ icon), products from your catalog (bag icon), short links, WhatsApp forms, AI summary, AI suggested replies (sparkle button), voice call, and share a chat. Internal notes: switch the composer from Reply to Internal note (teammates only, never sent to the customer; @mention a teammate to notify them). \"Send later\" schedules a message. Select mode lets you assign, close, tag or mark many chats at once. A chat shows an SLA badge when the customer has waited too long." },
+  { href: "/notifications", label: "Notifications", about: "Alerts when a teammate assigns a conversation to you or @mentions you, when a reply is overdue (SLA), and when stock is low." },
+  { href: "/reports", label: "Reports", about: "Message volume and delivery, response and resolution times, agent performance, broadcast results, deals and orders, and customer satisfaction (CSAT), with a date range and CSV export." },
   { href: "/calls", label: "Calls", about: "History of WhatsApp calls with optional AI call notes." },
   { href: "/daily-summary", label: "Daily summary", about: "A daily email with how WhatsApp went; choose the time and recipients." },
-  { href: "/contacts", label: "Contacts", about: "Contact list: add, import (CSV), export, tags, custom fields, filters." },
+  { href: "/contacts", label: "Contacts", about: "Contact list: add, import (CSV), export, tags, custom fields, filters. Saved segments (smart lists, also usable as a broadcast audience), a duplicate finder and merge for two contacts." },
   { href: "/pipelines", label: "Pipelines", about: "Kanban sales pipelines with stages and deals; drag deals between stages." },
   { href: "/orders", label: "Orders & payments", about: "Set WhatsApp Pay or UPI, add a catalog ID, and track order payment and delivery." },
+  { href: "/catalog", label: "Catalog", about: "Your product library: add products, import or export CSV, sync products to your WhatsApp catalog or fetch the ones already there, sync from Shopify or WooCommerce, and make collections to send in chats. Needs the catalog ID in Orders & payments." },
   { href: "/broadcasts", label: "Broadcasts", about: "Send a template to many contacts, now or scheduled; see delivery and read stats." },
   { href: "/templates", label: "Templates", about: "Create WhatsApp message templates, submit to Meta for approval, sync from Meta, create with AI." },
   { href: "/automations", label: "Automations", about: "No-code workflows triggered by WhatsApp events (welcome message, keyword, tag added...)." },
+  { href: "/journeys", label: "Journeys", about: "Automatic lifecycle messages: birthday or renewal messages from a date, drip sequences, and win-back messages to inactive contacts. Uses approved templates, quiet hours and a daily limit per contact." },
   { href: "/flows", label: "Flows", about: "Beta: branching, button-driven conversation builder (menus, FAQs, triage)." },
   { href: "/ai-chatbot", label: "AI chatbot", about: "AI that replies to customers from your knowledge base; test it, then switch it on." },
   { href: "/forms", label: "WhatsApp forms", about: "Forms that open inside WhatsApp to collect leads, bookings or feedback." },
@@ -37,6 +40,7 @@ export const ASSISTANT_PAGES: AssistantPage[] = [
   { href: "/integrations/calcom", label: "Cal.com", about: "Booking confirmations, 24h/1h reminders and cancellation messages from Cal.com bookings, via a webhook." },
   { href: "/integrations/shiprocket", label: "Shiprocket", about: "WhatsApp shipment updates (shipped, out for delivery, delivered, delivery failed, return) from Shiprocket tracking webhooks." },
   { href: "/integrations/calendly", label: "Calendly", about: "Booking confirmations, 24h/1h reminders, cancellation and no-show messages (needs a paid Calendly plan)." },
+  { href: "/integrations/hooks", label: "Webhooks & alerts", about: "Inbound webhook URLs so Zapier, Make, n8n or forms can create contacts and send a template, and Slack, Discord or Telegram alerts for new chats, overdue replies, ad leads, payments and orders." },
   { href: "/integrations/apps", label: "Connected apps", about: "Apps that were connected to your account; disconnect them here." },
   { href: "/settings?tab=whatsapp", label: "WhatsApp connection", about: "Connect or reconnect your WhatsApp Business number; number health and calling." },
   { href: "/settings?tab=members", label: "Team members", about: "Invite teammates and set roles (owner, admin, agent, viewer)." },
@@ -44,6 +48,10 @@ export const ASSISTANT_PAGES: AssistantPage[] = [
   { href: "/settings?tab=api", label: "API keys", about: "Keys for the public REST API (/api/v1)." },
   { href: "/settings?tab=fields", label: "Fields & tags", about: "Colour-coded tags and custom contact fields." },
   { href: "/settings?tab=saved-replies", label: "Saved replies", about: "Reusable answers; type / in the inbox to use them." },
+  { href: "/settings?tab=business-hours", label: "Business hours", about: "Weekly opening hours, holidays, welcome and away auto-replies, and the first-response time target for SLA alerts." },
+  { href: "/settings?tab=website-widget", label: "Website chat widget", about: "A floating WhatsApp button for your website: customise it, copy one script tag, and see impressions and clicks." },
+  { href: "/settings?tab=short-links", label: "Short links", about: "Short links with click counts, UTM tags and QR codes; insert them from the inbox composer." },
+  { href: "/settings?tab=activity-log", label: "Activity log", about: "Owners and admins can see who changed roles, API keys, integrations and other sensitive settings." },
   { href: "/settings?tab=appearance", label: "Appearance", about: "Light/dark mode and accent colour." },
   { href: "/docs", label: "Help & docs", about: "Full written guides." },
 ];
@@ -57,7 +65,7 @@ export function isAssistantHref(href: string): boolean {
 export function buildAssistantSystemPrompt(): string {
   const map = ASSISTANT_PAGES.map((p) => `- ${p.label} — ${p.href}: ${p.about}`).join("\n");
   return [
-    "You are the Repeat Grow help assistant, a small chat bubble inside the Repeat Grow app (a WhatsApp CRM: shared inbox, contacts, pipelines, broadcasts, automations, flows, AI chatbot, forms, orders, Shopify/Calendly integrations).",
+    "You are the Repeat Grow help assistant, a small chat bubble inside the Repeat Grow app (a WhatsApp CRM: shared inbox, contacts, pipelines, broadcasts, automations, journeys, flows, AI chatbot, forms, orders, catalog, reports, Shopify, WooCommerce, Calendly, Cal.com and Shiprocket integrations).",
     "You help the signed-in team member USE THE APP. Be friendly, brief (2-6 short sentences or a short numbered list), and practical. Plain text only: no markdown headings, no tables.",
     "",
     "Rules:",

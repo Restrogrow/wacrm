@@ -10,6 +10,8 @@ platform.
 | What | Where |
 |---|---|
 | Admin handbook (mailboxes, services, to-dos) | [ADMIN.md](./ADMIN.md) |
+| Feature guide (where, setup, roles, limits) | [FEATURES.md](./FEATURES.md) |
+| Blog manager · security report | https://repeatgrow.com/admin/blog · https://repeatgrow.com/admin/security |
 | Admin dashboard (sign-ups, activity, funnel, accounts) | https://repeatgrow.com/admin |
 | Email previews + test sends | https://repeatgrow.com/admin/emails |
 | System health (jobs, webhooks, config) | https://repeatgrow.com/admin/system |
@@ -60,21 +62,29 @@ Code: `src/app/api/health/route.ts`, `src/lib/ops/health.ts`.
   error. States: OK, Failing (last run errored), Not running (no success
   within its window), No runs yet.
 - **Recent webhook failures** — last 50 failed WhatsApp / Shopify /
-  Calendly webhooks with the account and error. Kept for 30 days.
+  Calendly / WooCommerce / Shiprocket / Cal.com webhooks with the account
+  and error. Kept for 30 days. (The allowed sources are the
+  `webhook_failures_source_check` constraint; see
+  [Running migrations](#running-migrations).)
 
 ### Jobs tracked
 
 | Job | Runs inside | Considered "not running" after |
 |---|---|---|
-| Automations cron | `GET /api/automations/cron` | 10 min |
-| Delayed automation steps | automations cron | 10 min |
-| Scheduled broadcasts | automations cron | 10 min |
-| Shopify abandoned carts | automations cron | 10 min |
-| Calendly reminders | automations cron | 10 min |
-| Daily summary emails | automations cron | 10 min |
-| WhatsApp number health | automations cron (each account daily) | 10 min |
-| Trial & renewal reminder emails | automations cron (daytime IST) | 10 min |
-| Flows cron | `GET /api/flows/cron` | 30 min |
+| Automations cron (`automations-cron`) | `GET /api/automations/cron` | 10 min |
+| Delayed automation steps (`automation-steps`) | automations cron | 10 min |
+| Scheduled broadcasts (`scheduled-broadcasts`) | automations cron | 10 min |
+| Scheduled chat messages (`scheduled-messages`) | automations cron | 10 min |
+| Shopify abandoned carts (`shopify-reminders`) | automations cron | 10 min |
+| Calendly reminders (`calendly-reminders`) | automations cron | 10 min |
+| Cal.com reminders (`calcom-reminders`) | automations cron | 10 min |
+| Daily summary emails (`daily-summaries`) | automations cron | 10 min |
+| WhatsApp number health (`number-health`) | automations cron (each account daily) | 10 min |
+| Trial & renewal reminder emails (`billing-reminders`) | automations cron (daytime IST) | 10 min |
+| Reply-time (SLA) alerts (`sla-alerts`) | automations cron | 10 min |
+| AI lead scoring (`ai-analysis`) | automations cron (a few chats per run) | 10 min |
+| Journeys (`journeys`) | automations cron | 10 min |
+| Flows cron (`flows-cron`) | `GET /api/flows/cron` | 30 min |
 
 Heartbeats are stored in `system_heartbeats`; failures in
 `webhook_failures` (migration 045, service-role only). Code:
@@ -172,14 +182,70 @@ stores that no longer exist).
   permission request (or call you first).
 - Failed accepts are saved in `whatsapp_calls.error`.
 
+## Running migrations
+
+Migrations live in `supabase/migrations/` (currently `001` to `077`) and
+must be applied **in order**, before the code that needs them is deployed.
+Two ways:
+
+1. **Supabase SQL Editor:** open the file, copy it all, paste, Run. Copy
+   from the file itself (not from a chat), because a mangled paste
+   produces confusing syntax errors.
+2. **From a developer machine:** put the Postgres connection string
+   (Supabase → Project Settings → Database → Connection string, with the
+   database password filled in) in `wacrm/.env.local` as `SUPABASE_DB_URL`
+   (a local-only variable; never set it on the server), then:
+
+   ```bash
+   node scripts/run-migration.mjs 076_products_catalog.sql 077_catalog_collections_stock.sql
+   ```
+
+   Each file runs in its **own transaction** (a failing file changes
+   nothing) and the script **stops at the first failure**, so later files
+   are not applied. Only plain `NNN_name.sql` files from the migrations
+   folder are accepted.
+
+Notes:
+
+- **Always verify afterwards** that the new tables / functions exist (for
+  example, select `count(*)` from each new table, or compare table names
+  from `information_schema.tables` with the `CREATE TABLE` statements in
+  the migration files). Do not trust a "success" message alone: on
+  17 Oct 2026 migrations `063` and `064` had silently not been applied
+  and were only noticed later.
+- Almost every migration is idempotent (`IF NOT EXISTS`, `OR REPLACE`,
+  `DROP POLICY IF EXISTS`), so re-running one is safe.
+- **`063_woocommerce.sql` resets the `webhook_failures.source` check
+  constraint to four sources** (`whatsapp`, `shopify`, `calendly`,
+  `woocommerce`). **`072_shiprocket_calcom.sql` widens it to six**
+  (adding `shiprocket`, `calcom`). If you re-run `063` on a database that
+  already has `072`, **re-run `072` straight after**, or failed Shiprocket
+  and Cal.com webhooks can no longer be logged.
+- `077_catalog_collections_stock.sql` needs `063` (it adds columns to
+  `woocommerce_stores`) and should come after `076` (products).
+  `068_segments_merge.sql` is needed by segment-based Journeys sequences.
+- `061_security_hardening.sql` adds a trigger on `auth.users` that blocks
+  disposable emails and repeat mailboxes. After applying it, test a sign-up
+  with a `@mailinator.com` address (it must be refused) and a normal one.
+- **Rollback:** there are no down-migrations. To undo a migration, write a
+  new SQL file that drops what it created (for example
+  `DROP TABLE IF EXISTS … CASCADE`, `DROP FUNCTION IF EXISTS …`,
+  `DROP TRIGGER IF EXISTS block_abusive_signups_trigger ON auth.users`)
+  and test it on a copy first. Dropping tables deletes their data;
+  take a Supabase backup (or a table export) before you do. Often the
+  simpler fix is to deploy the previous code: new features fail safe when
+  their tables are missing, but removing tables the code expects will make
+  those screens show errors.
+
 ## Releases
 
 1. Push to `main`. GitHub Actions runs lint, typecheck, unit tests, a
    production build and the Playwright end-to-end tests.
 2. Hostinger deploys `main` automatically.
-3. If the change adds a migration (see `CHANGELOG.md`), run the SQL file
-   from `supabase/migrations/` in the Supabase SQL Editor. Every new
-   feature fails safe until its migration is run.
+3. If the change adds a migration (see `CHANGELOG.md`), apply it first
+   (see [Running migrations](#running-migrations)). Every new feature
+   fails safe until its migration is run, but run it **before** the code
+   goes live.
 4. Check `/api/health` and `/admin/system` after the deploy.
 
 Pushing changes to `.github/workflows/` needs the GitHub `workflow`
@@ -196,6 +262,17 @@ once.
   key and must report "No table is readable without signing in".
 - Login / sign-up / password-reset rate limits and CAPTCHA live in the
   Supabase dashboard (Authentication → Rate Limits / Attack Protection).
+- **Sign-up abuse:** disposable emails and a second trial for the same
+  real mailbox are blocked in the database (migration 061; table
+  `blocked_email_domains` is editable, `signup_email_history` records
+  used mailboxes). Rate limits use the proxy-set client IP; if everyone
+  seems to be rate limited together after a deploy, check which header
+  your proxy sets (`getClientIp` in `src/lib/rate-limit.ts`).
+- **Captcha is not on yet.** Do not enable it in Supabase before the
+  login, signup and forgot-password forms send a Turnstile token (see
+  ADMIN.md), or every sign-in fails.
+- **Audit log:** owners and admins see account actions in Settings →
+  Activity log; the table is append-only (`audit_log`).
 - A webhook sender that keeps failing signature checks gets 429s for 10
   minutes; look for `[webhook] rejected request with invalid signature`
   in the logs.
