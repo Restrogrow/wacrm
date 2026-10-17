@@ -1,5 +1,11 @@
 # TODO
 
+> **FEATURE FREEZE (decided 17 Oct 2026): no new features until we have paying/active customers.**
+> The product already has far more than a first customer needs. Until then the work is only:
+> finish the owner to-dos in [docs/ADMIN.md](./docs/ADMIN.md), test what exists on the live site,
+> fix bugs, and get customers. New feature ideas below stay parked. Revisit when customers ask for them.
+
+
 Gap list from the product review of 2026-10-13. Item numbers match that
 review. #4 (opt-out / STOP handling) is done — see migration 036 and
 `src/lib/contacts/opt-out.ts`.

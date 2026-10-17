@@ -9,6 +9,10 @@ Day-to-day monitoring and incident steps live in [OPERATIONS.md](./OPERATIONS.md
 > **No secret values are written here** (passwords, API keys, app passwords). They live in the hosting panel,
 > `.env.local`, or the password manager. This file only says *where* each one lives.
 
+**Project status: feature freeze (decided 17 Oct 2026).** No new features until there are customers. The only open
+work is the owner to-do list below, testing the live site and fixing bugs. Parked ideas are in
+[TODO.md](../TODO.md).
+
 Last reviewed: **17 Oct 2026** (after the blog, security, catalog, reports, journeys and integrations release).
 
 ---

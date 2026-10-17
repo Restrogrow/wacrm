@@ -16,6 +16,9 @@
 **LinkedIn:** [repeat-grow](https://www.linkedin.com/company/repeat-grow) ·
 **Reviews:** [Trustpilot](https://www.trustpilot.com/review/repeatgrow.com)
 
+> **Status: feature freeze.** The product is feature-complete for launch. No new features will be built until there
+> are customers; the focus is testing on the live site, fixing bugs and onboarding. Ideas are parked in [TODO.md](./TODO.md).
+
 > **Running the platform?** Read the private **[Admin handbook](./docs/ADMIN.md)** — every mailbox, service, cron job,
 > email and the **⚠️ important to-do list** (env vars, captcha, key rotation, SMTP) live there.
 > **Looking for a feature?** The **[Feature guide](./docs/FEATURES.md)** says where each one is in the app, how to set it up and what role it needs.
