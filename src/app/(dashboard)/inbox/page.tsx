@@ -594,7 +594,10 @@ export default function InboxPage() {
   const hasActiveConv = !!activeConversation;
 
   return (
-    <div className="-m-4 flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden sm:-m-6">
+    // Fill the <main> area exactly (cancel its padding with negative margins and add the same back to the
+    // height). The old fixed `100vh - 3.5rem` ignored the plan / number-health banners and the larger
+    // desktop padding, so the page itself scrolled and dragged the chat header and composer with it.
+    <div className="-m-4 flex h-[calc(100%+2rem)] flex-col overflow-hidden sm:-m-6 sm:h-[calc(100%+3rem)] lg:-m-8 lg:h-[calc(100%+4rem)]">
       {/* WhatsApp connection banner — in the flex column, not absolute,
           so it pushes the panels down instead of overlapping them. */}
       {whatsappConnected === false && (
