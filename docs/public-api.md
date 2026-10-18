@@ -19,11 +19,12 @@ Every request authenticates with an **API key**, sent as a bearer
 token:
 
 ```
-Authorization: Bearer wacrm_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Authorization: Bearer RG-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX
 ```
 
-Keys start with `wacrm_live_` (a legacy prefix kept so existing keys
-and secret scanners keep working).
+Keys look like `RG-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX`: `RG-` followed
+by 8 groups of 4 uppercase characters. Keys in the old `RG-XXXX-…`
+format are no longer accepted; create a new key in **Settings → API keys**.
 
 Keys are **account-scoped**: a key acts on exactly one account, the
 one it was created in. There is no cross-account access.
@@ -114,7 +115,7 @@ and to discover its scopes.
 
 ```bash
 curl https://repeatgrow.com/api/v1/me \
-  -H "Authorization: Bearer wacrm_live_xxx"
+  -H "Authorization: Bearer RG-XXXX-…"
 ```
 
 ```json
@@ -134,7 +135,7 @@ finds-or-creates the contact + conversation, then sends.
 
 ```bash
 curl -X POST https://repeatgrow.com/api/v1/messages \
-  -H "Authorization: Bearer wacrm_live_xxx" \
+  -H "Authorization: Bearer RG-XXXX-…" \
   -H "Content-Type: application/json" \
   -d '{ "to": "+14155550123", "type": "text", "text": "Hi 👋" }'
 ```
@@ -247,7 +248,7 @@ returns fast — poll `GET /api/v1/broadcasts/{id}` for progress.
 
 ```bash
 curl -X POST https://repeatgrow.com/api/v1/broadcasts \
-  -H "Authorization: Bearer wacrm_live_xxx" \
+  -H "Authorization: Bearer RG-XXXX-…" \
   -H "Content-Type: application/json" \
   -d '{
         "name": "July promo",
@@ -291,7 +292,7 @@ Status is kept current by Meta's template-status webhook.
 
 ```bash
 curl "https://repeatgrow.com/api/v1/templates?names=promo_july" \
-  -H "Authorization: Bearer wacrm_live_xxx"
+  -H "Authorization: Bearer RG-XXXX-…"
 ```
 
 ```json
@@ -385,7 +386,7 @@ All under scope `webhooks:manage`.
 
 ```bash
 curl -X POST https://repeatgrow.com/api/v1/webhooks \
-  -H "Authorization: Bearer wacrm_live_xxx" \
+  -H "Authorization: Bearer RG-XXXX-…" \
   -H "Content-Type: application/json" \
   -d '{ "url": "https://example.com/hooks/repeatgrow", "events": ["message.received"] }'
 # → 201 { "data": { "id": "…", "url": "…", "events": [...], "secret": "whsec_…" } }

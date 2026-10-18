@@ -143,7 +143,7 @@ describe('code issue and exchange', () => {
     expect(codes.has(sha256Hex(code))).toBe(true);
 
     const result = await exchange(code);
-    expect(result.api_key).toMatch(/^wacrm_live_/);
+    expect(result.api_key).toMatch(/^RG-/);
     expect(result.account).toEqual({ id: 'acct-1', name: 'Spice Garden Pvt Ltd' });
     expect(result.phone_number).toBe('+91 98765 43210');
     expect(result.scopes).toEqual(['messages:send', 'templates:read', 'templates:write']);

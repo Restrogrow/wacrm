@@ -37,7 +37,7 @@ Owner clicks "Connect RepeatGrow" (RestroGrow)
 RestroGrow (server to server)
   → POST https://repeatgrow.com/api/v1/connect/token
         { client_id, client_secret, code, redirect_uri }
-  ← 200 { "data": { "api_key": "wacrm_live_…", "account": { "id": "…", "name": "…" },
+  ← 200 { "data": { "api_key": "RG-XXXX-…", "account": { "id": "…", "name": "…" },
                      "phone_number": "+91 98765 43210" | null,
                      "scopes": ["messages:send", "templates:read", "templates:write"] } }
 ```

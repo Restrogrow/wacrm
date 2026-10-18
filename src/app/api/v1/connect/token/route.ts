@@ -9,7 +9,7 @@
 //   { "client_id", "client_secret", "code", "redirect_uri" }
 //
 // Response (200), the key is returned exactly once and never stored:
-//   { "data": { "api_key": "wacrm_live_…", "account": { "id", "name" },
+//   { "data": { "api_key": "RG-XXXX-…", "account": { "id", "name" },
 //               "phone_number": "+91 98765 43210" | null,
 //               "scopes": ["messages:send", …] } }
 //

@@ -12,25 +12,36 @@
 //   only slow the per-request auth lookup. A fast hash with a UNIQUE
 //   index is the correct, indexable choice for opaque secrets.
 //
-// Why the `wacrm_live_` prefix
-//   - Self-identifying: a leaked string is instantly recognisable as
-//     a wacrm key (handy for secret-scanners like GitGuardian).
-//   - Forward-compatible: leaves room for a `wacrm_test_` variant if
-//     a sandbox mode is ever added, without reshaping the format.
+// Key format: `RG-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX`
+//   - 8 groups of 4 chars from the Crockford base32 alphabet (no
+//     I/L/O/U), so keys are easy to read aloud and retype.
+//     32 chars × 5 bits = 160 bits of CSPRNG entropy.
+//   - The short `RG-` tag keeps a leaked key recognisable to
+//     secret-scanners without carrying product branding.
+//   - Legacy `wacrm_live_` keys are no longer accepted.
 // ============================================================
 
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
 /** Secret prefix on every key. Part of the plaintext, not a secret. */
-export const API_KEY_PREFIX = 'wacrm_live_';
+export const API_KEY_PREFIX = 'RG-';
+
+/** Crockford base32 — 32 symbols, so `byte & 31` is unbiased. */
+const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+const GROUP_SIZE = 4;
+const GROUP_COUNT = 8;
+
+const KEY_PATTERN = new RegExp(
+  `^RG(-[${ALPHABET}]{${GROUP_SIZE}}){${GROUP_COUNT}}$`,
+);
 
 /**
- * Length of the non-secret display prefix stored in `key_prefix` and
- * shown in the dashboard: the literal prefix plus the first 8 chars
- * of the random body. Enough to tell two keys apart at a glance,
- * far too little to brute-force the remaining ~248 bits.
+ * Number of body groups in the non-secret display prefix stored in
+ * `key_prefix` and shown in the dashboard (e.g. `RG-7KQ2-M9XP`).
+ * Enough to tell two keys apart at a glance, far too little to
+ * brute-force the remaining 120 bits.
  */
-const DISPLAY_BODY_CHARS = 8;
+const DISPLAY_GROUPS = 2;
 
 export interface GeneratedApiKey {
   /** Plaintext key — return to the creator ONCE, never persist. */
@@ -47,14 +58,20 @@ export interface GeneratedApiKey {
  * creation modal and never again.
  */
 export function generateApiKey(): GeneratedApiKey {
-  // 32 bytes of CSPRNG entropy. base64url keeps it URL/header-safe
-  // and shorter than hex (43 vs 64 chars).
-  const body = randomBytes(32).toString('base64url');
-  const plaintext = `${API_KEY_PREFIX}${body}`;
+  const bytes = randomBytes(GROUP_SIZE * GROUP_COUNT);
+  const groups: string[] = [];
+  for (let g = 0; g < GROUP_COUNT; g++) {
+    let group = '';
+    for (let i = 0; i < GROUP_SIZE; i++) {
+      group += ALPHABET[bytes[g * GROUP_SIZE + i] & 31];
+    }
+    groups.push(group);
+  }
+  const plaintext = `${API_KEY_PREFIX}${groups.join('-')}`;
   return {
     plaintext,
     hash: hashApiKey(plaintext),
-    prefix: `${API_KEY_PREFIX}${body.slice(0, DISPLAY_BODY_CHARS)}`,
+    prefix: `${API_KEY_PREFIX}${groups.slice(0, DISPLAY_GROUPS).join('-')}`,
   };
 }
 
@@ -73,9 +90,7 @@ export function hashApiKey(plaintext: string): string {
  * malformed `Authorization` headers (e.g. a stale invite token).
  */
 export function looksLikeApiKey(value: string): boolean {
-  return (
-    value.startsWith(API_KEY_PREFIX) && value.length > API_KEY_PREFIX.length
-  );
+  return KEY_PATTERN.test(value);
 }
 
 /**

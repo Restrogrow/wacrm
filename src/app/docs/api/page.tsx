@@ -282,7 +282,7 @@ export default function ApiReferencePage() {
                 </li>
               </ol>
             </div>
-            <CodeBlock label="Terminal" code={`export REPEATGROW_API_KEY="wacrm_live_..."\n\n# Check the key works\ncurl ${BASE_URL}/me -H "Authorization: Bearer $REPEATGROW_API_KEY"`} />
+            <CodeBlock label="Terminal" code={`export REPEATGROW_API_KEY="RG-XXXX-..."\n\n# Check the key works\ncurl ${BASE_URL}/me -H "Authorization: Bearer $REPEATGROW_API_KEY"`} />
             <CodeTabs tabs={QUICKSTART_TABS} />
             <div className="callout warn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 9v4M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" /></svg>
@@ -298,7 +298,7 @@ export default function ApiReferencePage() {
             <div className="prose">
               <p>
                 Send your key as a bearer token on every request:{" "}
-                <Ic>Authorization: Bearer wacrm_live_…</Ic>
+                <Ic>Authorization: Bearer RG-XXXX-…</Ic>
               </p>
               <ul className="bullets">
                 <li>Each key belongs to one account and can only do what its scopes allow.</li>

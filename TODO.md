@@ -162,12 +162,8 @@ These still use the old `wacrm` name. They were left as-is because
 renaming them breaks existing API keys and webhook integrations, so
 each needs a backwards-compatible rollout.
 
-- [ ] **API key prefix** `wacrm_live_` → e.g. `rg_live_`
-      (`src/lib/api-keys/keys.ts`, `API_KEY_PREFIX`).
-      Issue new keys with the new prefix but keep accepting
-      `wacrm_live_` keys until every customer has rotated. Update the
-      key-format check in the same file (the `startsWith(API_KEY_PREFIX)`
-      test) and the `bearerFormat` in `src/lib/api/v1/openapi.ts`.
+- [x] **API key prefix** `wacrm_live_` → `RG-XXXX-XXXX-…`
+      (`src/lib/api-keys/keys.ts`). Old `wacrm_live_` keys are rejected.
 - [ ] **Webhook headers** `X-Wacrm-Event`, `X-Wacrm-Webhook-Id`,
       `X-Wacrm-Signature` → e.g. `X-RepeatGrow-*`
       (`src/lib/webhooks/deliver.ts`). Send both the old and new headers

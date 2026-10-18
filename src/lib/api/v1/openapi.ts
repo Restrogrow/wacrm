@@ -77,7 +77,7 @@ export const OPENAPI_SPEC = {
     summary: 'Send WhatsApp messages, manage contacts, read conversations, launch broadcasts, and receive webhooks.',
     description:
       'The Repeat Grow public REST API. Authenticate every request with an API key created in ' +
-      '**Settings → API keys** (`Authorization: Bearer wacrm_live_…`). Keys are scoped to one account ' +
+      '**Settings → API keys** (`Authorization: Bearer RG-XXXX-…`). Keys are scoped to one account ' +
       'and to the scopes granted at creation. Rate limit: 120 requests per minute per key.\n\n' +
       `Guides and examples: ${SITE_URL}/docs/api`,
     contact: { name: 'Repeat Grow support', email: 'support@repeatgrow.com', url: `${SITE_URL}/contact` },
@@ -430,7 +430,7 @@ export const OPENAPI_SPEC = {
             description: 'A new API key for the account that approved.',
             content: json(dataEnvelope(ref('ConnectTokenResult')), {
               data: {
-                api_key: 'wacrm_live_…',
+                api_key: 'RG-XXXX-…',
                 account: { id: '7d0c…', name: 'Spice Garden' },
                 phone_number: '+91 98765 43210',
                 scopes: ['messages:send', 'templates:read', 'templates:write'],
@@ -575,7 +575,7 @@ export const OPENAPI_SPEC = {
       apiKey: {
         type: 'http',
         scheme: 'bearer',
-        bearerFormat: 'wacrm_live_…',
+        bearerFormat: 'RG-XXXX-…',
         description:
           'Create a key in **Settings → API keys** (admins and owners only). The full key is shown once. ' +
           'Scopes:\n\n' +
