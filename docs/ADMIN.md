@@ -53,11 +53,23 @@ report anything that looks wrong.
   by the app, never in docs); (d) log in once to confirm. **Never do (c) before (a) and (b)**, or every signup and
   login fails. If you get locked out, untick Captcha in Supabase. Also tick "Prevent leaked passwords" if your plan
   has it.
-- [ ] **3b. Mobile app (iOS + Android).** The app is built (`mobile/`), type-checked and bundles for both platforms,
-  but has not been run on a real phone or published. Owner steps, in order: (a) apply migration `078_device_push_tokens.sql`
-  (`node scripts/run-migration.mjs 078_device_push_tokens.sql`), (b) deploy the web app (the app signs in to it with a bearer token),
-  (c) follow [MOBILE.md](./MOBILE.md): Expo account, `eas init`, Apple Developer ($99/yr) and Google Play ($25) accounts, push
-  credentials, a real-device test pass, then `eas build` + `eas submit` using [`mobile/store/LISTING.md`](../mobile/store/LISTING.md).
+- [ ] **3b. Mobile app (iOS + Android): IMPORTANT, in this order.** Built and pushed; first test APK (v1.0.1) is on the
+  Desktop (`RepeatGrow-1.0.1.apk`); the owner has only done a first launch test so far.
+  1. **Run the push table SQL** (migration `supabase/migrations/078_device_push_tokens.sql`) in the Supabase SQL editor.
+     Until then the app works but push notifications are silently skipped.
+  2. **Test the APK on a real Android phone** (intro, Try the demo, Inbox, a chat, Contacts, Overview, More) and report bugs.
+  3. **Google Play** (US$25 one-time): create the app (name `Repeat Grow: WhatsApp CRM`, package `com.repeatgrow.app`, App,
+     Free), then Testing > Internal testing > upload the **.aab** from `eas build -p android --profile production`
+     (the Expo build page link; the debug-signed local APK cannot be uploaded), add testers, install via the opt-in link.
+     Personal accounts need a **closed test with 12 testers for 14 days** before Production.
+  4. **Push notifications on Android:** create a Firebase project, add the Android app `com.repeatgrow.app`, put the
+     `google-services.json` path in `app.json` (`android.googleServicesFile`), upload an FCM V1 service-account key with
+     `eas credentials`. The iOS push key is created by EAS with your Apple account.
+  5. **Apple** (US$99/yr): Apple Developer account, create the app in App Store Connect, set `ascAppId` in `mobile/eas.json`,
+     `eas build -p ios --profile production`, `eas submit -p ios`, TestFlight test, then App Review.
+  6. **Store pages:** copy text and answers from `mobile/store/LISTING.md`, capture screenshots from the demo workspace, set
+     the Privacy policy to `https://repeatgrow.com/privacy`, and fill in the data-safety and content-rating answers.
+  7. Full guide: [MOBILE.md](./MOBILE.md), including "Building on this PC" (local APK build, no Expo login).
 - [ ] **4. Lower the Supabase Auth rate limits** (Authentication → Rate Limits: emails per hour, sign-ins per IP).
 - [ ] **5. Turn on app email (SMTP) and test it.** Add the `SMTP_*` variables (item 1) and restart. Then open
   `/admin/emails` → **Send all test emails** (they land in `restrogrow@gmail.com` marked `[TEST]`; check your phone

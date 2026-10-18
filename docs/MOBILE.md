@@ -93,3 +93,18 @@ Set the Apple app id in `mobile/eas.json` (`submit.production.ios.ascAppId`) aft
 - No Google or Apple sign-in (email and password only).
 - No call handling, broadcasts, flows builder or catalog editing in the app.
 - Android and iOS builds have been type-checked and bundled but not run on physical devices from this workspace: do a full pass on a real iPhone and Android phone (TestFlight and the internal Play track) before you submit.
+
+## Building on this PC (no Expo login needed)
+
+This PC has JDK 17 and the Android SDK in `C:\Users\INDIA\dev` (the same ones the RestroGrow apps use). Windows has a 260-character path limit, so build from a **short copy** of the project, for example `C:\rgm`:
+
+1. Copy `wacrm\mobile` to `C:\rgm` (include `node_modules` with all its folders; skip `android\app\build`).
+2. `npx expo prebuild --platform android --no-install` (once). In `android\gradle.properties` set `reactNativeArchitectures=armeabi-v7a,arm64-v8a` and add the Windows certificate lines (`-Djavax.net.ssl.trustStoreType=Windows-ROOT`).
+3. In `android\app\build.gradle`, inside `defaultConfig`, add: `externalNativeBuild { cmake { arguments "-DCMAKE_OBJECT_PATH_MAX=100" } }`.
+4. Point `android\gradle\wrapper\gradle-wrapper.properties` at the local `gradle-9.4.1-bin.zip` in `C:\Users\INDIA\dev` (check its SHA-256 against services.gradle.org).
+5. Run with `JAVA_HOME=C:\Users\INDIA\dev\jdk17`, `ANDROID_HOME=C:\Users\INDIA\dev\android-sdk`, `JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStoreType=Windows-ROOT` and the `EXPO_PUBLIC_*` values from `mobile\.env`: `gradlew assembleRelease --max-workers=2 --no-daemon`.
+6. The APK is `android\app\build\outputs\apk\release\app-release.apk`. It is debug-signed, so it is for your own testing only. Google Play needs the EAS production `.aab`.
+
+## Why the first launch showed "Unmatched Route"
+
+The app needs a start page for `/` (`mobile/app/index.tsx`) and a `+not-found` fallback. Both exist since v1.0.1.
