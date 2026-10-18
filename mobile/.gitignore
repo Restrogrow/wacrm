@@ -44,3 +44,9 @@ yarn-error.*
 .env
 .env.*
 !.env.example
+
+# built binaries
+apk/
+*.apk
+*.aab
+*.ipa
