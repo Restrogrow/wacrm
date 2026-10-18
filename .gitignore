@@ -54,3 +54,9 @@ login-page.html
 /test-results/
 /playwright-report/
 /blob-report/
+
+/mobile/node_modules
+/mobile/.expo
+/mobile/dist
+/mobile/ios
+/mobile/android

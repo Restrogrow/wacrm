@@ -1,0 +1,78 @@
+{
+  "expo": {
+    "name": "Repeat Grow",
+    "slug": "repeat-grow",
+    "scheme": "repeatgrow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.repeatgrow.app",
+      "supportsTablet": true,
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Choose a photo to send to a customer in a chat.",
+        "NSCameraUsageDescription": "Take a photo to send to a customer in a chat."
+      }
+    },
+    "android": {
+      "package": "com.repeatgrow.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "POST_NOTIFICATIONS",
+        "CAMERA",
+        "READ_MEDIA_IMAGES"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-image",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#16a34a"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose a photo to send to a customer in a chat.",
+          "cameraPermission": "Take a photo to send to a customer in a chat."
+        }
+      ],
+      "expo-web-browser",
+      "expo-asset"
+    ],
+    "extra": {
+      "apiBaseUrl": "https://repeatgrow.com",
+      "supabaseUrl": "",
+      "supabaseAnonKey": "",
+      "turnstileSiteKey": "0x4AAAAAAFZXKKLsMu6ADg4p",
+      "eas": {
+        "projectId": ""
+      }
+    }
+  }
+}

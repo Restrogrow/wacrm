@@ -17,6 +17,7 @@ import type {
 import { supabaseAdmin } from './admin-client'
 import { engineSendText, engineSendTemplate } from './meta-send'
 import { DEFAULT_CURRENCY } from '@/lib/currency'
+import { notifyAssignment } from '@/lib/push/expo'
 import { safeFetch, UnsafeUrlError } from '@/lib/webhooks/ssrf'
 import {
   pickRoundRobinAgent,
@@ -503,6 +504,18 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
         .update({ assigned_agent_id: agentId })
         .eq('account_id', args.automation.account_id)
         .eq('contact_id', args.contactId)
+      // Phone push for the new assignee. Never throws.
+      const { data: assignedConv } = await db
+        .from('conversations')
+        .select('id')
+        .eq('account_id', args.automation.account_id)
+        .eq('contact_id', args.contactId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (assignedConv?.id) {
+        await notifyAssignment({ conversationId: assignedConv.id as string, contactId: args.contactId, assignedUserId: agentId })
+      }
       return `assigned to ${agentId}`
     }
 

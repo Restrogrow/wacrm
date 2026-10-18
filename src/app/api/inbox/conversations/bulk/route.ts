@@ -17,6 +17,7 @@ import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/automations/admin-client'
 import { accountCanSend } from '@/lib/billing/server'
 import { parseBulkRequest } from '@/lib/inbox/bulk'
+import { notifyAssignment } from '@/lib/push/expo'
 import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
@@ -66,6 +67,15 @@ export async function POST(request: Request) {
           .eq('account_id', ctx.accountId)
           .in('id', req.ids)
         if (error) return fail('assign', error.message)
+        // Phone push for the new assignee (one summary push for a batch).
+        if (req.userId && req.userId !== ctx.userId) {
+          await notifyAssignment({
+            conversationId: req.ids[0],
+            assignedUserId: req.userId,
+            actorUserId: ctx.userId,
+            count: req.ids.length,
+          })
+        }
         break
       }
       case 'status': {

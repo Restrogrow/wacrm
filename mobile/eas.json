@@ -1,0 +1,37 @@
+{
+  "cli": { "version": ">= 16.0.0", "appVersionSource": "remote" },
+  "build": {
+    "base": {
+      "node": "24.20.0",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://hfufrwjhajtpfzjbqocv.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmdWZyd2poYWp0cGZ6amJxb2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NzMxNDksImV4cCI6MjA5ODU0OTE0OX0.WiyHKVGXSHobDI4xOmB5s80W1m89-_gbM8C7ZdZmhhQ",
+        "EXPO_PUBLIC_API_BASE_URL": "https://repeatgrow.com",
+        "EXPO_PUBLIC_TURNSTILE_SITE_KEY": "0x4AAAAAAFZXKKLsMu6ADg4p"
+      }
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": { "simulator": true },
+      "android": { "buildType": "apk" }
+    },
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "android": { "buildType": "apk" }
+    },
+    "production": {
+      "extends": "base",
+      "autoIncrement": true,
+      "android": { "buildType": "app-bundle" }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": { "ascAppId": "REPLACE_WITH_APP_STORE_CONNECT_APP_ID" },
+      "android": { "track": "internal", "releaseStatus": "draft" }
+    }
+  }
+}

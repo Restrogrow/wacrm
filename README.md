@@ -21,6 +21,7 @@
 
 > **Running the platform?** Read the private **[Admin handbook](./docs/ADMIN.md)** — every mailbox, service, cron job,
 > email and the **⚠️ important to-do list** (env vars, captcha, key rotation, SMTP) live there.
+> **Mobile app (iOS + Android):** a native Expo app lives in [`mobile/`](./mobile); build, test and store-release steps are in [docs/MOBILE.md](./docs/MOBILE.md).
 > **Looking for a feature?** The **[Feature guide](./docs/FEATURES.md)** says where each one is in the app, how to set it up and what role it needs.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](./LICENSE)

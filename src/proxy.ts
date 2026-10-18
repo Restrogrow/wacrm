@@ -152,7 +152,10 @@ export async function proxy(request: NextRequest) {
   }
 
   // API routes that need auth (not webhooks)
-  if (!user && request.nextUrl.pathname.startsWith('/api/whatsapp/') &&
+  // The mobile app authenticates with a bearer token instead of cookies; the route
+  // handlers verify it themselves (see src/lib/supabase/server.ts).
+  const hasBearer = /^Bearer\s/i.test(request.headers.get('authorization') ?? '')
+  if (!user && !hasBearer && request.nextUrl.pathname.startsWith('/api/whatsapp/') &&
       !request.nextUrl.pathname.includes('/webhook')) {
     return withRefreshedCookies(
       NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

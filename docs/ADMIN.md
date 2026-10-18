@@ -53,6 +53,11 @@ report anything that looks wrong.
   by the app, never in docs); (d) log in once to confirm. **Never do (c) before (a) and (b)**, or every signup and
   login fails. If you get locked out, untick Captcha in Supabase. Also tick "Prevent leaked passwords" if your plan
   has it.
+- [ ] **3b. Mobile app (iOS + Android).** The app is built (`mobile/`), type-checked and bundles for both platforms,
+  but has not been run on a real phone or published. Owner steps, in order: (a) apply migration `078_device_push_tokens.sql`
+  (`node scripts/run-migration.mjs 078_device_push_tokens.sql`), (b) deploy the web app (the app signs in to it with a bearer token),
+  (c) follow [MOBILE.md](./MOBILE.md): Expo account, `eas init`, Apple Developer ($99/yr) and Google Play ($25) accounts, push
+  credentials, a real-device test pass, then `eas build` + `eas submit` using [`mobile/store/LISTING.md`](../mobile/store/LISTING.md).
 - [ ] **4. Lower the Supabase Auth rate limits** (Authentication → Rate Limits: emails per hour, sign-ins per IP).
 - [ ] **5. Turn on app email (SMTP) and test it.** Add the `SMTP_*` variables (item 1) and restart. Then open
   `/admin/emails` → **Send all test emails** (they land in `restrogrow@gmail.com` marked `[TEST]`; check your phone

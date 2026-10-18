@@ -12,6 +12,7 @@ import { dispatchInboundToFlows } from '@/lib/flows/engine'
 import { maybeReplyWithAI } from '@/lib/ai-chatbot/respond'
 import { recordAdAttribution } from '@/lib/ad-attribution-server'
 import { maybeSendAutoReply } from '@/lib/business-hours/auto-reply'
+import { notifyInboundMessage } from '@/lib/push/expo'
 import { fireTeamAlert } from '@/lib/alerts/server'
 import {
   detectOptKeyword,
@@ -1096,7 +1097,16 @@ async function processMessage(
     suppressed: optHandled || flowConsumed,
   })
 
-  await Promise.all([...automationRuns, chatbotRun, messageReceived, autoReply])
+  // Mobile push for the team (assigned agent, or everyone if unassigned).
+  // Never throws; a no-op when nobody has registered a phone.
+  const pushRun = notifyInboundMessage({
+    accountId,
+    conversationId: conversation.id,
+    messageType: message.type,
+    text: inboundText || null,
+  })
+
+  await Promise.all([...automationRuns, chatbotRun, messageReceived, autoReply, pushRun])
 }
 
 async function parseMessageContent(

@@ -14,6 +14,7 @@ import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/automations/admin-client'
 import { accountCanSend } from '@/lib/billing/server'
+import { notifyMentions } from '@/lib/push/expo'
 import { parseNoteInput } from '@/lib/inbox/mentions'
 import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limit'
 
@@ -98,6 +99,16 @@ export async function POST(request: Request) {
       )
       // The note is saved either way; a failed notification is only logged.
       if (notifyError) console.error('[notes] mention notification failed:', notifyError.message)
+
+      // Phone push for the mentioned teammates. Never throws.
+      await notifyMentions({
+        conversationId: conversation.id,
+        contactId: conversation.contact_id,
+        actorUserId: ctx.userId,
+        actorName,
+        snippet: `${contactName}: ${snippet}`,
+        mentionedUserIds: validMentions,
+      })
     }
 
     return NextResponse.json({ note }, { status: 201 })

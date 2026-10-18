@@ -22,11 +22,11 @@ export async function POST(request: Request) {
 
   // Supabase checks the captcha on every password sign-in once Attack Protection is on,
   // so the login page passes the visitor's Turnstile token along.
-  const body = (await request.json().catch(() => null)) as { captchaToken?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as { captchaToken?: unknown; mobile?: unknown } | null;
   const captchaToken = typeof body?.captchaToken === 'string' && body.captchaToken ? body.captchaToken : undefined;
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
     ...(captchaToken ? { options: { captchaToken } } : {}),
@@ -34,6 +34,13 @@ export async function POST(request: Request) {
   if (error) {
     console.error('[demo-login] sign-in failed:', error.message);
     return NextResponse.json({ error: 'The demo is unavailable right now. Please try again later.' }, { status: 503 });
+  }
+  // The native app has no cookies: hand it the session tokens so it can store them itself.
+  if (body?.mobile === true && data.session) {
+    return NextResponse.json({
+      ok: true,
+      session: { access_token: data.session.access_token, refresh_token: data.session.refresh_token },
+    });
   }
   return NextResponse.json({ ok: true });
 }
