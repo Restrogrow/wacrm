@@ -253,16 +253,31 @@ export async function POST(request: Request) {
 
     // Doubles as proof the token is actually scoped to this phone
     // number — a mismatched/forged phone_number_id fails here.
-    let phoneInfo
-    try {
-      phoneInfo = await verifyPhoneNumber({
-        phoneNumberId: resolvedPhoneNumberId,
-        accessToken,
-      })
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown Meta API error'
-      console.error('Embedded Signup phone verification failed:', message)
-      return NextResponse.json({ error: `Meta API error: ${message}` }, { status: 400 })
+    //
+    // A number that was only just created or onboarded in the popup can take a few
+    // seconds before the Graph API can read it, and Meta answers "Object ... does not
+    // exist / missing permissions" until then. Retry that specific error briefly
+    // (up to ~8 s) instead of failing the whole connection on the first try.
+    const NOT_VISIBLE_YET = /does not exist|missing permissions|unsupported get request/i
+    let phoneInfo: Awaited<ReturnType<typeof verifyPhoneNumber>> | undefined
+    for (let attempt = 1; !phoneInfo; attempt++) {
+      try {
+        phoneInfo = await verifyPhoneNumber({
+          phoneNumberId: resolvedPhoneNumberId,
+          accessToken,
+        })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown Meta API error'
+        if (attempt < 4 && NOT_VISIBLE_YET.test(message)) {
+          await new Promise((resolve) => setTimeout(resolve, 2500))
+          continue
+        }
+        console.error('Embedded Signup phone verification failed:', message)
+        const hint = NOT_VISIBLE_YET.test(message)
+          ? ' Meta may still be setting this number up, or the number you picked is not available to this app. Wait a minute and try Connect again, or use the manual connection form below.'
+          : ''
+        return NextResponse.json({ error: `Meta API error: ${message}.${hint}` }, { status: 400 })
+      }
     }
 
     let encryptedAccessToken: string
