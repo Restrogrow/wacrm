@@ -129,6 +129,7 @@ interface WhatsAppWebhookEntry {
         status: string
         timestamp: string
         recipient_id?: string
+        errors?: Array<{ code?: number; title?: string; message?: string; error_data?: { details?: string } }>
       }>
     }
     field: string
@@ -484,7 +485,22 @@ async function handleStatusUpdate(status: {
   status: string
   timestamp: string
   recipient_id?: string
+  errors?: Array<{ code?: number; title?: string; message?: string; error_data?: { details?: string } }>
 }) {
+  // Meta reports WHY a send failed (e.g. 131042 payment, 131047 24h window)
+  // only here. Keep it on the message and in the logs.
+  const failure = status.status === 'failed' ? status.errors?.[0] : undefined
+  if (failure) {
+    console.error('[whatsapp] message failed', status.id, failure.code, failure.title ?? failure.message)
+    const detail = failure.error_data?.details ?? failure.message ?? failure.title ?? null
+    // Columns come from migration 079; before it is applied this is a no-op.
+    const { error: errColErr } = await supabaseAdmin()
+      .from('messages')
+      .update({ error_code: failure.code ?? null, error_detail: detail })
+      .eq('message_id', status.id)
+    if (errColErr) console.warn('[whatsapp] error_code not stored (run migration 079):', errColErr.message)
+  }
+
   // 1) Mirror onto messages (legacy behavior) — Meta's status values
   //    already match the CHECK constraint on messages.status. No
   //    `.select()`: message_id is NOT unique (migration 009 — Meta ids
