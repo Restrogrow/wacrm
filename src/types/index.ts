@@ -306,7 +306,13 @@ export type TemplateButton =
   | { type: 'QUICK_REPLY'; text: string }
   | { type: 'URL'; text: string; url: string; example?: string }
   | { type: 'PHONE_NUMBER'; text: string; phone_number: string }
-  | { type: 'COPY_CODE'; text: string; example: string };
+  | { type: 'COPY_CODE'; text: string; example: string }
+  /**
+   * "Call on WhatsApp": one tap starts a WhatsApp call to the business
+   * number (needs WhatsApp calling on). The button works for ttl_minutes
+   * after the message is sent (Meta: 1,440–43,200 at creation).
+   */
+  | { type: 'VOICE_CALL'; text: string; ttl_minutes?: number };
 
 export interface TemplateSampleValues {
   body?: string[];

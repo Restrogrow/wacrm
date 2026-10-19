@@ -30,12 +30,16 @@ export interface MetaComponent {
 }
 
 interface MetaButtonPayload {
-  type: 'QUICK_REPLY' | 'URL' | 'PHONE_NUMBER' | 'COPY_CODE';
+  type: 'QUICK_REPLY' | 'URL' | 'PHONE_NUMBER' | 'COPY_CODE' | 'voice_call';
   text: string;
   url?: string;
   phone_number?: string;
   example?: string[];
+  ttl_minutes?: number;
 }
+
+/** Default lifetime of a "Call on WhatsApp" button: 7 days (Meta's default). */
+export const VOICE_CALL_TTL_MINUTES = 10080;
 
 function buildHeaderComponent(payload: TemplatePayload): MetaComponent | null {
   const { header_type, header_content, header_media_url, header_handle } = payload;
@@ -106,6 +110,9 @@ function buildButtonPayload(b: TemplateButton): MetaButtonPayload {
       return { type: 'PHONE_NUMBER', text: b.text, phone_number: b.phone_number };
     case 'COPY_CODE':
       return { type: 'COPY_CODE', text: b.text, example: [b.example] };
+    case 'VOICE_CALL':
+      // Meta's call-button docs spell this type in lowercase.
+      return { type: 'voice_call', text: b.text, ttl_minutes: b.ttl_minutes ?? VOICE_CALL_TTL_MINUTES };
   }
 }
 

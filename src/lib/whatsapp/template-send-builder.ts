@@ -161,6 +161,9 @@ function buttonNeedsSendParam(
     case 'QUICK_REPLY':
     case 'PHONE_NUMBER':
       return override !== undefined;
+    case 'VOICE_CALL':
+      // Works without send-time params (Meta applies the template's TTL).
+      return false;
   }
 }
 
@@ -209,6 +212,8 @@ function buildButtonComponent(
     case 'PHONE_NUMBER':
       // PHONE_NUMBER buttons never accept send-time params per Meta —
       // return null even if an override snuck through.
+      return null;
+    case 'VOICE_CALL':
       return null;
   }
 }

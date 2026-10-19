@@ -32,6 +32,9 @@ export const TEMPLATE_LIMITS = {
   maxUrlButtons: 2,
   maxPhoneButtons: 1,
   maxCopyCodeButtons: 1,
+  maxVoiceCallButtons: 1,
+  /** Meta: "Call on WhatsApp" button label, max 20 characters. */
+  voiceCallTextMaxLength: 20,
   /** Meta: lowercase a-z, digits, underscore. Up to 512 chars. */
   nameRegex: /^[a-z0-9_]{1,512}$/,
 } as const;
@@ -178,6 +181,7 @@ function countButtonsByType(
     URL: 0,
     PHONE_NUMBER: 0,
     COPY_CODE: 0,
+    VOICE_CALL: 0,
   };
   for (const b of buttons) counts[b.type]++;
   return counts;
@@ -200,6 +204,11 @@ export function validateButtons(buttons: TemplateButton[] | undefined): void {
   if (counts.PHONE_NUMBER > TEMPLATE_LIMITS.maxPhoneButtons) {
     throw new Error(
       `At most ${TEMPLATE_LIMITS.maxPhoneButtons} PHONE_NUMBER button allowed (got ${counts.PHONE_NUMBER}).`,
+    );
+  }
+  if (counts.VOICE_CALL > TEMPLATE_LIMITS.maxVoiceCallButtons) {
+    throw new Error(
+      `At most ${TEMPLATE_LIMITS.maxVoiceCallButtons} WhatsApp call button allowed (got ${counts.VOICE_CALL}).`,
     );
   }
   if (counts.COPY_CODE > TEMPLATE_LIMITS.maxCopyCodeButtons) {
@@ -275,6 +284,21 @@ export function validateButtons(buttons: TemplateButton[] | undefined): void {
         if (!b.example?.trim()) {
           throw new Error(
             `COPY_CODE button #${i + 1} is missing example value.`,
+          );
+        }
+        break;
+      case 'VOICE_CALL':
+        if (b.text.length > TEMPLATE_LIMITS.voiceCallTextMaxLength) {
+          throw new Error(
+            `WhatsApp call button #${i + 1} text can be at most ${TEMPLATE_LIMITS.voiceCallTextMaxLength} characters.`,
+          );
+        }
+        if (
+          b.ttl_minutes !== undefined &&
+          (!Number.isInteger(b.ttl_minutes) || b.ttl_minutes < 1440 || b.ttl_minutes > 43200)
+        ) {
+          throw new Error(
+            `WhatsApp call button #${i + 1}: the button must stay active between 1 and 30 days.`,
           );
         }
         break;

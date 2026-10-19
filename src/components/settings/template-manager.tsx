@@ -120,6 +120,8 @@ function emptyButton(type: TemplateButton['type']): TemplateButton {
       return { type: 'PHONE_NUMBER', text: '', phone_number: '' };
     case 'COPY_CODE':
       return { type: 'COPY_CODE', text: '', example: '' };
+    case 'VOICE_CALL':
+      return { type: 'VOICE_CALL', text: 'Call Now' };
   }
 }
 
@@ -463,6 +465,12 @@ export function TemplateManager() {
             ...current,
             ...(patch.text !== undefined && { text: patch.text }),
             ...(patch.example !== undefined && { example: patch.example }),
+          };
+          break;
+        case 'VOICE_CALL':
+          next[index] = {
+            ...current,
+            ...(patch.text !== undefined && { text: patch.text }),
           };
           break;
       }
@@ -1107,12 +1115,22 @@ export function TemplateManager() {
                             >
                               Copy Code
                             </SelectItem>
+                            <SelectItem
+                              value="VOICE_CALL"
+                              className="text-popover-foreground focus:bg-muted focus:text-popover-foreground"
+                            >
+                              WhatsApp call
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <Input
                           placeholder="Button label"
                           value={btn.text}
-                          maxLength={TEMPLATE_LIMITS.buttonTextMaxLength}
+                          maxLength={
+                            btn.type === 'VOICE_CALL'
+                              ? TEMPLATE_LIMITS.voiceCallTextMaxLength
+                              : TEMPLATE_LIMITS.buttonTextMaxLength
+                          }
                           onChange={(e) =>
                             updateButton(i, { text: e.target.value })
                           }
@@ -1159,6 +1177,13 @@ export function TemplateManager() {
                           }
                           className="bg-muted border-border text-foreground placeholder:text-muted-foreground h-8 text-xs"
                         />
+                      )}
+                      {btn.type === 'VOICE_CALL' && (
+                        <p className="pl-1 text-[11px] text-muted-foreground">
+                          One tap starts a WhatsApp call to your business number (free for you; it rings in
+                          RepeatGrow, and the AI can answer). Works for 7 days after sending. Needs WhatsApp
+                          calling on in Settings → WhatsApp.
+                        </p>
                       )}
                       {btn.type === 'COPY_CODE' && (
                         <Input

@@ -29,6 +29,7 @@ interface MetaButton {
   phone_number?: string
   example?: string[] | string
   otp_type?: string
+  ttl_minutes?: number
 }
 
 interface MetaTemplateComponent {
@@ -102,6 +103,13 @@ function parseButtons(metaButtons: MetaButton[] | undefined): TemplateButton[] {
           type: 'COPY_CODE',
           text: b.text,
           example: Array.isArray(b.example) ? b.example[0] ?? '' : b.example ?? '',
+        })
+        break
+      case 'VOICE_CALL':
+        out.push({
+          type: 'VOICE_CALL',
+          text: b.text || 'Call Now',
+          ...(typeof b.ttl_minutes === 'number' ? { ttl_minutes: b.ttl_minutes } : {}),
         })
         break
       case 'OTP':
