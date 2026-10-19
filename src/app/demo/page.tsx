@@ -96,7 +96,7 @@ const DEMO_BODY_HTML = `
         <ul class="demo-points">
           <li>${CHECK}<span>A walkthrough of the shared inbox, pipelines and broadcasts, using examples from your industry.</span></li>
           <li>${CHECK}<span>How the AI chatbot answers from your own FAQs and hands over to your team.</span></li>
-          <li>${CHECK}<span>Shopify order messages, Calendly reminders, WhatsApp Pay and UPI orders, and voice calls in the browser.</span></li>
+          <li>${CHECK}<span>Shopify order messages, Calendly reminders, WhatsApp Pay and UPI orders, voice calls in the browser, and the AI voice agent that calls your leads.</span></li>
           <li>${CHECK}<span>What it costs, what Meta charges separately, and how we set up your WhatsApp Business API number.</span></li>
         </ul>
         <p class="demo-fine" style="margin-top:24px;">We reply on WhatsApp or email, usually within one working day. Prefer to talk now? <a href="https://wa.me/916377568749" target="_blank" rel="noopener" style="color:var(--accent-deep);text-decoration:underline;text-underline-offset:3px;">Message us on WhatsApp</a>.</p>

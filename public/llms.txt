@@ -1,12 +1,14 @@
 # Repeat Grow
 
-> Repeat Grow is a WhatsApp CRM and WhatsApp Business API platform for Indian sales and support teams. It includes a shared inbox, contacts, sales pipelines, scheduled broadcasts, no-code automations, an AI chatbot, orders and payments (WhatsApp Pay and UPI), WhatsApp forms, browser voice calls, Shopify and Calendly integrations, and a public REST API. Setup is done for you.
+> Repeat Grow is a WhatsApp CRM and WhatsApp Business API platform for Indian sales and support teams. It includes a shared inbox, contacts, sales pipelines, scheduled broadcasts, no-code automations, an AI chatbot, an AI voice agent for WhatsApp calls, orders and payments (WhatsApp Pay and UPI), WhatsApp forms, browser voice calls, Shopify and Calendly integrations, and a public REST API. Setup is done for you.
 
 Repeat Grow is built on Meta's official WhatsApp Business API (Cloud API). It is not an unofficial or jailbroken WhatsApp client, so the number stays compliant. Teams are typically live within days because Repeat Grow handles WhatsApp Business verification, number registration and data import. Prices are in Indian rupees. Every new account gets a 7-day free trial.
 
 ## Product
 
 - Shared inbox: multiple agents on one WhatsApp Business number, with assignment, status, internal notes, saved replies, voice notes and in-browser WhatsApp voice calls. Works alongside the WhatsApp Business app (coexistence).
+- AI voice agent: an AI calls leads on WhatsApp (English, Hindi or Hinglish), answers incoming calls the team misses, can be taken over live, and saves call notes (summary, to-dos, follow-up). Templates can carry a "Call Now" WhatsApp call button.
+- Mobile app: Android app in early access (inbox, contacts, push notifications, calls with AI notes, broadcasts, pipeline); iOS coming soon.
 - Contacts: custom fields, CSV import and export, deduplication, opt-out (STOP) handling, full conversation and deal history.
 - Sales pipelines: Kanban boards with deals linked to WhatsApp conversations. Default currency is Indian rupees.
 - Broadcasts: Meta-approved templates, including carousel templates. Send now or schedule, with delivery and read tracking and per-recipient variables.

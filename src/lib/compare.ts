@@ -50,8 +50,8 @@ export const COMPARE_PAGES: ComparePageData[] = [
       rows: [
         ["Plans and price", RG_PRICE, "Growth ₹2,699, Pro ₹5,799, Business ₹16,799 per month, billed quarterly"],
         ["Team members", "5 / 25 / 50 / unlimited by plan", "3 users on Growth, 5 on Pro and Business; extra users ₹1,299 (Pro) or ₹2,199 (Business) each per month"],
-        ["Channels", "WhatsApp", "WhatsApp, calling, Facebook, Instagram, TikTok, web chat, RCS and more"],
-        ["AI", "AI chatbot and AI flow builder on every plan", "AI in the inbox and Astra AI agents, limited by AI credits (2,000 / 5,000 / 20,000 per month by plan)"],
+        ["Channels", "WhatsApp, with WhatsApp calling and an AI voice agent", "WhatsApp, calling, Facebook, Instagram, TikTok, web chat, RCS and more"],
+        ["AI", "AI chatbot, AI flow builder and an AI voice agent for WhatsApp calls on every plan", "AI in the inbox and Astra AI agents, limited by AI credits (2,000 / 5,000 / 20,000 per month by plan)"],
         ["Broadcasts", "60 / 250 / unlimited per month by plan, scheduled sending, carousel templates", "Up to 15K per month on Growth, unlimited on Pro and Business"],
         ["Integrations", "Shopify, Calendly, public REST API and webhooks on every plan", "2 integrations on Growth, 5 on Pro (including HubSpot), unlimited on Business (including Salesforce)"],
         ["API and webhooks", "Public REST API and signed webhooks on every plan", "10k API calls and no webhooks on Growth; limited webhooks on Pro; extensive on Business"],
@@ -227,7 +227,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       items: [
         "You want the AI chatbot and chatbot flows included instead of paying for add-ons.",
         "You want one simple price starting at ₹999 a month.",
-        "You want WhatsApp Pay or UPI orders, Shopify and Calendly messages and browser voice calls.",
+        "You want WhatsApp Pay or UPI orders, Shopify and Calendly messages, browser voice calls and an AI agent that calls your leads.",
         "You want us to set up your WhatsApp Business API number and walk your team through it.",
       ],
     },
@@ -307,7 +307,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       items: [
         "You mostly work on WhatsApp and want the lowest monthly price in rupees.",
         "You want the AI chatbot, flows, API and webhooks on every plan, with only the limits changing.",
-        "You want WhatsApp Pay and UPI orders, Shopify and Calendly messages and browser voice calls.",
+        "You want WhatsApp Pay and UPI orders, Shopify and Calendly messages, browser voice calls and an AI agent that calls your leads.",
         "You want setup done for you and a team that answers on WhatsApp.",
       ],
     },

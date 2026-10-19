@@ -43,7 +43,7 @@ export default function AboutPage() {
       <div className="mt-10 space-y-6 text-sm leading-relaxed text-foreground/90">
         <p>
           Repeat Grow is a WhatsApp CRM built for sales and support teams:
-          a shared inbox with voice calls, contacts, sales pipelines,
+          a shared inbox with voice calls and an AI calling agent, contacts, sales pipelines,
           scheduled broadcasts, no-code automations, an AI chatbot, orders
           and payments, and Shopify and Calendly integrations, all built
           on the official WhatsApp Business API.

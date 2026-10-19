@@ -15,7 +15,7 @@ import { BRAND_KEYWORDS, SITE_URL, buildFAQNode, buildOrganizationNode } from "@
 
 const HOME_TITLE = "Repeat Grow: WhatsApp CRM & API for Indian Businesses";
 const HOME_DESCRIPTION =
-  "WhatsApp CRM on the official WhatsApp Business API: shared inbox, AI chatbot, broadcasts, payments, Shopify and Calendly. 7-day free trial.";
+  "WhatsApp CRM on the official WhatsApp Business API: shared inbox, AI chatbot, AI voice calls, broadcasts, payments and Shopify. 7-day free trial.";
 
 const HOME_FAQS = [
   {
@@ -46,7 +46,12 @@ const HOME_FAQS = [
   {
     question: "Can customers call my business on WhatsApp?",
     answer:
-      "Yes. With WhatsApp calling turned on, customers can call your WhatsApp number and every agent's browser rings. The first to answer takes the call. Agents can also call customers from the chat, no phone line is needed, and calls are not recorded unless an agent switches on AI call notes, which write a summary and to-dos into the contact’s notes.",
+      "Yes. With WhatsApp calling turned on, customers can call your WhatsApp number and every agent's browser rings. The first to answer takes the call. Agents can call customers from the chat, a contact or a deal, no phone line is needed. Add a “Call Now” button to any WhatsApp template and one tap starts the call. Calls are not recorded unless AI call notes are on, which write a summary and to-dos into the contact’s notes.",
+  },
+  {
+    question: "Can AI make and answer WhatsApp calls for me?",
+    answer:
+      "Yes. Click AI call on a lead and an AI voice agent calls them on WhatsApp: it greets them by name, says it is an AI assistant, answers from your knowledge base in English, Hindi or Hinglish, and books the next step. It can also answer incoming calls your team misses. You can listen live and take over in one click, and the AI saves call notes with a summary, to-dos and follow-up after every call. Business-initiated calls need the customer's call permission, as WhatsApp requires.",
   },
   {
     question: "Does it have an AI chatbot?",
@@ -76,7 +81,7 @@ const STRUCTURED_DATA = {
       url: SITE_URL,
       description: HOME_DESCRIPTION,
       applicationCategory: "BusinessApplication",
-      operatingSystem: "Web",
+      operatingSystem: "Web, Android",
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "INR",
@@ -240,6 +245,35 @@ const UI_CALL = `
     <div class="ui-call-btns"><span class="ok">Answer</span><span class="no">Decline</span></div>
   </div>`;
 
+// AI voice agent on a WhatsApp call: live transcript, then the outcome.
+const UI_AI_CALL = `
+  <div class="ui-aicall">
+    <div class="ui-aicall-hd">
+      <div class="ui-av" style="background:#0da968">AK</div>
+      <div class="t"><b>Amit Kulkarni</b><span>WhatsApp call · 01:42</span></div>
+      <span class="ui-ai-pill">✦ AI talking</span>
+    </div>
+    <div class="ui-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="ui-thread ui-aicall-body">
+      <div class="ui-b out"><span class="who">✦ Riya · AI agent</span><br>Hi Amit, I'm Riya, an AI assistant from Spice Garden. You asked about catering. Is now a good time?</div>
+      <div class="ui-b">Haan, 50 logon ke liye kitna hoga?</div>
+      <div class="ui-b out"><span class="who">✦ Riya · AI agent</span><br>50 guests ke liye thali ₹299 per plate hai. Saturday 11 baje taste session book kar doon?</div>
+      <div class="ui-b">Haan, kar do.</div>
+      <span class="ui-paid">✓ Booked Sat 11 am · AI notes saved</span>
+    </div>
+    <div class="ui-aicall-ft"><span class="take">Take over</span><span class="end">End call</span></div>
+  </div>`;
+
+const UI_PHONE = `
+  <div class="ui-phone" aria-hidden="true">
+    <div class="ui-phone-notch"></div>
+    <div class="ui-phone-hd"><b>Calls</b><span class="ui-phone-chips"><i class="on">All</i><i>Missed</i><i>AI calls</i></span></div>
+    <div class="ui-phone-row"><div class="ui-av" style="background:#0da968">AK</div><div class="t"><div class="n">Amit Kulkarni <em>✦ AI</em></div><div class="p">Booked a taste session for Sat 11 am. Wants a quote for 50 guests.</div></div><small>2m</small></div>
+    <div class="ui-phone-row"><div class="ui-av" style="background:#e0a33a">MN</div><div class="t"><div class="n miss">Meera Naidu</div><div class="p">Missed · tap to see the chat</div></div><small>18m</small></div>
+    <div class="ui-phone-row"><div class="ui-av" style="background:#4f8fd6">JT</div><div class="t"><div class="n">Jatin Thakur <em>✦ AI</em></div><div class="p">Asked for bulk pricing. Follow up tomorrow.</div></div><small>1h</small></div>
+    <div class="ui-phone-tabs"><span>Inbox</span><span>Contacts</span><span class="on">Overview</span><span>More</span></div>
+  </div>`;
+
 const UI_CODE = `<div class="ui-code"><span class="c"># Send a WhatsApp message from your app</span>
 curl -X POST https://repeatgrow.com/api/v1/messages \\
   -H <span class="s">"Authorization: Bearer $REPEATGROW_API_KEY"</span> \\
@@ -276,9 +310,9 @@ const LANDING_BODY_HTML = `
   <div class="h-hero-bg" aria-hidden="true"></div>
   <div class="container h-hero-grid">
     <div class="h-hero-copy">
-      <a href="/blog/whatsapp-pay-upi-payments-india" class="h-badge"><span class="h-badge-new">New</span>Take UPI &amp; WhatsApp Pay payments in chat <span aria-hidden="true">&rarr;</span></a>
+      <a href="#ai-calls" class="h-badge"><span class="h-badge-new">New</span>An AI agent that calls your leads on WhatsApp <span aria-hidden="true">&rarr;</span></a>
       <h1>Turn every WhatsApp chat into a <span class="h-grad">repeat customer</span>.</h1>
-      <p class="h-sub">One shared WhatsApp inbox for your whole team, with an AI chatbot, broadcasts, payments and Shopify built in. On the official WhatsApp Business API, and we set it up for you.</p>
+      <p class="h-sub">One shared WhatsApp inbox for your whole team, with an AI chatbot, an AI voice agent for calls, broadcasts, payments and Shopify built in. On the official WhatsApp Business API, and we set it up for you.</p>
       <div class="h-ctas">
         <a href="/demo" class="btn btn-primary h-btn h-btn-glow">Book a free demo ${ICON_ARROW}</a>
         <a href="/signup" class="btn btn-ghost h-btn h-btn-ghost">Start 7-day free trial</a>
@@ -296,15 +330,17 @@ const LANDING_BODY_HTML = `
         <div class="h-stage">
           <div class="h-slide is-active" data-url="repeatgrow.com/inbox" role="group" aria-label="Shared inbox">${UI_INBOX}</div>
           <div class="h-slide" data-url="repeatgrow.com/inbox · AI chatbot" role="group" aria-label="AI chatbot">${UI_BOT}</div>
+          <div class="h-slide" data-url="repeatgrow.com/calls · AI voice agent" role="group" aria-label="AI calls">${UI_AI_CALL}</div>
           <div class="h-slide" data-url="repeatgrow.com/broadcasts" role="group" aria-label="Broadcasts">${UI_CAMPAIGN}</div>
           <div class="h-slide" data-url="repeatgrow.com/inbox · payments" role="group" aria-label="Payments">${UI_PAYMENT}</div>
         </div>
       </div>
       <div class="h-float f1" aria-hidden="true"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></span><div><b>Payment received</b><span>&#8377;2,058 · UPI</span></div></div>
-      <div class="h-float f2" aria-hidden="true"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span><div><b>Incoming WhatsApp call</b><span>Riya Shah · tap to answer</span></div></div>
+      <div class="h-float f2" aria-hidden="true"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span><div><b>AI answered a missed call</b><span>Demo booked · Sat 11 am</span></div></div>
       <div class="h-slider-nav" role="tablist" aria-label="Choose a preview">
         <button type="button" role="tab" aria-selected="true">Shared inbox</button>
         <button type="button" role="tab" aria-selected="false">AI chatbot</button>
+        <button type="button" role="tab" aria-selected="false">AI calls</button>
         <button type="button" role="tab" aria-selected="false">Broadcasts</button>
         <button type="button" role="tab" aria-selected="false">Payments</button>
       </div>
@@ -357,7 +393,7 @@ const LANDING_BODY_HTML = `
       </article>
       <article class="h-card reveal" style="--d:2">
         <div class="h-card-visual" style="height:250px">${UI_CALL}</div>
-        <div class="h-card-body"><span class="h-card-tag">Voice calls</span><h3>Customers call, every agent's browser rings</h3><p>The first to answer takes it. Call back from the chat. No phone line needed.</p></div>
+        <div class="h-card-body"><span class="h-card-tag">Voice &amp; AI calls</span><h3>Customers call, every agent's browser rings</h3><p>The first to answer takes it, and the AI picks up if nobody can. Call back from any chat. No phone line needed.</p></div>
       </article>
 
       <article class="h-card w2 reveal">
@@ -380,9 +416,25 @@ const LANDING_BODY_HTML = `
           <div class="h-card-visual">${UI_CODE}</div>
         </div>
       </article>
+
+      <article class="h-card w3 reveal">
+        <div class="h-wide">
+          <div class="h-card-body">
+            <span class="h-card-tag">Mobile app</span>
+            <h3>Your WhatsApp inbox in your pocket</h3>
+            <p>Reply to customers, get a push notification for every new message, check your calls and AI call notes, send a broadcast and move deals, all from your phone. Android app in early access for customers, iOS coming soon.</p>
+            <div class="h-int-badges"><span>Android · early access</span><span>iOS · coming soon</span><span>Push notifications</span><span>Calls &amp; AI notes</span><span>Broadcasts</span></div>
+          </div>
+          <div class="h-card-visual h-phone-wrap">${UI_PHONE}</div>
+        </div>
+      </article>
     </div>
 
     <div class="h-more reveal">
+      <span>${ICON_CHECK}AI voice agent</span>
+      <span>${ICON_CHECK}“Call Now” template button</span>
+      <span>${ICON_CHECK}AI call notes</span>
+      <span>${ICON_CHECK}Android app (early access)</span>
       <span>${ICON_CHECK}WhatsApp forms</span>
       <span>${ICON_CHECK}Carousel templates</span>
       <span>${ICON_CHECK}Scheduled broadcasts</span>
@@ -392,6 +444,35 @@ const LANDING_BODY_HTML = `
       <span>${ICON_CHECK}Team roles</span>
       <span>${ICON_CHECK}Data export &amp; deletion</span>
     </div>
+  </div>
+</section>
+
+<!-- ============================= AI VOICE AGENT ============================= -->
+<section id="ai-calls" class="h-section h-ai">
+  <div class="container">
+    <div class="h-head reveal">
+      <span class="h-eyebrow">New · AI voice agent</span>
+      <h2>An AI that <span class="h-grad">calls your leads</span> and picks up when you can't</h2>
+      <p>Leads go cold when nobody calls them back. Now the AI calls them on WhatsApp in seconds, in their language, and books the next step.</p>
+    </div>
+    <div class="h-ai-grid">
+      <ul class="h-ai-list reveal">
+        <li><span class="ico">📞</span><div><b>Calls every new lead</b><p>Click <em>AI call</em> on a contact, deal or chat. The AI greets them by name, explains your offer and books a demo, visit or order.</p></div></li>
+        <li><span class="ico">🔔</span><div><b>Answers the calls you miss</b><p>If nobody picks up in a few seconds, the AI answers incoming WhatsApp calls from your knowledge base.</p></div></li>
+        <li><span class="ico">🗣️</span><div><b>Speaks Hindi, Hinglish and English</b><p>It switches to the caller's language, says it is an AI, and only shares facts you gave it.</p></div></li>
+        <li><span class="ico">🎧</span><div><b>You stay in control</b><p>Listen live, read the conversation as it happens and take over in one click.</p></div></li>
+        <li><span class="ico">📝</span><div><b>Notes after every call</b><p>A summary, what the customer wants, to-dos and the follow-up are saved on the contact, also in the mobile app.</p></div></li>
+        <li><span class="ico">✨</span><div><b>“Call Now” in your messages</b><p>Add a WhatsApp call button to any template. One tap starts the call, and the AI is ready to talk.</p></div></li>
+      </ul>
+      <div class="h-ai-visual reveal" style="--d:1">
+        <div class="h-ai-device">${UI_AI_CALL}</div>
+      </div>
+    </div>
+    <div class="h-center reveal">
+      <a href="/demo" class="btn btn-primary h-btn">Hear the AI on a demo call ${ICON_ARROW}</a>
+      <a href="/signup" class="btn btn-ghost h-btn">Start 7-day free trial</a>
+    </div>
+    <p class="h-ai-note reveal">Calls from customers are free for you on WhatsApp. Calls you start need the customer's call permission, as WhatsApp requires, and are billed per minute by Meta.</p>
   </div>
 </section>
 
@@ -409,6 +490,7 @@ const LANDING_BODY_HTML = `
         <button type="button" class="h-tab" role="tab" id="tab-bot" aria-controls="panel-bot" aria-selected="false"><b><i>✦</i>Let AI handle the repeats</b><p>The AI chatbot answers common questions day and night, then hands over to your team when it matters.</p><span class="h-prog"></span></button>
         <button type="button" class="h-tab" role="tab" id="tab-pay" aria-controls="panel-pay" aria-selected="false"><b><i>&#8377;</i>Close the sale in chat</b><p>Send the order with a payment request. Customers pay with WhatsApp Pay or UPI without leaving WhatsApp.</p><span class="h-prog"></span></button>
         <button type="button" class="h-tab" role="tab" id="tab-camp" aria-controls="panel-camp" aria-selected="false"><b><i>📣</i>Bring them back</b><p>Broadcast offers and updates with approved templates, and see who read and replied.</p><span class="h-prog"></span></button>
+        <button type="button" class="h-tab" role="tab" id="tab-call" aria-controls="panel-call" aria-selected="false"><b><i>📞</i>Let AI make the calls</b><p>The AI voice agent calls new leads and answers missed calls, then saves notes for your team.</p><span class="h-prog"></span></button>
         <button type="button" class="h-tab" role="tab" id="tab-flow" aria-controls="panel-flow" aria-selected="false"><b><i>⚡</i>Automate the follow-up</b><p>Tag, wait and follow up automatically, so no warm lead goes cold.</p><span class="h-prog"></span></button>
       </div>
       <div class="h-panels">
@@ -417,6 +499,7 @@ const LANDING_BODY_HTML = `
           <div class="h-panel" id="panel-bot" role="tabpanel" aria-labelledby="tab-bot">${UI_BOT}</div>
           <div class="h-panel" id="panel-pay" role="tabpanel" aria-labelledby="tab-pay">${UI_PAYMENT}</div>
           <div class="h-panel" id="panel-camp" role="tabpanel" aria-labelledby="tab-camp">${UI_CAMPAIGN}</div>
+          <div class="h-panel" id="panel-call" role="tabpanel" aria-labelledby="tab-call">${UI_AI_CALL}</div>
           <div class="h-panel" id="panel-flow" role="tabpanel" aria-labelledby="tab-flow">${UI_FLOW}</div>
         </div>
       </div>
@@ -435,7 +518,7 @@ const LANDING_BODY_HTML = `
     <div class="h-steps">
       <div class="h-step reveal"><div class="n">1</div><h3>Book a free demo</h3><p>Tell us what you sell and how your team talks to customers. We show Repeat Grow on your use case.</p></div>
       <div class="h-step reveal" style="--d:1"><div class="n">2</div><h3>We set up your WhatsApp API</h3><p>Business verification, number registration and importing your contacts, done for you.</p></div>
-      <div class="h-step reveal" style="--d:2"><div class="n">3</div><h3>Your team sells on WhatsApp</h3><p>Everyone works from one inbox, with automations, broadcasts and payments ready to switch on.</p></div>
+      <div class="h-step reveal" style="--d:2"><div class="n">3</div><h3>Your team sells on WhatsApp</h3><p>Everyone works from one inbox and the mobile app, with automations, broadcasts, payments and AI calls ready to switch on.</p></div>
     </div>
   </div>
 </section>

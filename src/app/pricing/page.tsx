@@ -221,7 +221,7 @@ const PRICING_BODY_HTML = `
     <div class="usecase-grid reveal">
       <div class="usecase-card">
         <h3>Inbox &amp; calling</h3>
-        <p>Shared inbox, saved replies, voice notes, in-browser WhatsApp voice calls and coexistence with the WhatsApp Business app.</p>
+        <p>Shared inbox, saved replies, voice notes, in-browser WhatsApp voice calls, an AI voice agent that calls leads and answers missed calls, AI call notes, and coexistence with the WhatsApp Business app.</p>
       </div>
       <div class="usecase-card">
         <h3>Sales &amp; payments</h3>
