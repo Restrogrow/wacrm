@@ -119,10 +119,14 @@ export function Composer(p: Props) {
   async function pickImage(source: 'camera' | 'library') {
     setAttachOpen(false);
     try {
-      const perm = source === 'camera' ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!perm.granted) {
-        Alert.alert('Permission needed', `Allow access to your ${source === 'camera' ? 'camera' : 'photos'} in Settings to send pictures.`);
-        return;
+      // The gallery opens the system photo picker, which needs no photo
+      // permission (the app doesn't hold READ_MEDIA_IMAGES; Play policy).
+      if (source === 'camera') {
+        const perm = await ImagePicker.requestCameraPermissionsAsync();
+        if (!perm.granted) {
+          Alert.alert('Permission needed', 'Allow access to your camera in Settings to take pictures.');
+          return;
+        }
       }
       const result =
         source === 'camera'
