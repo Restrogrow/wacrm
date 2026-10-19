@@ -167,16 +167,14 @@ export function TemplateManager() {
     [form.header_format, form.header_content],
   );
 
-  // Resize body_samples so it always has exactly bodyVarCount entries.
-  // (We mutate via setForm in an effect so React owns the state.)
-  useEffect(() => {
-    setForm((prev) => {
-      if (prev.body_samples.length === bodyVarCount) return prev;
-      const next = prev.body_samples.slice(0, bodyVarCount);
-      while (next.length < bodyVarCount) next.push('');
-      return { ...prev, body_samples: next };
-    });
-  }, [bodyVarCount]);
+  // One sample per body variable, derived on every render. (An effect
+  // used to resize form.body_samples, but a form reset that kept the same
+  // variable count left it empty: the "Sample values" heading showed with
+  // no inputs, so a template couldn't be submitted with its samples.)
+  const bodySamples = useMemo(
+    () => Array.from({ length: bodyVarCount }, (_, i) => form.body_samples[i] ?? ''),
+    [bodyVarCount, form.body_samples],
+  );
 
   useEffect(() => {
     if (authLoading) return;
@@ -208,8 +206,8 @@ export function TemplateManager() {
 
   function buildSubmitPayload() {
     const sample_values: TemplateSampleValues = {};
-    if (form.body_samples.some((v) => v.trim())) {
-      sample_values.body = form.body_samples.map((v) => v.trim());
+    if (bodySamples.some((v) => v.trim())) {
+      sample_values.body = bodySamples.map((v) => v.trim());
     }
     if (form.header_format === 'text' && form.header_sample.trim()) {
       sample_values.header = [form.header_sample.trim()];
@@ -1012,7 +1010,7 @@ export function TemplateManager() {
                   <Label className="text-[11px] text-muted-foreground">
                     Sample values (Meta uses these to review your template)
                   </Label>
-                  {form.body_samples.map((val, i) => {
+                  {bodySamples.map((val, i) => {
                     const inputId = `template-body-sample-${i}`;
                     return (
                       <Input
@@ -1022,7 +1020,7 @@ export function TemplateManager() {
                         placeholder={`Sample for {{${i + 1}}}`}
                         value={val}
                         onChange={(e) => {
-                          const next = [...form.body_samples];
+                          const next = [...bodySamples];
                           next[i] = e.target.value;
                           setForm({ ...form, body_samples: next });
                         }}
