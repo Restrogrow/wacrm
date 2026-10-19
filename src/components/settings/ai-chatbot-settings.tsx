@@ -323,10 +323,10 @@ export function AiChatbotSettings() {
               <SectionTitle
                 icon={PhoneCall}
                 title="AI calls"
-                subtitle="What the AI agent says when you click AI call on a lead. It uses the knowledge base and name above."
+                subtitle="The AI voice agent for WhatsApp calls: calls you start with AI call, and incoming calls if you switch that on. It uses the knowledge base and name above."
               />
               <Field
-                label="Call goal and script"
+                label="Call goal and script (calls you start)"
                 hint="The AI says it is an AI assistant, may hang up when the call is done, and asks you to take over when the customer wants a person. AI calls are capped at 10 minutes."
               >
                 <Textarea
@@ -338,6 +338,51 @@ export function AiChatbotSettings() {
                   disabled={readOnly}
                 />
               </Field>
+              <div className="space-y-4 rounded-2xl border border-border p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">AI answers incoming calls</p>
+                    <p className="text-xs text-muted-foreground">
+                      When a customer calls and nobody picks up, the AI answers. It only works while someone has this
+                      dashboard open in a browser (for example the counter computer); click the page once after opening
+                      it so the AI can speak.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.voice_inbound_enabled}
+                    onCheckedChange={(checked) => update({ voice_inbound_enabled: checked })}
+                    disabled={readOnly}
+                    aria-label="AI answers incoming calls"
+                  />
+                </div>
+                {settings.voice_inbound_enabled && (
+                  <div className="grid gap-4 sm:grid-cols-[minmax(0,200px)_minmax(0,1fr)]">
+                    <Field label="Ring for your team first (seconds)">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={30}
+                        value={settings.voice_inbound_delay_seconds}
+                        onChange={(e) => update({ voice_inbound_delay_seconds: Number(e.target.value) })}
+                        disabled={readOnly}
+                      />
+                    </Field>
+                    <Field
+                      label="What the AI should do on incoming calls"
+                      hint="Empty: answer questions from the knowledge base and take a message for the team."
+                    >
+                      <Textarea
+                        value={settings.voice_inbound_instructions}
+                        onChange={(e) => update({ voice_inbound_instructions: e.target.value })}
+                        placeholder={'e.g. Answer questions about plans and prices. If they want a demo, take their name, restaurant name and a good time, and say the team will confirm on WhatsApp.'}
+                        maxLength={VOICE_INSTRUCTIONS_MAX}
+                        rows={4}
+                        disabled={readOnly}
+                      />
+                    </Field>
+                  </div>
+                )}
+              </div>
               <div className="grid gap-2 sm:max-w-xs">
                 <Label className="text-sm">Voice</Label>
                 <select

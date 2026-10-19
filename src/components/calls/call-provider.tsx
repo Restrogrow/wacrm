@@ -15,6 +15,11 @@
 // the call carries the voice of a Gemini Live agent run in this browser
 // (lib/calls/live-agent.ts). The agent hears both sides and can take
 // over, which switches the call to their mic. AI notes record by default.
+//
+// AI answers incoming calls (Settings → AI chatbot → AI calls, migration
+// 081): when on, a ringing call that nobody picks up within the set delay
+// is answered by this tab with the AI (answer with { ai: true }; the
+// server lets only one tab win). Needs a dashboard tab open.
 // ============================================================
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -91,7 +96,9 @@ interface CallContextValue {
   startCall: (conversationId: string, label: string, opts?: { ai?: boolean }) => Promise<StartCallResult>;
   /** AI calls: stop the AI and talk to the customer yourself. */
   takeOver: () => Promise<void>;
-  answer: () => Promise<void>;
+  answer: (opts?: { ai?: boolean }) => Promise<void>;
+  /** When the AI will pick up the ringing call (ms timestamp), if it will. */
+  aiAnswerAt: number | null;
   decline: () => Promise<void>;
   hangup: () => Promise<void>;
   toggleMute: () => void;
@@ -145,6 +152,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState<ActiveCall | null>(null);
   const [muted, setMuted] = useState(false);
   const [aiNotes, setAiNotes] = useState<AiNotesState>('off');
+  // When the AI will pick up a ringing call, keyed to that call.
+  const [aiAnswer, setAiAnswer] = useState<{ callId: string; at: number } | null>(null);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const micRef = useRef<MediaStream | null>(null);
@@ -177,6 +186,20 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
   const supported = useMemo(() => isCallingSupported(), []);
   const enabled = supported && !!user && canSendMessages;
+
+  // AI calls: the AI's voice goes to the call and to this computer's
+  // speakers. Returns the stream to send on the call.
+  const setupAiAudio = useCallback((): MediaStream => {
+    const ctx = new AudioContext();
+    const dest = ctx.createMediaStreamDestination();
+    const out = ctx.createGain();
+    out.connect(dest);
+    out.connect(ctx.destination);
+    aiCtxRef.current = ctx;
+    aiSendRef.current = dest;
+    aiOutRef.current = out;
+    return dest.stream;
+  }, []);
 
   const stopRinging = useCallback(() => {
     ringRef.current?.stop();
@@ -362,33 +385,74 @@ export function CallProvider({ children }: { children: ReactNode }) {
   }, [stopRinging, cleanupMedia]);
 
   // ---- Actions ----
-  const answer = useCallback(async () => {
-    const call = incomingRef.current;
-    if (!call?.sdp_offer) return;
-    stopRinging();
-    setIncoming(null);
-    setActive({
-      rowId: call.id,
-      direction: 'inbound',
-      phase: 'connecting',
-      label: labelFor(call),
-      conversationId: call.conversation_id,
-      connectedAt: null,
-    });
-    try {
-      const mic = await getMicrophone();
-      micRef.current = mic;
-      sendStreamRef.current = mic;
-      const pc = createPeer(mic, onRemoteStream, () => endLocally('The call connection was lost.'));
-      pcRef.current = pc;
-      const sdp = await createAnswerSdp(pc, call.sdp_offer);
-      await postAction(call.id, { action: 'answer', sdp });
-      setActive((cur) => (cur?.rowId === call.id ? { ...cur, phase: 'connected', connectedAt: Date.now() } : cur));
-    } catch (err) {
-      endLocally();
-      toast.error(err instanceof Error ? err.message : 'Could not answer the call.');
-    }
-  }, [endLocally, onRemoteStream, stopRinging]);
+  const answer = useCallback(
+    async (opts?: { ai?: boolean }) => {
+      const call = incomingRef.current;
+      if (!call?.sdp_offer) return;
+      const ai = opts?.ai === true;
+      stopRinging();
+      setIncoming(null);
+      setActive({
+        rowId: call.id,
+        direction: 'inbound',
+        phase: 'connecting',
+        label: labelFor(call),
+        conversationId: call.conversation_id,
+        connectedAt: null,
+        ...(ai ? { ai: { mode: 'ai', state: 'connecting', handoff: null, lines: [] } } : {}),
+      });
+      try {
+        let send: MediaStream;
+        if (ai) {
+          send = setupAiAudio();
+        } else {
+          send = await getMicrophone();
+          micRef.current = send;
+        }
+        sendStreamRef.current = send;
+        const pc = createPeer(send, onRemoteStream, () => endLocally('The call connection was lost.'));
+        pcRef.current = pc;
+        const sdp = await createAnswerSdp(pc, call.sdp_offer);
+        await postAction(call.id, { action: 'answer', sdp, ...(ai ? { ai: true } : {}) });
+        setActive((cur) => (cur?.rowId === call.id ? { ...cur, phase: 'connected', connectedAt: Date.now() } : cur));
+      } catch (err) {
+        endLocally();
+        // Another tab (or a person) got there first: nothing to report.
+        if (ai && err instanceof Error && /someone else answered/i.test(err.message)) return;
+        toast.error(err instanceof Error ? err.message : 'Could not answer the call.');
+      }
+    },
+    [endLocally, onRemoteStream, setupAiAudio, stopRinging],
+  );
+
+  // AI answers incoming calls nobody picked up (if switched on). Every
+  // open tab schedules it; a small random delay spreads them out and the
+  // server lets only the first one claim the call.
+  const incomingId = incoming?.id;
+  useEffect(() => {
+    if (!incomingId) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    void (async () => {
+      const res = await fetch('/api/ai-chatbot').catch(() => null);
+      const json = res?.ok ? await res.json().catch(() => null) : null;
+      const s = json?.settings as { voice_inbound_enabled?: boolean; voice_inbound_delay_seconds?: number } | undefined;
+      if (cancelled || !s?.voice_inbound_enabled || json?.ai_configured === false) return;
+      const created = incomingRef.current ? new Date(incomingRef.current.created_at).getTime() : Date.now();
+      const at = created + Math.max(0, Number(s.voice_inbound_delay_seconds ?? 8)) * 1000;
+      setAiAnswer({ callId: incomingId, at });
+      timer = setTimeout(
+        () => {
+          if (incomingRef.current?.id === incomingId && !activeRef.current) void answer({ ai: true });
+        },
+        Math.max(0, at - Date.now()) + Math.random() * 1500,
+      );
+    })();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [incomingId, answer]);
 
   const decline = useCallback(async () => {
     const call = incomingRef.current;
@@ -433,16 +497,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
       try {
         let send: MediaStream;
         if (ai) {
-          // The AI's voice goes to the call and to this computer's speakers.
-          const ctx = new AudioContext();
-          const dest = ctx.createMediaStreamDestination();
-          const out = ctx.createGain();
-          out.connect(dest);
-          out.connect(ctx.destination);
-          aiCtxRef.current = ctx;
-          aiSendRef.current = dest;
-          aiOutRef.current = out;
-          send = dest.stream;
+          send = setupAiAudio();
         } else {
           send = await getMicrophone();
           micRef.current = send;
@@ -490,7 +545,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         return { ok: false, error: err instanceof Error ? err.message : 'Could not place the call.' };
       }
     },
-    [endLocally, onRemoteStream, supported],
+    [endLocally, onRemoteStream, setupAiAudio, supported],
   );
 
   const toggleMute = useCallback(() => {
@@ -568,7 +623,15 @@ export function CallProvider({ children }: { children: ReactNode }) {
       const remote = remoteStreamRef.current;
       try {
         if (!ctx || !out || !remote) throw new Error('The call audio is not ready.');
-        await ctx.resume();
+        await ctx.resume().catch(() => {});
+        if (ctx.state !== 'running') {
+          // The browser blocks sound until the page is clicked once (an
+          // incoming call answered by the AI with nobody at the screen).
+          toast.warning('Click anywhere on this page so the AI can speak.', { duration: 30000 });
+          const unlock = () => void ctx.resume().catch(() => {});
+          document.addEventListener('pointerdown', unlock, { once: true });
+          document.addEventListener('keydown', unlock, { once: true });
+        }
         const res = await fetch(`/api/whatsapp/calls/${rowId}/ai-session`, { method: 'POST' });
         const json = await res.json().catch(() => null);
         if (!res.ok) throw new Error(json?.error ?? 'Could not start the AI agent.');
@@ -644,6 +707,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
     }
   }, [updateAi]);
 
+  const aiAnswerAt = incoming && aiAnswer?.callId === incoming.id ? aiAnswer.at : null;
+
   const value = useMemo<CallContextValue>(
     () => ({
       supported,
@@ -653,13 +718,28 @@ export function CallProvider({ children }: { children: ReactNode }) {
       startCall,
       takeOver,
       answer,
+      aiAnswerAt,
       decline,
       hangup,
       toggleMute,
       aiNotes,
       startAiNotes,
     }),
-    [supported, incoming, active, muted, startCall, takeOver, answer, decline, hangup, toggleMute, aiNotes, startAiNotes],
+    [
+      supported,
+      incoming,
+      active,
+      muted,
+      startCall,
+      takeOver,
+      answer,
+      aiAnswerAt,
+      decline,
+      hangup,
+      toggleMute,
+      aiNotes,
+      startAiNotes,
+    ],
   );
 
   return (

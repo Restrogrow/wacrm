@@ -124,10 +124,10 @@ export class LiveAgent {
     if (msg.setupComplete !== undefined && !this.ready) {
       this.ready = true
       this.startCapture()
-      // The customer has picked up: the AI speaks first.
+      // The call is connected: the AI speaks first.
       this.send({
         clientContent: {
-          turns: [{ role: 'user', parts: [{ text: '(The customer has picked up the call. Greet them now.)' }] }],
+          turns: [{ role: 'user', parts: [{ text: '(The call is connected. Greet the customer now.)' }] }],
           turnComplete: true,
         },
       })

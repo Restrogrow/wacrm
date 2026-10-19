@@ -4,7 +4,10 @@
 //   { action: 'answer', sdp }  inbound, ringing: the first agent to
 //                              answer claims it (others get 409), then
 //                              pre_accept + accept with the browser's
-//                              SDP answer.
+//                              SDP answer. With ai: true the browser
+//                              answers with the AI agent (migration 081):
+//                              counts against the daily AI-call quota and
+//                              marks the call ai_agent.
 //   { action: 'reject' }       inbound, ringing: decline.
 //   { action: 'hangup' }       end a call in progress (terminate).
 // ============================================================
@@ -14,6 +17,8 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { callAction, loadCallingConfig } from '@/lib/whatsapp/calling'
 import { callingErrorResponse, requireCallingAgent } from '@/lib/whatsapp/calling-server'
+import { aiApiKey, AI_NOT_CONFIGURED } from '@/lib/ai/gemini'
+import { consumeAiQuota } from '@/lib/ai/quota'
 
 const FINISHED = ['ended', 'missed', 'rejected', 'failed']
 
@@ -21,7 +26,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const ctx = await requireCallingAgent()
     const { id } = await params
-    const body = (await request.json().catch(() => null)) as { action?: unknown; sdp?: unknown } | null
+    const body = (await request.json().catch(() => null)) as { action?: unknown; sdp?: unknown; ai?: unknown } | null
     const action = body?.action
 
     const db = supabaseAdmin()
@@ -42,16 +47,32 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }
       if (call.direction !== 'inbound') return NextResponse.json({ error: 'Not an incoming call' }, { status: 400 })
 
+      const ai = body?.ai === true
+      if (ai && !aiApiKey()) return NextResponse.json({ error: AI_NOT_CONFIGURED }, { status: 503 })
+
       // Claim: only one agent can pick up.
       const { data: claimed } = await db
         .from('whatsapp_calls')
-        .update({ status: 'answering', answered_by: ctx.userId })
+        .update({ status: 'answering', answered_by: ctx.userId, ...(ai ? { ai_agent: true } : {}) })
         .eq('id', call.id)
         .eq('status', 'ringing')
         .select('id')
         .maybeSingle()
       if (!claimed) {
         return NextResponse.json({ error: 'Someone else answered, or the call ended.' }, { status: 409 })
+      }
+      // AI quota is counted only by the tab that won the claim; over the
+      // limit, put the call back to ringing so a person can still pick up.
+      if (ai) {
+        const quota = await consumeAiQuota(ctx.accountId, 'voice_call')
+        if (!quota.allowed) {
+          await db
+            .from('whatsapp_calls')
+            .update({ status: 'ringing', answered_by: null, ai_agent: false })
+            .eq('id', call.id)
+            .eq('status', 'answering')
+          return NextResponse.json({ error: quota.message }, { status: 429 })
+        }
       }
 
       try {

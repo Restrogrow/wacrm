@@ -24,6 +24,12 @@ export interface ChatbotSettings {
   voice_instructions: string;
   /** Gemini Live voice; '' = Google's default. */
   voice_name: string;
+  /** AI answers incoming calls nobody picked up (migration 081). */
+  voice_inbound_enabled: boolean;
+  /** Seconds the call rings for the team before the AI answers. */
+  voice_inbound_delay_seconds: number;
+  /** What the AI should do on incoming calls. */
+  voice_inbound_instructions: string;
 }
 
 export const DEFAULT_CHATBOT_SETTINGS: ChatbotSettings = {
@@ -35,6 +41,9 @@ export const DEFAULT_CHATBOT_SETTINGS: ChatbotSettings = {
   pause_minutes_after_agent: 30,
   voice_instructions: "",
   voice_name: "",
+  voice_inbound_enabled: false,
+  voice_inbound_delay_seconds: 8,
+  voice_inbound_instructions: "",
 };
 
 export const KNOWLEDGE_BASE_MAX = 20000;
@@ -320,6 +329,7 @@ export function normalizeChatbotSettings(raw: Record<string, unknown> | null | u
   const str = (v: unknown, fallback: string, max: number) =>
     typeof v === "string" ? v.slice(0, max) : fallback;
   const pause = Number(r.pause_minutes_after_agent);
+  const delay = Number(r.voice_inbound_delay_seconds ?? DEFAULT_CHATBOT_SETTINGS.voice_inbound_delay_seconds);
   return {
     enabled: r.enabled === true,
     bot_name: str(r.bot_name, DEFAULT_CHATBOT_SETTINGS.bot_name, 60).trim() || "Assistant",
@@ -333,5 +343,10 @@ export function normalizeChatbotSettings(raw: Record<string, unknown> | null | u
       : DEFAULT_CHATBOT_SETTINGS.pause_minutes_after_agent,
     voice_instructions: str(r.voice_instructions, "", VOICE_INSTRUCTIONS_MAX),
     voice_name: (VOICE_NAMES as readonly string[]).includes(r.voice_name as string) ? (r.voice_name as string) : "",
+    voice_inbound_enabled: r.voice_inbound_enabled === true,
+    voice_inbound_delay_seconds: Number.isFinite(delay)
+      ? Math.min(30, Math.max(0, Math.round(delay)))
+      : DEFAULT_CHATBOT_SETTINGS.voice_inbound_delay_seconds,
+    voice_inbound_instructions: str(r.voice_inbound_instructions, "", VOICE_INSTRUCTIONS_MAX),
   };
 }

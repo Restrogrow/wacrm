@@ -17,6 +17,21 @@ const AI_STATE_TEXT: Record<AiCallState['state'], string> = {
   speaking: 'AI is speaking',
 };
 
+function AiAnswerCountdown({ at }: { at: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(t);
+  }, []);
+  const left = Math.ceil((at - now) / 1000);
+  return (
+    <p className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-primary">
+      <Bot className="size-3" />
+      {left > 0 ? `AI answers in ${left}s unless you pick up` : 'AI is answering…'}
+    </p>
+  );
+}
+
 function AiPanel({ ai, onTakeOver }: { ai: AiCallState; onTakeOver: () => void }) {
   if (ai.mode === 'human') {
     return <p className="mt-3 text-xs text-muted-foreground">You took over from the AI. Your mic is on the call.</p>;
@@ -86,7 +101,8 @@ function Avatar({ label, pulse }: { label: string; pulse?: boolean }) {
 }
 
 export function CallOverlay() {
-  const { incoming, active, muted, answer, decline, hangup, toggleMute, aiNotes, startAiNotes, takeOver } = useCalls();
+  const { incoming, active, muted, answer, decline, hangup, toggleMute, aiNotes, startAiNotes, takeOver, aiAnswerAt } =
+    useCalls();
 
   if (!incoming && !active) return null;
 
@@ -204,6 +220,7 @@ export function CallOverlay() {
           {call.customer_name && call.customer_number && (
             <p className="text-xs text-muted-foreground">+{call.customer_number}</p>
           )}
+          {aiAnswerAt && <AiAnswerCountdown at={aiAnswerAt} />}
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">

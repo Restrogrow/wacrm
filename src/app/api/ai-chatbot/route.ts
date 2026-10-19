@@ -68,19 +68,32 @@ export async function PUT(request: Request) {
         .select()
         .single()
     let { data, error } = await upsert({ ...settings })
-    // Migration 080 not run yet: save the chatbot without the voice-call
-    // fields rather than failing the whole form.
-    if (error && /voice_(instructions|name)/.test(error.message ?? '')) {
-      if (settings.voice_instructions || settings.voice_name) {
+    // Migrations 080 / 081 not run yet: save the chatbot without the
+    // voice-call fields rather than failing the whole form.
+    if (error && /voice_/.test(error.message ?? '')) {
+      if (
+        settings.voice_instructions ||
+        settings.voice_name ||
+        settings.voice_inbound_enabled ||
+        settings.voice_inbound_instructions
+      ) {
         return NextResponse.json(
           {
-            error: 'AI calls are not set up yet. Run supabase/migrations/080_ai_voice_calls.sql in the Supabase SQL editor.',
+            error:
+              'AI calls are not set up yet. Run supabase/migrations/080_ai_voice_calls.sql and 081_ai_inbound_calls.sql in the Supabase SQL editor.',
             code: 'missing_voice_columns',
           },
           { status: 503 },
         )
       }
-      const { voice_instructions: _vi, voice_name: _vn, ...chatbotOnly } = settings
+      const {
+        voice_instructions: _vi,
+        voice_name: _vn,
+        voice_inbound_enabled: _ve,
+        voice_inbound_delay_seconds: _vd,
+        voice_inbound_instructions: _vii,
+        ...chatbotOnly
+      } = settings
       ;({ data, error } = await upsert(chatbotOnly))
     }
     if (isMissingTable(error)) return MISSING

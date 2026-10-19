@@ -36,12 +36,14 @@ export function liveModel(): string {
 }
 
 export interface VoiceAgentContext {
+  /** outbound: we called them; inbound: they called and the AI answered. */
+  direction: 'outbound' | 'inbound'
   businessName: string
   botName: string
   knowledgeBase: string
   /** Chatbot "rules & tone". */
   instructions: string
-  /** The goal and script for calls. */
+  /** The goal and script for this kind of call (outbound or inbound). */
   voiceInstructions: string
   customerName: string | null
   now: Date
@@ -60,15 +62,23 @@ export function buildVoiceAgentPrompt(c: VoiceAgentContext): string {
     hour: 'numeric',
     minute: '2-digit',
   })
+  const inbound = c.direction === 'inbound'
   const goal =
     c.voiceInstructions.trim() ||
-    'Follow up on their enquiry: find out what they need, answer their questions from the business information, and agree on a clear next step.'
+    (inbound
+      ? 'Help the caller: find out what they need and answer their questions from the business information. If they want to order, book or need something you cannot do, take their name and what they need, and tell them the team will follow up on WhatsApp shortly.'
+      : 'Follow up on their enquiry: find out what they need, answer their questions from the business information, and agree on a clear next step.')
+  const byName = c.customerName ? ` by name (${c.customerName})` : ''
 
   return [
-    `You are ${name}, an AI voice assistant calling a customer on WhatsApp on behalf of ${business}. You placed this call; the customer has just picked up.`,
+    inbound
+      ? `You are ${name}, an AI voice assistant answering a WhatsApp call to ${business}. The customer called the business and nobody from the team could pick up, so you answered.`
+      : `You are ${name}, an AI voice assistant calling a customer on WhatsApp on behalf of ${business}. You placed this call; the customer has just picked up.`,
     '',
     '# How to talk',
-    `- Start by greeting the customer${c.customerName ? ` by name (${c.customerName})` : ''}, say you are an AI assistant from ${business}, why you are calling, and that the call may be recorded for notes. Then ask if it is a good time.`,
+    inbound
+      ? `- Start by greeting the caller${byName}: thank them for calling ${business}, say you are an AI assistant, that the call may be recorded for notes, and ask how you can help.`
+      : `- Start by greeting the customer${byName}, say you are an AI assistant from ${business}, why you are calling, and that the call may be recorded for notes. Then ask if it is a good time.`,
     '- This is a phone call: short, natural sentences, one question at a time. Never read out lists, links, symbols or formatting.',
     '- Start in English. If the customer speaks Hindi, Hinglish or another language, switch to it and keep using it.',
     '- Be warm, polite and brief. Let the customer finish; if they interrupt, stop and listen.',

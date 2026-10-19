@@ -102,6 +102,14 @@
   a single-use token (`POST /api/whatsapp/calls/[id]/ai-session`). Daily
   AI-call limit per plan (`voice_call` in `lib/ai/quota.ts`). Needs
   migration 080; the agent's tab must stay open during the call.
+  **Incoming calls too** (migration 081): switch on *AI answers incoming
+  calls* in the same card. A call rings for the team first (8 s by
+  default, the card shows "AI answers in Ns"); if nobody picks up, an
+  open dashboard tab answers with the AI using its own incoming-call
+  script. Every open tab tries; the server lets only one claim the call,
+  and the AI-call quota is counted only by the winner. Only works while a
+  dashboard tab is open, and the page must have been clicked once so the
+  browser allows sound.
 - **AI call notes** (✦ button on a connected call): records both sides in
   the agent's browser (Ogg/Opus, opt-in per call, with an on-screen
   reminder to tell the customer). When the call ends the recording is sent
@@ -852,6 +860,7 @@ is idempotent where possible. Recent ones:
 | `076_products_catalog` | Product library (`products`) and the `catalog-media` image bucket |
 | `077_catalog_collections_stock` | Collections, stock ledger, stock trigger on paid orders, optional WooCommerce REST keys |
 | `080_ai_voice_calls` | AI calls: call script and voice on `ai_chatbot_settings`, `whatsapp_calls.ai_agent` |
+| `081_ai_inbound_calls` | AI answers incoming calls: switch, ring delay and incoming-call script on `ai_chatbot_settings` |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 

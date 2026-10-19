@@ -16,6 +16,7 @@ afterEach(() => {
 })
 
 const base = {
+  direction: 'outbound' as const,
   businessName: 'Taste of Banaras',
   botName: 'Riya',
   knowledgeBase: 'Thali ₹299. Open 11am-11pm.',
@@ -52,6 +53,21 @@ describe('buildVoiceAgentPrompt', () => {
     expect(p).toContain('Do not state any business facts')
     expect(p).not.toContain('# Business rules and tone')
     expect(p).not.toContain('by name')
+  })
+})
+
+describe('buildVoiceAgentPrompt (incoming calls)', () => {
+  it('answers as the business and uses the inbound script', () => {
+    const p = buildVoiceAgentPrompt({ ...base, direction: 'inbound', voiceInstructions: 'Take table bookings.' })
+    expect(p).toContain('answering a WhatsApp call to Taste of Banaras')
+    expect(p).toContain('thank them for calling Taste of Banaras')
+    expect(p).toContain('Take table bookings.')
+    expect(p).not.toContain('You placed this call')
+  })
+
+  it('has its own default goal', () => {
+    const p = buildVoiceAgentPrompt({ ...base, direction: 'inbound', voiceInstructions: '' })
+    expect(p).toContain('Help the caller')
   })
 })
 

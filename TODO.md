@@ -73,8 +73,9 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 - [ ] **#41e AI calls: test live.** Run migration 080, then place a real
       AI call: greeting, Hindi switch, interruptions, take over, hang-up,
       AI notes. Check the Gemini Live model id and voice names still work.
-      Later: run the agent server-side (VPS) so the tab needn't stay
-      open, AI on inbound calls, bulk AI call campaigns.
+      AI on incoming calls added 2026-10-20 (migration 081, browser tab
+      must be open). Later: run the agent server-side (VPS) so no tab
+      needs to stay open, bulk AI call campaigns.
 - [ ] **#42 Usernames / BSUID follow-ups.** Core support shipped
       (migration 038: contacts store `whatsapp_user_id`; sends fall back
       to the BSUID via `recipient`). Still to do: broadcasts to

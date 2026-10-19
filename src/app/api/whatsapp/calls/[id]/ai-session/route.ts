@@ -7,8 +7,9 @@
 // `token` is a single-use Gemini Live token (open the session within a
 // minute); `setup` is the first WebSocket message, with the prompt built
 // from Settings → AI chatbot (knowledge base, name, rules) and the call
-// script. Only the agent who placed the call, and only for a call
-// started with { ai: true } that hasn't ended.
+// script. Only the agent who placed the call (outbound, started with
+// { ai: true }) or whose browser answered it with the AI (inbound,
+// answer with { ai: true }), and only while the call is going.
 // ============================================================
 
 import { NextResponse } from 'next/server'
@@ -42,12 +43,14 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     const db = supabaseAdmin()
     const { data: call } = await db
       .from('whatsapp_calls')
-      .select('id, status, started_by, ai_agent, customer_name, contact_id')
+      .select('id, direction, status, started_by, answered_by, ai_agent, customer_name, contact_id')
       .eq('id', id)
       .eq('account_id', ctx.accountId)
       .maybeSingle()
     if (!call) return NextResponse.json({ error: 'Call not found' }, { status: 404 })
-    if (!call.ai_agent || call.started_by !== ctx.userId) {
+    const inbound = call.direction === 'inbound'
+    const owner = inbound ? call.answered_by : call.started_by
+    if (!call.ai_agent || owner !== ctx.userId) {
       return NextResponse.json({ error: 'This call was not started as an AI call by you.' }, { status: 403 })
     }
     if (FINISHED.includes(call.status as string)) {
@@ -61,11 +64,12 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     const settings = normalizeChatbotSettings(settingsRow)
 
     const prompt = buildVoiceAgentPrompt({
+      direction: inbound ? 'inbound' : 'outbound',
       businessName: (account?.name as string | undefined) ?? '',
       botName: settings.bot_name,
       knowledgeBase: settings.knowledge_base,
       instructions: settings.instructions,
-      voiceInstructions: settings.voice_instructions,
+      voiceInstructions: inbound ? settings.voice_inbound_instructions : settings.voice_instructions,
       customerName: (call.customer_name as string | null) ?? null,
       now: new Date(),
     })
