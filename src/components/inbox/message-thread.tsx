@@ -1033,6 +1033,11 @@ export function MessageThread({
             conversationId={conversation.id}
             label={contact?.name || (contact?.phone ? `+${contact.phone.replace(/^\+/, "")}` : "Customer")}
           />
+          <CallButton
+            conversationId={conversation.id}
+            label={contact?.name || (contact?.phone ? `+${contact.phone.replace(/^\+/, "")}` : "Customer")}
+            ai
+          />
 
           {/* Manual refresh — forces a refetch of the messages + the
               conversation list (the parent bumps its resyncToken). Useful

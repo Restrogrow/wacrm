@@ -1,7 +1,9 @@
 // ============================================================
 // /api/whatsapp/calls/permission — can we call this customer?
 //
-//   GET  ?conversation_id=  → { status, expires_at, can_call, can_request }
+//   GET  ?conversation_id= | ?contact_id=
+//        → { conversation_id, status, expires_at, can_call, can_request }
+//        (contact_id find-or-creates the lead's conversation)
 //   POST { conversation_id, text? } → sends a call permission request
 //        (the customer taps Allow / Don't allow in WhatsApp). Needs an
 //        open 24-hour window; Meta allows 1 request a day, 2 a week.
@@ -17,18 +19,30 @@ import {
   loadCallingConfig,
   sendCallPermissionRequest,
 } from '@/lib/whatsapp/calling'
-import { callingErrorResponse, customerForConversation, requireCallingAgent } from '@/lib/whatsapp/calling-server'
+import {
+  callingErrorResponse,
+  customerForContact,
+  customerForConversation,
+  requireCallingAgent,
+} from '@/lib/whatsapp/calling-server'
 
 export async function GET(request: Request) {
   try {
     const ctx = await requireCallingAgent()
-    const conversationId = new URL(request.url).searchParams.get('conversation_id')
-    if (!conversationId) return NextResponse.json({ error: 'conversation_id is required' }, { status: 400 })
+    const params = new URL(request.url).searchParams
+    const conversationId = params.get('conversation_id')
+    const contactId = params.get('contact_id')
+    if (!conversationId && !contactId) {
+      return NextResponse.json({ error: 'conversation_id or contact_id is required' }, { status: 400 })
+    }
 
-    const customer = await customerForConversation(ctx.accountId, conversationId)
+    const customer = conversationId
+      ? await customerForConversation(ctx.accountId, conversationId)
+      : await customerForContact(ctx, contactId!)
     const cfg = await loadCallingConfig(supabaseAdmin(), ctx.accountId)
     const p = await getCallPermission(cfg, customer.phone)
     return NextResponse.json({
+      conversation_id: customer.conversationId,
       status: p.status,
       expires_at: p.expiresAt,
       can_call: p.canCall,

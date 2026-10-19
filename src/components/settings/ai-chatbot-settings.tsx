@@ -7,6 +7,8 @@
 // (lib/ai-chatbot). Any member can read; admin+ can edit and turn it
 // on. The "Test the bot" chat runs against the UNSAVED form so admins
 // can tune answers before going live — nothing is sent to WhatsApp.
+// The "AI calls" card sets what the AI voice agent says on AI calls
+// (lib/ai/voice-agent.ts); it uses the same knowledge base and name.
 // ============================================================
 
 import { IconChip } from '@/components/icon-chip';
@@ -18,6 +20,7 @@ import {
   Check,
   Lightbulb,
   Loader2,
+  PhoneCall,
   RotateCcw,
   Save,
   Send,
@@ -39,6 +42,8 @@ import {
   DEFAULT_CHATBOT_SETTINGS,
   INSTRUCTIONS_MAX,
   KNOWLEDGE_BASE_MAX,
+  VOICE_INSTRUCTIONS_MAX,
+  VOICE_NAMES,
   type ChatbotSettings,
 } from '@/lib/ai-chatbot/chatbot';
 import { SettingsPanelHead } from './settings-panel-head';
@@ -53,6 +58,14 @@ Order online: https://tasteofbanaras.in
 Tiffin plans: Daily / Weekly / Monthly — details on the website.
 Catering: 50+ meals, book 2 days ahead, call the team for a quote.
 FAQ: Jain food available on request. No onion-garlic option for thali.`;
+
+const VOICE_PLACEHOLDER = `What should the AI do on calls? For example:
+
+You are calling people who asked about our tiffin plans on WhatsApp.
+1. Ask which plan they are interested in (daily, weekly or monthly).
+2. Answer questions about the menu and prices.
+3. If they are interested, offer to send the order link on WhatsApp.
+Speak in Hinglish if they reply in Hindi.`;
 
 type ChatTurn = { role: 'user' | 'assistant'; content: string; handoff?: boolean };
 
@@ -300,6 +313,45 @@ export function AiChatbotSettings() {
                     disabled={readOnly}
                   />
                 </Field>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* AI calls */}
+          <Card>
+            <CardContent className="space-y-4">
+              <SectionTitle
+                icon={PhoneCall}
+                title="AI calls"
+                subtitle="What the AI agent says when you click AI call on a lead. It uses the knowledge base and name above."
+              />
+              <Field
+                label="Call goal and script"
+                hint="The AI says it is an AI assistant, may hang up when the call is done, and asks you to take over when the customer wants a person. AI calls are capped at 10 minutes."
+              >
+                <Textarea
+                  value={settings.voice_instructions}
+                  onChange={(e) => update({ voice_instructions: e.target.value })}
+                  placeholder={VOICE_PLACEHOLDER}
+                  maxLength={VOICE_INSTRUCTIONS_MAX}
+                  rows={7}
+                  disabled={readOnly}
+                />
+              </Field>
+              <div className="grid gap-2 sm:max-w-xs">
+                <Label className="text-sm">Voice</Label>
+                <select
+                  value={settings.voice_name}
+                  onChange={(e) => update({ voice_name: e.target.value })}
+                  disabled={readOnly}
+                  className="h-11 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground shadow-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {VOICE_NAMES.map((v) => (
+                    <option key={v} value={v}>
+                      {v || 'Default voice'}
+                    </option>
+                  ))}
+                </select>
               </div>
             </CardContent>
           </Card>

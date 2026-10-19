@@ -3,6 +3,7 @@
 import type { Deal, PipelineStage } from "@/types";
 import { Calendar, Check, X } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
+import { CallButton } from "@/components/calls/call-button";
 
 interface DealCardProps {
   deal: Deal;
@@ -30,6 +31,7 @@ export function DealCard({ deal, stage, onEdit, isOverlay }: DealCardProps) {
   const assigneeLabel = deal.assignee?.full_name || null;
 
   return (
+    <div className="relative">
     <button
       type="button"
       onClick={(e) => {
@@ -90,16 +92,35 @@ export function DealCard({ deal, stage, onEdit, isOverlay }: DealCardProps) {
         )}
       </div>
 
-      {assigneeLabel && (
-        <div className="mt-2 flex items-center justify-end">
+      {/* h-7 leaves room for the call button, which sits over this row. */}
+      {(assigneeLabel || deal.contact_id) && (
+        <div className="mt-2 flex h-7 items-center justify-end">
+          {assigneeLabel && (
           <span
             title={assigneeLabel}
             className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[10px] font-semibold text-primary"
           >
             {initials(assigneeLabel)}
           </span>
+          )}
         </div>
       )}
     </button>
+
+    {/* Call the deal's contact. Outside the card button (no nested
+        buttons); stops clicks and drags — including from its dialog,
+        which React bubbles through here — from opening or moving the card. */}
+    {deal.contact_id && !isOverlay && (
+      <span
+        className={`absolute bottom-3.5 flex ${assigneeLabel ? "right-10" : "right-3.5"}`}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <CallButton contactId={deal.contact_id} label={contactLabel} />
+        <CallButton contactId={deal.contact_id} label={contactLabel} ai />
+      </span>
+    )}
+    </div>
   );
 }

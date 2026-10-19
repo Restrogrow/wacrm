@@ -34,6 +34,40 @@ export async function customerForConversation(accountId: string, conversationId:
   return { conversationId: data.id as string, contactId: contact?.id ?? null, phone, name: contact?.name ?? null }
 }
 
+/**
+ * Same as customerForConversation, for a contact (Contacts page, pipeline
+ * deals). Finds the contact's conversation, creating one if the lead has
+ * never chatted, so the call shows up in the inbox like any other.
+ */
+export async function customerForContact(ctx: AccountContext, contactId: string) {
+  const db = supabaseAdmin()
+  const { data: contact } = await db
+    .from('contacts')
+    .select('id')
+    .eq('id', contactId)
+    .eq('account_id', ctx.accountId)
+    .maybeSingle()
+  if (!contact) throw new CallingError('Contact not found.', 404)
+
+  const find = () =>
+    db.from('conversations').select('id').eq('account_id', ctx.accountId).eq('contact_id', contactId).maybeSingle()
+  let { data: conversation } = await find()
+  if (!conversation) {
+    const { data: created, error } = await db
+      .from('conversations')
+      .insert({ account_id: ctx.accountId, user_id: ctx.userId, contact_id: contactId })
+      .select('id')
+      .single()
+    // Lost a race with the webhook or another tab: use their row.
+    conversation = created ?? (await find()).data
+    if (!conversation) {
+      console.error('[calls] could not open a conversation for contact', contactId, error?.message)
+      throw new CallingError('Could not open a chat for this contact.', 500)
+    }
+  }
+  return customerForConversation(ctx.accountId, conversation.id as string)
+}
+
 export function callingErrorResponse(err: unknown): NextResponse {
   if (isCoexistenceCallingError(err)) {
     return NextResponse.json({ error: CALLING_COEXISTENCE_HELP, code: 'calling_unavailable' }, { status: 400 })

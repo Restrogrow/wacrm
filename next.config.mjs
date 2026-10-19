@@ -65,7 +65,8 @@ const SECURITY_HEADERS = [
       // the Embedded Signup button's client-side FB SDK calls
       // connect.facebook.net (app config) and www.facebook.com
       // (login telemetry) directly from the browser.
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://connect.facebook.net https://www.facebook.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com",
+      // generativelanguage: the AI call agent's Gemini Live WebSocket.
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co wss://generativelanguage.googleapis.com https://connect.facebook.net https://www.facebook.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com",
       // The FB SDK's cross-domain messaging bridge runs in a hidden
       // iframe on facebook.com — without this, default-src 'self'
       // blocks it once CSP is enforced.

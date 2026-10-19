@@ -89,6 +89,19 @@
   WhatsApp → WhatsApp calling**. Audio goes browser ↔ Meta directly and
   is not recorded, unless the agent switches on **AI notes** for a call.
   See [WhatsApp calling setup](#whatsapp-calling).
+- **AI calls** (🤖 button next to Call on contacts, deals and chats): an AI
+  voice agent talks to the lead on a WhatsApp call. The call is placed
+  from the agent's browser; once the lead picks up, the browser streams
+  the call audio to Gemini Live and plays the AI's voice into the call.
+  The agent hears both sides, sees the last lines said, and can **Take
+  over** (switches the call to their mic). The AI says it is an AI, uses
+  the AI chatbot's knowledge base and name plus a call script (Settings →
+  AI chatbot → AI calls), hangs up when done, asks the agent to take over
+  when the customer wants a person, and stops at 10 minutes. AI notes
+  record by default. The Gemini key stays on the server: the browser gets
+  a single-use token (`POST /api/whatsapp/calls/[id]/ai-session`). Daily
+  AI-call limit per plan (`voice_call` in `lib/ai/quota.ts`). Needs
+  migration 080; the agent's tab must stay open during the call.
 - **AI call notes** (✦ button on a connected call): records both sides in
   the agent's browser (Ogg/Opus, opt-in per call, with an on-screen
   reminder to tell the customer). When the call ends the recording is sent
@@ -763,6 +776,7 @@ baked in at build time — **redeploy after changing them**.
 | `AUTOMATION_CRON_SECRET` | Yes (prod) | Shared secret for the cron endpoints (`x-cron-secret` header) |
 | `META_APP_ID`, `NEXT_PUBLIC_META_APP_ID`, `NEXT_PUBLIC_META_CONFIG_ID` | Optional | WhatsApp Embedded Signup ("Connect with Facebook") |
 | `GEMINI_KEY` (`GEMINI_API_KEY` also accepted), `GEMINI_MODEL` | Optional | AI chatbot, AI flows, AI templates, help assistant, reply suggestions and lead scoring; model defaults to `gemini-3.8-flash`. Without a key those features show "AI is not set up" and nothing else breaks |
+| `GEMINI_LIVE_MODEL` | Optional | Model for AI calls (Gemini Live); defaults to `gemini-3.8-live` |
 | `DEMO_LOGIN_EMAIL`, `DEMO_LOGIN_PASSWORD` | Optional | Account that the public `demo` / `demo` login on `/login` signs into (server-only). Use a demo-workspace **admin** with sample data only. Unset = the feature is off |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional | Google Sheets integration (OAuth client; redirect `<site>/api/integrations/google-sheets/callback`) |
 | `SUPABASE_DB_URL` | Script only | Postgres connection string used **only** by `scripts/run-migration.mjs` on your own machine (in `.env.local`). Never set it on the server; it holds the database password |
@@ -837,6 +851,7 @@ is idempotent where possible. Recent ones:
 | `075_journeys` | Journeys: steps, enrollments, send ledger, sending rules |
 | `076_products_catalog` | Product library (`products`) and the `catalog-media` image bucket |
 | `077_catalog_collections_stock` | Collections, stock ledger, stock trigger on paid orders, optional WooCommerce REST keys |
+| `080_ai_voice_calls` | AI calls: call script and voice on `ai_chatbot_settings`, `whatsapp_calls.ai_agent` |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 

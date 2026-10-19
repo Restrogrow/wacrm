@@ -10,6 +10,11 @@
 //   * our outbound call's row gets Meta's SDP answer / status changes.
 // Audio is WebRTC between this browser and Meta (lib/calls/webrtc.ts).
 // API: /api/whatsapp/calls, /api/whatsapp/calls/[id].
+//
+// AI calls (startCall with { ai: true }): instead of the agent's mic,
+// the call carries the voice of a Gemini Live agent run in this browser
+// (lib/calls/live-agent.ts). The agent hears both sides and can take
+// over, which switches the call to their mic. AI notes record by default.
 // ============================================================
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -27,6 +32,7 @@ import {
   startRingtone,
   stopStream,
 } from '@/lib/calls/webrtc';
+import { LiveAgent, type AgentState, type TranscriptLine } from '@/lib/calls/live-agent';
 import { CallOverlay } from './call-overlay';
 
 export type CallStatus = 'ringing' | 'answering' | 'connected' | 'ended' | 'missed' | 'rejected' | 'failed';
@@ -56,7 +62,21 @@ export interface ActiveCall {
   label: string;
   conversationId: string | null;
   connectedAt: number | null;
+  /** Set on AI calls. */
+  ai?: AiCallState;
 }
+
+export interface AiCallState {
+  /** 'ai' while the AI talks; 'human' after the agent took over; 'stopped' if the AI failed. */
+  mode: 'ai' | 'human' | 'stopped';
+  state: AgentState;
+  /** The AI asked for a person (with its reason), until someone takes over. */
+  handoff: string | null;
+  /** The last few transcript lines. */
+  lines: TranscriptLine[];
+}
+
+const TRANSCRIPT_LINES = 4;
 
 export type StartCallResult = { ok: true } | { ok: false; needsPermission?: boolean; error: string };
 
@@ -68,7 +88,9 @@ interface CallContextValue {
   incoming: CallRow | null;
   active: ActiveCall | null;
   muted: boolean;
-  startCall: (conversationId: string, label: string) => Promise<StartCallResult>;
+  startCall: (conversationId: string, label: string, opts?: { ai?: boolean }) => Promise<StartCallResult>;
+  /** AI calls: stop the AI and talk to the customer yourself. */
+  takeOver: () => Promise<void>;
   answer: () => Promise<void>;
   decline: () => Promise<void>;
   hangup: () => Promise<void>;
@@ -135,6 +157,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
   const notesCtxRef = useRef<AudioContext | null>(null);
   const notesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notesBytesRef = useRef<Uint8Array | null>(null);
+  // The audio we send on the call: the mic, or the AI's voice on AI calls.
+  const sendStreamRef = useRef<MediaStream | null>(null);
+  // AI calls: the audio graph (AI voice → call + speakers), the agent, timers.
+  const aiCtxRef = useRef<AudioContext | null>(null);
+  const aiSendRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const aiOutRef = useRef<GainNode | null>(null);
+  const agentRef = useRef<LiveAgent | null>(null);
+  const agentStartedRef = useRef<string | null>(null);
+  const aiTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const hangupRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     activeRef.current = active;
@@ -205,6 +237,16 @@ export function CallProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const cleanupMedia = useCallback(() => {
+    agentRef.current?.stop();
+    agentRef.current = null;
+    agentStartedRef.current = null;
+    aiTimersRef.current.forEach(clearTimeout);
+    aiTimersRef.current = [];
+    void aiCtxRef.current?.close().catch(() => {});
+    aiCtxRef.current = null;
+    aiSendRef.current = null;
+    aiOutRef.current = null;
+    sendStreamRef.current = null;
     pcRef.current?.close();
     pcRef.current = null;
     stopStream(micRef.current);
@@ -336,6 +378,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     try {
       const mic = await getMicrophone();
       micRef.current = mic;
+      sendStreamRef.current = mic;
       const pc = createPeer(mic, onRemoteStream, () => endLocally('The call connection was lost.'));
       pcRef.current = pc;
       const sdp = await createAnswerSdp(pc, call.sdp_offer);
@@ -369,23 +412,50 @@ export function CallProvider({ children }: { children: ReactNode }) {
       // Already ended on WhatsApp's side.
     }
   }, [endLocally]);
+  useEffect(() => {
+    hangupRef.current = hangup;
+  }, [hangup]);
 
   const startCall = useCallback(
-    async (conversationId: string, label: string): Promise<StartCallResult> => {
+    async (conversationId: string, label: string, opts?: { ai?: boolean }): Promise<StartCallResult> => {
       if (!supported) return { ok: false, error: 'Your browser can’t make calls. Try Chrome, Edge or Safari.' };
       if (activeRef.current) return { ok: false, error: 'Finish your current call first.' };
-      setActive({ rowId: null, direction: 'outbound', phase: 'calling', label, conversationId, connectedAt: null });
+      const ai = opts?.ai === true;
+      setActive({
+        rowId: null,
+        direction: 'outbound',
+        phase: 'calling',
+        label,
+        conversationId,
+        connectedAt: null,
+        ...(ai ? { ai: { mode: 'ai', state: 'connecting', handoff: null, lines: [] } } : {}),
+      });
       try {
-        const mic = await getMicrophone();
-        micRef.current = mic;
-        const pc = createPeer(mic, onRemoteStream, () => endLocally('The call connection was lost.'));
+        let send: MediaStream;
+        if (ai) {
+          // The AI's voice goes to the call and to this computer's speakers.
+          const ctx = new AudioContext();
+          const dest = ctx.createMediaStreamDestination();
+          const out = ctx.createGain();
+          out.connect(dest);
+          out.connect(ctx.destination);
+          aiCtxRef.current = ctx;
+          aiSendRef.current = dest;
+          aiOutRef.current = out;
+          send = dest.stream;
+        } else {
+          send = await getMicrophone();
+          micRef.current = send;
+        }
+        sendStreamRef.current = send;
+        const pc = createPeer(send, onRemoteStream, () => endLocally('The call connection was lost.'));
         pcRef.current = pc;
         const sdp = await createOfferSdp(pc);
 
         const res = await fetch('/api/whatsapp/calls', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ conversation_id: conversationId, sdp }),
+          body: JSON.stringify({ conversation_id: conversationId, sdp, ...(ai ? { ai: true } : {}) }),
         });
         const json = await res.json().catch(() => null);
         if (!res.ok) {
@@ -433,7 +503,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
   // Record both sides of the connected call (mic + customer) as Ogg/Opus
   // in this browser, for AI notes when the call ends. Opt-in per call.
   const startAiNotes = useCallback(async () => {
-    const mic = micRef.current;
+    const mic = sendStreamRef.current;
     const remote = remoteStreamRef.current;
     if (recorderRef.current || !mic || !remote || activeRef.current?.phase !== 'connected') {
       toast.error('AI notes can start once the call is connected.');
@@ -477,9 +547,119 @@ export function CallProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // ---- AI calls ----
+  const updateAi = useCallback((patch: (ai: AiCallState) => Partial<AiCallState>) => {
+    setActive((cur) => (cur?.ai ? { ...cur, ai: { ...cur.ai, ...patch(cur.ai) } } : cur));
+  }, []);
+
+  // Once an AI call connects: get a Gemini session from the server and
+  // let the AI talk. AI notes record by default on AI calls.
+  const aiMode = active?.ai?.mode;
+  const phase = active?.phase;
+  const rowId = active?.rowId;
+  useEffect(() => {
+    if (aiMode !== 'ai' || phase !== 'connected' || !rowId) return;
+    if (agentStartedRef.current === rowId) return;
+    agentStartedRef.current = rowId;
+
+    void (async () => {
+      const ctx = aiCtxRef.current;
+      const out = aiOutRef.current;
+      const remote = remoteStreamRef.current;
+      try {
+        if (!ctx || !out || !remote) throw new Error('The call audio is not ready.');
+        await ctx.resume();
+        const res = await fetch(`/api/whatsapp/calls/${rowId}/ai-session`, { method: 'POST' });
+        const json = await res.json().catch(() => null);
+        if (!res.ok) throw new Error(json?.error ?? 'Could not start the AI agent.');
+        if (activeRef.current?.rowId !== rowId || activeRef.current.ai?.mode !== 'ai') return;
+
+        const agent = new LiveAgent({
+          ctx,
+          remote,
+          output: out,
+          token: json.token,
+          setup: json.setup,
+          onState: (state) => updateAi(() => ({ state })),
+          onTranscript: (line) => updateAi((ai) => ({ lines: [...ai.lines, line].slice(-TRANSCRIPT_LINES) })),
+          onEndCall: () => {
+            if (activeRef.current?.ai?.mode === 'ai') void hangupRef.current();
+          },
+          onHandoff: (reason) => {
+            updateAi(() => ({ handoff: reason || 'The customer wants to talk to a person.' }));
+            toast.warning('The AI is asking you to take over the call.', { duration: 15000 });
+          },
+          onError: (message) => {
+            agentRef.current = null;
+            updateAi(() => ({ mode: 'stopped' }));
+            toast.error(`${message} Take over or hang up.`, { duration: 15000 });
+          },
+        });
+        agentRef.current = agent;
+        await agent.start();
+
+        const maxMs = Number(json.max_seconds) * 1000;
+        aiTimersRef.current.push(
+          setTimeout(
+            () => agentRef.current?.say('(Time is almost up. Wrap up politely and end the call within a minute.)'),
+            maxMs - 60_000,
+          ),
+          setTimeout(() => {
+            if (activeRef.current?.ai?.mode === 'ai') {
+              toast('The AI call reached its 10-minute limit.');
+              void hangupRef.current();
+            }
+          }, maxMs),
+        );
+        void startAiNotes();
+      } catch (err) {
+        agentRef.current?.stop();
+        agentRef.current = null;
+        updateAi(() => ({ mode: 'stopped' }));
+        toast.error(`${err instanceof Error ? err.message : 'The AI agent could not start.'} Take over or hang up.`, {
+          duration: 15000,
+        });
+      }
+    })();
+  }, [aiMode, phase, rowId, startAiNotes, updateAi]);
+
+  const takeOver = useCallback(async () => {
+    const ctx = aiCtxRef.current;
+    const dest = aiSendRef.current;
+    if (!activeRef.current?.ai || activeRef.current.ai.mode === 'human' || !ctx || !dest) return;
+    agentRef.current?.stop();
+    agentRef.current = null;
+    aiTimersRef.current.forEach(clearTimeout);
+    aiTimersRef.current = [];
+    try {
+      const mic = await getMicrophone();
+      micRef.current = mic;
+      // Mic → the call only (not the speakers, or you would hear yourself).
+      ctx.createMediaStreamSource(mic).connect(dest);
+      updateAi(() => ({ mode: 'human', handoff: null }));
+      toast.success('You’re on the call now.');
+    } catch (err) {
+      updateAi(() => ({ mode: 'stopped' }));
+      toast.error(err instanceof Error ? err.message : 'Could not start your microphone.');
+    }
+  }, [updateAi]);
+
   const value = useMemo<CallContextValue>(
-    () => ({ supported, incoming, active, muted, startCall, answer, decline, hangup, toggleMute, aiNotes, startAiNotes }),
-    [supported, incoming, active, muted, startCall, answer, decline, hangup, toggleMute, aiNotes, startAiNotes],
+    () => ({
+      supported,
+      incoming,
+      active,
+      muted,
+      startCall,
+      takeOver,
+      answer,
+      decline,
+      hangup,
+      toggleMute,
+      aiNotes,
+      startAiNotes,
+    }),
+    [supported, incoming, active, muted, startCall, takeOver, answer, decline, hangup, toggleMute, aiNotes, startAiNotes],
   );
 
   return (

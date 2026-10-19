@@ -1,14 +1,65 @@
 'use client';
 
 // Floating call card (bottom-right): incoming call with Answer / Decline,
-// or the call in progress with a timer, mute and hang up.
+// or the call in progress with a timer, mute and hang up. On AI calls it
+// shows what the AI is doing, the last lines said, and Take over.
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Mic, MicOff, Phone, PhoneIncoming, PhoneOff, Sparkles } from 'lucide-react';
+import { Bot, Hand, Loader2, Mic, MicOff, Phone, PhoneIncoming, PhoneOff, Sparkles } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { useCalls } from './call-provider';
+import { useCalls, type AiCallState } from './call-provider';
+
+const AI_STATE_TEXT: Record<AiCallState['state'], string> = {
+  connecting: 'AI is getting ready…',
+  listening: 'AI is listening',
+  speaking: 'AI is speaking',
+};
+
+function AiPanel({ ai, onTakeOver }: { ai: AiCallState; onTakeOver: () => void }) {
+  if (ai.mode === 'human') {
+    return <p className="mt-3 text-xs text-muted-foreground">You took over from the AI. Your mic is on the call.</p>;
+  }
+  return (
+    <div
+      className={cn(
+        'mt-3 space-y-2 rounded-xl border p-3',
+        ai.handoff || ai.mode === 'stopped' ? 'border-amber-500/50 bg-amber-500/10' : 'border-border bg-muted/50',
+      )}
+    >
+      <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+        <Bot className="size-3.5" />
+        {ai.mode === 'stopped'
+          ? 'The AI stopped. Take over or hang up.'
+          : ai.handoff
+            ? `Take over: ${ai.handoff}`
+            : AI_STATE_TEXT[ai.state]}
+        {ai.mode === 'ai' && ai.state === 'speaking' && !ai.handoff && (
+          <span className="size-1.5 animate-pulse rounded-full bg-primary" aria-hidden />
+        )}
+      </p>
+      {ai.lines.length > 0 && (
+        <ul className="max-h-28 space-y-1 overflow-y-auto text-xs" aria-live="polite">
+          {ai.lines.map((line, i) => (
+            <li key={i} className={line.who === 'ai' ? 'text-muted-foreground' : 'text-foreground'}>
+              <span className="font-medium">{line.who === 'ai' ? 'AI: ' : 'Customer: '}</span>
+              {line.text}
+            </li>
+          ))}
+        </ul>
+      )}
+      <button
+        type="button"
+        onClick={onTakeOver}
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-foreground py-2 text-xs font-semibold text-background transition-opacity hover:opacity-90"
+      >
+        <Hand className="size-3.5" />
+        Take over the call
+      </button>
+    </div>
+  );
+}
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -35,7 +86,7 @@ function Avatar({ label, pulse }: { label: string; pulse?: boolean }) {
 }
 
 export function CallOverlay() {
-  const { incoming, active, muted, answer, decline, hangup, toggleMute, aiNotes, startAiNotes } = useCalls();
+  const { incoming, active, muted, answer, decline, hangup, toggleMute, aiNotes, startAiNotes, takeOver } = useCalls();
 
   if (!incoming && !active) return null;
 
@@ -58,7 +109,9 @@ export function CallOverlay() {
           <Avatar label={active.label} pulse={active.phase !== 'connected'} />
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold text-foreground">{active.label}</p>
-            <p className="text-xs text-muted-foreground">WhatsApp voice call · {status}</p>
+            <p className="text-xs text-muted-foreground">
+              {active.ai ? 'AI call' : 'WhatsApp voice call'} · {status}
+            </p>
             {aiNotes === 'recording' && (
               <p className="mt-0.5 flex items-center gap-1.5 text-[11px] font-medium text-red-600 dark:text-red-400">
                 <span className="size-1.5 animate-pulse rounded-full bg-red-600" aria-hidden />
@@ -67,6 +120,9 @@ export function CallOverlay() {
             )}
           </div>
         </div>
+        {active.ai && active.phase === 'connected' && (
+          <AiPanel ai={active.ai} onTakeOver={() => void takeOver()} />
+        )}
         <div className="mt-4 flex items-center justify-between gap-2">
           {active.conversationId ? (
             <Link
@@ -101,6 +157,7 @@ export function CallOverlay() {
                 {aiNotes === 'saving' ? <Loader2 className="size-5 animate-spin" /> : <Sparkles className="size-5" />}
               </button>
             )}
+            {(!active.ai || active.ai.mode === 'human') && (
             <button
               type="button"
               onClick={toggleMute}
@@ -113,6 +170,7 @@ export function CallOverlay() {
             >
               {muted ? <MicOff className="size-5" /> : <Mic className="size-5" />}
             </button>
+            )}
             <button
               type="button"
               onClick={() => void hangup()}

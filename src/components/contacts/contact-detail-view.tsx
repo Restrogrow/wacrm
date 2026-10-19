@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AdSourceBadge } from '@/components/contacts/ad-source-badge';
+import { CallButton } from '@/components/calls/call-button';
 import {
   Phone,
   Mail,
@@ -455,7 +456,7 @@ export function ContactDetailView({
                   </div>
                 </div>
               </div>
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Button
                   size="sm"
                   onClick={() => setTemplatePickerOpen(true)}
@@ -469,6 +470,17 @@ export function ContactDetailView({
                   )}
                   Send template
                 </Button>
+                <CallButton
+                  contactId={contact.id}
+                  label={contact.name || contactPhoneLabel(contact)}
+                  variant="button"
+                />
+                <CallButton
+                  contactId={contact.id}
+                  label={contact.name || contactPhoneLabel(contact)}
+                  variant="button"
+                  ai
+                />
               </div>
             </SheetHeader>
 

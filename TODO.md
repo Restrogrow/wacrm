@@ -61,6 +61,20 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 - [ ] **#41b Calling follow-ups.** Voicemail when nobody answers, call
       hours, a TURN server for strict networks, and call events inline
       in the chat thread.
+- [x] **#41c Call a lead in one click** (2026-10-19). Call button on
+      the Contacts list, the contact panel and pipeline deal cards; it
+      opens the lead's chat if they have none (`contact_id` on
+      GET /api/whatsapp/calls/permission).
+- [x] **#41d AI voice agent for outbound calls** (2026-10-19, freeze
+      lifted for this). Runs in the agent's browser (no VPS): WebRTC
+      with Meta ↔ Gemini Live, AI call button, take over, call script in
+      Settings → AI chatbot (README → AI calls). Only for contacts who
+      gave call permission.
+- [ ] **#41e AI calls: test live.** Run migration 080, then place a real
+      AI call: greeting, Hindi switch, interruptions, take over, hang-up,
+      AI notes. Check the Gemini Live model id and voice names still work.
+      Later: run the agent server-side (VPS) so the tab needn't stay
+      open, AI on inbound calls, bulk AI call campaigns.
 - [ ] **#42 Usernames / BSUID follow-ups.** Core support shipped
       (migration 038: contacts store `whatsapp_user_id`; sends fall back
       to the BSUID via `recipient`). Still to do: broadcasts to

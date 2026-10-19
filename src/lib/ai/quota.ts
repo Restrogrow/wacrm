@@ -8,21 +8,23 @@ import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { loadEffectivePlan } from '@/lib/billing/server'
 import type { EffectivePlan } from '@/lib/billing/plans'
 
-export type AiFeature = 'suggest' | 'analysis' | 'summary'
+export type AiFeature = 'suggest' | 'analysis' | 'summary' | 'voice_call'
 
 export const AI_DAILY_CAPS: Record<EffectivePlan, Record<AiFeature, number>> = {
-  trial: { suggest: 40, analysis: 40, summary: 20 },
-  starter: { suggest: 100, analysis: 100, summary: 50 },
-  growth: { suggest: 500, analysis: 500, summary: 200 },
-  pro: { suggest: 1500, analysis: 1500, summary: 500 },
-  enterprise: { suggest: 5000, analysis: 5000, summary: 2000 },
-  expired: { suggest: 0, analysis: 0, summary: 0 },
+  // voice_call: AI-agent WhatsApp calls (up to 10 minutes of Gemini Live each).
+  trial: { suggest: 40, analysis: 40, summary: 20, voice_call: 5 },
+  starter: { suggest: 100, analysis: 100, summary: 50, voice_call: 20 },
+  growth: { suggest: 500, analysis: 500, summary: 200, voice_call: 100 },
+  pro: { suggest: 1500, analysis: 1500, summary: 500, voice_call: 300 },
+  enterprise: { suggest: 5000, analysis: 5000, summary: 2000, voice_call: 1000 },
+  expired: { suggest: 0, analysis: 0, summary: 0, voice_call: 0 },
 }
 
 const FEATURE_LABEL: Record<AiFeature, string> = {
   suggest: 'reply suggestions',
   analysis: 'lead scoring',
   summary: 'chat summaries',
+  voice_call: 'calls',
 }
 
 export function aiDailyCap(plan: EffectivePlan | null, feature: AiFeature): number {

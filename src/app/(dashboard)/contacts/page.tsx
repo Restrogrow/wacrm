@@ -61,6 +61,7 @@ import { useCan } from '@/hooks/use-can';
 import { GatedButton } from '@/components/ui/gated-button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SegmentBar } from '@/components/contacts/segment-bar';
+import { CallButton } from '@/components/calls/call-button';
 import { useAuth } from '@/hooks/use-auth';
 import type { SegmentRow } from '@/lib/segments/resolve';
 
@@ -735,6 +736,13 @@ export default function ContactsPage() {
                     })}
                   </TableCell>
                   <TableCell>
+                    <div className="flex items-center justify-end gap-0.5">
+                    {/* Stops row clicks — also from the call dialog, which
+                        React bubbles through here — opening the contact. */}
+                    <span className="flex" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                      <CallButton contactId={contact.id} label={contact.name || contactPhoneLabel(contact)} />
+                      <CallButton contactId={contact.id} label={contact.name || contactPhoneLabel(contact)} ai />
+                    </span>
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         render={
@@ -775,6 +783,7 @@ export default function ContactsPage() {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

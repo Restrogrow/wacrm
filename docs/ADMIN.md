@@ -23,7 +23,7 @@ Last reviewed: **17 Oct 2026** (after the blog, security, catalog, reports, jour
 
 Updated 17 Oct 2026. Tick them off and delete the line once done.
 
-**Already done (17 Oct 2026):** the green redesign is on `main`; database migrations `059` to `077` are applied to
+**Already done (17 Oct 2026):** the green redesign is on `main`; database migrations `059` to `080` are applied (078 to 080 on 20 Oct) to
 production and checked against the live database; the blog, security fixes, catalog, reports, journeys, business
 hours / SLA, notes and mentions, segments, scheduled messages, CSAT, audit log, WooCommerce, Razorpay links,
 Shiprocket, Cal.com, inbound webhooks and alerts, website widget, short links and AI suggestions are all pushed.
@@ -55,8 +55,7 @@ report anything that looks wrong.
   has it.
 - [ ] **3b. Mobile app (iOS + Android): IMPORTANT, in this order.** Built and pushed; first test APK (v1.0.1) is on the
   Desktop (`RepeatGrow-1.0.1.apk`); the owner has only done a first launch test so far.
-  1. **Run the push table SQL** (migration `supabase/migrations/078_device_push_tokens.sql`) in the Supabase SQL editor.
-     Until then the app works but push notifications are silently skipped.
+  1. ~~Run the push table SQL (migration `078`)~~ Done 20 Oct 2026 (with `079` and `080`, checked against the live database).
   2. **Test the APK on a real Android phone** (intro, Try the demo, Inbox, a chat, Contacts, Overview, More) and report bugs.
   3. **Google Play** (US$25 one-time): create the app (name `Repeat Grow: WhatsApp CRM`, package `com.repeatgrow.app`, App,
      Free), then Testing > Internal testing > upload the **.aab** from `eas build -p android --profile production`

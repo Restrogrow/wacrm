@@ -58,19 +58,31 @@ export async function PUT(request: Request) {
         { status: 400 },
       )
     }
-    const { data, error } = await supabase
-      .from('ai_chatbot_settings')
-      .upsert(
-        {
-          account_id: accountId,
-          ...settings,
-          updated_at: new Date().toISOString(),
-          updated_by: userId,
-        },
-        { onConflict: 'account_id' },
-      )
-      .select()
-      .single()
+    const upsert = (row: Record<string, unknown>) =>
+      supabase
+        .from('ai_chatbot_settings')
+        .upsert(
+          { account_id: accountId, ...row, updated_at: new Date().toISOString(), updated_by: userId },
+          { onConflict: 'account_id' },
+        )
+        .select()
+        .single()
+    let { data, error } = await upsert({ ...settings })
+    // Migration 080 not run yet: save the chatbot without the voice-call
+    // fields rather than failing the whole form.
+    if (error && /voice_(instructions|name)/.test(error.message ?? '')) {
+      if (settings.voice_instructions || settings.voice_name) {
+        return NextResponse.json(
+          {
+            error: 'AI calls are not set up yet. Run supabase/migrations/080_ai_voice_calls.sql in the Supabase SQL editor.',
+            code: 'missing_voice_columns',
+          },
+          { status: 503 },
+        )
+      }
+      const { voice_instructions: _vi, voice_name: _vn, ...chatbotOnly } = settings
+      ;({ data, error } = await upsert(chatbotOnly))
+    }
     if (isMissingTable(error)) return MISSING
     if (error) return NextResponse.json({ error: (console.error('[api] database error:', error.message), 'Something went wrong. Please try again.') }, { status: 500 })
     return NextResponse.json({ settings: normalizeChatbotSettings(data) })

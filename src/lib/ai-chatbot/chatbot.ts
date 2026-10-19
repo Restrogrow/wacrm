@@ -20,6 +20,10 @@ export interface ChatbotSettings {
   instructions: string;
   handoff_message: string;
   pause_minutes_after_agent: number;
+  /** AI voice calls (migration 080): the goal and script for calls. */
+  voice_instructions: string;
+  /** Gemini Live voice; '' = Google's default. */
+  voice_name: string;
 }
 
 export const DEFAULT_CHATBOT_SETTINGS: ChatbotSettings = {
@@ -29,10 +33,15 @@ export const DEFAULT_CHATBOT_SETTINGS: ChatbotSettings = {
   instructions: "",
   handoff_message: "Let me connect you with our team — someone will reply here shortly. 🙏",
   pause_minutes_after_agent: 30,
+  voice_instructions: "",
+  voice_name: "",
 };
 
 export const KNOWLEDGE_BASE_MAX = 20000;
 export const INSTRUCTIONS_MAX = 2000;
+export const VOICE_INSTRUCTIONS_MAX = 3000;
+/** Gemini Live prebuilt voices offered in settings ('' = default). */
+export const VOICE_NAMES = ["", "Kore", "Aoede", "Leda", "Zephyr", "Puck", "Charon", "Fenrir", "Orus"] as const;
 /** Hard cap on bot messages per conversation per hour (runaway guard). */
 export const MAX_BOT_MESSAGES_PER_HOUR = 30;
 /** How many recent messages the model sees. */
@@ -322,5 +331,7 @@ export function normalizeChatbotSettings(raw: Record<string, unknown> | null | u
     pause_minutes_after_agent: Number.isFinite(pause)
       ? Math.min(10080, Math.max(0, Math.round(pause)))
       : DEFAULT_CHATBOT_SETTINGS.pause_minutes_after_agent,
+    voice_instructions: str(r.voice_instructions, "", VOICE_INSTRUCTIONS_MAX),
+    voice_name: (VOICE_NAMES as readonly string[]).includes(r.voice_name as string) ? (r.voice_name as string) : "",
   };
 }
