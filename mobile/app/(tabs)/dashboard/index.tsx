@@ -5,6 +5,8 @@ import { Pressable, RefreshControl, ScrollView, View, useWindowDimensions } from
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BarChart } from '@/components/charts/BarChart';
+import { PressableScale } from '@/components/ui/PressableScale';
+import { countCalls } from '@/features/calls/data';
 import { Avatar, Badge } from '@/components/ui/misc';
 import { Text } from '@/components/ui/Text';
 import {
@@ -55,6 +57,7 @@ export default function OverviewScreen() {
   const orders = useSection(() => getOrderTotals(acct!, bounds.from, bounds.to), [acct, range], refreshKey);
   const leads = useSection(() => getLeadSources(acct!, bounds.from), [acct, range], refreshKey);
   const attention = useSection(() => getAttention(acct!), [acct], refreshKey);
+  const calls = useSection(() => countCalls(bounds.from.toISOString()), [acct, range], refreshKey);
 
   const days = useMemo(() => (daily.data ? fillDays(daily.data, bounds.from, bounds.days) : []), [daily.data, bounds]);
   const inTotal = days.reduce((n, d) => n + d.inbound, 0);
@@ -100,6 +103,41 @@ export default function OverviewScreen() {
             </View>
             <Ionicons name="chevron-forward" size={20} color={colors.primary} />
           </Pressable>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <PressableScale
+              onPress={() => router.push('/calls')}
+              accessibilityRole="button"
+              accessibilityLabel="Open calls"
+              style={{ flex: 1, gap: 6, backgroundColor: colors.surface, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: colors.border }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Ionicons name="call-outline" size={22} color={colors.info} />
+                {calls.data?.missed ? (
+                  <View style={{ backgroundColor: colors.danger, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 1 }}>
+                    <Text variant="caption" color="#ffffff" style={{ fontWeight: '700', fontSize: 11 }}>
+                      {calls.data.missed} missed
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text variant="label">Calls</Text>
+              <Text variant="caption" muted numberOfLines={1}>
+                {calls.data ? `${calls.data.total} ${calls.data.total === 1 ? 'call' : 'calls'} · AI notes` : 'History and AI notes'}
+              </Text>
+            </PressableScale>
+            <PressableScale
+              onPress={() => router.push('/broadcasts')}
+              accessibilityRole="button"
+              accessibilityLabel="Open broadcasts"
+              style={{ flex: 1, gap: 6, backgroundColor: colors.surface, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: colors.border }}
+            >
+              <Ionicons name="megaphone-outline" size={22} color={colors.warning} />
+              <Text variant="label">Broadcasts</Text>
+              <Text variant="caption" muted numberOfLines={1}>
+                Send a template to many
+              </Text>
+            </PressableScale>
+          </View>
         </View>
 
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>

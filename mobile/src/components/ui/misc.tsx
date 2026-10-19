@@ -1,6 +1,7 @@
 import { ActivityIndicator, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Text } from '@/components/ui/Text';
 import { radius, useTheme } from '@/theme';
 
@@ -12,9 +13,9 @@ export function Card({ children, style, onPress }: { children: React.ReactNode; 
   ];
   if (!onPress) return <View style={base}>{children}</View>;
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [...base, { opacity: pressed ? 0.85 : 1 }]}>
+    <PressableScale onPress={onPress} accessibilityRole="button" scaleTo={0.98} style={base}>
       {children}
-    </Pressable>
+    </PressableScale>
   );
 }
 

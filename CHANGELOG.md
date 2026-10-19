@@ -9,6 +9,31 @@ Versions follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Pre-1.0, `MINOR` bumps cover new modules; `PATCH` bumps cover bug fixes
 and polish.
 
+## [0.7.0] — 2026-10-20
+
+**Migrations required, in order:** `078_device_push_tokens.sql`,
+`079_message_error_code.sql`, `080_ai_voice_calls.sql`,
+`081_ai_inbound_calls.sql`.
+
+### Added
+
+- **AI calls** (README → AI calls): an AI voice agent (Gemini Live, run in
+  the agent's browser) places outbound WhatsApp calls from contacts, deals
+  and chats, and can answer incoming calls nobody picked up. Call script,
+  incoming-call script and voice in AI chatbot → AI calls; take over at any
+  time; AI notes saved after every AI call; daily AI-call quota per plan.
+- **One-click Call** on the Contacts list, contact panel and deal cards.
+- **"WhatsApp call" template button** (`voice_call`): one tap starts a
+  WhatsApp call to the business number.
+- **Mobile app 1.1.0**: Calls with AI notes, Broadcasts (sent by the
+  server), send a template from a contact, template previews with buttons,
+  smoother UI. See `docs/MOBILE.md`.
+
+### Fixed
+
+- Template builder: the "Sample values" box for {{1}} could disappear,
+  blocking submission.
+
 ## [0.6.0] — 2026-10-17
 
 **Migrations required, in order:** `059_google_sheets.sql` (if not yet

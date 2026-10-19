@@ -54,11 +54,16 @@ export default function RootLayout() {
         <StatusBar style={dark ? 'light' : 'dark'} />
         <PushProvider>
         <Gate>
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="chat/[id]" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="contact/[id]" options={{ animation: 'slide_from_right' }} />
+          <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: colors.background } }}>
+            <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
+            <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+            <Stack.Screen name="chat/[id]" />
+            <Stack.Screen name="contact/[id]" />
+            <Stack.Screen name="calls/index" />
+            <Stack.Screen name="calls/[id]" />
+            <Stack.Screen name="broadcasts/index" />
+            <Stack.Screen name="broadcasts/new" options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="broadcasts/[id]" />
           </Stack>
         </Gate>
         </PushProvider>

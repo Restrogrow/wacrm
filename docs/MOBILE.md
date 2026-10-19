@@ -8,12 +8,18 @@ A native app built with **Expo (React Native)** in [`mobile/`](../mobile). It ta
 |---|---|
 | Getting started | 4-slide intro, sign up (2 steps), sign in, forgot password, "Try the demo" |
 | Inbox | Live conversation list with filters and search, chat thread, send text and photos, saved replies, AI suggestions, internal notes, templates when the 24-hour window is closed, assign / close / reopen, bulk actions. Split view on tablets |
-| Contacts | Search, tags, saved segments, contact detail with notes, orders and deals, add and edit |
-| Overview | Key numbers, message chart, response time, deals and orders, needs-attention list; pipeline board |
+| Contacts | Search, tags, saved segments, contact detail with notes, calls, orders and deals, add and edit. **Template** button sends an approved template to a lead even with no chat yet (the server opens the chat) |
+| Overview | Key numbers, message chart, response time, deals and orders, needs-attention list; pipeline board; **Calls** (with missed count) and **Broadcasts** tiles |
+| Calls (v1.1) | WhatsApp call history (incoming, outgoing, missed, AI calls) with live updates, and each call's **AI notes**: summary, what the customer wants, to-dos, follow-up, language and mood; copy or share them; open the chat or contact. Calls are placed and answered on the web dashboard |
+| Broadcasts (v1.1) | List with delivery bars and stats, recipient statuses with failure reasons, and **New broadcast**: pick an approved template (WhatsApp-style preview with its buttons, including "Call Now"), fill {{1}} with each contact's first name (with a fallback) or fixed text, send to all contacts or by tag, now / in 1 hour / tomorrow 10 AM. Cancel before it goes out |
 | Notifications | Push for new messages, mentions and assignments, with deep links into the chat |
 | More | Profile, appearance (system / light / dark), notifications, change password, help, legal, delete account, sign out |
 
-Not in the app (use the website): billing and plans, automations and flows builder, broadcasts, template creation, integrations, catalog management, admin pages. This is deliberate: the app shows **no pricing and no purchase buttons**, which keeps it compliant with App Store rule 3.1.3(c) (enterprise services sold outside the app).
+Not in the app (use the website): billing and plans, automations and flows builder, template creation, placing or answering calls (and the AI call agent), integrations, catalog management, admin pages. This is deliberate: the app shows **no pricing and no purchase buttons**, which keeps it compliant with App Store rule 3.1.3(c) (enterprise services sold outside the app).
+
+## How broadcasts are sent from the app
+
+The website sends a "now" broadcast from the browser in batches. A phone can be locked or backgrounded mid-send, so the app never does that: it saves the broadcast and its recipients (each with its own {{1}}, {{2}} values) as a **draft**, then switches it to **scheduled**; the server's every-minute cron (`processScheduledBroadcasts`, web migration 043) sends it. "Now" is scheduled one minute ahead. Opted-out contacts are skipped, and plan limits, delivery counts and webhooks work exactly as for web broadcasts. Code: `mobile/src/features/broadcasts/data.ts`.
 
 ## Accounts you need (owner only)
 
@@ -73,7 +79,13 @@ Set the Apple app id in `mobile/eas.json` (`submit.production.ios.ascAppId`) aft
 
 ## Versioning
 
-`app.json` holds the marketing version (`version`). Build numbers are incremented automatically by EAS (`autoIncrement` in `eas.json`).
+`app.json` holds the marketing version (`version`). Build numbers are incremented automatically by EAS (`autoIncrement` in `eas.json`, `appVersionSource: remote`).
+
+| Version | Date | Changes |
+|---|---|---|
+| 1.1.0 | 2026-10-20 | Calls (history, AI notes, live), Broadcasts (list, stats, new broadcast sent by the server), send a template from a contact, template preview with buttons, Calls and Broadcasts on Overview and More, smoother UI (spring press on buttons and cards, haptics on tabs and filters, skeleton loading, consistent slide transitions) |
+| 1.0.1 | 2026-10-18 | Start route and not-found fallback ("Unmatched Route" fix) |
+| 1.0.0 | 2026-10-18 | First release |
 
 ## Server requirements
 
@@ -88,10 +100,11 @@ Set the Apple app id in `mobile/eas.json` (`submit.production.ios.ascAppId`) aft
 - Sign-out removes this device's push token.
 - Account deletion is reachable in the app (App Store rule 5.1.1(v)).
 
-## Known limits (v1)
+## Known limits
 
 - No Google or Apple sign-in (email and password only).
-- No call handling, broadcasts, flows builder or catalog editing in the app.
+- Calls can't be placed or answered in the app (that needs native WebRTC); the app shows call history and AI notes. No flows builder, template creation or catalog editing.
+- Broadcasts from the app: all contacts or by tag (no CSV, custom-field or segment audiences, no media-header URL override; the template's own media is used).
 - Android and iOS builds have been type-checked and bundled but not run on physical devices from this workspace: do a full pass on a real iPhone and Android phone (TestFlight and the internal Play track) before you submit.
 
 ## Building on this PC (no Expo login needed)

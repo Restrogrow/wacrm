@@ -5,10 +5,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Linking, Pressable, RefreshControl, ScrollView, Share, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { TemplateSheet, type TemplateValues } from '@/components/chat/TemplateSheet';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Avatar, Badge, Card, EmptyState, ErrorView, LoadingView } from '@/components/ui/misc';
+import { Avatar, Badge, Card, EmptyState, ErrorView } from '@/components/ui/misc';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { Text } from '@/components/ui/Text';
+import { CallListRow } from '@/features/calls/CallListRow';
+import { fetchCalls, type CallRow } from '@/features/calls/data';
 import { TagPill } from '@/features/contacts/ContactListRow';
 import { describeSaveError, loadTags, type Tag } from '@/features/contacts/data';
 import {
@@ -33,6 +37,9 @@ import { useSnack } from '@/features/contacts/snack';
 import { fmtDate, fmtDateTime, fmtMoney, fmtPhone, fmtRelative } from '@/features/dashboard/fmt';
 import { DealSheet } from '@/features/deals/DealSheet';
 import { getDeal, loadPipelines, type Deal, type Pipeline } from '@/features/deals/data';
+import { renderTemplateBody } from '@/features/inbox/format';
+import type { MessageTemplate } from '@/features/inbox/types';
+import { api } from '@/lib/api';
 import { useSession } from '@/providers/session';
 import { useTheme } from '@/theme';
 
@@ -89,6 +96,8 @@ export default function ContactDetailScreen() {
   const [convs, setConvs] = useState<ConversationLite[]>([]);
   const [deals, setDeals] = useState<DealLite[]>([]);
   const [orders, setOrders] = useState<OrderLite[]>([]);
+  const [calls, setCalls] = useState<CallRow[]>([]);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,13 +129,22 @@ export default function ContactDetailScreen() {
       setEmail(d.contact.email ?? '');
       setCompany(d.contact.company ?? '');
       // Each section is independent: one failing does not blank the page.
-      const [n, c, dl, o, t, p] = await Promise.allSettled([getNotes(id), getConversations(id), getDeals(id), getOrders(id), loadTags(), loadPipelines()]);
+      const [n, c, dl, o, t, p, cl] = await Promise.allSettled([
+        getNotes(id),
+        getConversations(id),
+        getDeals(id),
+        getOrders(id),
+        loadTags(),
+        loadPipelines(),
+        fetchCalls({ contactId: id, limit: 5 }),
+      ]);
       if (n.status === 'fulfilled') setNotes(n.value);
       if (c.status === 'fulfilled') setConvs(c.value);
       if (dl.status === 'fulfilled') setDeals(dl.value);
       if (o.status === 'fulfilled') setOrders(o.value);
       if (t.status === 'fulfilled') setAllTags(t.value);
       if (p.status === 'fulfilled') setPipelines(p.value);
+      if (cl.status === 'fulfilled') setCalls(cl.value);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load this contact.');
     } finally {
@@ -139,7 +157,22 @@ export default function ContactDetailScreen() {
     void load();
   }, [load]);
 
-  if (loading) return <LoadingView />;
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top + 56, alignItems: 'center', gap: 12, paddingHorizontal: 16 }}>
+        <Skeleton width={84} height={84} round />
+        <Skeleton width={180} height={22} />
+        <Skeleton width={120} height={14} />
+        <View style={{ flexDirection: 'row', gap: 24, marginVertical: 12 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} width={52} height={52} round />
+          ))}
+        </View>
+        <Skeleton height={140} style={{ borderRadius: 16 }} />
+        <Skeleton height={80} style={{ borderRadius: 16 }} />
+      </View>
+    );
+  }
   if (missing || !detail) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top + 40 }}>
@@ -203,11 +236,36 @@ export default function ContactDetailScreen() {
   function openWhatsApp() {
     const latest = convs[0];
     if (latest) router.push(`/chat/${latest.id}`);
+    else if (canWrite) setTemplateOpen(true);
     else
       Alert.alert(
         'No conversation yet',
         'WhatsApp only lets you message a customer first with an approved template. Once they message you, the chat appears here and in your Inbox.',
       );
+  }
+
+  // Business-initiated message: the server finds or opens the chat for
+  // this contact (same as "Send template" on the web contact page).
+  async function sendTemplate(template: MessageTemplate, values: TemplateValues, rendered: string): Promise<{ ok: boolean; error?: string }> {
+    try {
+      await api('/api/whatsapp/send', {
+        body: {
+          contact_id: c.id,
+          message_type: 'template',
+          template_name: template.name,
+          template_language: template.language,
+          template_message_params: { body: values.body, headerText: values.headerText, buttonParams: values.buttonParams },
+          template_params: values.body,
+          content_text: rendered || renderTemplateBody(template.body_text, values.body),
+        },
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      snack.show('Template sent', 'success');
+      void load();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : 'Could not send the template.' };
+    }
   }
 
   function confirmDelete() {
@@ -277,6 +335,7 @@ export default function ContactDetailScreen() {
 
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <ActionButton icon="logo-whatsapp" label="WhatsApp" onPress={openWhatsApp} />
+          {canWrite ? <ActionButton icon="document-text-outline" label="Template" onPress={() => setTemplateOpen(true)} /> : null}
           <ActionButton icon="call-outline" label="Call" onPress={() => Linking.openURL(`tel:+${digits}`).catch(() => snack.show('Calling is not available on this device.', 'error'))} />
           <ActionButton icon="mail-outline" label="Email" disabled={!c.email} onPress={() => c.email && Linking.openURL(`mailto:${c.email}`).catch(() => snack.show('No email app found.', 'error'))} />
           <ActionButton icon="share-outline" label="Share" onPress={() => Share.share({ message: `${title}\n${fmtPhone(c.phone)}${c.email ? `\n${c.email}` : ''}` }).catch(() => {})} />
@@ -362,6 +421,18 @@ export default function ContactDetailScreen() {
           {convs.length === 0 ? <Text muted>No conversations yet.</Text> : null}
         </Section>
 
+        <Section title="Calls" count={calls.length} action={calls.length ? <Pressable onPress={() => router.push('/calls')} hitSlop={8}><Text variant="label" color={colors.primary}>All calls</Text></Pressable> : undefined}>
+          {calls.length ? (
+            <Card style={{ paddingVertical: 2 }}>
+              {calls.map((cl) => (
+                <CallListRow key={cl.id} call={cl} compact onPress={() => router.push(`/calls/${cl.id}`)} />
+              ))}
+            </Card>
+          ) : (
+            <Text muted>No WhatsApp calls yet.</Text>
+          )}
+        </Section>
+
         <Section
           title="Deals"
           count={deals.length}
@@ -430,6 +501,8 @@ export default function ContactDetailScreen() {
         </View>
         <Button title="Done" onPress={() => setTagSheet(false)} />
       </Sheet>
+
+      <TemplateSheet visible={templateOpen} onClose={() => setTemplateOpen(false)} contactName={c.name} onSend={sendTemplate} />
 
       <DealSheet
         visible={!!dealSheet}

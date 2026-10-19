@@ -30,6 +30,8 @@ WHAT YOU CAN DO
 - Work as a team: private internal notes that customers never see, @mentions, and bulk actions.
 - Know your customers: search contacts, see tags, notes, orders and deals in one place.
 - Track sales: move deals through your pipeline and see revenue at a glance.
+- Calls with AI notes: see every WhatsApp call, missed calls and AI call summaries with to-dos and follow-ups.
+- Broadcasts: send an approved WhatsApp template to all your contacts or a tag, personalised with each name.
 - See how you are doing: response times, conversations and messages, deals and orders.
 - Safe by design: your team's roles decide who can reply, edit or delete.
 
@@ -42,9 +44,13 @@ Note: You need a Repeat Grow account to sign in. Create one in the app or at rep
 
 `whatsapp,crm,business,inbox,leads,sales,team,customer,support,broadcast,pipeline,contacts,chat`
 
-## What's new (first release)
+## What's new
 
-Welcome to Repeat Grow on mobile: team inbox, contacts, sales pipeline, notifications and more.
+**1.1.0** (paste into "Release notes", max 500 characters):
+
+New: Calls with AI notes (summary, to-dos, follow-up) for every WhatsApp call. New: Broadcasts — send a template to all contacts or a tag, right from your phone. Send a template to any contact from their page. Template previews now show their buttons. Smoother, faster feel everywhere.
+
+**1.0.0** (first release): Welcome to Repeat Grow on mobile: team inbox, contacts, sales pipeline, notifications and more.
 
 ## Screenshots to capture (both stores)
 
@@ -52,7 +58,7 @@ Use the demo workspace (tap "Try the demo" on the login screen). Capture on:
 - iPhone 6.9" (1320x2868) and 6.5" (1284x2778), iPad 13" (2064x2752) if you ship the iPad layout
 - Android phone (1080x1920 or taller), plus a 7" and 10" tablet if you want the tablet badge
 
-Suggested order: 1) Inbox list, 2) A conversation, 3) Quick replies and AI suggestions, 4) Contact details, 5) Pipeline, 6) Overview dashboard, 7) Dark mode inbox.
+Suggested order: 1) Inbox list, 2) A conversation, 3) Quick replies and AI suggestions, 4) Contact details, 5) Calls with AI notes, 6) New broadcast, 7) Overview dashboard, 8) Dark mode inbox.
 Add a one-line caption over each (for example "Every customer chat in one inbox").
 
 ## Google Play: data safety answers

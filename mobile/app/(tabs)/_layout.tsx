@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,7 +22,9 @@ export default function TabsLayout() {
   const unread = useUnreadCount();
   return (
     <Tabs
+      screenListeners={{ tabPress: () => void Haptics.selectionAsync().catch(() => {}) }}
       screenOptions={{
+        animation: 'shift',
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,

@@ -1,7 +1,8 @@
 import * as Haptics from 'expo-haptics';
-import { ActivityIndicator, Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleSheet, View, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Text } from '@/components/ui/Text';
 import { radius, useTheme } from '@/theme';
 
@@ -31,17 +32,18 @@ export function Button({
   const fg = { primary: colors.onPrimary, secondary: colors.text, ghost: colors.primary, danger: '#ffffff' }[variant];
   const inactive = disabled || loading;
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
+      accessibilityLabel={title}
       accessibilityState={{ disabled: !!inactive, busy: !!loading }}
       disabled={inactive}
       onPress={() => {
         Haptics.selectionAsync().catch(() => {});
         onPress?.();
       }}
-      style={({ pressed }) => [
+      style={[
         styles.base,
-        { backgroundColor: bg, opacity: inactive ? 0.55 : pressed ? 0.85 : 1, minHeight: small ? 40 : 52, paddingHorizontal: small ? 14 : 20 },
+        { backgroundColor: bg, opacity: inactive ? 0.55 : 1, minHeight: small ? 40 : 52, paddingHorizontal: small ? 14 : 20 },
         variant === 'secondary' && { borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border },
         style,
       ]}
@@ -56,7 +58,7 @@ export function Button({
           </Text>
         </View>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 

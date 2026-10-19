@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, View } from 'react-native';
 
 import { BottomSheet, SheetRow } from '@/components/chat/BottomSheet';
+import { TemplatePreview } from '@/components/chat/TemplatePreview';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Text } from '@/components/ui/Text';
@@ -103,14 +104,7 @@ export function TemplateSheet({
     >
       {picked ? (
         <View style={{ gap: 12 }}>
-          <View style={{ backgroundColor: colors.bubbleOut, borderRadius: 14, padding: 12 }}>
-            <Text>{rendered}</Text>
-            {picked.footer_text ? (
-              <Text variant="caption" muted style={{ marginTop: 6 }}>
-                {picked.footer_text}
-              </Text>
-            ) : null}
-          </View>
+          <TemplatePreview template={picked} body={rendered} />
           {slots.header > 0 ? <Input label="Header value" value={headerText} onChangeText={setHeaderText} placeholder="Text for the header" /> : null}
           {slots.body.map((n, i) => (
             <Input key={n} label={`Value for {{${n}}}`} value={params[i] ?? ''} onChangeText={(v) => setParams((prev) => Object.assign([...prev], { [i]: v }))} placeholder={i === 0 ? 'e.g. the customer name' : 'Type a value'} />

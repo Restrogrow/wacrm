@@ -70,6 +70,12 @@ export default function More() {
 
         <NotificationPrompt />
 
+        <SettingsGroup title="Work">
+          <SettingsRow icon="call-outline" label="Calls" detail="History · AI notes" onPress={() => router.push('/calls')} />
+          <SettingsRow icon="megaphone-outline" label="Broadcasts" onPress={() => router.push('/broadcasts')} />
+          <SettingsRow icon="git-branch-outline" label="Sales pipeline" onPress={() => router.push('/deal')} last />
+        </SettingsGroup>
+
         <SettingsGroup title="Preferences">
           <SettingsRow icon="color-palette-outline" label="Appearance" detail={THEME_LABEL[pref]} onPress={() => router.push('/(tabs)/more/appearance')} />
           <SettingsRow icon="notifications-outline" label="Notifications" onPress={() => router.push('/(tabs)/more/notifications')} />
