@@ -56,11 +56,27 @@ function StatusIcon({ status }: { status: Message["status"] }) {
   }
 }
 
+/** A single short line ending in a file extension, e.g. "menu.pdf". */
+function looksLikeFilename(text: string): boolean {
+  return text.length <= 120 && !text.includes("\n") &&/\.[a-z0-9]{1,5}$/i.test(text);
+}
+
+function filenameFromUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  try {
+    const last = new URL(url).pathname.split("/").pop() ?? "";
+    const name = decodeURIComponent(last);
+    return looksLikeFilename(name) ? name : "";
+  } catch {
+    return "";
+  }
+}
+
 function MediaUnavailable({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
       <ImageOff className="h-4 w-4 shrink-0 text-muted-foreground" />
-      <span>{label} unavailable</span>
+      <span className="min-w-0 truncate">{label} unavailable</span>
     </div>
   );
 }
@@ -192,23 +208,40 @@ function MessageContent({ message }: { message: Message }) {
         </div>
       );
 
-    case "document":
-      if (!message.media_url || !isWebUrl(message.media_url)) {
-        return <MediaUnavailable label={message.content_text || "Document"} />;
-      }
+    case "document": {
+      // content_text is the caption when there is one, else the filename.
+      // A caption can be a whole paragraph, so it goes below the file chip
+      // in full rather than truncated to one line inside it.
+      const text = message.content_text?.trim() || "";
+      const isFilename = !!text && looksLikeFilename(text);
+      const name = (isFilename ? text : filenameFromUrl(message.media_url)) || "Document";
+      const caption = isFilename ? "" : text;
+      const chip =
+        !message.media_url || !isWebUrl(message.media_url) ? (
+          <MediaUnavailable label={name} />
+        ) : (
+          <a
+            href={message.media_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={name}
+            className="flex min-w-0 items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 text-sm hover:bg-muted"
+          >
+            <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <span className="truncate">{name}</span>
+          </a>
+        );
       return (
-        <a
-          href={message.media_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 text-sm hover:bg-muted"
-        >
-          <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
-          <span className="truncate">
-            {message.content_text || "Document"}
-          </span>
-        </a>
+        <div className="min-w-0">
+          {chip}
+          {caption && (
+            <p className="mt-1 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm">
+              {caption}
+            </p>
+          )}
+        </div>
       );
+    }
 
     case "template":
       return (
