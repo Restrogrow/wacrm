@@ -543,6 +543,10 @@ async function handleStatusUpdate(status: {
     if (status.status === 'sent' && !('sent_at' in update)) update.sent_at = tsIso
     if (status.status === 'delivered') update.delivered_at = tsIso
     if (status.status === 'read') update.read_at = tsIso
+    // Keep Meta's code (e.g. 131026 = not on WhatsApp) for the contact badge.
+    if (failure) {
+      update.error_message = `${failure.code ?? ''}: ${failure.error_data?.details ?? failure.message ?? failure.title ?? 'Failed'}`
+    }
 
     const { error: recUpdateErr } = await supabaseAdmin()
       .from('broadcast_recipients')

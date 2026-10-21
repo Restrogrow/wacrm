@@ -11,6 +11,7 @@ import {
   isUniqueViolation,
   type ExistingContact,
 } from '@/lib/contacts/dedupe';
+import { isValidE164, sanitizePhoneForMeta } from '@/lib/whatsapp/phone-utils';
 import {
   Dialog,
   DialogContent,
@@ -295,9 +296,19 @@ export function ContactForm({
                   )}
                 </div>
               </div>
+            ) : phone.trim() && !isValidE164(sanitizePhoneForMeta(phone)) ? (
+              <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-xs text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                <p>
+                  This doesn&apos;t look like a full number with country code, so
+                  WhatsApp messages to it will likely fail. You can still save it.
+                </p>
+              </div>
             ) : (
               <p className="text-xs text-muted-foreground">
-                Include country code, e.g. +1 for US
+                Include country code, e.g. +91 for India.
+                {!isEdit &&
+                  " WhatsApp doesn't let businesses check a number in advance, so it will show as \"not checked\" until the first message, then \"On WhatsApp\" or \"Not on WhatsApp\"."}
               </p>
             )}
           </div>

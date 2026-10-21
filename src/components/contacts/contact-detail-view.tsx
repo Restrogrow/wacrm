@@ -25,6 +25,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AdSourceBadge } from '@/components/contacts/ad-source-badge';
+import { WhatsAppStatusBadge } from '@/components/contacts/whatsapp-status-badge';
+import { fetchWhatsAppStatuses, type WhatsAppStatus } from '@/lib/contacts/whatsapp-status';
 import { CallButton } from '@/components/calls/call-button';
 import {
   Phone,
@@ -57,6 +59,7 @@ export function ContactDetailView({
   const { accountId, defaultCurrency } = useAuth();
 
   const [contact, setContact] = useState<Contact | null>(null);
+  const [waStatus, setWaStatus] = useState<WhatsAppStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
 
@@ -186,6 +189,18 @@ export function ContactDetailView({
       fetchDeals();
     }
   }, [open, contactId, fetchContact, fetchTags, fetchNotes, fetchCustomFields, fetchDeals]);
+
+  useEffect(() => {
+    if (!open || !contactId) return;
+    let cancelled = false;
+    void fetchWhatsAppStatuses(supabase, [contactId]).then((map) => {
+      if (!cancelled) setWaStatus(map.get(contactId) ?? 'unknown');
+    });
+    return () => {
+      cancelled = true;
+      setWaStatus(null);
+    };
+  }, [open, contactId, supabase]);
 
   async function copyPhone() {
     if (!contact) return;
@@ -427,6 +442,7 @@ export function ContactDetailView({
                       </span>
                     ) : null}
                     <AdSourceBadge contact={contact} className="ml-2 align-middle" />
+                    <WhatsAppStatusBadge status={waStatus} className="ml-2 align-middle" />
                   </SheetDescription>
                   <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                     <button

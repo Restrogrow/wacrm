@@ -53,6 +53,8 @@ import {
   X,
 } from 'lucide-react';
 import { ContactForm } from '@/components/contacts/contact-form';
+import { WhatsAppStatusBadge } from '@/components/contacts/whatsapp-status-badge';
+import { fetchWhatsAppStatuses, type WhatsAppStatus } from '@/lib/contacts/whatsapp-status';
 import { ContactDetailView } from '@/components/contacts/contact-detail-view';
 import { ImportModal } from '@/components/contacts/import-modal';
 import { CustomFieldsManager } from '@/components/contacts/custom-fields-manager';
@@ -97,6 +99,7 @@ export default function ContactsPage() {
   const canEditSettings = useCan('edit-settings');
 
   const [contacts, setContacts] = useState<ContactWithTags[]>([]);
+  const [waStatus, setWaStatus] = useState<Map<string, WhatsAppStatus>>(new Map());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
@@ -272,6 +275,17 @@ export default function ContactsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchContacts();
   }, [fetchContacts]);
+
+  // WhatsApp status for the visible page of contacts.
+  useEffect(() => {
+    let cancelled = false;
+    void fetchWhatsAppStatuses(supabase, contacts.map((c) => c.id)).then((map) => {
+      if (!cancelled) setWaStatus(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, contacts]);
 
   function openAddForm() {
     setEditContact(null);
@@ -695,7 +709,14 @@ export default function ContactsPage() {
                     ) : null}
                   </TableCell>
                   <TableCell className="text-muted-foreground font-mono text-xs">
-                    {contactPhoneLabel(contact)}
+                    <span className="inline-flex flex-wrap items-center gap-1.5">
+                      {contactPhoneLabel(contact)}
+                      {waStatus.get(contact.id) === 'off' ? (
+                        <WhatsAppStatusBadge status="off" className="font-sans" />
+                      ) : waStatus.get(contact.id) === 'on' ? (
+                        <WhatsAppStatusBadge status="on" compact />
+                      ) : null}
+                    </span>
                   </TableCell>
                   <TableCell className="text-muted-foreground hidden md:table-cell text-sm">
                     {contact.email || <span className="text-muted-foreground">-</span>}
