@@ -238,9 +238,18 @@ export function MessageComposer({
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    // Max 4 lines (~96px)
-    el.style.height = `${Math.min(el.scrollHeight, 96)}px`;
+    // Grow with the text so a whole paragraph stays visible, up to ~40%
+    // of the screen (min 4 lines); past that the box scrolls.
+    const max = Math.max(96, Math.round(window.innerHeight * 0.4));
+    el.style.height = `${Math.min(el.scrollHeight, max)}px`;
+    el.style.overflowY = el.scrollHeight > max ? "auto" : "hidden";
   }, []);
+
+  // Re-measure whenever the text changes from anywhere (typing, AI
+  // suggestions, translate, inserted links, clearing after send).
+  useEffect(() => {
+    adjustHeight();
+  }, [text, adjustHeight]);
 
   // "Translate reply": rewrite the draft in the customer's language
   // before sending. The agent sees the result in the box and can still
@@ -760,7 +769,7 @@ export function MessageComposer({
             // The placeholder text also surfaces the read-only state.
             title={readOnly ? "Read-only — your role can't send messages" : undefined}
             className={cn(
-              "flex-1 resize-none rounded-2xl border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary/50",
+              "min-w-0 flex-1 resize-none rounded-2xl border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary/50",
               (sessionExpired || readOnly) && "cursor-not-allowed opacity-50"
             )}
           />

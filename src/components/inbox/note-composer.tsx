@@ -137,7 +137,7 @@ export function NoteComposer({ conversationId, members, onSaved }: NoteComposerP
               void save();
             }
           }}
-          className="max-h-32 min-h-[44px] flex-1 resize-none rounded-2xl border border-amber-500/40 bg-background px-4 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-amber-500"
+          className="field-sizing-content max-h-[40vh] min-h-[44px] min-w-0 flex-1 resize-none rounded-2xl border border-amber-500/40 bg-background px-4 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-amber-500"
         />
         <Button
           type="button"
