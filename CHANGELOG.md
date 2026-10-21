@@ -9,6 +9,16 @@ Versions follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Pre-1.0, `MINOR` bumps cover new modules; `PATCH` bumps cover bug fixes
 and polish.
 
+## [Unreleased]
+
+### Added
+
+- **Buttons and lists in the public API**: `POST /api/v1/messages` takes
+  `type: "interactive"` with up to 3 reply buttons (optionally a photo on
+  top) or a list of up to 10 rows. A tap arrives in the `message.received`
+  webhook with the new `reply_id` (the button / row id); `text` is still the
+  visible title. No migration needed.
+
 ## [0.7.0] — 2026-10-20
 
 **Migrations required, in order:** `078_device_push_tokens.sql`,

@@ -953,6 +953,8 @@ export interface SendInteractiveButtonsArgs {
   bodyText: string
   /** Optional plain-text header (≤ 60 chars). */
   headerText?: string
+  /** Optional photo shown above the text (public JPEG/PNG URL); wins over headerText. */
+  headerImageUrl?: string
   /** Optional grey footer line under the buttons (≤ 60 chars). */
   footerText?: string
   /** 1–3 buttons. Validated against Meta's limits before sending. */
@@ -974,10 +976,13 @@ export async function sendInteractiveButtons(
 ): Promise<MetaSendResult> {
   const {
     phoneNumberId, accessToken, to,
-    bodyText, headerText, footerText, buttons, contextMessageId,
+    bodyText, headerText, headerImageUrl, footerText, buttons, contextMessageId,
   } = args
   validateInteractiveBody(bodyText)
   validateInteractiveHeaderFooter(headerText, footerText)
+  if (headerImageUrl && !/^https?:\/\//i.test(headerImageUrl)) {
+    throw new Error('Interactive header image must be an http(s) URL.')
+  }
   if (buttons.length < 1 || buttons.length > INTERACTIVE_LIMITS.maxButtons) {
     throw new Error(
       `Interactive button message requires 1-${INTERACTIVE_LIMITS.maxButtons} buttons (got ${buttons.length}).`
@@ -1003,7 +1008,8 @@ export async function sendInteractiveButtons(
       })),
     },
   }
-  if (headerText) interactive.header = { type: 'text', text: headerText }
+  if (headerImageUrl) interactive.header = { type: 'image', image: { link: headerImageUrl } }
+  else if (headerText) interactive.header = { type: 'text', text: headerText }
   if (footerText) interactive.footer = { text: footerText }
 
   const body: Record<string, unknown> = {

@@ -13,8 +13,12 @@
 // Body:
 //   {
 //     "to": "+14155550123",                 // required, E.164
-//     "type": "text",                        // text|template|image|video|document|audio (default: text)
-//     "text": "Hello!",                      // text body, or media caption
+//     "type": "text",                        // text|template|image|video|document|audio|interactive (default: text)
+//     "text": "Hello!",                      // text body, media caption, or the words above buttons / a list
+//     "interactive": {                       // required when type=interactive (24-hour window only)
+//       "kind": "buttons",                   // buttons: 1–3 {id, title ≤ 20}, optional header_image_url
+//       "buttons": [{ "id": "menu", "title": "📋 Menu" }]
+//     },                                     // list: { kind, button ≤ 20, sections: [{ title, rows: [{ id, title ≤ 24, description ≤ 72 }] }] } (≤ 10 rows)
 //     "media_url": "https://…/file.pdf",     // required for image/video/document/audio
 //     "filename": "invoice.pdf",             // optional, document filename
 //     "template": {                          // required when type=template
@@ -91,6 +95,7 @@ export async function POST(request: Request) {
       contentText: typeof body.text === 'string' ? body.text : null,
       mediaUrl: typeof body.media_url === 'string' ? body.media_url : null,
       templateName: typeof template?.name === 'string' ? template.name : null,
+      interactive: body.interactive,
     });
 
     // Customers who replied STOP don't get marketing templates (WhatsApp
@@ -133,6 +138,7 @@ export async function POST(request: Request) {
           typeof template?.language === 'string' ? template.language : null,
         templateParams,
         templateMessageParams,
+        interactive: body.interactive,
         replyToMessageId:
           typeof body.reply_to_message_id === 'string'
             ? body.reply_to_message_id

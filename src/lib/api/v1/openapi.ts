@@ -650,10 +650,43 @@ export const OPENAPI_SPEC = {
           to: { type: 'string', description: 'Recipient phone in E.164 format.', example: '+14155550123' },
           type: {
             type: 'string',
-            enum: ['text', 'template', 'image', 'video', 'document', 'audio'],
+            enum: ['text', 'template', 'image', 'video', 'document', 'audio', 'interactive'],
             default: 'text',
           },
-          text: { type: 'string', description: 'Message body, or the caption for media.' },
+          text: { type: 'string', description: 'Message body, or the caption for media. For `interactive`, the text above the buttons / list (≤ 1024).' },
+          interactive: {
+            type: 'object',
+            description:
+              'Required when `type` is `interactive` (only inside the 24-hour customer service window). ' +
+              '`buttons`: 1–3 reply buttons (title ≤ 20), optional `header_image_url` (JPEG/PNG) or `header_text`. ' +
+              '`list`: a `button` label (≤ 20) opening up to 10 rows in total (title ≤ 24, description ≤ 72). ' +
+              'A tap arrives as `message.received` with `text` = the title and `reply_id` = the id.',
+            required: ['kind'],
+            properties: {
+              kind: { type: 'string', enum: ['buttons', 'list'] },
+              buttons: {
+                type: 'array', maxItems: 3,
+                items: { type: 'object', required: ['id', 'title'], properties: { id: { type: 'string' }, title: { type: 'string' } } },
+              },
+              button: { type: 'string', description: 'List only: the label of the button that opens the list.' },
+              sections: {
+                type: 'array',
+                items: {
+                  type: 'object', required: ['rows'],
+                  properties: {
+                    title: { type: 'string' },
+                    rows: {
+                      type: 'array',
+                      items: { type: 'object', required: ['id', 'title'], properties: { id: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' } } },
+                    },
+                  },
+                },
+              },
+              header_image_url: { type: 'string', format: 'uri', description: 'Buttons only: a photo shown above the text.' },
+              header_text: { type: 'string' },
+              footer: { type: 'string' },
+            },
+          },
           media_url: { type: 'string', format: 'uri', description: 'Public file URL. Required for media types.' },
           filename: { type: 'string', description: 'Shown to the recipient for `document`.' },
           template: {
@@ -934,7 +967,7 @@ export const OPENAPI_SPEC = {
           data: {
             type: 'object',
             description:
-              '`message.received`: conversation_id, contact_id, whatsapp_message_id, content_type, text. ' +
+              '`message.received`: conversation_id, contact_id, whatsapp_message_id, content_type, text, reply_id (the id of a tapped button / list row, else null). ' +
               '`message.status_updated`: whatsapp_message_id, conversation_id, status. ' +
               '`conversation.created`: conversation_id, contact_id.',
           },

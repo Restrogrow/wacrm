@@ -1103,6 +1103,9 @@ async function processMessage(
     whatsapp_message_id: message.id,
     content_type: contentType,
     text: contentText,
+    // A tap on a reply button / list row sent through the API: the stable
+    // id it was sent with (text carries the visible title). Null otherwise.
+    reply_id: interactiveReplyId,
   })
 
   // Welcome / away auto-reply (Settings → Business hours). Never throws.

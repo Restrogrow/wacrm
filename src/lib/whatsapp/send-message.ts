@@ -25,6 +25,9 @@ import {
   sendTextMessage,
   sendTemplateMessage,
   sendMediaMessage,
+  sendInteractiveButtons,
+  sendInteractiveList,
+  INTERACTIVE_LIMITS,
   type MediaKind,
 } from '@/lib/whatsapp/meta-api';
 import { decrypt, encrypt, isLegacyFormat } from '@/lib/whatsapp/encryption';
@@ -43,7 +46,98 @@ export const VALID_MESSAGE_TYPES = [
   'text',
   'template',
   ...MEDIA_KINDS,
+  'interactive',
 ] as const;
+
+/**
+ * Reply buttons or a list (`type: 'interactive'`), the API shape. `contentText`
+ * is the body above them. Only valid inside the 24-hour service window, like
+ * any free-form message. A tap comes back as `message.received` with the id.
+ */
+export type InteractivePayload =
+  | {
+      kind: 'buttons';
+      buttons: { id: string; title: string }[];
+      header_image_url?: string;
+      header_text?: string;
+      footer?: string;
+    }
+  | {
+      kind: 'list';
+      button: string;
+      sections: { title?: string; rows: { id: string; title: string; description?: string }[] }[];
+      header_text?: string;
+      footer?: string;
+    };
+
+const str = (v: unknown): string | undefined =>
+  typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined;
+
+/**
+ * Check and normalise an `interactive` object against Meta's limits, so a bad
+ * payload is a 400 here and not a Meta error after the contact was created.
+ */
+export function parseInteractive(raw: unknown): InteractivePayload {
+  const bad = (m: string) => new SendMessageError('bad_request', `interactive: ${m}`, 400);
+  if (!raw || typeof raw !== 'object') throw bad('an object is required for interactive messages');
+  const o = raw as Record<string, unknown>;
+  const L = INTERACTIVE_LIMITS;
+  const header_text = str(o.header_text);
+  const footer = str(o.footer);
+  if (header_text && header_text.length > L.headerTextMaxLength) throw bad(`header_text is over ${L.headerTextMaxLength} characters`);
+  if (footer && footer.length > L.footerMaxLength) throw bad(`footer is over ${L.footerMaxLength} characters`);
+  const ids = new Set<string>();
+  const id = (v: unknown, what: string): string => {
+    const s = str(v);
+    if (!s || s.length > 200) throw bad(`each ${what} needs an id (≤ 200 characters)`);
+    if (ids.has(s)) throw bad(`duplicate id "${s}"`);
+    ids.add(s);
+    return s;
+  };
+
+  if (o.kind === 'buttons') {
+    const list = Array.isArray(o.buttons) ? o.buttons : [];
+    if (list.length < 1 || list.length > L.maxButtons) throw bad(`1–${L.maxButtons} buttons are required`);
+    const buttons = list.map((b) => {
+      const r = (b ?? {}) as Record<string, unknown>;
+      const title = str(r.title);
+      if (!title || title.length > L.buttonTitleMaxLength) throw bad(`each button needs a title of 1–${L.buttonTitleMaxLength} characters`);
+      return { id: id(r.id, 'button'), title };
+    });
+    const header_image_url = str(o.header_image_url);
+    if (header_image_url && !/^https?:\/\//i.test(header_image_url)) throw bad('header_image_url must be an http(s) URL');
+    return { kind: 'buttons', buttons, header_image_url, header_text, footer };
+  }
+
+  if (o.kind === 'list') {
+    const button = str(o.button);
+    if (!button || button.length > L.buttonTitleMaxLength) throw bad(`button (the list's label) must be 1–${L.buttonTitleMaxLength} characters`);
+    const secs = Array.isArray(o.sections) ? o.sections : [];
+    if (secs.length < 1 || secs.length > L.maxListSections) throw bad(`1–${L.maxListSections} sections are required`);
+    let total = 0;
+    const sections = secs.map((s) => {
+      const r = (s ?? {}) as Record<string, unknown>;
+      const rows = (Array.isArray(r.rows) ? r.rows : []).map((row) => {
+        const x = (row ?? {}) as Record<string, unknown>;
+        const title = str(x.title);
+        const description = str(x.description);
+        if (!title || title.length > L.listRowTitleMaxLength) throw bad(`each row needs a title of 1–${L.listRowTitleMaxLength} characters`);
+        if (description && description.length > L.listRowDescriptionMaxLength) throw bad(`row descriptions are at most ${L.listRowDescriptionMaxLength} characters`);
+        return { id: id(x.id, 'row'), title, description };
+      });
+      if (!rows.length) throw bad('every section needs rows');
+      total += rows.length;
+      const title = str(r.title);
+      if (title && title.length > L.listRowTitleMaxLength) throw bad(`section titles are at most ${L.listRowTitleMaxLength} characters`);
+      return { title, rows };
+    });
+    if (total > L.maxListRowsTotal) throw bad(`at most ${L.maxListRowsTotal} rows in total`);
+    if (sections.length > 1 && sections.some((s) => !s.title)) throw bad('with several sections, each needs a title');
+    return { kind: 'list', button, sections, header_text, footer };
+  }
+
+  throw bad("kind must be 'buttons' or 'list'");
+}
 
 /**
  * Typed failure with a machine `code` and a suggested HTTP `status`.
@@ -73,6 +167,8 @@ export interface SendMessageParams {
   templateParams?: string[];
   /** Structured template params (header/body/buttons). */
   templateMessageParams?: unknown;
+  /** Buttons / list for `messageType: 'interactive'` (see parseInteractive). */
+  interactive?: unknown;
   replyToMessageId?: string | null;
   /**
    * The signed-in teammate sending from the dashboard. Stored as
@@ -109,6 +205,7 @@ export function validateSendMessageParams(params: {
   contentText?: string | null;
   mediaUrl?: string | null;
   templateName?: string | null;
+  interactive?: unknown;
 }): void {
   const { messageType, contentText, mediaUrl, templateName } = params;
 
@@ -140,6 +237,24 @@ export function validateSendMessageParams(params: {
       'template_name is required for template messages',
       400
     );
+  }
+
+  if (messageType === 'interactive') {
+    if (!contentText) {
+      throw new SendMessageError(
+        'bad_request',
+        'text is required for interactive messages (the words above the buttons)',
+        400
+      );
+    }
+    if (contentText.length > INTERACTIVE_LIMITS.bodyMaxLength) {
+      throw new SendMessageError(
+        'bad_request',
+        `Interactive text exceeds the ${INTERACTIVE_LIMITS.bodyMaxLength}-character limit`,
+        400
+      );
+    }
+    parseInteractive(params.interactive);
   }
 
   if (isMediaKind && !mediaUrl) {
@@ -202,9 +317,10 @@ export async function sendMessageToConversation(
     );
   }
 
-  validateSendMessageParams({ messageType, contentText, mediaUrl, templateName });
+  validateSendMessageParams({ messageType, contentText, mediaUrl, templateName, interactive: params.interactive });
 
   const isMediaKind = (MEDIA_KINDS as readonly string[]).includes(messageType);
+  const interactive = messageType === 'interactive' ? parseInteractive(params.interactive) : null;
 
   // Conversation + contact, account-scoped.
   const { data: conversation, error: convError } = await db
@@ -321,6 +437,34 @@ export async function sendMessageToConversation(
   }
 
   const attempt = async (phone: string): Promise<string> => {
+    if (interactive?.kind === 'buttons') {
+      const result = await sendInteractiveButtons({
+        phoneNumberId: config.phone_number_id,
+        accessToken,
+        to: phone,
+        bodyText: contentText!,
+        buttons: interactive.buttons,
+        headerImageUrl: interactive.header_image_url,
+        headerText: interactive.header_text,
+        footerText: interactive.footer,
+        contextMessageId,
+      });
+      return result.messageId;
+    }
+    if (interactive?.kind === 'list') {
+      const result = await sendInteractiveList({
+        phoneNumberId: config.phone_number_id,
+        accessToken,
+        to: phone,
+        bodyText: contentText!,
+        buttonLabel: interactive.button,
+        sections: interactive.sections,
+        headerText: interactive.header_text,
+        footerText: interactive.footer,
+        contextMessageId,
+      });
+      return result.messageId;
+    }
     if (messageType === 'template') {
       const result = await sendTemplateMessage({
         phoneNumberId: config.phone_number_id,
@@ -413,7 +557,8 @@ export async function sendMessageToConversation(
       sender_id: senderId || null,
       content_type: messageType,
       content_text: contentText || null,
-      media_url: mediaUrl || null,
+      // an interactive message's photo header shows in the inbox like a media message
+      media_url: mediaUrl || (interactive?.kind === 'buttons' ? interactive.header_image_url : null) || null,
       template_name: templateName || null,
       message_id: waMessageId,
       status: 'sent',
