@@ -43,7 +43,7 @@ export function NoteBubble({ note, authorName, mentionNames, canDelete, onDelete
             </button>
           )}
         </div>
-        <p className="whitespace-pre-wrap break-words text-sm text-foreground">
+        <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm text-foreground">
           {segments.map((seg, i) =>
             seg.mention ? (
               <span key={i} className="rounded bg-amber-500/25 px-1 font-semibold text-amber-800 dark:text-amber-300">

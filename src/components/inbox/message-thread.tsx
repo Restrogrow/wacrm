@@ -938,8 +938,8 @@ export function MessageThread({
     <div className={cn("flex min-w-0 flex-1 flex-col", DOODLE_BG_CLASSES)}>
       {/* Header — solid card surface sits on top of the doodle so the
           name/avatar/dropdowns stay legible. */}
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-3.5 shadow-sm sm:px-5">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2 border-b border-border bg-card px-3 py-3.5 shadow-sm sm:px-5">
+        <div className="flex min-w-0 flex-1 basis-56 items-center gap-2 sm:gap-3">
           {/* Back-to-list button — mobile only. Hidden on lg+ where the
               conversation list is always visible next to the thread. */}
           {onBack && (
@@ -955,19 +955,23 @@ export function MessageThread({
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
             {displayName.charAt(0).toUpperCase()}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h2 className="truncate text-sm font-semibold text-foreground">{displayName}</h2>
             <p className="truncate text-xs text-muted-foreground">{contactPhoneLabel(contact)}</p>
-            <AdSourceBadge contact={contact} className="mt-0.5" />
-            <SlaBadge conversationId={conversationId} className="mt-0.5" />
-            <LeadBadge conversationId={conversationId} className="mt-0.5" />
+            {/* Badges wrap onto extra lines instead of pushing into the
+                action buttons on narrow screens. */}
+            <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1 empty:hidden">
+              <AdSourceBadge contact={contact} />
+              <SlaBadge conversationId={conversationId} />
+              <LeadBadge conversationId={conversationId} className="max-w-full" />
+            </div>
           </div>
           {/* Session timer badge — hidden on the narrowest phones so
               the name + back arrow keep their room. */}
           <Badge
             variant="outline"
             className={cn(
-              "ml-1 hidden gap-1 border-border text-[10px] sm:inline-flex sm:ml-2",
+              "ml-1 hidden shrink-0 gap-1 whitespace-nowrap border-border text-[10px] sm:inline-flex sm:ml-2",
               sessionInfo.expired ? "text-red-400" : "text-primary"
             )}
           >
@@ -976,7 +980,9 @@ export function MessageThread({
           </Badge>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Actions wrap to a second row (right-aligned) when the header
+            gets too narrow, rather than overlapping the contact info. */}
+        <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-1 sm:gap-2">
           {/* Contact-panel toggle — desktop only. The contact sidebar
               eats a chunk of horizontal width that crowds the thread on
               smaller laptops; this lets agents reclaim it when they just

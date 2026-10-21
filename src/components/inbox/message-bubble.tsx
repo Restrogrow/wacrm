@@ -136,7 +136,7 @@ function MessageContent({ message }: { message: Message }) {
   switch (message.content_type) {
     case "text":
       return (
-        <p className="whitespace-pre-wrap break-words text-sm">
+        <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm">
           {message.content_text}
         </p>
       );
@@ -150,7 +150,7 @@ function MessageContent({ message }: { message: Message }) {
             <MediaUnavailable label="Image" />
           )}
           {message.content_text && (
-            <p className="mt-1 whitespace-pre-wrap break-words text-sm">
+            <p className="mt-1 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm">
               {message.content_text}
             </p>
           )}
@@ -170,7 +170,7 @@ function MessageContent({ message }: { message: Message }) {
             <MediaUnavailable label="Video" />
           )}
           {message.content_text && (
-            <p className="mt-1 whitespace-pre-wrap break-words text-sm">
+            <p className="mt-1 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm">
               {message.content_text}
             </p>
           )}
@@ -218,7 +218,7 @@ function MessageContent({ message }: { message: Message }) {
             Template
           </span>
           {message.content_text && (
-            <p className="mt-1 whitespace-pre-wrap break-words text-sm">
+            <p className="mt-1 whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm">
               {message.content_text}
             </p>
           )}
@@ -245,7 +245,7 @@ function MessageContent({ message }: { message: Message }) {
             <CornerDownLeft className="h-3 w-3" />
             Button reply
           </span>
-          <p className="whitespace-pre-wrap break-words text-sm">
+          <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm">
             {message.content_text || "[Interactive reply]"}
           </p>
         </div>
@@ -254,7 +254,7 @@ function MessageContent({ message }: { message: Message }) {
 
     default:
       return (
-        <p className="whitespace-pre-wrap break-words text-sm">
+        <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm">
           {message.content_text || "[Unsupported message type]"}
         </p>
       );
@@ -277,13 +277,13 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        "flex flex-col",
+        "flex min-w-0 max-w-full flex-col",
         isAgent ? "items-end" : "items-start",
       )}
     >
       <div
         className={cn(
-          "relative rounded-3xl px-4 py-2.5 shadow-sm",
+          "relative min-w-0 max-w-full rounded-3xl px-4 py-2.5 shadow-sm",
           isAgent
             ? "rounded-br-lg bg-primary text-primary-foreground"
             : "rounded-bl-lg border border-border bg-card text-foreground",

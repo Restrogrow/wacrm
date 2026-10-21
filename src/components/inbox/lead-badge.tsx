@@ -117,7 +117,7 @@ export function LeadBadge({
     <span
       title={`AI read: ${INTENT_LABELS[row.intent]} · mood ${row.sentiment} · lead score ${row.lead_score}/100`}
       className={cn(
-        "inline-flex shrink-0 items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-medium",
+        "inline-flex max-w-full shrink-0 items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-medium",
         row.sentiment === "negative" && row.lead_score < 40
           ? "border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-400"
           : tone(row.lead_score),
@@ -125,7 +125,7 @@ export function LeadBadge({
       )}
     >
       <Flame className="size-3 shrink-0" />
-      <span>
+      <span className="truncate">
         {compact ? row.lead_score : `Lead ${row.lead_score} · ${INTENT_LABELS[row.intent]}${mood}`}
       </span>
     </span>

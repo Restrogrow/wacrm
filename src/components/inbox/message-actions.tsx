@@ -138,7 +138,7 @@ export function MessageActions({
               <Languages className="h-3 w-3" />
               {translation.from ? `Translated from ${translation.from}` : "Translation"}
             </p>
-            <p className="whitespace-pre-wrap break-words">{translation.text}</p>
+            <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{translation.text}</p>
           </div>
         )}
       <div
