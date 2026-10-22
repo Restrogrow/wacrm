@@ -41,6 +41,7 @@ const GROUPS: { heading: string; links: { href: string; label: string }[] }[] = 
       { href: "/about", label: "About us" },
       { href: "/contact", label: "Contact us" },
       { href: "/security", label: "Security" },
+      { href: "https://restrogrow.com/", label: "Restaurant software: RestroGrow" },
     ],
   },
 ];
