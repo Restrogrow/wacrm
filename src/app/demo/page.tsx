@@ -7,16 +7,50 @@ import {
   LANDING_FOOTER_HTML,
   LANDING_WHATSAPP_FLOAT_HTML,
 } from "@/lib/landing-chrome";
-import { BRAND_KEYWORDS, SITE_URL, buildBreadcrumbNode } from "@/lib/seo";
+import { BRAND_KEYWORDS, SITE_URL, buildBreadcrumbNode, buildFAQNode } from "@/lib/seo";
 
-const DEMO_TITLE = "Book a Demo";
+const DEMO_TITLE = "Book a Free Demo";
 const DEMO_DESCRIPTION =
   "Book a free 20-minute Repeat Grow demo and see the WhatsApp inbox, AI chatbot, broadcasts, payments and integrations on your own use case.";
+
+// Answers mirror the homepage FAQ and pricing; keep them in step.
+const DEMO_FAQS = [
+  {
+    question: "Is the demo free?",
+    answer: "Yes. The demo is free and there is no obligation to buy. It takes about 20 minutes.",
+  },
+  {
+    question: "Do I need the WhatsApp Business API before the demo?",
+    answer:
+      "No. Most people we talk to are not on the API yet. We explain how it works in the demo, and if you sign up we handle WhatsApp Business verification and number setup for you. Setup is included on every plan.",
+  },
+  {
+    question: "Can I keep using the WhatsApp Business app on my phone?",
+    answer:
+      "Yes. With coexistence, one number works in both the WhatsApp Business app and Repeat Grow, and chats from the phone sync into the shared inbox.",
+  },
+  {
+    question: "What does Repeat Grow cost?",
+    answer:
+      "Plans start at ₹999 per month (Starter), with Growth at ₹1,999 and Pro at ₹3,999. WhatsApp message fees are billed by Meta directly. We go through what your team would need in the demo.",
+  },
+  {
+    question: "Can I try it myself instead?",
+    answer:
+      "Yes. Every new account gets a 7-day free trial with Growth limits, and no credit card is needed. Many teams book a demo first so the trial starts set up for their use case.",
+  },
+  {
+    question: "How soon will you contact me?",
+    answer:
+      "We reply on WhatsApp or email, usually within one working day, to pick a time that suits you.",
+  },
+];
 
 const DEMO_STRUCTURED_DATA = {
   "@context": "https://schema.org",
   "@graph": [
     buildBreadcrumbNode([{ name: "Book a demo", path: "/demo" }]),
+    buildFAQNode(DEMO_FAQS),
     {
       "@type": "ContactPage",
       name: "Book a Repeat Grow demo",
@@ -67,14 +101,32 @@ const DEMO_CSS = `
 .lp-page .demo-form .form-msg.err{ color:#b42318; }
 .lp-page .demo-form .form-msg.ok{ color:var(--accent-deep, #0a7a4b); font-weight:600; }
 .lp-page .demo-fine{ font-size:12.5px; color:var(--text-dim); }
+.lp-page .demo-steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:32px; }
+.lp-page .demo-steps .feature-card h3{ font-size:18px; margin:0 0 8px; }
+.lp-page .demo-steps .feature-card p{ font-size:14.5px; color:var(--text-muted); line-height:1.6; margin:0; }
+.lp-page .demo-who{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px 32px; list-style:none; padding:0; margin:28px 0 0; }
+.lp-page .demo-who li{ font-size:15px; color:var(--text-muted); line-height:1.6; }
+.lp-page .demo-who strong{ color:var(--text); }
+.lp-page .demo-who a, .lp-page .demo-links a{ color:var(--accent-deep); text-decoration:underline; text-underline-offset:3px; }
+.lp-page .demo-faq{ max-width:820px; margin:32px auto 0; }
+.lp-page .demo-links{ margin-top:28px; font-size:14.5px; color:var(--text-muted); text-align:center; line-height:1.9; }
 @media (max-width: 860px){
   .lp-page .demo-wrap{ grid-template-columns:1fr; gap:32px; }
   .lp-page .demo-form .row{ grid-template-columns:1fr; }
+  .lp-page .demo-steps, .lp-page .demo-who{ grid-template-columns:1fr; }
 }
 `;
 
 const CHECK =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
+
+const DEMO_FAQ_HTML = DEMO_FAQS.map(
+  (faq, index) => `
+      <details class="faq-item"${index === 0 ? " open" : ""}>
+        <summary>${faq.question}</summary>
+        <p>${faq.answer}</p>
+      </details>`
+).join("");
 
 const DEMO_BODY_HTML = `
 <main id="top">
@@ -154,6 +206,65 @@ const DEMO_BODY_HTML = `
         <p class="demo-fine">We only use these details to contact you about the demo.</p>
       </form>
     </div>
+  </div>
+</section>
+
+<section class="section-alt">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">How it works</span>
+      <h2>From request to a working WhatsApp setup</h2>
+    </div>
+    <div class="demo-steps">
+      <div class="feature-card"><span class="feature-num">01</span><h3>Send the form</h3><p>Tell us your business, team size and what you want WhatsApp to do. It takes a minute.</p></div>
+      <div class="feature-card"><span class="feature-num">02</span><h3>We pick a time with you</h3><p>We message you on WhatsApp or email, usually within one working day, and fix a slot that suits you.</p></div>
+      <div class="feature-card"><span class="feature-num">03</span><h3>20-minute walkthrough</h3><p>We show Repeat Grow on your use case and answer your questions. If it fits, we set up your WhatsApp Business API number for you.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Who it is for</span>
+      <h2>Teams that sell and support on WhatsApp</h2>
+      <p>The demo is shaped around your industry. These are the setups we show most often.</p>
+    </div>
+    <ul class="demo-who">
+      <li><strong>Online stores and D2C brands:</strong> Shopify order, COD and shipping messages, abandoned carts and broadcasts. <a href="/whatsapp-crm-for-ecommerce">WhatsApp CRM for e-commerce</a></li>
+      <li><strong>Real estate teams:</strong> property enquiries, lead follow-ups and a sales pipeline. <a href="/whatsapp-crm-for-real-estate">WhatsApp CRM for real estate</a></li>
+      <li><strong>Coaching and education:</strong> student enquiries, follow-ups and reminders. <a href="/whatsapp-crm-for-education">WhatsApp CRM for education</a></li>
+      <li><strong>Clinics, salons and services:</strong> Calendly bookings and reminders that cut no-shows. <a href="/blog/whatsapp-appointment-reminders">Appointment reminder guide</a></li>
+      <li><strong>Teams moving from another tool:</strong> what changes, what it costs and how your number moves. <a href="/wati-vs-interakt-vs-aisensy">WATI vs Interakt vs AiSensy</a></li>
+      <li><strong>Businesses new to the API:</strong> how it differs from the WhatsApp Business app. <a href="/whatsapp-crm-vs-whatsapp-business-app">CRM vs WhatsApp Business app</a></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section-alt">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Get the most from 20 minutes</span>
+      <h2>What to have ready</h2>
+    </div>
+    <ul class="demo-points" style="max-width:720px;margin:28px auto 0;">
+      <li>${CHECK}<span>The WhatsApp number you use for business, and whether it is on the WhatsApp Business app today.</span></li>
+      <li>${CHECK}<span>Roughly how many customer chats your team handles a day, and how many people answer them.</span></li>
+      <li>${CHECK}<span>The tools you already use, such as Shopify, Calendly, a payment gateway or a CRM.</span></li>
+      <li>${CHECK}<span>One or two messages you send again and again. We will show you how to automate them.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">FAQ</span>
+      <h2>Questions about the demo</h2>
+    </div>
+    <div class="faq-list demo-faq">${DEMO_FAQ_HTML}
+    </div>
+    <p class="demo-links">Not ready to talk yet? See <a href="/pricing">plans and pricing</a>, read our <a href="/blog">WhatsApp Business guides</a>, or browse the <a href="/docs">Help Center</a>.<br><a href="#top">Back to the demo form</a></p>
   </div>
 </section>
 </main>
