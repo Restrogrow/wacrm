@@ -339,6 +339,7 @@ Checks before merging: `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` (a
 | AI quotas (per plan, per day) | `src/lib/ai/quota.ts` |
 | AI safety (secrets, prompt injection) and Gemini client | `src/lib/ai/safety.ts` · `src/lib/ai/gemini.ts` |
 | URL check used everywhere | `src/lib/url.ts` |
+| Security incident response policy (Shopify Level 2 data) | `docs/SECURITY_INCIDENT_RESPONSE.md` |
 | Outbound request guard (SSRF) | `src/lib/webhooks/ssrf.ts` |
 | API buttons / lists | `src/lib/whatsapp/send-message.ts` · `docs/public-api.md` |
 
