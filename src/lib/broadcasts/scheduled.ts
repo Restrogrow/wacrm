@@ -42,6 +42,7 @@ interface ScheduledBroadcast {
   template_name: string;
   template_language: string | null;
   message_params: SendTimeParams | null;
+  phone_number_id: string | null;
 }
 
 async function failRemaining(broadcastId: string, message: string) {
@@ -102,7 +103,7 @@ export async function processScheduledBroadcasts(): Promise<number> {
   // scheduled_at; browser-driven sends don't and are left alone).
   const { data: inFlight } = await db
     .from('broadcasts')
-    .select('id, account_id, template_name, template_language, message_params')
+    .select('id, account_id, template_name, template_language, message_params, phone_number_id')
     .eq('status', 'sending')
     .not('scheduled_at', 'is', null)
     .lte('scheduled_at', nowIso)
@@ -137,6 +138,12 @@ export async function processScheduledBroadcasts(): Promise<number> {
       .maybeSingle();
     if (!config) {
       await failRemaining(broadcast.id, 'WhatsApp is not connected');
+      continue;
+    }
+    // Scheduled on a number the account has since swapped out (migration 083):
+    // don't send it from the new one.
+    if (broadcast.phone_number_id && config.phone_number_id !== broadcast.phone_number_id) {
+      await failRemaining(broadcast.id, 'Not sent: it was scheduled on a WhatsApp number that is no longer connected.');
       continue;
     }
     const accessToken = decrypt(config.access_token);

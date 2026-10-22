@@ -20,8 +20,13 @@
 -- old local row is removed (it is only a copy: the template still lives in
 -- Meta, and a sync after reconnecting number 1 brings it back).
 --
+-- Messages, notes and anything else whose policy checks EXISTS (… FROM
+-- conversations …) follow automatically: that subquery is itself filtered
+-- by the conversations policy below, so a hidden chat hides its messages.
+--
 -- Server code on the service role is not filtered by RLS; the places that
--- find a contact's conversation filter by number themselves.
+-- find a contact's conversation filter by number themselves, sends refuse a
+-- chat of another number, and scheduled broadcasts of another number fail.
 --
 -- Idempotent — safe to run multiple times.
 -- ============================================================
