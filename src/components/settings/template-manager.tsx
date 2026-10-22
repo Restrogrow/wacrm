@@ -362,6 +362,12 @@ export function TemplateManager() {
             ? ` (${data.inserted} new, ${data.updated} updated)`
             : ''),
       );
+      if (data.removed) {
+        toast.error(
+          `${data.removed} template${data.removed === 1 ? ' is' : 's are'} no longer on Meta and ${data.removed === 1 ? 'was' : 'were'} marked Disabled. Pick another template wherever ${data.removed === 1 ? 'it was' : 'they were'} used.`,
+          { duration: 10000 },
+        );
+      }
       if (Array.isArray(data.errors) && data.errors.length > 0) {
         const preview = data.errors.slice(0, 3).map(
           (e: { name: string; language: string; message: string }) =>
