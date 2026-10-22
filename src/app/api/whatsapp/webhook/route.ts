@@ -26,6 +26,7 @@ import { recordWebhookFailure } from '@/lib/ops/monitoring'
 import { handleCallsWebhook, type CallWebhookValue } from '@/lib/whatsapp/calling'
 import { handleFormReply } from '@/lib/whatsapp/forms'
 import { handleCsatReply } from '@/lib/csat/server'
+import { currentNumberFilter, currentPhoneNumberId } from '@/lib/whatsapp/current-number'
 import {
   createOrderFromCatalog,
   handlePaymentStatus,
@@ -1480,13 +1481,16 @@ async function findOrCreateConversation(
   configOwnerUserId: string,
   contactId: string,
 ) {
-  // Look for existing conversation in this account
-  const { data: existing, error: findError } = await supabaseAdmin()
+  // Look for this contact's conversation on the account's current number
+  // (an account that switched numbers has one per number — migration 083)
+  const scope = currentNumberFilter(await currentPhoneNumberId(supabaseAdmin(), accountId))
+  let findQuery = supabaseAdmin()
     .from('conversations')
     .select('*')
     .eq('account_id', accountId)
     .eq('contact_id', contactId)
-    .single()
+  if (scope) findQuery = findQuery.or(scope)
+  const { data: existing, error: findError } = await findQuery.limit(1).single()
 
   if (!findError && existing) {
     return { conversation: existing, created: false }

@@ -30,6 +30,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { normalizePhone } from './phone-utils'
+import { currentNumberFilter, currentPhoneNumberId } from '@/lib/whatsapp/current-number'
 
 const COEXISTENCE_WEBHOOK_FIELDS = new Set([
   'history',
@@ -443,12 +444,15 @@ async function ensureEchoConversation(
   config: ConfigRow,
   contactId: string,
 ): Promise<{ id: string } | null> {
-  const { data: existing } = await supabase
+  // One conversation per (account, contact, number) — migration 083.
+  const scope = currentNumberFilter(await currentPhoneNumberId(supabase, config.account_id))
+  let query = supabase
     .from('conversations')
     .select('id')
     .eq('account_id', config.account_id)
     .eq('contact_id', contactId)
-    .maybeSingle()
+  if (scope) query = query.or(scope)
+  const { data: existing } = await query.limit(1).maybeSingle()
   if (existing) return existing
 
   const { data, error } = await supabase

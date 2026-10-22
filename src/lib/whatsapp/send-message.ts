@@ -405,6 +405,16 @@ export async function sendMessageToConversation(
     );
   }
 
+  // A chat from a number the account has since swapped out (migration 083)
+  // must not be continued from the new number.
+  if (conversation.phone_number_id && config.phone_number_id && conversation.phone_number_id !== config.phone_number_id) {
+    throw new SendMessageError(
+      'other_number',
+      'This chat belongs to a WhatsApp number that is no longer connected.',
+      409
+    );
+  }
+
   const accessToken = decrypt(config.access_token);
 
   // Self-heal legacy CBC ciphertexts. Fire-and-forget; idempotent.

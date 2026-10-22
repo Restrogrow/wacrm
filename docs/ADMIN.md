@@ -361,6 +361,9 @@ Checks before merging: `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` (a
 
 ## 11. Change log (admin-relevant)
 
+- **22 Oct 2026 (night)** — Switching WhatsApp numbers: chats, broadcasts and templates now belong to the number (templates:
+  the Business Account) they ran on (migration 083). Only the connected number's show; reconnecting the old number brings
+  its history back. Contacts stay shared.
 - **22 Oct 2026 (evening)** — Separate dev database `repeatgrow-dev`: all 82 migrations applied, isolation check
   passes, sample demo seeded; local `.env.local` switched to it. `seed-demo.mjs` fixed for folders with spaces and
   for doubled broadcast counts (the live demo's broadcasts still show 200%).

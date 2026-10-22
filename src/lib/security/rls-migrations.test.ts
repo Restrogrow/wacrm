@@ -134,6 +134,9 @@ describe('row-level security (final migration state)', () => {
       for (const [name, sql] of policies) {
         const key = `${table}.${name}`
         if (ALLOWED_UNSCOPED[key]) continue
+        // A RESTRICTIVE policy only narrows what the scoped permissive
+        // policies already allow (e.g. migration 083's current-number filter).
+        if (/\bAS RESTRICTIVE\b/i.test(sql)) continue
         // A policy body references another policy-protected table via
         // EXISTS (SELECT … FROM other WHERE … is_account_member …) —
         // fine; a bare `true` or no condition at all is not.
