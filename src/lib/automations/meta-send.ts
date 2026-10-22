@@ -1,5 +1,6 @@
 import { sendTextMessage, sendTemplateMessage } from '@/lib/whatsapp/meta-api'
 import { decrypt } from '@/lib/whatsapp/encryption'
+import { assertChatOnNumber } from '@/lib/whatsapp/current-number'
 import {
   resolveSendTarget,
   isRecipientNotAllowedError,
@@ -103,6 +104,7 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
   if (configErr || !config) {
     throw new Error('WhatsApp not configured for this account')
   }
+  await assertChatOnNumber(db, input.conversationId, config.phone_number_id)
 
   const accessToken = decrypt(config.access_token)
 

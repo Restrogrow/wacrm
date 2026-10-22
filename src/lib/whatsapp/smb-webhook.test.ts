@@ -48,6 +48,12 @@ function makeSupabaseStub(results: Partial<Record<Table, Array<{ data: unknown; 
         entry.filters.push({ column, value: 'lt' });
         return q;
       },
+      or(_filter: string) {
+        return q;
+      },
+      order(_column: string, _opts?: unknown) {
+        return q;
+      },
       limit(_n: number) {
         return q;
       },

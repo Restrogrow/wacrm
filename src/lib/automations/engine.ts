@@ -25,7 +25,7 @@ import {
   type RoundRobinMember,
   type RoundRobinPresence,
 } from './round-robin'
-import { currentNumberScope, onCurrentNumber } from '@/lib/whatsapp/current-number'
+import { currentNumberScope, findCurrentConversation } from '@/lib/whatsapp/current-number'
 
 // ------------------------------------------------------------
 // Public API
@@ -161,6 +161,7 @@ export async function resumePendingExecution(pending: {
       startPosition: pending.next_step_position,
       logId: pending.log_id,
       triggerEvent: 'resumed_wait',
+      numberScope: lazyNumberScope(automation.account_id),
     })
     await markPending(pending.id, 'done')
   } catch (err) {
@@ -208,6 +209,7 @@ async function executeAutomation(automation: Automation, input: DispatchInput) {
     startPosition: 0,
     logId: log.id,
     triggerEvent: input.triggerType,
+    numberScope: lazyNumberScope(automation.account_id),
   })
 
   // Atomic counter update via the SQL function from migration 007.
@@ -231,6 +233,13 @@ interface ExecuteArgs {
   startPosition: number
   logId: string | null
   triggerEvent: string
+  /** The current number's conversations filter, looked up once per run. */
+  numberScope: () => Promise<string | null>
+}
+
+function lazyNumberScope(accountId: string): () => Promise<string | null> {
+  let scope: Promise<string | null> | null = null
+  return () => (scope ??= currentNumberScope(supabaseAdmin(), accountId))
 }
 
 async function executeStepsFrom(args: ExecuteArgs): Promise<void> {
@@ -442,6 +451,9 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
     case 'assign_conversation': {
       const cfg = step.step_config as AssignConversationStepConfig
       if (!args.contactId) throw new Error('assign_conversation needs a contact')
+      // One chat: the contact's on the current number (an account that
+      // switched numbers keeps the old one hidden, and untouched).
+      const conversationId = await contactConversationId(args)
       let agentId = cfg.agent_id
       if (cfg.mode === 'round_robin') {
         const accountId = args.automation.account_id
@@ -453,30 +465,30 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
         const eligibleIds = new Set(eligible.map((m) => m.user_id as string))
 
         // Round-robin never takes a chat away from a teammate who has it.
-        const { data: current } = await onCurrentNumber(
-          db
+        if (conversationId) {
+          const { data: current } = await db
             .from('conversations')
             .select('assigned_agent_id')
-            .eq('account_id', accountId)
-            .eq('contact_id', args.contactId),
-          await currentNumberScope(db, accountId),
-        )
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-        if (current?.assigned_agent_id && eligibleIds.has(current.assigned_agent_id as string)) {
-          return `already assigned to ${current.assigned_agent_id}`
+            .eq('id', conversationId)
+            .maybeSingle()
+          if (current?.assigned_agent_id && eligibleIds.has(current.assigned_agent_id as string)) {
+            return `already assigned to ${current.assigned_agent_id}`
+          }
         }
 
+        // Load counts only the current number's chats: after a switch the
+        // old number's are hidden, and nobody can work them. (`.or` directly:
+        // onCurrentNumber's generic is too deep for tsc on this query.)
+        const numberScope = await args.numberScope()
+        let loadQuery = db
+          .from('conversations')
+          .select('assigned_agent_id, status, updated_at')
+          .eq('account_id', accountId)
+          .not('assigned_agent_id', 'is', null)
+        if (numberScope) loadQuery = loadQuery.or(numberScope)
         const [{ data: presence }, { data: assigned }] = await Promise.all([
           db.from('member_presence').select('user_id, status, last_seen_at').eq('account_id', accountId),
-          db
-            .from('conversations')
-            .select('assigned_agent_id, status, updated_at')
-            .eq('account_id', accountId)
-            .not('assigned_agent_id', 'is', null)
-            .order('updated_at', { ascending: false })
-            .limit(5000),
+          loadQuery.order('updated_at', { ascending: false }).limit(5000),
         ])
         // Open/pending load per member, plus their most recent assigned
         // chat as a stand-in for "last given a chat" (no assigned_at column).
@@ -505,31 +517,14 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
         .eq('account_id', args.automation.account_id)
         .maybeSingle()
       if (!member) return 'agent is not a member of this account'
-      // only the current number's chat (an account that switched numbers keeps the old one hidden)
-      const assignScope = await currentNumberScope(db, args.automation.account_id)
-      await onCurrentNumber(
-        db
-          .from('conversations')
-          .update({ assigned_agent_id: agentId })
-          .eq('account_id', args.automation.account_id)
-          .eq('contact_id', args.contactId),
-        assignScope,
-      )
+      if (!conversationId) return 'no conversation for contact'
+      await db
+        .from('conversations')
+        .update({ assigned_agent_id: agentId })
+        .eq('id', conversationId)
+        .eq('account_id', args.automation.account_id)
       // Phone push for the new assignee. Never throws.
-      const { data: assignedConv } = await onCurrentNumber(
-        db
-          .from('conversations')
-          .select('id')
-          .eq('account_id', args.automation.account_id)
-          .eq('contact_id', args.contactId),
-        assignScope,
-      )
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      if (assignedConv?.id) {
-        await notifyAssignment({ conversationId: assignedConv.id as string, contactId: args.contactId, assignedUserId: agentId })
-      }
+      await notifyAssignment({ conversationId, contactId: args.contactId, assignedUserId: agentId })
       return `assigned to ${agentId}`
     }
 
@@ -652,37 +647,23 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
 
     case 'close_conversation': {
       if (!args.contactId) throw new Error('close_conversation needs a contact')
-      const closeScope = await currentNumberScope(db, args.automation.account_id)
-      await onCurrentNumber(
-        db
-          .from('conversations')
-          .update({ status: 'closed', updated_at: new Date().toISOString() })
-          .eq('account_id', args.automation.account_id)
-          .eq('contact_id', args.contactId),
-        closeScope,
-      )
+      // One chat, the current number's (same as assign_conversation).
+      const conversationId = await contactConversationId(args)
+      if (!conversationId) return 'no conversation for contact'
+      await db
+        .from('conversations')
+        .update({ status: 'closed', updated_at: new Date().toISOString() })
+        .eq('id', conversationId)
+        .eq('account_id', args.automation.account_id)
       // Optional CSAT rating request for the chat that was just closed (no-op
       // unless the account turned it on). Failure-safe: never fails the step.
       try {
-        const { data: closed } = await onCurrentNumber(
-          db
-            .from('conversations')
-            .select('id')
-            .eq('account_id', args.automation.account_id)
-            .eq('contact_id', args.contactId),
-          closeScope,
-        )
-          .order('updated_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-        if (closed) {
-          const { requestCsat } = await import('@/lib/csat/server')
-          await requestCsat({
-            accountId: args.automation.account_id,
-            conversationId: closed.id as string,
-            userId: args.automation.user_id,
-          })
-        }
+        const { requestCsat } = await import('@/lib/csat/server')
+        await requestCsat({
+          accountId: args.automation.account_id,
+          conversationId,
+          userId: args.automation.user_id,
+        })
       } catch (err) {
         console.warn('[automations] csat request skipped:', err instanceof Error ? err.message : err)
       }
@@ -706,24 +687,23 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
  * no meaningful target without a conversation.
  */
 async function resolveConversationId(args: ExecuteArgs): Promise<string> {
+  if (!args.contactId && !args.context.conversation_id) {
+    throw new Error('cannot resolve conversation: no contact')
+  }
+  const id = await contactConversationId(args)
+  if (!id) throw new Error('no conversation for contact')
+  return id
+}
+
+/** The webhook's conversation if it handed us one, else the contact's on the current number. */
+async function contactConversationId(args: ExecuteArgs): Promise<string | null> {
   const fromCtx = args.context.conversation_id
   if (fromCtx) return fromCtx
-  if (!args.contactId) throw new Error('cannot resolve conversation: no contact')
-  const admin = supabaseAdmin()
-  const { data, error } = await onCurrentNumber(
-    admin
-      .from('conversations')
-      .select('id')
-      .eq('account_id', args.automation.account_id)
-      .eq('contact_id', args.contactId),
-    await currentNumberScope(admin, args.automation.account_id),
-  )
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  if (error) throw new Error(`conversation lookup failed: ${error.message}`)
-  if (!data?.id) throw new Error('no conversation for contact')
-  return data.id as string
+  if (!args.contactId) return null
+  const conv = await findCurrentConversation(supabaseAdmin(), args.automation.account_id, args.contactId, {
+    scope: await args.numberScope(),
+  })
+  return conv?.id ?? null
 }
 
 export function triggerMatches(automation: Automation, ctx: AutomationContext | undefined): boolean {

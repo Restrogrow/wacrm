@@ -41,6 +41,14 @@ export const LANDING_NAV_HTML = `
 </div>
 `;
 
+// Our sister product, linked from both footers (here and SiteLinks).
+// Brand-name anchor on purpose: a sitewide keyword anchor to a site we
+// also own can read as a link scheme to Google.
+export const RESTROGROW_URL = "https://restrogrow.com/";
+export const RESTROGROW_LABEL = "RestroGrow";
+// Tooltip, so visitors know what it is (carries little SEO weight).
+export const RESTROGROW_TITLE = "Our restaurant software";
+
 export const LANDING_FOOTER_HTML = `
 <footer>
   <div class="container">
@@ -100,7 +108,7 @@ export const LANDING_FOOTER_HTML = `
           <li><a href="/blog">Blog</a></li>
           <li><a href="/docs">Help Center</a></li>
           <li><a href="/docs/api">API reference</a></li>
-          <li><a href="https://restrogrow.com/" target="_blank" rel="noopener" title="RestroGrow, our restaurant software">Restaurant software: RestroGrow</a></li>
+          <li><a href="${RESTROGROW_URL}" target="_blank" rel="noopener" title="${RESTROGROW_TITLE}">${RESTROGROW_LABEL}</a></li>
         </ul>
       </div>
       <div class="footer-col">

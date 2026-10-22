@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 
 import { requireRole, toErrorResponse, type AccountContext } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
-import { currentNumberFilter, currentPhoneNumberId } from '@/lib/whatsapp/current-number'
+import { currentNumberScope, findCurrentConversation } from '@/lib/whatsapp/current-number'
 import { CALLING_COEXISTENCE_HELP, CallingError, isCallingNotEnabledError, isCoexistenceCallingError } from '@/lib/whatsapp/calling'
 
 /** Agents and above can place and answer calls. */
@@ -51,13 +51,9 @@ export async function customerForContact(ctx: AccountContext, contactId: string)
   if (!contact) throw new CallingError('Contact not found.', 404)
 
   // the current number's chat (migration 083)
-  const scope = currentNumberFilter(await currentPhoneNumberId(db, ctx.accountId))
-  const find = () => {
-    let q = db.from('conversations').select('id').eq('account_id', ctx.accountId).eq('contact_id', contactId)
-    if (scope) q = q.or(scope)
-    return q.limit(1).maybeSingle()
-  }
-  let { data: conversation } = await find()
+  const scope = await currentNumberScope(db, ctx.accountId)
+  const find = () => findCurrentConversation(db, ctx.accountId, contactId, { scope })
+  let conversation = await find()
   if (!conversation) {
     const { data: created, error } = await db
       .from('conversations')
@@ -65,7 +61,7 @@ export async function customerForContact(ctx: AccountContext, contactId: string)
       .select('id')
       .single()
     // Lost a race with the webhook or another tab: use their row.
-    conversation = created ?? (await find()).data
+    conversation = created ?? (await find())
     if (!conversation) {
       console.error('[calls] could not open a conversation for contact', contactId, error?.message)
       throw new CallingError('Could not open a chat for this contact.', 500)

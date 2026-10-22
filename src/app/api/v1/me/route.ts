@@ -30,11 +30,9 @@ export async function GET(request: Request) {
     const [name, phone] = await Promise.all([
       getAccountName(ctx.accountId),
       // Meta being slow or down must not break (or stall) the identity probe:
-      // give it a few seconds, then answer without the number
-      Promise.race([
-        getConnectedPhoneNumber(ctx.accountId).catch(() => undefined),
-        new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), PHONE_LOOKUP_MS)),
-      ]),
+      // the Graph call is aborted after a few seconds and we answer without
+      // the number (no timer or request is left running after the response)
+      getConnectedPhoneNumber(ctx.accountId, AbortSignal.timeout(PHONE_LOOKUP_MS)).catch(() => undefined),
     ]);
     return ok({
       account: { id: ctx.accountId, name },

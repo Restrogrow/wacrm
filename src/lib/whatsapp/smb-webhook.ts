@@ -30,7 +30,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { normalizePhone } from './phone-utils'
-import { currentNumberFilter, currentPhoneNumberId } from '@/lib/whatsapp/current-number'
+import { findCurrentConversation } from '@/lib/whatsapp/current-number'
 
 const COEXISTENCE_WEBHOOK_FIELDS = new Set([
   'history',
@@ -445,14 +445,13 @@ async function ensureEchoConversation(
   contactId: string,
 ): Promise<{ id: string } | null> {
   // One conversation per (account, contact, number) — migration 083.
-  const scope = currentNumberFilter(await currentPhoneNumberId(supabase, config.account_id))
-  let query = supabase
-    .from('conversations')
-    .select('id')
-    .eq('account_id', config.account_id)
-    .eq('contact_id', contactId)
-  if (scope) query = query.or(scope)
-  const { data: existing } = await query.limit(1).maybeSingle()
+  let existing: { id: string } | null = null
+  try {
+    existing = await findCurrentConversation(supabase, config.account_id, contactId)
+  } catch (err) {
+    // fall through to create, as before: never drop the echo
+    console.error('[smb-webhook] echo conversation lookup failed:', err instanceof Error ? err.message : err)
+  }
   if (existing) return existing
 
   const { data, error } = await supabase
