@@ -11,18 +11,28 @@
 // parse → hash lookup → liveness → rate limit → envelope — so a
 // green response here means the plumbing every future endpoint
 // depends on is sound.
+//
+// phone_number is the account's WhatsApp number right now, so a
+// partner app (RestroGrow) can notice when the owner switched numbers.
 // ============================================================
 
 import { requireApiKey } from '@/lib/auth/api-context';
 import { getAccountName } from '@/lib/api-keys/store';
 import { ok, toApiErrorResponse } from '@/lib/api/v1/respond';
+import { getConnectedPhoneNumber } from '@/lib/connect/phone';
 
 export async function GET(request: Request) {
   try {
     const ctx = await requireApiKey(request);
-    const name = await getAccountName(ctx.accountId);
+    const [name, phone] = await Promise.all([
+      getAccountName(ctx.accountId),
+      // Meta being slow or down must not break the identity probe
+      getConnectedPhoneNumber(ctx.accountId).catch(() => undefined),
+    ]);
     return ok({
       account: { id: ctx.accountId, name },
+      // null: no number connected; undefined (left out): could not check
+      ...(phone !== undefined ? { phone_number: phone } : {}),
       key: { id: ctx.keyId, scopes: ctx.scopes },
     });
   } catch (err) {

@@ -23,23 +23,10 @@ import { ConnectError, exchangeConnectCode, parseExchangeInput } from '@/lib/con
 import {
   consumeConnectCode,
   findConnectClient,
-  findWhatsAppConfig,
   insertClientApiKey,
 } from '@/lib/connect/store';
-import { decrypt } from '@/lib/whatsapp/encryption';
-import { verifyPhoneNumber } from '@/lib/whatsapp/meta-api';
+import { getConnectedPhoneNumber } from '@/lib/connect/phone';
 import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit';
-
-/** The connected number in display form (Graph API), or null. */
-async function getPhoneNumber(accountId: string): Promise<string | null> {
-  const config = await findWhatsAppConfig(accountId);
-  if (!config?.phone_number_id || !config.access_token) return null;
-  const info = await verifyPhoneNumber({
-    phoneNumberId: config.phone_number_id,
-    accessToken: decrypt(config.access_token),
-  });
-  return info.display_phone_number ?? null;
-}
 
 export async function POST(request: Request) {
   try {
@@ -56,7 +43,7 @@ export async function POST(request: Request) {
       consumeCode: (hash, clientId, redirectUri) => consumeConnectCode(hash, clientId, redirectUri),
       insertKey: (row) => insertClientApiKey(row),
       getAccountName,
-      getPhoneNumber,
+      getPhoneNumber: getConnectedPhoneNumber,
     });
 
     return ok(result);
