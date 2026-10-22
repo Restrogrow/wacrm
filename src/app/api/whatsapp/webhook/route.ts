@@ -26,7 +26,7 @@ import { recordWebhookFailure } from '@/lib/ops/monitoring'
 import { handleCallsWebhook, type CallWebhookValue } from '@/lib/whatsapp/calling'
 import { handleFormReply } from '@/lib/whatsapp/forms'
 import { handleCsatReply } from '@/lib/csat/server'
-import { currentNumberFilter, currentPhoneNumberId } from '@/lib/whatsapp/current-number'
+import { findCurrentConversation } from '@/lib/whatsapp/current-number'
 import {
   createOrderFromCatalog,
   handlePaymentStatus,
@@ -1483,16 +1483,21 @@ async function findOrCreateConversation(
 ) {
   // Look for this contact's conversation on the account's current number
   // (an account that switched numbers has one per number — migration 083)
-  const scope = currentNumberFilter(await currentPhoneNumberId(supabaseAdmin(), accountId))
-  let findQuery = supabaseAdmin()
-    .from('conversations')
-    .select('*')
-    .eq('account_id', accountId)
-    .eq('contact_id', contactId)
-  if (scope) findQuery = findQuery.or(scope)
-  const { data: existing, error: findError } = await findQuery.limit(1).single()
+  let existing
+  try {
+    existing = await findCurrentConversation<Record<string, unknown> & { id: string }>(
+      supabaseAdmin(),
+      accountId,
+      contactId,
+      { columns: '*' },
+    )
+  } catch (err) {
+    // Same as before the helper: a failed read falls through to create,
+    // so the inbound message is never dropped.
+    console.error('Error finding conversation:', err)
+  }
 
-  if (!findError && existing) {
+  if (existing) {
     return { conversation: existing, created: false }
   }
 

@@ -9,6 +9,7 @@ import {
   type MediaKind,
 } from '@/lib/whatsapp/meta-api'
 import { decrypt } from '@/lib/whatsapp/encryption'
+import { assertChatOnNumber } from '@/lib/whatsapp/current-number'
 import {
   resolveSendTarget,
   isRecipientNotAllowedError,
@@ -98,6 +99,7 @@ export async function engineSendText(
   if (configErr || !config) {
     throw new Error('WhatsApp not configured for this account')
   }
+  await assertChatOnNumber(db, args.conversationId, config.phone_number_id)
 
   const accessToken = decrypt(config.access_token)
 
@@ -219,6 +221,7 @@ export async function engineSendMedia(
   if (configErr || !config) {
     throw new Error('WhatsApp not configured for this account')
   }
+  await assertChatOnNumber(db, args.conversationId, config.phone_number_id)
 
   const accessToken = decrypt(config.access_token)
 
@@ -406,6 +409,7 @@ async function sendInteractiveViaMeta(
   if (configErr || !config) {
     throw new Error('WhatsApp not configured for this account')
   }
+  await assertChatOnNumber(db, input.conversationId, config.phone_number_id)
 
   const accessToken = decrypt(config.access_token)
 

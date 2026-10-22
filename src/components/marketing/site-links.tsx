@@ -1,11 +1,15 @@
 import Link from "next/link";
+import { RESTROGROW_LABEL, RESTROGROW_TITLE, RESTROGROW_URL } from "@/lib/landing-chrome";
 
 // Compact footer of the marketing site's main pages, for the pages that
 // don't use the landing-page chrome (blog, comparison and industry pages).
 // Every public page links to every other section, which helps Google find
 // and index them and pick the right sitelinks for "repeat grow" searches.
+// Entries marked `external` (off-site) render as a plain <a> in a new tab.
 // Keep in step with LANDING_FOOTER_HTML in src/lib/landing-chrome.ts.
-const GROUPS: { heading: string; links: { href: string; label: string }[] }[] = [
+type SiteLink = { href: string; label: string; title?: string; external?: true };
+
+const GROUPS: { heading: string; links: SiteLink[] }[] = [
   {
     heading: "Product",
     links: [
@@ -41,10 +45,24 @@ const GROUPS: { heading: string; links: { href: string; label: string }[] }[] = 
       { href: "/about", label: "About us" },
       { href: "/contact", label: "Contact us" },
       { href: "/security", label: "Security" },
-      { href: "https://restrogrow.com/", label: "Restaurant software: RestroGrow" },
+      { href: RESTROGROW_URL, label: RESTROGROW_LABEL, title: RESTROGROW_TITLE, external: true },
     ],
   },
 ];
+
+function FooterLink({ link }: { link: SiteLink }) {
+  const Tag = link.external ? "a" : Link;
+  return (
+    <Tag
+      href={link.href}
+      title={link.title}
+      className="text-muted-foreground hover:text-foreground"
+      {...(link.external ? { target: "_blank", rel: "noopener" } : {})}
+    >
+      {link.label}
+    </Tag>
+  );
+}
 
 export function SiteLinks() {
   return (
@@ -56,9 +74,7 @@ export function SiteLinks() {
             <ul className="mt-3 space-y-2">
               {group.links.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-muted-foreground hover:text-foreground">
-                    {link.label}
-                  </Link>
+                  <FooterLink link={link} />
                 </li>
               ))}
             </ul>

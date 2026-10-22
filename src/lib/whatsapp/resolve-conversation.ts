@@ -24,7 +24,7 @@ import { findExistingContact, isUniqueViolation } from '@/lib/contacts/dedupe';
 import { sanitizePhoneForMeta, isValidE164 } from '@/lib/whatsapp/phone-utils';
 import { SendMessageError } from '@/lib/whatsapp/send-message';
 import { resolveAuditUserId, ContactError } from '@/lib/api/v1/contacts';
-import { currentNumberFilter, currentPhoneNumberId } from '@/lib/whatsapp/current-number';
+import { findCurrentConversation } from '@/lib/whatsapp/current-number';
 
 export interface ResolvedConversation {
   conversationId: string;
@@ -140,14 +140,13 @@ export async function resolveConversationByPhone(
   // ---- conversation -------------------------------------------
   // One conversation per (account, contact, number) — same convention as
   // the webhook (migration 083).
-  const scope = currentNumberFilter(await currentPhoneNumberId(db, accountId));
-  let convQuery = db
-    .from('conversations')
-    .select('id')
-    .eq('account_id', accountId)
-    .eq('contact_id', contactId);
-  if (scope) convQuery = convQuery.or(scope);
-  const { data: conv } = await convQuery.limit(1).maybeSingle();
+  let conv: { id: string } | null;
+  try {
+    conv = await findCurrentConversation(db, accountId, contactId);
+  } catch (err) {
+    console.error('[resolve-conversation] conversation lookup error:', err);
+    throw new SendMessageError('db_error', 'Failed to look up conversation', 500);
+  }
 
   if (conv?.id) {
     return { conversationId: conv.id, contactId, contactCreated };

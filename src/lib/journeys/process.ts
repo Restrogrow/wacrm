@@ -27,6 +27,7 @@ import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { accountCanSend, loadEffectivePlan } from '@/lib/billing/server'
 import { engineSendTemplate, engineSendText } from '@/lib/automations/meta-send'
 import { resolveConversationByPhone } from '@/lib/whatsapp/resolve-conversation'
+import { findCurrentConversation } from '@/lib/whatsapp/current-number'
 import {
   DATE_SEND_GRACE_HOURS,
   DEFAULT_TIMEZONE,
@@ -270,15 +271,9 @@ async function releaseClaim(db: Db, id: string, patch: Record<string, unknown> =
 }
 
 async function conversationFor(db: Db, accountId: string, contactId: string): Promise<string | null> {
-  const { data } = await db
-    .from('conversations')
-    .select('id')
-    .eq('account_id', accountId)
-    .eq('contact_id', contactId)
-    .order('last_message_at', { ascending: false, nullsFirst: false })
-    .limit(1)
-    .maybeSingle()
-  return data?.id ?? null
+  // the current number's chat: after a number switch the contact has one per number (migration 083)
+  const conv = await findCurrentConversation(db, accountId, contactId)
+  return conv?.id ?? null
 }
 
 async function lastCustomerMessageAt(db: Db, conversationId: string): Promise<string | null> {

@@ -57,6 +57,8 @@ async function throwMetaError(response: Response, fallback: string): Promise<nev
 export interface VerifyPhoneNumberArgs {
   phoneNumberId: string
   accessToken: string
+  /** Aborts the Graph calls (e.g. a caller's timeout). */
+  signal?: AbortSignal
 }
 
 /**
@@ -66,7 +68,7 @@ export interface VerifyPhoneNumberArgs {
 export async function verifyPhoneNumber(
   args: VerifyPhoneNumberArgs
 ): Promise<MetaPhoneInfo> {
-  const { phoneNumberId, accessToken } = args
+  const { phoneNumberId, accessToken, signal } = args
   const basic = 'id,display_phone_number,verified_name,quality_rating'
   const extended = `${basic},name_status,status,code_verification_status,platform_type,account_mode,is_official_business_account,last_onboarded_time,messaging_limit_tier`
   // Try the detailed field set first; if Meta rejects any field for this
@@ -74,6 +76,7 @@ export async function verifyPhoneNumber(
   for (const fields of [extended, basic]) {
     const response = await fetch(`${META_API_BASE}/${phoneNumberId}?fields=${fields}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
+      signal,
     })
     if (response.ok) return response.json()
     if (fields === basic) {

@@ -40,6 +40,7 @@ function makeDb(script: Script): SupabaseClient {
     },
     eq: () => builder,
     or: () => builder,
+    order: () => builder,
     limit: () => builder,
     like: () => {
       const data = script.contactCandidatesByCall
