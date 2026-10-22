@@ -108,7 +108,7 @@ export default function ShopifyWhatsAppPost() {
         Shopify event, so once it&apos;s set up nobody on your team has to press send.
       </p>
       <BlogFigure
-        src="/blog/shopify-whatsapp-order-notifications/order-journey.svg"
+        src="/blog/shopify-whatsapp-order-notifications/order-journey.webp"
         alt="Timeline of six WhatsApp messages: abandoned cart, order placed, COD confirmation, shipped, out for delivery, delivered"
         caption="The six WhatsApp moments in a Shopify order, and which template category each uses."
       />

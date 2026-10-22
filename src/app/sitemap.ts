@@ -1,3 +1,5 @@
+import { readdirSync } from "node:fs";
+import nodePath from "node:path";
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/seo";
 import { BLOG_POSTS } from "@/lib/blog";
@@ -9,7 +11,21 @@ type Entry = {
   updated: string;
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
   priority: number;
+  /** Site-relative image URLs on the page, listed so Google Images finds them. */
+  images?: string[];
 };
+
+/** The WebP images in public/blog/<slug>/ (built by scripts/build-blog-images.mjs), cover first. */
+function blogImages(slug: string): string[] {
+  try {
+    return readdirSync(nodePath.join(process.cwd(), "public", "blog", slug))
+      .filter((f) => f.endsWith(".webp"))
+      .sort((a, b) => (a === "cover.webp" ? -1 : b === "cover.webp" ? 1 : a.localeCompare(b)))
+      .map((f) => `/blog/${slug}/${f}`);
+  } catch {
+    return [];
+  }
+}
 
 // Real last-changed dates, not "now": Google ignores <lastmod> on sites
 // where every URL claims to have changed on every crawl.
@@ -45,12 +61,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       updated: post.dateModified ?? post.datePublished,
       changeFrequency: "monthly" as const,
       priority: 0.6,
+      images: blogImages(post.slug),
     })),
     ...dbPosts.map((row) => ({
       path: `/blog/${row.slug}`,
       updated: row.updated_at.slice(0, 10),
       changeFrequency: "monthly" as const,
       priority: 0.6,
+      images: row.cover_url ? [row.cover_url] : [],
     })),
   ];
 
@@ -58,10 +76,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const newestPost = posts.reduce((max, p) => (p.updated > max ? p.updated : max), "2026-10-17");
   const blogIndex: Entry = { path: "/blog", updated: newestPost, changeFrequency: "weekly", priority: 0.7 };
 
-  return [...PAGES, blogIndex, ...posts].map(({ path, updated, changeFrequency, priority }) => ({
+  return [...PAGES, blogIndex, ...posts].map(({ path, updated, changeFrequency, priority, images }) => ({
     url: `${SITE_URL}${path}`,
     lastModified: updated,
     changeFrequency,
     priority,
+    ...(images?.length
+      ? { images: images.map((src) => (src.startsWith("http") ? src : `${SITE_URL}${src}`)) }
+      : {}),
   }));
 }

@@ -2,7 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { getPost } from '@/lib/blog';
-import { BlogPostLayout, type FaqItem, type TocItem } from '@/components/blog/post-layout';
+import {
+  BlogDemoCta,
+  BlogFigure,
+  BlogPostLayout,
+  type FaqItem,
+  type TocItem,
+} from '@/components/blog/post-layout';
 
 const POST = getPost('whatsapp-messaging-limits-2026');
 
@@ -73,6 +79,11 @@ export default function MessagingLimitsPost() {
       </p>
 
       <h2 id="what-it-counts">What the messaging limit counts</h2>
+      <BlogFigure
+        src="/blog/whatsapp-messaging-limits-2026/what-counts.webp"
+        alt="Which WhatsApp messages count towards the messaging limit"
+        caption="Only templates you send to customers who have not messaged you in 24 hours use the limit, once per customer."
+      />
       <ul>
         <li>
           <strong>Unique customers, not messages.</strong> Sending three templates to the same
@@ -182,6 +193,11 @@ export default function MessagingLimitsPost() {
         </li>
       </ul>
 
+      <BlogDemoCta
+        heading="Stuck at 250 a day?"
+        text="Book a free demo. We set up and verify your WhatsApp Business API number, so you can move past the starting limit sooner."
+      />
+
       <h2 id="check">Where to see your current limit</h2>
       <p>
         Open WhatsApp Manager in Meta Business Suite and look at the phone number&apos;s overview,
@@ -191,6 +207,11 @@ export default function MessagingLimitsPost() {
       </p>
 
       <h2 id="big-lists">Sending to a list bigger than your limit</h2>
+      <BlogFigure
+        src="/blog/whatsapp-messaging-limits-2026/batch-sending.webp"
+        alt="Splitting a 5,000-person WhatsApp broadcast into batches over three days"
+        caption="Send to your most engaged customers first. Good results on day 1 help raise the limit for the rest."
+      />
       <p>
         If your list is larger than your limit, split it: send to your most engaged customers
         first, then the rest over the next days. Good engagement on the first batch is what moves

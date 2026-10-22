@@ -3,6 +3,8 @@ import Link from 'next/link';
 
 import { getPost } from '@/lib/blog';
 import {
+  BlogDemoCta,
+  BlogFigure,
   BlogPostLayout,
   TemplateExample,
   type FaqItem,
@@ -94,6 +96,11 @@ export default function DiwaliWhatsAppPost() {
       </p>
 
       <h2 id="plan">A day-by-day WhatsApp plan</h2>
+      <BlogFigure
+        src="/blog/diwali-whatsapp-marketing-templates/campaign-calendar.webp"
+        alt="Diwali 2026 WhatsApp campaign calendar from 26 October to 11 November"
+        caption="Six sends from early access to the thank-you message. Diwali day itself is a greeting only."
+      />
       <ol>
         <li>
           <strong>Now to 25 October: prepare.</strong> Clean your list, tag customers who bought
@@ -123,6 +130,11 @@ export default function DiwaliWhatsAppPost() {
       </ol>
 
       <h2 id="templates">Templates you can copy</h2>
+      <BlogFigure
+        src="/blog/diwali-whatsapp-marketing-templates/diwali-offer-message.webp"
+        alt="A Diwali sale WhatsApp message with an image header, offer text and Shop now and Stop promotions buttons"
+        caption="A festive banner, one clear offer with a deadline, and two buttons: buy, or opt out."
+      />
       <p>
         Variables in double braces are filled per customer. Keep offers clear, add one button, and
         always offer a way to stop promotions.
@@ -154,6 +166,11 @@ Track it here: {{4}}`}
         The last one is a Utility template because it is about an order the customer placed. Keep
         offers out of it, or Meta will treat it as Marketing.
       </p>
+
+      <BlogDemoCta
+        heading="Want us to set up your Diwali campaign?"
+        text="Book a free demo. We will create these templates with you, submit them to Meta and schedule every send before the rush."
+      />
 
       <h2 id="approval">Getting templates approved in time</h2>
       <ul>

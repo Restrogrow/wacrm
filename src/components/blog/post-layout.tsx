@@ -13,7 +13,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { SiteLinks } from "@/components/marketing/site-links";
 
-import { buildArticleSchema, buildBreadcrumbSchema, buildFAQNode } from '@/lib/seo';
+import { buildArticleSchema, buildBreadcrumbSchema, buildFAQNode, buildImageSchema } from '@/lib/seo';
 import { formatPostDate, relatedPosts, type BlogPost } from '@/lib/blog';
 
 export interface TocItem {
@@ -54,11 +54,12 @@ export function BlogPostLayout({
       path,
       datePublished: post.datePublished,
       dateModified: post.dateModified,
-      image: post.cover.startsWith('http') ? post.cover : `${path}/opengraph-image`,
+      image: [post.cover, `${path}/opengraph-image`],
       keywords: post.keywords,
       section: post.category,
     }),
     ...(faq?.length ? [{ '@context': 'https://schema.org', ...buildFAQNode(faq) }] : []),
+    buildImageSchema({ src: post.cover, caption: post.coverAlt, width: 1200, height: 630 }),
   ];
   const related = relatedOverride ?? relatedPosts(post.slug);
 
@@ -131,6 +132,8 @@ export function BlogPostLayout({
           </ol>
         </nav>
       )}
+
+      <BlogDemoCta />
 
       <div className="blog-prose mt-10">{children}</div>
 
@@ -238,16 +241,51 @@ export function BlogFigure({
 }) {
   return (
     <figure>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(buildImageSchema({ src, caption: alt, width, height })).replace(/</g, '\\u003c'),
+        }}
+      />
       <Image
         src={src}
         alt={alt}
+        title={alt}
         width={width}
         height={height}
+        loading="lazy"
         unoptimized
         className="w-full rounded-xl border border-border"
       />
       {caption && <figcaption>{caption}</figcaption>}
     </figure>
+  );
+}
+
+/**
+ * "Book a demo" box. Every post shows one under the table of contents;
+ * posts can also drop one into the body where it fits the story.
+ */
+export function BlogDemoCta({
+  heading = 'See it working on your own WhatsApp number',
+  text = 'Book a free 20-minute demo. We show you the inbox, broadcasts and automations on your use case, and set up your WhatsApp Business API number for you.',
+}: {
+  heading?: string;
+  text?: string;
+}) {
+  return (
+    <aside className="not-prose my-8 flex flex-col gap-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="font-semibold">{heading}</p>
+        <p className="mt-1 text-sm leading-relaxed text-foreground/80">{text}</p>
+      </div>
+      <Link
+        href="/demo"
+        className="shrink-0 rounded-lg bg-emerald-700 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-emerald-800"
+      >
+        Book a free demo
+      </Link>
+    </aside>
   );
 }
 

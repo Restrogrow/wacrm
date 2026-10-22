@@ -106,8 +106,8 @@ export function buildArticleSchema(article: {
   path: string;
   datePublished: string;
   dateModified?: string;
-  /** Absolute or site-relative image URL (e.g. the post's OG image). */
-  image?: string;
+  /** Absolute or site-relative image URL(s), e.g. the cover and the post's OG image. */
+  image?: string | string[];
   keywords?: string[];
   section?: string;
 }) {
@@ -122,11 +122,40 @@ export function buildArticleSchema(article: {
     author: { "@id": SITE_URL },
     publisher: { "@id": SITE_URL },
     mainEntityOfPage: `${SITE_URL}${article.path}`,
-    ...(article.image
-      ? { image: article.image.startsWith("http") ? article.image : `${SITE_URL}${article.image}` }
-      : {}),
+    ...(article.image ? { image: [article.image].flat().map(absoluteUrl) } : {}),
     ...(article.keywords?.length ? { keywords: article.keywords.join(", ") } : {}),
     ...(article.section ? { articleSection: article.section } : {}),
+  };
+}
+
+function absoluteUrl(url: string) {
+  return url.startsWith("http") ? url : `${SITE_URL}${url}`;
+}
+
+/**
+ * Standalone-valid ImageObject JSON-LD for an image we made. The credit,
+ * copyright and licence fields are what Google Images reads to show
+ * "Repeat Grow" as the image's source and to link back here.
+ */
+export function buildImageSchema(image: {
+  src: string;
+  caption: string;
+  width?: number;
+  height?: number;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ImageObject",
+    contentUrl: absoluteUrl(image.src),
+    url: absoluteUrl(image.src),
+    caption: image.caption,
+    ...(image.width && image.height ? { width: image.width, height: image.height } : {}),
+    creditText: BRAND_NAME,
+    creator: { "@type": "Organization", name: BRAND_NAME, url: SITE_URL },
+    copyrightHolder: { "@id": SITE_URL },
+    copyrightNotice: `© ${BRAND_NAME}, repeatgrow.com`,
+    license: `${SITE_URL}/terms`,
+    acquireLicensePage: `${SITE_URL}/contact`,
   };
 }
 

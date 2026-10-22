@@ -2,7 +2,8 @@
 // index, each post's layout (hero, schema, related posts), the per-post
 // Open Graph images and sitemap.ts. A new post needs an entry here, a
 // page.tsx + opengraph-image.tsx under src/app/blog/<slug>/, and its
-// images under public/blog/<slug>/. Newest first.
+// images under public/blog/<slug>/ (SVG source + WebP built by
+// scripts/build-blog-images.mjs). Newest first.
 
 export interface BlogPost {
   slug: string;
@@ -32,7 +33,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Marketing',
     datePublished: '2026-10-22',
     readMinutes: 7,
-    cover: '/blog/diwali-whatsapp-marketing-templates/cover.svg',
+    cover: '/blog/diwali-whatsapp-marketing-templates/cover.webp',
     coverAlt: 'A diya next to a WhatsApp Diwali offer message with a Shop now button',
     keywords: [
       'diwali whatsapp marketing',
@@ -51,7 +52,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'WhatsApp API',
     datePublished: '2026-10-22',
     readMinutes: 6,
-    cover: '/blog/whatsapp-service-message-pricing-2026/cover.svg',
+    cover: '/blog/whatsapp-service-message-pricing-2026/cover.webp',
     coverAlt: 'A WhatsApp reply bubble with a rupee price tag on it',
     keywords: [
       'whatsapp service message pricing',
@@ -70,7 +71,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'WhatsApp API',
     datePublished: '2026-10-22',
     readMinutes: 6,
-    cover: '/blog/whatsapp-messaging-limits-2026/cover.svg',
+    cover: '/blog/whatsapp-messaging-limits-2026/cover.webp',
     coverAlt: 'A rising bar chart of daily WhatsApp messaging limits from 250 upwards',
     keywords: [
       'whatsapp messaging limit',
@@ -89,7 +90,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Payments',
     datePublished: '2026-10-16',
     readMinutes: 7,
-    cover: '/blog/whatsapp-pay-upi-payments-india/cover.svg',
+    cover: '/blog/whatsapp-pay-upi-payments-india/cover.webp',
     coverAlt: 'A WhatsApp order summary with a Review and pay button',
     keywords: [
       'whatsapp pay india',
@@ -108,7 +109,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'WhatsApp API',
     datePublished: '2026-10-16',
     readMinutes: 6,
-    cover: '/blog/whatsapp-business-voice-calling/cover.svg',
+    cover: '/blog/whatsapp-business-voice-calling/cover.webp',
     coverAlt: 'An incoming WhatsApp call ringing on a team inbox with an Answer button',
     keywords: [
       'whatsapp business calling api',
@@ -127,7 +128,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'E-commerce',
     datePublished: '2026-10-13',
     readMinutes: 9,
-    cover: '/blog/shopify-whatsapp-order-notifications/cover.svg',
+    cover: '/blog/shopify-whatsapp-order-notifications/cover.webp',
     coverAlt:
       'A Shopify order turning into WhatsApp messages: order confirmed, shipped and delivered',
     keywords: [
@@ -147,7 +148,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Bookings',
     datePublished: '2026-10-13',
     readMinutes: 8,
-    cover: '/blog/whatsapp-appointment-reminders/cover.svg',
+    cover: '/blog/whatsapp-appointment-reminders/cover.webp',
     coverAlt: 'A calendar booking with WhatsApp reminders sent 24 hours and 1 hour before',
     keywords: [
       'whatsapp appointment reminders',
@@ -166,7 +167,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'WhatsApp API',
     datePublished: '2026-10-05',
     readMinutes: 5,
-    cover: '/blog/whatsapp-business-api-verification-guide/cover.svg',
+    cover: '/blog/whatsapp-business-api-verification-guide/cover.webp',
     coverAlt: 'A verified badge next to a WhatsApp Business profile',
     keywords: [
       'whatsapp business api verification',
@@ -182,7 +183,7 @@ export const BLOG_POSTS: BlogPost[] = [
     category: 'Templates',
     datePublished: '2026-10-05',
     readMinutes: 4,
-    cover: '/blog/whatsapp-broadcast-template-rules/cover.svg',
+    cover: '/blog/whatsapp-broadcast-template-rules/cover.webp',
     coverAlt: 'A WhatsApp message template with approved and rejected checks',
     keywords: [
       'whatsapp template rules',

@@ -2,7 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { getPost } from '@/lib/blog';
-import { BlogPostLayout, type FaqItem, type TocItem } from '@/components/blog/post-layout';
+import {
+  BlogDemoCta,
+  BlogFigure,
+  BlogPostLayout,
+  type FaqItem,
+  type TocItem,
+} from '@/components/blog/post-layout';
 
 const POST = getPost('whatsapp-service-message-pricing-2026');
 
@@ -95,6 +101,11 @@ export default function ServiceMessagePricingPost() {
       </p>
 
       <h2 id="still-free">What is billed and what is still free</h2>
+      <BlogFigure
+        src="/blog/whatsapp-service-message-pricing-2026/billed-before-after.webp"
+        alt="Which WhatsApp messages are free and which are billed before and after 1 October 2026"
+        caption="Replies and utility templates inside the 24-hour window are now billed. Messages customers send you stay free."
+      />
       <div className="overflow-x-auto">
         <table>
           <thead>
@@ -173,6 +184,11 @@ export default function ServiceMessagePricingPost() {
       </p>
 
       <h2 id="cut-costs">Seven ways to keep the bill down</h2>
+      <BlogFigure
+        src="/blog/whatsapp-service-message-pricing-2026/fewer-replies.webp"
+        alt="Five short WhatsApp replies compared with one complete reply"
+        caption="Every bubble is a billed message now. One complete answer costs a fifth of five short ones."
+      />
       <ol>
         <li>
           <strong>Answer in one message, not five.</strong> Every bubble is now a billed message.
@@ -205,6 +221,11 @@ export default function ServiceMessagePricingPost() {
           agent, and look for bots or automations that loop.
         </li>
       </ol>
+
+      <BlogDemoCta
+        heading="Answer customers in fewer messages"
+        text="Book a free demo to see saved replies, buttons and business-hours rules in the inbox, and ask us anything about WhatsApp pricing."
+      />
 
       <h2 id="repeat-grow">How Repeat Grow handles it</h2>
       <p>

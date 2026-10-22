@@ -28,4 +28,5 @@
     <line x1="160" y1="512" x2="1060" y2="512" stroke="#334155" stroke-width="4"/>
     <text x="200" y="575" font-size="30" fill="#94a3b8">Customers per 24 hours</text>
   </g>
+  <text id="rg-brand" x="1172" y="606" text-anchor="end" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="600" fill="#ffffff" fill-opacity="0.6">repeatgrow.com</text>
 </svg>
