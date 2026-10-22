@@ -17,6 +17,8 @@ import { roleGuard } from '@/lib/auth/account'
  *
  * Locally-created templates (no Meta counterpart) are NOT deleted —
  * they remain visible so the user can notice drift and clean up.
+ * Templates that came from Meta but are no longer listed there are
+ * marked DISABLED (see the end of POST).
  */
 
 const META_API_VERSION = 'v21.0'
@@ -333,13 +335,51 @@ export async function POST() {
       }
     }
 
+    // Rows that were on Meta once (real meta_template_id) but are no
+    // longer returned were deleted there, or belong to a WABA this
+    // account no longer uses. Sending them fails with #132001, so mark
+    // them DISABLED — that drops them from every APPROVED-only picker.
+    // Only after a complete listing; a later sync that sees the
+    // template again restores its real status via the update above.
+    const truncated = pageCount >= PAGE_CAP && nextUrl !== null
+    let removed = 0
+    if (!truncated) {
+      const onMeta = new Set(metaTemplates.map((t) => `${t.name}|${t.language}`))
+      const { data: localRows, error: localErr } = await supabase
+        .from('message_templates')
+        .select('id, name, language, status, meta_template_id')
+        .eq('account_id', accountId)
+        .not('meta_template_id', 'is', null)
+      if (localErr) {
+        errors.push({ name: '*', language: '*', message: localErr.message })
+      }
+      const stale = (localRows ?? []).filter(
+        (r) =>
+          !String(r.meta_template_id).startsWith('dry-run') &&
+          r.status !== 'DISABLED' &&
+          !onMeta.has(`${r.name}|${r.language}`),
+      )
+      if (stale.length) {
+        const { error: staleErr } = await supabase
+          .from('message_templates')
+          .update({ status: 'DISABLED', updated_at: new Date().toISOString() })
+          .in('id', stale.map((r) => r.id))
+        if (staleErr) {
+          errors.push({ name: '*', language: '*', message: staleErr.message })
+        } else {
+          removed = stale.length
+        }
+      }
+    }
+
     return NextResponse.json({
       success: errors.length === 0,
       total: metaTemplates.length,
       inserted,
       updated,
+      removed,
       errors,
-      truncated: pageCount >= PAGE_CAP && nextUrl !== null,
+      truncated,
     })
   } catch (error) {
     console.error('Error syncing WhatsApp templates:', error)
