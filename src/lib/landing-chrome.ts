@@ -100,6 +100,7 @@ export const LANDING_FOOTER_HTML = `
           <li><a href="/blog">Blog</a></li>
           <li><a href="/docs">Help Center</a></li>
           <li><a href="/docs/api">API reference</a></li>
+          <li><a href="https://restrogrow.com/" target="_blank" rel="noopener" title="RestroGrow, our restaurant software">Restaurant software: RestroGrow</a></li>
         </ul>
       </div>
       <div class="footer-col">
