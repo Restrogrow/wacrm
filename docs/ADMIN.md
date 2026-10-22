@@ -318,6 +318,20 @@ A fully populated test workspace on the **production** Supabase project, for pre
    see [OPERATIONS.md](./OPERATIONS.md#running-migrations)). Always check afterwards that the new tables exist.
 4. After changing a `NEXT_PUBLIC_*` variable, redeploy.
 
+**Two databases (since 22 Oct 2026).** Test and production data are kept apart:
+
+| | Supabase project | Used by |
+|---|---|---|
+| **Production** | the live project | repeatgrow.com (Hostinger env vars). Real accounts plus the public demo workspace (made-up sample data) |
+| **Development** | `repeatgrow-dev` (`tldvpdlnzwtcvxerknvk`) | `npm run dev` on your computer and all testing. Its own demo account from `scripts/seed-demo.mjs` |
+
+- `wacrm/.env.local` points at **repeatgrow-dev**. Its keys also sit in `.env.dev.local`; the old live settings are
+  backed up in `.env.prod.local`. All three are git-ignored. Never copy production keys into `.env.local` again.
+- New migrations: run them on **dev first** (`node scripts/run-migration.mjs <file>` uses `.env.local`), test, then
+  on production in the Supabase SQL Editor before merging.
+- `npm run security:check` against dev (reads `.env.local`): 103 tables, none readable without signing in.
+- Shopify's protected-customer-data answer "test and production data separated" (#11) relies on this setup.
+
 Checks before merging: `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` (all passing at last review, 22 Oct 2026: 1,437 tests).
 
 ---
@@ -347,6 +361,9 @@ Checks before merging: `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` (a
 
 ## 11. Change log (admin-relevant)
 
+- **22 Oct 2026 (evening)** — Separate dev database `repeatgrow-dev`: all 82 migrations applied, isolation check
+  passes, sample demo seeded; local `.env.local` switched to it. `seed-demo.mjs` fixed for folders with spaces and
+  for doubled broadcast counts (the live demo's broadcasts still show 200%).
 - **22 Oct 2026 (later)** — Shopify App Store prep: install starts OAuth immediately (pending installs, migration 082,
   `/api/integrations/shopify/claim`); Shopify order messages free after the trial; listing assets in
   `shopify-listing/` (one folder above the repo).

@@ -4,8 +4,10 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1').replace(/\/$/, '');
+// fileURLToPath decodes %20, so a folder with a space in its name works.
+const ROOT = fileURLToPath(new URL('..', import.meta.url)).replace(/[\\/]$/, '');
 const require = createRequire(ROOT + '/package.json');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -216,6 +218,11 @@ for (const [name, template_name, status, total, sent, delivered, read, replied, 
       broadcast_id: b.id, contact_id: c.id, status: i < replied ? 'replied' : i < read ? 'read' : 'delivered',
       sent_at: ago(2000), delivered_at: ago(1990), read_at: i < read ? ago(1900) : null,
     }))), 'recipients');
+    // Inserting recipients bumps the counters again (migration 005 trigger),
+    // which doubled them (200% delivered). Set the intended numbers last.
+    must(await db.from('broadcasts').update({
+      sent_count: sent, delivered_count: delivered, read_count: read, replied_count: replied, failed_count: failed,
+    }).eq('id', b.id), 'broadcast counts');
   }
 }
 
