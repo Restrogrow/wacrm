@@ -24,7 +24,11 @@ async function calendly<T>(
   path: string,
   init: RequestInit = {}
 ): Promise<T> {
-  const res = await fetch(path.startsWith('http') ? path : `${API}${path}`, {
+  // A full URL (a webhook subscription's uri) must still be Calendly's API:
+  // the account's token goes with this request.
+  const url = path.startsWith('http') ? path : `${API}${path}`
+  if (!url.startsWith(`${API}/`)) throw new Error('Calendly request URL is not the Calendly API')
+  const res = await fetch(url, {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,

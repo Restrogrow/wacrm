@@ -4,6 +4,7 @@
  * the webhook-side orchestration is in ./respond.ts.
  */
 
+import { redactSecrets } from "@/lib/ai/safety";
 import {
   AI_NOT_CONFIGURED,
   aiApiKey,
@@ -251,7 +252,10 @@ export function toChatHistory(
     const caption = (r.content_text ?? "").trim();
     const text = placeholder ? (caption ? `${placeholder} ${caption}` : placeholder) : caption;
     if (!text) continue;
-    out.push({ role: r.sender_type === "customer" ? "user" : "assistant", content: text.slice(0, 1500) });
+    const isCustomer = r.sender_type === "customer";
+    // Card numbers, OTPs and passwords a customer pastes never go to Gemini.
+    const safe = isCustomer ? redactSecrets(text) : text;
+    out.push({ role: isCustomer ? "user" : "assistant", content: safe.slice(0, 1500) });
   }
   return out;
 }

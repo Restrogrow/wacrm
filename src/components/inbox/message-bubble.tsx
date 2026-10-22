@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { isHttpUrl } from "@/lib/url";
 import type { Message, MessageReaction } from "@/types";
 import {
   Clock,
@@ -13,6 +14,7 @@ import {
   LayoutTemplate,
   ImageOff,
   CornerDownLeft,
+  MousePointerClick,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ReplyQuote } from "./reply-quote";
@@ -36,7 +38,7 @@ interface MessageBubbleProps {
  * /api/whatsapp/media/<id>, which is same-origin and safe.
  */
 function isWebUrl(url: string): boolean {
-  return /^https?:\/\//i.test(url) || /^\/api\/whatsapp\/media\/\d+$/.test(url);
+  return isHttpUrl(url) || /^\/api\/whatsapp\/media\/\d+$/.test(url);
 }
 
 function StatusIcon({ status }: { status: Message["status"] }) {
@@ -72,6 +74,33 @@ function filenameFromUrl(url: string | null | undefined): string {
   }
 }
 
+/**
+ * A Flow link-button message's text: the body, then the "Label: https://…"
+ * line meta-send.ts appends from the Flow's own settings. Only that final
+ * line becomes a link. The body can hold a customer's answers (Flow
+ * variables), so a URL there stays plain text, like any customer message.
+ */
+function BotInteractiveText({ text }: { text: string }) {
+  const cut = text.lastIndexOf("\n\n");
+  const last = cut === -1 ? "" : text.slice(cut + 2);
+  const m = /^([^\n]{1,60}): (https?:\/\/\S+)$/.exec(last);
+  if (!m || !isHttpUrl(m[2])) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, cut + 2)}
+      {m[1]}:{" "}
+      <a
+        href={m[2]}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline underline-offset-2"
+      >
+        {m[2]}
+      </a>
+    </>
+  );
+}
+
 function MediaUnavailable({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
@@ -81,42 +110,51 @@ function MediaUnavailable({ label }: { label: string }) {
   );
 }
 
+/**
+ * Keyed by `url` so a new address starts from fresh state: no revoked blob
+ * or earlier error carried over from the previous one.
+ */
 function MediaImage({ url, alt }: { url: string; alt: string }) {
-  const [src, setSrc] = useState<string | null>(null);
+  if (!url) return <MediaUnavailable label="Image" />;
+  return <MediaImageLoader key={url} url={url} alt={alt} />;
+}
+
+function MediaImageLoader({ url, alt }: { url: string; alt: string }) {
+  const isProxy = url.startsWith("/api/whatsapp/media/");
+  // Only proxy URLs go through state; web URLs render straight from props.
+  const [blobSrc, setBlobSrc] = useState<string | null>(null);
   const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [blobLoading, setBlobLoading] = useState(true);
+  const src = isProxy ? blobSrc : url;
+  const loading = isProxy && blobLoading;
 
-  const loadImage = useCallback(async () => {
-    if (!url) return;
+  useEffect(() => {
+    if (!isProxy) return;
 
-    // Proxy URLs need auth fetch to create blob URL
-    if (url.startsWith("/api/whatsapp/media/")) {
+    // Proxy URLs need an authenticated fetch to create a blob URL. The blob
+    // URL lives in this effect so the cleanup revokes the one it created
+    // (state from the first render would always be null).
+    let blobUrl: string | null = null;
+    let cancelled = false;
+    (async () => {
       try {
         const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to load media");
         const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        setSrc(blobUrl);
+        if (cancelled) return;
+        blobUrl = URL.createObjectURL(blob);
+        setBlobSrc(blobUrl);
       } catch {
-        setError(true);
+        if (!cancelled) setError(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) setBlobLoading(false);
       }
-    } else {
-      setSrc(url);
-      setLoading(false);
-    }
-  }, [url]);
-
-  useEffect(() => {
-    loadImage();
+    })();
     return () => {
-      if (src?.startsWith("blob:")) {
-        URL.revokeObjectURL(src);
-      }
+      cancelled = true;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadImage]);
+  }, [url, isProxy]);
 
   if (error) {
     return (
@@ -126,7 +164,7 @@ function MediaImage({ url, alt }: { url: string; alt: string }) {
     );
   }
 
-  if (loading) {
+  if (loading || !src) {
     return (
       <div className="flex h-40 w-60 items-center justify-center rounded-xl bg-muted">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -140,7 +178,7 @@ function MediaImage({ url, alt }: { url: string; alt: string }) {
     // a max-size box, which `fill` would change the display behavior of.
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src ?? ""}
+      src={src}
       alt={alt}
       className="max-h-64 max-w-60 rounded-xl object-cover"
       onError={() => setError(true)}
@@ -148,7 +186,11 @@ function MediaImage({ url, alt }: { url: string; alt: string }) {
   );
 }
 
-function MessageContent({ message }: { message: Message }) {
+/**
+ * `onPrimary`: the bubble has the primary fill (our outbound messages), so
+ * chips and labels use the on-primary colours to stay readable.
+ */
+function MessageContent({ message, onPrimary }: { message: Message; onPrimary: boolean }) {
   switch (message.content_type) {
     case "text":
       return (
@@ -246,7 +288,14 @@ function MessageContent({ message }: { message: Message }) {
     case "template":
       return (
         <div>
-          <span className="mb-1 inline-flex items-center gap-1 rounded bg-primary/20 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+          <span
+            className={cn(
+              "mb-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium",
+              onPrimary
+                ? "bg-primary-foreground/20 text-primary-foreground"
+                : "bg-primary/20 text-primary",
+            )}
+          >
             <LayoutTemplate className="h-3 w-3" />
             Template
           </span>
@@ -267,6 +316,36 @@ function MessageContent({ message }: { message: Message }) {
       );
 
     case "interactive": {
+      // Our own buttons / list / link-button message (agent via the API,
+      // or a Flow bot): the photo header if any (API sends only), then the
+      // body. Which kind it was isn't stored, so the label stays generic.
+      if (message.sender_type !== "customer") {
+        return (
+          <div className="flex flex-col gap-0.5">
+            {message.media_url && isWebUrl(message.media_url) && (
+              <MediaImage url={message.media_url} alt="Message header" />
+            )}
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide",
+                onPrimary ? "text-primary-foreground/70" : "text-muted-foreground",
+              )}
+            >
+              <MousePointerClick className="h-3 w-3" />
+              Interactive
+            </span>
+            {message.content_text && (
+              <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-sm">
+                {message.sender_type === "bot" ? (
+                  <BotInteractiveText text={message.content_text} />
+                ) : (
+                  message.content_text
+                )}
+              </p>
+            )}
+          </div>
+        );
+      }
       // Customer tapped a reply button or list row on a message the bot
       // sent. We show the tapped option's title (already in content_text,
       // set by parseMessageContent in the webhook) with a small affordance
@@ -329,7 +408,7 @@ export function MessageBubble({
             onPrimary={isAgent}
           />
         )}
-        <MessageContent message={message} />
+        <MessageContent message={message} onPrimary={isAgent} />
         <div
           className={cn(
             "mt-1 flex items-center gap-1",

@@ -30,6 +30,7 @@ import {
   INTERACTIVE_LIMITS,
   type MediaKind,
 } from '@/lib/whatsapp/meta-api';
+import { isHttpUrl } from '@/lib/url';
 import { decrypt, encrypt, isLegacyFormat } from '@/lib/whatsapp/encryption';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 import {
@@ -48,6 +49,8 @@ export const VALID_MESSAGE_TYPES = [
   ...MEDIA_KINDS,
   'interactive',
 ] as const;
+/** What the dashboard inbox can send: buttons / lists are public-API only. */
+export const INBOX_MESSAGE_TYPES = VALID_MESSAGE_TYPES.filter((t) => t !== 'interactive');
 
 /**
  * Reply buttons or a list (`type: 'interactive'`), the API shape. `contentText`
@@ -87,12 +90,15 @@ export function parseInteractive(raw: unknown): InteractivePayload {
   if (header_text && header_text.length > L.headerTextMaxLength) throw bad(`header_text is over ${L.headerTextMaxLength} characters`);
   if (footer && footer.length > L.footerMaxLength) throw bad(`footer is over ${L.footerMaxLength} characters`);
   const ids = new Set<string>();
-  const id = (v: unknown, what: string): string => {
-    const s = str(v);
-    if (!s || s.length > 200) throw bad(`each ${what} needs an id (≤ 200 characters)`);
-    if (ids.has(s)) throw bad(`duplicate id "${s}"`);
-    ids.add(s);
-    return s;
+  // Ids aren't trimmed — the tap's webhook returns this id as `reply_id`
+  // and the caller looks it up by the same string — so surrounding spaces
+  // are refused instead (they'd also let "yes" and "yes " both pass).
+  const id = (v: unknown, what: string, max: number): string => {
+    if (typeof v !== 'string' || v.trim() === '' || v.length > max) throw bad(`each ${what} needs an id (≤ ${max} characters)`);
+    if (v !== v.trim()) throw bad(`id "${v}" has spaces at the start or end`);
+    if (ids.has(v)) throw bad(`duplicate id "${v}"`);
+    ids.add(v);
+    return v;
   };
 
   if (o.kind === 'buttons') {
@@ -102,14 +108,18 @@ export function parseInteractive(raw: unknown): InteractivePayload {
       const r = (b ?? {}) as Record<string, unknown>;
       const title = str(r.title);
       if (!title || title.length > L.buttonTitleMaxLength) throw bad(`each button needs a title of 1–${L.buttonTitleMaxLength} characters`);
-      return { id: id(r.id, 'button'), title };
+      return { id: id(r.id, 'button', L.buttonIdMaxLength), title };
     });
     const header_image_url = str(o.header_image_url);
-    if (header_image_url && !/^https?:\/\//i.test(header_image_url)) throw bad('header_image_url must be an http(s) URL');
+    // https only: every agent's browser loads it in the inbox (no mixed content).
+    if (header_image_url && !(isHttpUrl(header_image_url) && /^https:/i.test(header_image_url))) throw bad('header_image_url must be an https URL');
+    // Meta takes one header: refuse both rather than drop one without telling.
+    if (header_image_url && header_text) throw bad('send header_image_url or header_text, not both');
     return { kind: 'buttons', buttons, header_image_url, header_text, footer };
   }
 
   if (o.kind === 'list') {
+    if (str(o.header_image_url)) throw bad("header_image_url is only supported for kind 'buttons'");
     const button = str(o.button);
     if (!button || button.length > L.buttonTitleMaxLength) throw bad(`button (the list's label) must be 1–${L.buttonTitleMaxLength} characters`);
     const secs = Array.isArray(o.sections) ? o.sections : [];
@@ -123,7 +133,7 @@ export function parseInteractive(raw: unknown): InteractivePayload {
         const description = str(x.description);
         if (!title || title.length > L.listRowTitleMaxLength) throw bad(`each row needs a title of 1–${L.listRowTitleMaxLength} characters`);
         if (description && description.length > L.listRowDescriptionMaxLength) throw bad(`row descriptions are at most ${L.listRowDescriptionMaxLength} characters`);
-        return { id: id(x.id, 'row'), title, description };
+        return { id: id(x.id, 'row', L.listRowIdMaxLength), title, description };
       });
       if (!rows.length) throw bad('every section needs rows');
       total += rows.length;
@@ -167,8 +177,20 @@ export interface SendMessageParams {
   templateParams?: string[];
   /** Structured template params (header/body/buttons). */
   templateMessageParams?: unknown;
-  /** Buttons / list for `messageType: 'interactive'` (see parseInteractive). */
-  interactive?: unknown;
+  /**
+   * Buttons / list for `messageType: 'interactive'`, as returned by
+   * validateSendMessageParams. It is checked again here, so a payload
+   * changed after that check can't reach Meta.
+   */
+  interactive?: InteractivePayload | null;
+  /** The types this caller can send; defaults to every VALID_MESSAGE_TYPES entry. */
+  allowedTypes?: readonly string[];
+  /**
+   * Send even when the trial / plan has ended. Only for Shopify app order
+   * messages, which are free for merchants who install from the Shopify
+   * App Store (the listing is "Free"). Everything else stays plan-gated.
+   */
+  planExempt?: boolean;
   replyToMessageId?: string | null;
   /**
    * The signed-in teammate sending from the dashboard. Stored as
@@ -198,7 +220,9 @@ export interface SendMessageResult {
  * bad payload. Exported so a caller can reject a malformed request
  * *before* it finds-or-creates a contact/conversation — otherwise an
  * invalid payload leaves an orphan empty conversation behind. The send
- * core calls this too, so validation can't be skipped.
+ * core calls this too, so validation can't be skipped. Returns the parsed
+ * interactive payload (null for other types) for the caller to hand to
+ * sendMessageToConversation.
  */
 export function validateSendMessageParams(params: {
   messageType: string;
@@ -206,8 +230,11 @@ export function validateSendMessageParams(params: {
   mediaUrl?: string | null;
   templateName?: string | null;
   interactive?: unknown;
-}): void {
+  /** The types this caller can send; defaults to every VALID_MESSAGE_TYPES entry. */
+  allowedTypes?: readonly string[];
+}): InteractivePayload | null {
   const { messageType, contentText, mediaUrl, templateName } = params;
+  const allowedTypes = params.allowedTypes ?? VALID_MESSAGE_TYPES;
 
   if (!messageType) {
     throw new SendMessageError('bad_request', 'message_type is required', 400);
@@ -215,7 +242,7 @@ export function validateSendMessageParams(params: {
 
   const isMediaKind = (MEDIA_KINDS as readonly string[]).includes(messageType);
 
-  if (!(VALID_MESSAGE_TYPES as readonly string[]).includes(messageType)) {
+  if (!allowedTypes.includes(messageType)) {
     throw new SendMessageError(
       'bad_request',
       `Unsupported message_type "${messageType}"`,
@@ -223,7 +250,7 @@ export function validateSendMessageParams(params: {
     );
   }
 
-  if (messageType === 'text' && !contentText) {
+  if (messageType === 'text' && (typeof contentText !== 'string' || !contentText.trim())) {
     throw new SendMessageError(
       'bad_request',
       'content_text is required for text messages',
@@ -239,8 +266,9 @@ export function validateSendMessageParams(params: {
     );
   }
 
+  let interactive: InteractivePayload | null = null;
   if (messageType === 'interactive') {
-    if (!contentText) {
+    if (typeof contentText !== 'string' || !contentText.trim()) {
       throw new SendMessageError(
         'bad_request',
         'text is required for interactive messages (the words above the buttons)',
@@ -254,7 +282,7 @@ export function validateSendMessageParams(params: {
         400
       );
     }
-    parseInteractive(params.interactive);
+    interactive = parseInteractive(params.interactive);
   }
 
   if (isMediaKind && !mediaUrl) {
@@ -267,7 +295,7 @@ export function validateSendMessageParams(params: {
 
   // The URL is stored and later rendered as a link in the inbox, so only
   // web URLs are accepted (never javascript:, data: and the like).
-  if (mediaUrl && !/^https?:\/\//i.test(mediaUrl)) {
+  if (mediaUrl && !isHttpUrl(mediaUrl)) {
     throw new SendMessageError(
       'bad_request',
       'media_url must be an http(s) URL',
@@ -288,6 +316,8 @@ export function validateSendMessageParams(params: {
       400
     );
   }
+
+  return interactive;
 }
 
 export async function sendMessageToConversation(
@@ -317,10 +347,16 @@ export async function sendMessageToConversation(
     );
   }
 
-  validateSendMessageParams({ messageType, contentText, mediaUrl, templateName, interactive: params.interactive });
+  const interactive = validateSendMessageParams({
+    messageType,
+    contentText,
+    mediaUrl,
+    templateName,
+    interactive: params.interactive,
+    allowedTypes: params.allowedTypes,
+  });
 
   const isMediaKind = (MEDIA_KINDS as readonly string[]).includes(messageType);
-  const interactive = messageType === 'interactive' ? parseInteractive(params.interactive) : null;
 
   // Conversation + contact, account-scoped.
   const { data: conversation, error: convError } = await db
@@ -350,7 +386,7 @@ export async function sendMessageToConversation(
   const sanitizedPhone = target.to;
 
   // Trial or paid period over: the account is read-only.
-  if (!(await accountCanSend(accountId))) {
+  if (!params.planExempt && !(await accountCanSend(accountId))) {
     throw new SendMessageError('plan_expired', PLAN_EXPIRED_MESSAGE, 402);
   }
 
@@ -557,7 +593,7 @@ export async function sendMessageToConversation(
       sender_id: senderId || null,
       content_type: messageType,
       content_text: contentText || null,
-      // an interactive message's photo header shows in the inbox like a media message
+      // a buttons message's photo header; the inbox bubble shows it above the text
       media_url: mediaUrl || (interactive?.kind === 'buttons' ? interactive.header_image_url : null) || null,
       template_name: templateName || null,
       message_id: waMessageId,

@@ -282,6 +282,11 @@ Meta's menus change, so the exact names may differ slightly.
   before text goes to the model, and customer text is treated as data, not instructions.
 - **Daily caps per account** (suggest / lead scoring / summary): trial 40 / 40 / 20, Starter 100 / 100 / 50, Growth
   500 / 500 / 200, Pro 1,500 / 1,500 / 500, Enterprise 5,000 / 5,000 / 2,000, expired 0; resets at midnight IST.
+- **AI chatbot replies** (automatic answers to customers) have their own daily cap: trial 200, Starter 1,000, Growth
+  5,000, Pro 15,000, Enterprise 50,000, plus a cap per chat per hour. Over the cap the bot stays quiet and the chat
+  waits in the inbox. The chatbot also removes card numbers, OTPs and passwords before the chat goes to Gemini.
+- **Timeouts:** every AI request gives up after 60 seconds (3 minutes for voice notes and call recordings) and shows
+  "AI took too long to answer. Try again."
 - **Needs** `GEMINI_KEY`. Without it the buttons say "AI is not set up for this workspace yet" and nothing else breaks.
 - **Limits:** no auto-suggest on every inbound message; scores aren't yet usable as segment or automation fields; the
   badge can lag about a minute.
@@ -327,6 +332,9 @@ Meta's menus change, so the exact names may differ slightly.
   `DEMO_LOGIN_EMAIL` / `DEMO_LOGIN_PASSWORD`. Today these should point to the demo workspace **admin**, which holds
   only sample data (12 contacts, 7 chats, 9 deals, broadcasts, automations). It is rate limited (20 per hour per IP)
   and returns 404 / "not enabled" when the variables are unset.
-- **Risks:** anyone can use it; the visitor can change demo data, invite teammates (invite emails come from your
-  domain) and create API keys inside the demo workspace, but cannot see other accounts or use `/admin`. Keep real data
-  out of the demo workspace, and change the account's password to switch the public login off.
+- **What it can't do:** change members, invitations, API keys, ownership, billing or delete the account; set up
+  WhatsApp; send messages, broadcasts, calls, forms or reactions; change integrations, payment links or short links.
+  These return 403 "This is turned off in the demo" (`src/lib/auth/demo-guard.ts`, checked in `src/proxy.ts`).
+- **Risks:** anyone can use it; the visitor can still change demo data and use the AI features (capped daily), but
+  cannot see other accounts or use `/admin`. Keep real data out of the demo workspace, and change the account's
+  password to switch the public login off. For a read-only demo, point the variables at the demo viewer.

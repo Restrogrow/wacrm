@@ -8,6 +8,7 @@ import {
 import {
   sendMessageToConversation,
   validateSendMessageParams,
+  INBOX_MESSAGE_TYPES,
   SendMessageError,
 } from '@/lib/whatsapp/send-message'
 import { roleGuard } from '@/lib/auth/account'
@@ -101,6 +102,7 @@ export async function POST(request: Request) {
         contentText: content_text,
         mediaUrl: media_url,
         templateName: template_name,
+        allowedTypes: INBOX_MESSAGE_TYPES,
       })
     } catch (err) {
       if (err instanceof SendMessageError) {
@@ -186,6 +188,7 @@ export async function POST(request: Request) {
         templateMessageParams: template_message_params,
         replyToMessageId: reply_to_message_id,
         senderId: user.id,
+        allowedTypes: INBOX_MESSAGE_TYPES,
       })
 
       return NextResponse.json({

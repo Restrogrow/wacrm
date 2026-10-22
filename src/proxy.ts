@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { SITE_URL } from '@/lib/seo'
 import { safeNextPath } from '@/lib/auth/safe-next'
+import { DEMO_BLOCKED_MESSAGE, isDemoBlockedRequest, isDemoEmail } from '@/lib/auth/demo-guard'
 import { publicOrigin } from '@/lib/public-origin'
 
 // Google was indexing https://repeatgrow.com/ and https://www.repeatgrow.com/
@@ -94,6 +95,22 @@ export async function proxy(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
+
+  // The public demo login may not touch ownership, WhatsApp setup,
+  // integrations or real sends (see demo-guard). The mobile app sends a
+  // bearer token instead of cookies, so resolve that user too, but only
+  // for the blocked writes, to keep every other request at one lookup.
+  const demoEmail = process.env.DEMO_LOGIN_EMAIL
+  if (demoEmail && isDemoBlockedRequest(request.nextUrl.pathname, request.method)) {
+    let email = user?.email
+    const bearer = /^Bearer\s+(\S+)$/i.exec(request.headers.get('authorization') ?? '')?.[1]
+    if (!email && bearer) {
+      email = (await supabase.auth.getUser(bearer)).data.user?.email
+    }
+    if (isDemoEmail(email, demoEmail)) {
+      return NextResponse.json({ error: DEMO_BLOCKED_MESSAGE }, { status: 403 })
+    }
+  }
 
   // getUser() transparently refreshes an expired access token, which
   // ROTATES the refresh token and writes the new cookies onto

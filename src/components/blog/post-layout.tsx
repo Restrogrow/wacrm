@@ -67,7 +67,9 @@ export function BlogPostLayout({
         <script
           key={i}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          // Post fields come from the database: escape "<" so a title
+          // holding "</script>" can't close the tag and run as HTML.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }}
         />
       ))}
       <BlogProseStyles />

@@ -35,8 +35,11 @@ Dashboard (partners.shopify.com → App distribution → Repeat Grow).
 - [x] Public distribution selected
 - [x] Compliance webhooks configured (handled in
       `src/app/api/integrations/shopify/webhooks/route.ts`)
-- [x] Not embedded; install → (log in / sign up) → OAuth → Settings →
-      Shopify, with the connection resumed after login or signup
+- [x] Not embedded; install → OAuth consent immediately (Shopify-signed
+      install, no login first) → sign in / sign up → `/claim` attaches the
+      store → Settings → Shopify. Needs migration `082_shopify_pending_installs.sql`
+- [x] Pricing: one Free plan. Shopify order messages are plan-exempt
+      (`planExempt` in `send-message.ts`), so they keep sending after the trial
 - [ ] Protected customer data access requested (Level 2: name, email,
       phone, address) with justifications
 - [ ] App Store listing: name, tagline, description, icon (1200×1200),

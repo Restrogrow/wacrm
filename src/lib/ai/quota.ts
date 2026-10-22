@@ -8,16 +8,19 @@ import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { loadEffectivePlan } from '@/lib/billing/server'
 import type { EffectivePlan } from '@/lib/billing/plans'
 
-export type AiFeature = 'suggest' | 'analysis' | 'summary' | 'voice_call'
+export type AiFeature = 'suggest' | 'analysis' | 'summary' | 'voice_call' | 'chatbot'
 
 export const AI_DAILY_CAPS: Record<EffectivePlan, Record<AiFeature, number>> = {
   // voice_call: AI-agent WhatsApp calls (up to 10 minutes of Gemini Live each).
-  trial: { suggest: 40, analysis: 40, summary: 20, voice_call: 5 },
-  starter: { suggest: 100, analysis: 100, summary: 50, voice_call: 20 },
-  growth: { suggest: 500, analysis: 500, summary: 200, voice_call: 100 },
-  pro: { suggest: 1500, analysis: 1500, summary: 500, voice_call: 300 },
-  enterprise: { suggest: 5000, analysis: 5000, summary: 2000, voice_call: 1000 },
-  expired: { suggest: 0, analysis: 0, summary: 0, voice_call: 0 },
+  // chatbot: automatic AI replies to customers. Customers trigger these, not
+  // the team, so the cap stops a flood of messages from many numbers
+  // running up the bill; each conversation is also capped per hour.
+  trial: { suggest: 40, analysis: 40, summary: 20, voice_call: 5, chatbot: 200 },
+  starter: { suggest: 100, analysis: 100, summary: 50, voice_call: 20, chatbot: 1000 },
+  growth: { suggest: 500, analysis: 500, summary: 200, voice_call: 100, chatbot: 5000 },
+  pro: { suggest: 1500, analysis: 1500, summary: 500, voice_call: 300, chatbot: 15000 },
+  enterprise: { suggest: 5000, analysis: 5000, summary: 2000, voice_call: 1000, chatbot: 50000 },
+  expired: { suggest: 0, analysis: 0, summary: 0, voice_call: 0, chatbot: 0 },
 }
 
 const FEATURE_LABEL: Record<AiFeature, string> = {
@@ -25,6 +28,7 @@ const FEATURE_LABEL: Record<AiFeature, string> = {
   analysis: 'lead scoring',
   summary: 'chat summaries',
   voice_call: 'calls',
+  chatbot: 'chatbot replies',
 }
 
 export function aiDailyCap(plan: EffectivePlan | null, feature: AiFeature): number {

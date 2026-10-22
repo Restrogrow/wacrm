@@ -80,6 +80,11 @@ export interface AiChatOptions {
    * recording as audio/ogg). Inline requests are capped at ~20 MB.
    */
   inlineData?: { mimeType: string; data: string };
+  /**
+   * Give up after this long (default 60 s), so a stalled Gemini call can't
+   * hang a spinner or hold a webhook until the platform kills it.
+   */
+  timeoutMs?: number;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -115,6 +120,7 @@ async function aiChatOnce(opts: AiChatOptions): Promise<string> {
     if (lastUser) (lastUser.parts as unknown[]).unshift(part);
   }
   let res: Response;
+  let text: string;
   try {
     res = await fetch(`${GEMINI_BASE}/${encodeURIComponent(opts.model)}:generateContent`, {
       method: "POST",
@@ -133,11 +139,15 @@ async function aiChatOnce(opts: AiChatOptions): Promise<string> {
           ...(thinking ? { thinkingConfig: { thinkingBudget: thinking } } : {}),
         },
       }),
+      signal: AbortSignal.timeout(opts.timeoutMs ?? 60_000),
     });
+    text = await res.text();
   } catch (err) {
-    throw new AiTransientError(`AI request failed: ${err instanceof Error ? err.message : String(err)}`);
+    const timedOut = err instanceof Error && err.name === "TimeoutError";
+    throw new AiTransientError(
+      timedOut ? "AI took too long to answer. Try again." : `AI request failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
-  const text = await res.text();
   if (!res.ok) {
     let msg = text;
     try {

@@ -4,22 +4,25 @@
 // Shopify redirects here after the merchant approves the app. Verify
 // the request (HMAC, state nonce, shop domain), exchange the code for
 // an expiring offline token, save the store on the admin's account,
-// register our webhooks, and return to Settings → Shopify.
+// register our webhooks, and return to Settings → Shopify. A merchant
+// who installed from the App Store without a session yet is sent to
+// sign in / sign up, and ../claim finishes the connection.
 // ============================================================
 
-import { randomBytes } from 'node:crypto';
-import { recordAudit } from '@/lib/audit';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { requireRole } from '@/lib/auth/account';
-import { supabaseAdmin } from '@/lib/flows/admin-client';
+import { requireRole, UnauthorizedError } from '@/lib/auth/account';
 import {
   exchangeCodeForToken,
   fetchShopName,
-  registerWebhooks,
   tokenColumns,
 } from '@/lib/shopify/admin-api';
+import {
+  PENDING_INSTALL_COOKIE,
+  createPendingInstall,
+  saveOAuthConnection,
+} from '@/lib/shopify/connect';
 import { appBaseUrl, shopifyAppCredentials } from '@/lib/shopify/config';
 import {
   isValidShopDomain,
@@ -27,6 +30,7 @@ import {
 } from '@/lib/shopify/verify';
 
 const STATE_COOKIE = 'shopify_oauth_state';
+const CLAIM_PATH = '/api/integrations/shopify/claim';
 
 function backToSettings(params: Record<string, string>) {
   const url = new URL('/integrations/shopify', appBaseUrl());
@@ -69,25 +73,36 @@ export async function GET(request: Request) {
   let ctx;
   try {
     ctx = await requireRole('admin');
-  } catch {
-    return NextResponse.redirect(new URL('/login', appBaseUrl()));
-  }
-
-  const db = supabaseAdmin();
-
-  // An OAuth-connected shop can belong to only one Repeat Grow account.
-  const { data: taken } = await db
-    .from('shopify_stores')
-    .select('account_id')
-    .eq('shop_domain', shop)
-    .eq('connection_type', 'oauth')
-    .eq('status', 'active')
-    .neq('account_id', ctx.accountId)
-    .maybeSingle();
-  if (taken) {
-    return backToSettings({
-      shopify_error: `${shop} is already connected to another Repeat Grow account. Disconnect it there first.`,
-    });
+  } catch (err) {
+    if (!(err instanceof UnauthorizedError)) {
+      return backToSettings({
+        shopify_error: 'Only an owner or admin can connect Shopify.',
+      });
+    }
+    // Installed from the App Store before signing in: exchange the code
+    // now (it expires within minutes), park the connection, and finish
+    // it on /claim once they sign in or sign up.
+    try {
+      const tokens = await exchangeCodeForToken(shop, code);
+      const { claimToken, maxAge } = await createPendingInstall(shop, tokens);
+      const login = new URL('/login', appBaseUrl());
+      login.searchParams.set('next', CLAIM_PATH);
+      const response = NextResponse.redirect(login);
+      response.cookies.delete({ name: STATE_COOKIE, path: '/api/integrations/shopify' });
+      response.cookies.set(PENDING_INSTALL_COOKIE, claimToken, {
+        httpOnly: true,
+        secure: appBaseUrl().startsWith('https://'),
+        sameSite: 'lax',
+        path: '/api/integrations/shopify',
+        maxAge,
+      });
+      return response;
+    } catch (parkErr) {
+      console.error('[shopify/callback] could not park install:', parkErr);
+      return backToSettings({
+        shopify_error: 'Could not finish connecting. Please sign in and click Connect again.',
+      });
+    }
   }
 
   try {
@@ -95,33 +110,14 @@ export async function GET(request: Request) {
     const shopName = await fetchShopName(shop, tokens.accessToken).catch(
       () => null
     );
-
-    const { data: existing } = await db
-      .from('shopify_stores')
-      .select('ingest_token')
-      .eq('account_id', ctx.accountId)
-      .maybeSingle();
-
-    const { error: saveErr } = await db.from('shopify_stores').upsert(
-      {
-        account_id: ctx.accountId,
-        shop_domain: shop,
-        shop_name: shopName,
-        connection_type: 'oauth',
-        ingest_token:
-          existing?.ingest_token ?? randomBytes(24).toString('base64url'),
-        webhook_secret: null,
-        ...tokenColumns(tokens),
-        status: 'active',
-        connected_by: ctx.userId,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'account_id' }
-    );
-    if (saveErr) throw new Error(saveErr.message);
-
-    await registerWebhooks(shop, tokens.accessToken);
-    await recordAudit({ accountId: ctx.accountId, actorUserId: ctx.userId, action: 'integration.connected', targetType: 'integration', targetId: 'shopify' }, request)
+    await saveOAuthConnection({
+      accountId: ctx.accountId,
+      userId: ctx.userId,
+      shop,
+      shopName,
+      columns: tokenColumns(tokens),
+      request,
+    });
   } catch (err) {
     const message =
       err instanceof Error ? err.message : 'Could not connect the store';

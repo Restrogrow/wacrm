@@ -484,7 +484,14 @@ async function sendInteractiveViaMeta(
     conversation_id: input.conversationId,
     sender_type: 'bot',
     content_type: 'interactive',
-    content_text: input.bodyText,
+    // A link button sends no webhook when tapped, so keep its label + URL
+    // in the text: otherwise the inbox never shows where it pointed.
+    content_text:
+      input.kind === 'cta_url'
+        ? `${input.bodyText}
+
+${input.displayText}: ${input.url}`
+        : input.bodyText,
     message_id: waMessageId,
     status: 'sent',
   })

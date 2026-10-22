@@ -2,6 +2,8 @@
 // retailer-id generation, the Meta item mapper and the plan caps.
 // Server-only database helpers live in ./products.ts, which re-exports this.
 
+import { isHttpUrl } from '@/lib/url'
+
 export const PRODUCT_AVAILABILITY = ['in stock', 'out of stock'] as const
 export type ProductAvailability = (typeof PRODUCT_AVAILABILITY)[number]
 export const PRODUCT_STATUSES = ['active', 'draft', 'archived'] as const
@@ -138,15 +140,6 @@ export function slugRetailerId(title: string): string {
 // ------------------------------------------------------------
 // Validation
 // ------------------------------------------------------------
-
-function isHttpUrl(value: string): boolean {
-  try {
-    const u = new URL(value)
-    return u.protocol === 'https:' || u.protocol === 'http:'
-  } catch {
-    return false
-  }
-}
 
 function text(v: unknown, max: number): string {
   return typeof v === 'string' ? v.trim().slice(0, max) : ''

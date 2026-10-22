@@ -658,8 +658,8 @@ export const OPENAPI_SPEC = {
             type: 'object',
             description:
               'Required when `type` is `interactive` (only inside the 24-hour customer service window). ' +
-              '`buttons`: 1–3 reply buttons (title ≤ 20), optional `header_image_url` (JPEG/PNG) or `header_text`. ' +
-              '`list`: a `button` label (≤ 20) opening up to 10 rows in total (title ≤ 24, description ≤ 72). ' +
+              '`buttons`: 1–3 reply buttons (title ≤ 20, id ≤ 256), optional `header_image_url` (JPEG/PNG) or `header_text`, not both. ' +
+              '`list`: a `button` label (≤ 20) opening up to 10 rows in total (title ≤ 24, description ≤ 72, id ≤ 200); no image header. ' +
               'A tap arrives as `message.received` with `text` = the title and `reply_id` = the id.',
             required: ['kind'],
             properties: {
@@ -967,7 +967,7 @@ export const OPENAPI_SPEC = {
           data: {
             type: 'object',
             description:
-              '`message.received`: conversation_id, contact_id, whatsapp_message_id, content_type, text, reply_id (the id of a tapped button / list row, else null). ' +
+              '`message.received`: conversation_id, contact_id, whatsapp_message_id, content_type, text, reply_id (the id of a tapped reply button / list row, or the payload of a tapped template quick-reply button; else null). ' +
               '`message.status_updated`: whatsapp_message_id, conversation_id, status. ' +
               '`conversation.created`: conversation_id, contact_id.',
           },

@@ -271,6 +271,11 @@
 - Answers WhatsApp chats from the business's knowledge base (Google
   Gemini), knows opening hours, and hands off to a human when asked;
   picks the chat back up if no teammate replies within two hours.
+- Limits: a cap per chat per hour and a daily cap per account by plan
+  (`chatbot` in `src/lib/ai/quota.ts`; trial 200 replies a day). Over the
+  cap the bot stays quiet and the chat waits for the team.
+- Card numbers, OTPs, passwords and keys a customer types are removed
+  before the chat goes to Gemini (`redactSecrets` in `src/lib/ai/safety.ts`).
 
 ### Notifications and reporting
 - Real-time dashboard: response times, daily volume, pipeline value,
@@ -464,9 +469,13 @@ per-connection country code).
 - **Connect Shopify (one click, OAuth):** Repeat Grow's Shopify app
   (public distribution, App Store review pending). Webhooks are
   registered automatically via the Admin API (2026-10) with expiring
-  offline tokens; a merchant installing while logged out signs in or up
-  and the connection continues. Until approval, one-click works on
+  offline tokens. An install from Shopify goes straight to the permission
+  screen; a merchant without a session then signs in or up and
+  `/api/integrations/shopify/claim` attaches the parked connection
+  (migration 082, one hour). Until approval, one-click works on
   development stores.
+- **Free:** Shopify order messages keep sending after the trial or plan
+  ends (`planExempt` in `src/lib/whatsapp/send-message.ts`).
 - **Connect with webhooks (any store):** paste the signing key from
   Shopify admin → Settings → Notifications → Webhooks and create the
   listed webhooks pointing at the account's unique URL.
@@ -751,6 +760,8 @@ npm run dev
 > | **Turn it off** | Remove the two env vars and redeploy (the login then says the demo isn't enabled), or change the account's password in Supabase |
 > | **Change the password** | Supabase → Authentication → Users → the demo admin → set a new password, then update `DEMO_LOGIN_PASSWORD` on Hostinger and redeploy |
 > | **Limits** | Route `POST /api/demo-login`, 20 attempts per hour per IP. Treat the workspace as public: keep real data out of it |
+> | **What the demo can't do** | Change members, API keys, ownership, billing or delete the account; set up WhatsApp; send messages, broadcasts, calls or forms; change integrations, payment links or short links. These return 403 "turned off in the demo" (`src/lib/auth/demo-guard.ts`, checked in `src/proxy.ts`) |
+> | **Still possible** | Direct database writes from the browser that the account's role allows, and changing the account's password through Supabase. For a mostly read-only demo, point `DEMO_LOGIN_EMAIL` at the demo **viewer** (Kabir Khan) and turn on Supabase → Authentication → **Secure password change** |
 
 A fully populated demo workspace (contacts, chats, deals, broadcasts, templates, automations, forms, orders, AI chatbot) for previewing the UI.
 
@@ -861,6 +872,7 @@ is idempotent where possible. Recent ones:
 | `077_catalog_collections_stock` | Collections, stock ledger, stock trigger on paid orders, optional WooCommerce REST keys |
 | `080_ai_voice_calls` | AI calls: call script and voice on `ai_chatbot_settings`, `whatsapp_calls.ai_agent` |
 | `081_ai_inbound_calls` | AI answers incoming calls: switch, ring delay and incoming-call script on `ai_chatbot_settings` |
+| `082_shopify_pending_installs` | Shopify App Store installs waiting for the merchant to sign in (encrypted tokens, 1 hour, service role only) |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -1158,6 +1170,24 @@ local build.
   secrets are redacted before they are stored.
 - **Generic API errors:** automation, flow, AI and blog routes log the
   database error and return a generic message.
+- **Public demo login is fenced:** the shared `demo` / `demo` session
+  can't touch ownership, members, API keys, billing, WhatsApp setup,
+  integrations or anything that sends to a real phone
+  (`src/lib/auth/demo-guard.ts`, enforced in `src/proxy.ts` for cookie and
+  bearer sessions). See [Demo account](#demo-account-local-testing).
+- **One URL check** (`isHttpUrl` in `src/lib/url.ts`): only `http(s)`
+  addresses with a host and no spaces or backslashes are sent to Meta,
+  stored, or rendered as links. Outbound requests to user-supplied URLs
+  go through `safeFetch` (private and reserved IPs blocked, no redirects).
+- **Tokens only go to their own service:** Meta media downloads only to
+  Meta hosts, Calendly requests only to `api.calendly.com`.
+- **AI:** customer text is treated as data (prompt-injection phrases
+  neutralised, secrets redacted), every request times out (60 s, 3 min
+  for audio), and AI features have per-user rate limits plus daily
+  per-account caps.
+- **Inbox rendering:** React escapes all message text; in bot bubbles only
+  the link a Flow's own settings added is clickable, never a URL inside a
+  customer's answer. JSON-LD on blog pages escapes `<`.
 - **Still open:** the CSP is report-only, and captcha is not yet enabled
   (see [TODO.md](./TODO.md) and [docs/ADMIN.md](./docs/ADMIN.md)).
 - Cron endpoints check `x-cron-secret` in constant time. `/api/health`

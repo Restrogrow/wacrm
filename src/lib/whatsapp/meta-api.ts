@@ -10,6 +10,7 @@
  */
 
 import { metaRecipient } from './phone-utils'
+import { isHttpUrl } from '@/lib/url'
 
 const META_API_VERSION = 'v21.0'
 const META_API_BASE = `https://graph.facebook.com/${META_API_VERSION}`
@@ -936,6 +937,8 @@ export const INTERACTIVE_LIMITS = {
   bodyMaxLength: 1024,
   footerMaxLength: 60,
   headerTextMaxLength: 60,
+  buttonIdMaxLength: 256,
+  listRowIdMaxLength: 200,
 } as const
 
 export interface InteractiveButton {
@@ -980,7 +983,7 @@ export async function sendInteractiveButtons(
   } = args
   validateInteractiveBody(bodyText)
   validateInteractiveHeaderFooter(headerText, footerText)
-  if (headerImageUrl && !/^https?:\/\//i.test(headerImageUrl)) {
+  if (headerImageUrl && !isHttpUrl(headerImageUrl)) {
     throw new Error('Interactive header image must be an http(s) URL.')
   }
   if (buttons.length < 1 || buttons.length > INTERACTIVE_LIMITS.maxButtons) {
@@ -990,6 +993,9 @@ export async function sendInteractiveButtons(
   }
   for (const btn of buttons) {
     if (!btn.id) throw new Error('Interactive button missing id.')
+    if (btn.id.length > INTERACTIVE_LIMITS.buttonIdMaxLength) {
+      throw new Error(`Interactive button id exceeds ${INTERACTIVE_LIMITS.buttonIdMaxLength} chars.`)
+    }
     if (!btn.title) throw new Error(`Interactive button "${btn.id}" missing title.`)
     if (btn.title.length > INTERACTIVE_LIMITS.buttonTitleMaxLength) {
       throw new Error(
@@ -1170,6 +1176,9 @@ export async function sendInteractiveList(
   for (const section of sections) {
     for (const row of section.rows) {
       if (!row.id) throw new Error('Interactive list row missing id.')
+      if (row.id.length > INTERACTIVE_LIMITS.listRowIdMaxLength) {
+        throw new Error(`Interactive list row id exceeds ${INTERACTIVE_LIMITS.listRowIdMaxLength} chars.`)
+      }
       if (seenIds.has(row.id)) {
         throw new Error(`Interactive list has duplicate row id "${row.id}".`)
       }
