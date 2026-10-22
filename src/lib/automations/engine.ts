@@ -457,6 +457,8 @@ async function runStep(step: AutomationStep, args: ExecuteArgs): Promise<string>
           .select('assigned_agent_id')
           .eq('account_id', accountId)
           .eq('contact_id', args.contactId)
+          .order('updated_at', { ascending: false })
+          .limit(1)
           .maybeSingle()
         if (current?.assigned_agent_id && eligibleIds.has(current.assigned_agent_id as string)) {
           return `already assigned to ${current.assigned_agent_id}`
@@ -693,6 +695,8 @@ async function resolveConversationId(args: ExecuteArgs): Promise<string> {
     .select('id')
     .eq('account_id', args.automation.account_id)
     .eq('contact_id', args.contactId)
+    .order('updated_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
   if (error) throw new Error(`conversation lookup failed: ${error.message}`)
   if (!data?.id) throw new Error('no conversation for contact')

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 
 import { requireRole, toErrorResponse, type AccountContext } from '@/lib/auth/account'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
+import { currentNumberFilter, currentPhoneNumberId } from '@/lib/whatsapp/current-number'
 import { CALLING_COEXISTENCE_HELP, CallingError, isCallingNotEnabledError, isCoexistenceCallingError } from '@/lib/whatsapp/calling'
 
 /** Agents and above can place and answer calls. */
@@ -49,8 +50,13 @@ export async function customerForContact(ctx: AccountContext, contactId: string)
     .maybeSingle()
   if (!contact) throw new CallingError('Contact not found.', 404)
 
-  const find = () =>
-    db.from('conversations').select('id').eq('account_id', ctx.accountId).eq('contact_id', contactId).maybeSingle()
+  // the current number's chat (migration 083)
+  const scope = currentNumberFilter(await currentPhoneNumberId(db, ctx.accountId))
+  const find = () => {
+    let q = db.from('conversations').select('id').eq('account_id', ctx.accountId).eq('contact_id', contactId)
+    if (scope) q = q.or(scope)
+    return q.limit(1).maybeSingle()
+  }
   let { data: conversation } = await find()
   if (!conversation) {
     const { data: created, error } = await db
