@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SiteLinks } from "@/components/marketing/site-links";
 import { buildBreadcrumbSchema, LINKEDIN_URL, TRUSTPILOT_URL } from "@/lib/seo";
 
 const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
@@ -82,6 +83,8 @@ export default function AboutPage() {
           .
         </p>
       </div>
+
+      <SiteLinks />
     </div>
   );
 }

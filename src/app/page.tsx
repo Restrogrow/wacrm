@@ -11,7 +11,7 @@ import {
 } from "@/lib/landing-chrome";
 import { BLOG_POSTS } from "@/lib/blog";
 import { brandSvg, type BrandIcon } from "@/lib/brand-icons";
-import { BRAND_KEYWORDS, SITE_URL, buildFAQNode, buildOrganizationNode } from "@/lib/seo";
+import { BRAND_KEYWORDS, SITE_URL, buildFAQNode, buildOrganizationNode, buildWebSiteNode } from "@/lib/seo";
 
 const HOME_TITLE = "Repeat Grow: WhatsApp CRM & API for Indian Businesses";
 const HOME_DESCRIPTION =
@@ -73,6 +73,7 @@ const HOME_FAQS = [
 const STRUCTURED_DATA = {
   "@context": "https://schema.org",
   "@graph": [
+    buildWebSiteNode(),
     buildOrganizationNode(),
     {
       "@type": "SoftwareApplication",

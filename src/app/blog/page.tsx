@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { SiteLinks } from "@/components/marketing/site-links";
 
 import { SITE_URL, buildBreadcrumbSchema } from '@/lib/seo';
 import { formatPostDate, type BlogPost } from '@/lib/blog';
@@ -211,6 +212,8 @@ export default async function BlogIndexPage() {
           </Link>
         </div>
       </aside>
+
+      <SiteLinks />
     </div>
   );
 }

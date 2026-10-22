@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SiteLinks } from "@/components/marketing/site-links";
 import { buildBreadcrumbSchema } from "@/lib/seo";
 
 const BREADCRUMB_SCHEMA = buildBreadcrumbSchema([
@@ -122,6 +123,8 @@ export default function WhatsappCrmVsBusinessAppPage() {
           See plans &amp; pricing
         </Link>
       </div>
+
+      <SiteLinks />
     </div>
   );
 }

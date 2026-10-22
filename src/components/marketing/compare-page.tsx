@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SiteLinks } from "@/components/marketing/site-links";
 
 import { COMPARE_PAGES, PRICES_CHECKED, type ComparePageData } from "@/lib/compare";
 import { SITE_URL, buildBreadcrumbNode, buildFAQNode } from "@/lib/seo";
@@ -184,6 +185,8 @@ export function ComparePage({ page }: { page: ComparePageData }) {
         their sites for current details. Meta&apos;s per-message WhatsApp fees apply on top of every
         platform price.
       </p>
+
+      <SiteLinks />
     </div>
   );
 }

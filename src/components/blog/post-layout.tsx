@@ -11,6 +11,7 @@
 import type { ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { SiteLinks } from "@/components/marketing/site-links";
 
 import { buildArticleSchema, buildBreadcrumbSchema, buildFAQNode } from '@/lib/seo';
 import { formatPostDate, relatedPosts, type BlogPost } from '@/lib/blog';
@@ -215,6 +216,8 @@ export function BlogPostLayout({
           </div>
         </section>
       )}
+
+      <SiteLinks />
     </article>
   );
 }

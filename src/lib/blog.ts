@@ -24,6 +24,63 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'diwali-whatsapp-marketing-templates',
+    title: 'Diwali WhatsApp Marketing 2026: Campaign Plan and Templates That Get Approved',
+    seoTitle: 'Diwali WhatsApp Marketing 2026: Plan & Templates',
+    description:
+      'A day-by-day WhatsApp plan for Diwali 2026 (8 November), with Marketing and Utility templates you can copy and the mistakes that get them rejected.',
+    category: 'Marketing',
+    datePublished: '2026-10-22',
+    readMinutes: 7,
+    cover: '/blog/diwali-whatsapp-marketing-templates/cover.svg',
+    coverAlt: 'A diya next to a WhatsApp Diwali offer message with a Shop now button',
+    keywords: [
+      'diwali whatsapp marketing',
+      'diwali whatsapp templates',
+      'diwali offer message for customers',
+      'festive whatsapp campaign',
+      'whatsapp broadcast diwali 2026',
+    ],
+  },
+  {
+    slug: 'whatsapp-service-message-pricing-2026',
+    title: 'WhatsApp Service Messages Are No Longer Free: What Changed on 1 October 2026',
+    seoTitle: 'WhatsApp Service Message Pricing (October 2026)',
+    description:
+      'Since 1 October 2026 Meta charges for replies inside the 24-hour window. What is billed now, what is still free, and how to keep your bill down.',
+    category: 'WhatsApp API',
+    datePublished: '2026-10-22',
+    readMinutes: 6,
+    cover: '/blog/whatsapp-service-message-pricing-2026/cover.svg',
+    coverAlt: 'A WhatsApp reply bubble with a rupee price tag on it',
+    keywords: [
+      'whatsapp service message pricing',
+      'whatsapp api pricing 2026',
+      'whatsapp service conversation charges',
+      'is whatsapp business api free',
+      'whatsapp pricing october 2026',
+    ],
+  },
+  {
+    slug: 'whatsapp-messaging-limits-2026',
+    title: 'WhatsApp Messaging Limits in 2026: How Many People Can You Message per Day?',
+    seoTitle: 'WhatsApp Messaging Limits 2026: Tiers Explained',
+    description:
+      'How WhatsApp Business API messaging limits work in 2026: portfolio-level limits, the 250 starting limit, how to get to 2,000 and beyond, and what lowers you.',
+    category: 'WhatsApp API',
+    datePublished: '2026-10-22',
+    readMinutes: 6,
+    cover: '/blog/whatsapp-messaging-limits-2026/cover.svg',
+    coverAlt: 'A rising bar chart of daily WhatsApp messaging limits from 250 upwards',
+    keywords: [
+      'whatsapp messaging limit',
+      'whatsapp business api limit per day',
+      'whatsapp messaging tier',
+      'increase whatsapp messaging limit',
+      'whatsapp business portfolio limit',
+    ],
+  },
+  {
     slug: 'whatsapp-pay-upi-payments-india',
     title: 'How to Take Payments on WhatsApp in India: WhatsApp Pay and UPI',
     seoTitle: 'WhatsApp Pay & UPI: Take Payments on WhatsApp in India',

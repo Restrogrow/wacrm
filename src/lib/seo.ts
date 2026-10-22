@@ -61,6 +61,22 @@ export function buildOrganizationNode() {
   };
 }
 
+/**
+ * WebSite node without "@context" — on the homepage, so Google shows "Repeat Grow"
+ * as the site name and ties searches like "repeatgrow" / "repeat grow" to this site.
+ */
+export function buildWebSiteNode() {
+  return {
+    "@type": "WebSite",
+    "@id": `${SITE_URL}/#website`,
+    name: BRAND_NAME,
+    alternateName: ["RepeatGrow", "Repeat Grow CRM", "repeatgrow.com"],
+    url: `${SITE_URL}/`,
+    inLanguage: "en-IN",
+    publisher: { "@id": SITE_URL },
+  };
+}
+
 /** BreadcrumbList node without "@context" — for nesting inside an "@graph". `items` excludes the implicit Home root. */
 export function buildBreadcrumbNode(items: Array<{ name: string; path: string }>) {
   const trail = [{ name: "Home", path: "/" }, ...items];
