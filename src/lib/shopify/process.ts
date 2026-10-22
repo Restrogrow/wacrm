@@ -214,6 +214,9 @@ export async function sendShopifyEvent(
       templateMessageParams: {
         body: resolveBodyParams(ruleVariables(rule), req.ctx),
       },
+      // Shopify order messages are free (the Shopify App Store listing
+      // is "Free"), so they keep sending after the trial ends.
+      planExempt: true,
     });
     return finish({
       status: 'sent',

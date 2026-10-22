@@ -785,7 +785,7 @@ async function processMessage(
   }
 
   // Parse message content based on type
-  const { contentText, mediaUrl, mediaType, interactiveReplyId } =
+  const { contentText, mediaUrl, mediaType, interactiveReplyId, tapReplyId } =
     await parseMessageContent(message, accessToken)
 
   // Resolve swipe-reply context if present. A missing parent is fine —
@@ -1103,9 +1103,9 @@ async function processMessage(
     whatsapp_message_id: message.id,
     content_type: contentType,
     text: contentText,
-    // A tap on a reply button / list row sent through the API: the stable
-    // id it was sent with (text carries the visible title). Null otherwise.
-    reply_id: interactiveReplyId,
+    // The tapped button / list row's id, or a template quick-reply's
+    // payload (text carries the visible title). Null otherwise.
+    reply_id: tapReplyId,
   })
 
   // Welcome / away auto-reply (Settings → Business hours). Never throws.
@@ -1147,6 +1147,13 @@ async function parseMessageContent(
    * tap with the right affordance. Null for everything else.
    */
   interactiveReplyId: string | null
+  /**
+   * Only for a real tap: a reply button / list row's id, or a template
+   * quick-reply's payload (never its title). Sent to API webhooks as
+   * `reply_id`. Call-permission answers and form submissions set
+   * interactiveReplyId but leave this null.
+   */
+  tapReplyId: string | null
 }> {
   // getMediaUrl signature is (mediaId, accessToken) — earlier code had
   // the args swapped, so every verification hit an invalid Meta URL and
@@ -1174,6 +1181,7 @@ async function parseMessageContent(
     mediaUrl: null,
     mediaType: null,
     interactiveReplyId: null,
+    tapReplyId: null,
   }
 
   switch (message.type) {
@@ -1261,6 +1269,7 @@ async function parseMessageContent(
         ...empty,
         contentText: text,
         interactiveReplyId: message.button?.payload || text,
+        tapReplyId: message.button?.payload || null,
       }
     }
 
@@ -1315,6 +1324,7 @@ async function parseMessageContent(
           ...empty,
           contentText: reply.title || reply.id,
           interactiveReplyId: reply.id,
+          tapReplyId: reply.id,
         }
       }
       return { ...empty, contentText: '[Interactive reply]' }

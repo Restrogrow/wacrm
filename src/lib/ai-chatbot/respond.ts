@@ -5,6 +5,7 @@
 
 import { supabaseAdmin } from "@/lib/flows/admin-client";
 import { engineSendText } from "@/lib/flows/meta-send";
+import { consumeAiQuota } from "@/lib/ai/quota";
 import {
   HISTORY_LIMIT,
   chatbotTimeZone,
@@ -124,6 +125,14 @@ export async function maybeReplyWithAI(input: ChatbotInbound): Promise<void> {
       now: Date.now(),
     });
     if (!decision.reply) return;
+
+    // Account-wide daily cap. Over it, the bot stays quiet and the
+    // message waits in the inbox for the team like any other.
+    const quota = await consumeAiQuota(input.accountId, "chatbot");
+    if (!quota.allowed) {
+      console.warn(`[ai-chatbot] daily cap reached for account ${input.accountId}; not replying`);
+      return;
+    }
 
     // Recent thread (includes the messages that just arrived) and who
     // the customer is.

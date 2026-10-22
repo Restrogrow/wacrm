@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     // Validate the message shape BEFORE resolveConversationByPhone
     // finds-or-creates a contact + conversation, so a bad payload 400s
     // without leaving an orphan contact/conversation behind.
-    validateSendMessageParams({
+    const interactive = validateSendMessageParams({
       messageType: type,
       contentText: typeof body.text === 'string' ? body.text : null,
       mediaUrl: typeof body.media_url === 'string' ? body.media_url : null,
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
           typeof template?.language === 'string' ? template.language : null,
         templateParams,
         templateMessageParams,
-        interactive: body.interactive,
+        interactive,
         replyToMessageId:
           typeof body.reply_to_message_id === 'string'
             ? body.reply_to_message_id

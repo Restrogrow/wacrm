@@ -59,6 +59,8 @@ export async function transcribeVoiceNote(
     maxTokens: 2500,
     retries: 1,
     inlineData: { mimeType, data: Buffer.from(audio).toString('base64') },
+    // Long recordings take a while to process.
+    timeoutMs: 180_000,
     messages: [
       {
         role: 'system',

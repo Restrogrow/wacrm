@@ -62,6 +62,8 @@ export async function summarizeCallAudio(
     maxTokens: 2000,
     retries: 1,
     inlineData: { mimeType, data: Buffer.from(audio).toString('base64') },
+    // Long recordings take a while to process.
+    timeoutMs: 180_000,
     messages: [
       {
         role: 'system',

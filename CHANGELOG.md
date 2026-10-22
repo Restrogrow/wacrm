@@ -11,13 +11,62 @@ and polish.
 
 ## [Unreleased]
 
+**Migration required:** `082_shopify_pending_installs.sql`.
+
 ### Added
 
+- **Shopify App Store install starts OAuth immediately** (Shopify's
+  "Immediately authenticates after install" check). A Shopify-signed install
+  goes straight to the permission screen; if the merchant has no Repeat Grow
+  session yet, the connection is parked for an hour and finished after they
+  sign in or sign up (`/api/integrations/shopify/claim`).
+- **Shopify order messages are free:** they keep sending after the trial or
+  plan ends (the Shopify listing is "Free"). Everything else stays on plans.
 - **Buttons and lists in the public API**: `POST /api/v1/messages` takes
   `type: "interactive"` with up to 3 reply buttons (optionally a photo on
   top) or a list of up to 10 rows. A tap arrives in the `message.received`
   webhook with the new `reply_id` (the button / row id); `text` is still the
   visible title. No migration needed.
+- **Daily cap on AI chatbot replies** per plan (trial 200, Starter 1,000,
+  Growth 5,000, Pro 15,000, Enterprise 50,000), on top of the existing
+  per-chat hourly cap. Over the cap the bot stays quiet and the chat waits
+  in the inbox. Uses the existing `ai_usage_daily` counter (migration 074).
+
+### Changed
+
+- **Inbox:** buttons, list and link-button messages sent by a teammate (API)
+  or a Flow now show as an "Interactive" bubble with the photo header, not
+  as a customer's "Button reply". A Flow link-button message also stores
+  "Label: link" after its text, and that link can be clicked.
+- **Dashboard send route** (`/api/whatsapp/send`) returns
+  `Unsupported message_type "interactive"`: buttons and lists are API-only.
+
+### Security
+
+- **Public demo login is restricted:** the `demo` / `demo` session can no
+  longer change members, API keys, ownership, billing or account deletion,
+  set up WhatsApp, send messages / broadcasts / calls / forms, or change
+  integrations, payment links or short links (`src/lib/auth/demo-guard.ts`,
+  enforced in `src/proxy.ts`, also for the mobile app's bearer token).
+- **AI chatbot:** card numbers, OTPs, passwords and keys a customer types
+  are removed before the chat history goes to Gemini.
+- **Inbox:** only the link from a Flow's own settings becomes clickable in a
+  bot bubble; URLs inside customer answers stay plain text.
+- **Web addresses** are checked once, strictly (`src/lib/url.ts`): no
+  missing host, spaces or backslashes the parser would quietly fix up.
+- **Calendly** requests only ever go to `api.calendly.com` with the token.
+- **Blog** JSON-LD escapes `<`, so a post title can't close the script tag.
+
+### Fixed
+
+- AI requests stop after 60 s (3 min for audio) instead of hanging.
+- A text message of only spaces, or a non-text `content_text`, is a clean
+  400 instead of a Meta error or a 500.
+- Inbox images: proxied media blobs are released (memory leak), a changed
+  image address no longer shows a revoked or failed image, and an empty
+  address shows "Image unavailable".
+- The "Template" chip and the new labels are readable on outbound (green)
+  bubbles.
 
 ## [0.7.0] — 2026-10-20
 

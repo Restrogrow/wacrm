@@ -21,7 +21,7 @@ Last reviewed: **17 Oct 2026** (after the blog, security, catalog, reports, jour
 
 ## ⚠️ Important to-do (do these first)
 
-Updated 17 Oct 2026. Tick them off and delete the line once done.
+Updated 22 Oct 2026. Tick them off and delete the line once done.
 
 **Already done (17 Oct 2026):** the green redesign is on `main`; database migrations `059` to `080` are applied (078 to 080 on 20 Oct) to
 production and checked against the live database; the blog, security fixes, catalog, reports, journeys, business
@@ -82,10 +82,23 @@ report anything that looks wrong.
 - [ ] **8. Check the cron jobs exist on Hostinger** (see [Crons](#crons-background-jobs)) and that
   `AUTOMATION_CRON_SECRET` is set. Open `/admin/system`: every job (now 14, including `sla-alerts`,
   `scheduled-messages`, `journeys`, `ai-analysis`, `calcom-reminders`) should say OK.
-- [x] **9. Delete the plain-text demo passwords. DONE 17 Oct 2026** (the demo admin password was reset). Original task: `wacrm/.env.demo-login` and `demo-login.txt` (one folder above the
-  repo) sit in OneDrive. Move them to a password manager and delete both files. If the demo workspace is on the
-  production database (it is), change those five passwords. See [Demo account](#demo-account) for the public
-  `demo` / `demo` login risks.
+- [ ] **9. Delete the plain-text demo passwords. NOT DONE: both files were still there on 22 Oct 2026.** The demo
+  admin password was reset on 17 Oct, but `wacrm/.env.demo-login` and `demo-login.txt` (one folder above the repo)
+  still sit in OneDrive. Move anything still needed to a password manager, delete both files, and change any of the
+  five demo passwords in them that still work (the demo workspace is on the production database). See
+  [Demo account](#8-demo-account).
+- [ ] **9a. Make the public demo safer (5 minutes).** Since 22 Oct the app blocks the risky demo actions (see
+  [Demo account](#8-demo-account)), but a visitor can still write directly to the database as far as the account's
+  role allows, and change the account's password. (a) In Hostinger set `DEMO_LOGIN_EMAIL` /
+  `DEMO_LOGIN_PASSWORD` to the demo **viewer** (Kabir Khan) for a mostly read-only demo, then redeploy. (b) Supabase
+  → Authentication → turn on **Secure password change**. Decide (a) first: as a viewer the visitor can't edit
+  sample data either.
+- [ ] **9c. Run migration `082_shopify_pending_installs.sql`** on production **before** deploying the Shopify install
+  fix (Supabase SQL Editor or `node scripts/run-migration.mjs`). Without it, an App Store install by a merchant who
+  isn't signed in fails with "Could not finish connecting".
+- [ ] **9b. Enforce the Content Security Policy.** It only reports today (`Content-Security-Policy-Report-Only` in
+  `next.config.mjs`). Flip it to `Content-Security-Policy` on a branch, click through every page, fix anything it
+  blocks, then merge.
 - [ ] **10. Decide what to do with the demo workspace.** It lives on the **production** Supabase project, so it shows
   up in `/admin` counts as a real account with 5 members. Keep it for testing, or delete it before you report numbers.
 - [ ] **11. Merchants' own setup** (not yours): each customer pastes webhook URLs / secrets for WooCommerce,
@@ -272,7 +285,9 @@ after changing them. Where they live: **Hostinger hPanel** for production, **`wa
 > - **Where the password lives:** only in Hostinger env vars `DEMO_LOGIN_EMAIL` and `DEMO_LOGIN_PASSWORD` (and `wacrm/.env.local` locally). It was reset on 17 Oct 2026 when the old password file was deleted. Never put it in the repo or docs.
 > - **Turn off:** delete the two env vars and redeploy, or change the user's password in Supabase.
 > - **Change password:** Supabase → Authentication → Users → the demo admin → new password; update `DEMO_LOGIN_PASSWORD` on Hostinger; redeploy.
-> - **Risks:** anyone can use it, so they can edit demo data, invite teammates (invite emails go from your domain) and create API keys *inside the demo workspace only*. Rate limited to 20 attempts/hour/IP. Keep real customer data out of it.
+> - **Blocked for the demo (since 22 Oct 2026):** members and invitations, API keys, ownership transfer, account deletion, billing, the daily-summary settings, WhatsApp setup, sending messages / broadcasts / calls / forms / reactions, scheduled messages, CSAT requests, bulk inbox actions, chat sharing, journey enrolment, integrations, payment links, short links. These return 403 "This is turned off in the demo". The list is in `src/lib/auth/demo-guard.ts` and is checked in `src/proxy.ts` (the mobile app's bearer token too).
+> - **Still possible:** edit sample data, use the AI features (capped by the demo account's daily AI limits), and anything the account's role allows by writing to the database directly from the browser. A visitor can also change the account's password through Supabase. See to-do 9a.
+> - Rate limited to 20 attempts/hour/IP. Keep real customer data out of it.
 
 A fully populated test workspace on the **production** Supabase project, for previewing the UI.
 
@@ -285,10 +300,10 @@ A fully populated test workspace on the **production** Supabase project, for pre
 - **Public `demo` / `demo` login:** typing `demo` as both email and password on `/login` signs anyone into the demo
   workspace as the account named by the server variables `DEMO_LOGIN_EMAIL` / `DEMO_LOGIN_PASSWORD` (today: the demo
   **admin**, Anjali Rao). The route is `POST /api/demo-login`, rate limited to 20 per hour per IP, and does nothing
-  (returns 404) when the variables are unset. **Risks:** anyone on the internet can use it, so the visitor can change
-  demo data, invite teammates (invite emails go out from your domain, capped by plan) and create API keys inside the
-  demo workspace. It is not a platform admin and cannot see other accounts (row-level security). Keep real customer
-  data out of the demo workspace; change the demo admin's password to switch the public login off.
+  (returns 404) when the variables are unset. **Risks:** anyone on the internet can use it. The app blocks the risky
+  actions (quick reference above), but the visitor can still change demo data. It is not a platform admin and cannot
+  see other accounts (row-level security). Keep real customer data out of the demo workspace; change the demo
+  account's password to switch the public login off.
 - **Re-create:** delete the demo user in Supabase, then `node scripts/seed-demo.mjs`. It refuses to touch a demo user
   older than an hour, and only writes inside the demo account.
 
@@ -303,7 +318,7 @@ A fully populated test workspace on the **production** Supabase project, for pre
    see [OPERATIONS.md](./OPERATIONS.md#running-migrations)). Always check afterwards that the new tables exist.
 4. After changing a `NEXT_PUBLIC_*` variable, redeploy.
 
-Checks before merging: `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` (all passing at last review: 1,350 tests).
+Checks before merging: `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` (all passing at last review, 22 Oct 2026: 1,437 tests).
 
 ---
 
@@ -320,10 +335,26 @@ Checks before merging: `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` (a
 | Migration runner | `scripts/run-migration.mjs` |
 | Blog admin, security report | `src/app/admin/blog/` · `src/app/admin/security/` · `src/lib/security-report.ts` |
 | Theme (mint green default) | `src/app/globals.css`, `src/lib/themes.ts` |
+| Demo login and what it may not do | `src/app/api/demo-login/` · `src/lib/auth/demo-guard.ts` · `src/proxy.ts` |
+| AI quotas (per plan, per day) | `src/lib/ai/quota.ts` |
+| AI safety (secrets, prompt injection) and Gemini client | `src/lib/ai/safety.ts` · `src/lib/ai/gemini.ts` |
+| URL check used everywhere | `src/lib/url.ts` |
+| Outbound request guard (SSRF) | `src/lib/webhooks/ssrf.ts` |
+| API buttons / lists | `src/lib/whatsapp/send-message.ts` · `docs/public-api.md` |
 
 ---
 
 ## 11. Change log (admin-relevant)
+
+- **22 Oct 2026 (later)** — Shopify App Store prep: install starts OAuth immediately (pending installs, migration 082,
+  `/api/integrations/shopify/claim`); Shopify order messages free after the trial; listing assets in
+  `shopify-listing/` (one folder above the repo).
+- **22 Oct 2026** — Security review of the whole app. Public demo login now blocked from members, API keys,
+  ownership, billing, deletion, WhatsApp setup, real sends, integrations, payment and short links. AI chatbot gets a
+  daily cap per plan and no longer sends customers' card numbers / OTPs / passwords to Gemini; all AI requests time
+  out. Buttons and lists in the public API (`type: "interactive"`, `reply_id` in `message.received`) with stricter
+  checks, and an "Interactive" bubble in the inbox. Found the plain-text demo password files still on disk (to-do 9).
+  No migration needed.
 
 - **17 Oct 2026 (later)** — Blog manager (`/admin/blog`), security audit and fixes (`/admin/security`), sign-up abuse
   guard, public demo login, ad attribution, catalog (product library, Meta sync both ways, store sync, picker, stock),

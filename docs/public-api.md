@@ -140,9 +140,11 @@ curl -X POST https://repeatgrow.com/api/v1/messages \
   -d '{ "to": "+14155550123", "type": "text", "text": "Hi 👋" }'
 ```
 
-`type` is `text` (default), `template`, or a media kind (`image` /
-`video` / `document` / `audio`). Media needs `media_url` (and optional
-`filename`); `text` doubles as the caption. `template` needs a
+`type` is `text` (default), `template`, `interactive` (buttons or a
+list, see below), or a media kind (`image` / `video` / `document` /
+`audio`). Media needs `media_url` (and optional `filename`); `text`
+doubles as the caption. `media_url` must be a plain `http(s)://` address
+with a host and no spaces. `text` can't be only spaces. `template` needs a
 `template` object:
 
 ```jsonc
@@ -157,6 +159,58 @@ curl -X POST https://repeatgrow.com/api/v1/messages \
   "reply_to_message_id": "<uuid>"   // optional; must be in the same conversation
 }
 ```
+
+#### Buttons and lists (`type: "interactive"`)
+
+Only inside the 24-hour customer service window (like any free-form
+message). `text` is the body above the buttons (1–1024 characters).
+
+```jsonc
+// Up to 3 reply buttons, optionally with a photo on top
+{
+  "to": "+14155550123",
+  "type": "interactive",
+  "text": "Paneer Tikka ₹249. Add it to your order?",
+  "interactive": {
+    "kind": "buttons",
+    "buttons": [
+      { "id": "add:pt", "title": "➕ Add" },
+      { "id": "menu", "title": "📋 Menu" }
+    ],
+    "header_image_url": "https://cdn.example.com/paneer.jpg", // optional, https only
+    "footer": "Delivery in 30 min"                            // optional
+  }
+}
+
+// A list: one button that opens up to 10 rows
+{
+  "to": "+14155550123",
+  "type": "interactive",
+  "text": "What would you like to see?",
+  "interactive": {
+    "kind": "list",
+    "button": "Categories",
+    "sections": [
+      { "title": "Food", "rows": [{ "id": "cat:1", "title": "Starters", "description": "10 dishes" }] },
+      { "title": "Drinks", "rows": [{ "id": "cat:2", "title": "Beverages" }] }
+    ]
+  }
+}
+```
+
+| Rule | Limit |
+|---|---|
+| Buttons | 1–3; title 1–20 characters; id up to 256 characters |
+| List | `button` label 1–20 characters; 1–10 sections; 10 rows in total; row title up to 24, description up to 72; row id up to 200 |
+| Sections | With more than one section, each needs a `title` |
+| Ids | Unique within the message, sent back exactly as given; no spaces at the start or end |
+| Header | Buttons: `header_image_url` **or** `header_text` (up to 60), not both. Lists: `header_text` only |
+| Footer | Up to 60 characters |
+
+A bad payload is a `400 bad_request` **before** any contact or
+conversation is created. When the customer taps, you get
+`message.received` with `content_type: "interactive"`, `text` = the
+visible title and `reply_id` = the id you sent (see [Webhooks](#webhooks)).
 
 Response (201):
 
@@ -411,12 +465,18 @@ delivery uuid you can dedupe on, and `data` varies by `event`:
 
 ```jsonc
 // message.received
-{ "conversation_id": "…", "contact_id": "…", "whatsapp_message_id": "wamid.…", "content_type": "text", "text": "Hi 👋" }
+{ "conversation_id": "…", "contact_id": "…", "whatsapp_message_id": "wamid.…", "content_type": "text", "text": "Hi 👋", "reply_id": null }
 // conversation.created
 { "conversation_id": "…", "contact_id": "…" }
 // message.status_updated
 { "whatsapp_message_id": "wamid.…", "conversation_id": "…", "status": "delivered" }
 ```
+
+`reply_id` is set only when the customer **tapped** something: the id of
+a reply button or list row you sent, or the payload of a template
+quick-reply button (`null` if that button has no payload; never its
+title). It is `null` for everything else, including typed text, form
+submissions and answers to a call-permission request.
 
 Headers: `X-Wacrm-Event`, `X-Wacrm-Webhook-Id`, and `X-Wacrm-Signature`.
 
