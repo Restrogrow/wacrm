@@ -25,3 +25,13 @@ export function currentNumberFilter(phoneNumberId: string | null): string | null
   if (!phoneNumberId) return null;
   return `phone_number_id.is.null,phone_number_id.eq.${phoneNumberId.replace(/[^0-9A-Za-z_-]/g, '')}`;
 }
+
+/** Narrow a conversations query (select or update) to the current number's chats. */
+export function onCurrentNumber<Q extends { or: (filter: string) => Q }>(query: Q, filter: string | null): Q {
+  return filter ? query.or(filter) : query;
+}
+
+/** The filter for an account, in one call. */
+export async function currentNumberScope(db: SupabaseClient, accountId: string): Promise<string | null> {
+  return currentNumberFilter(await currentPhoneNumberId(db, accountId));
+}
