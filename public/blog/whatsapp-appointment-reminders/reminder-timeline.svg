@@ -49,4 +49,5 @@
 
     <text x="60" y="620" font-size="17" fill="#475569">Skip a reminder when the booking was made after that point (e.g. no "24 hours before" for a same-day booking).</text>
   </g>
+  <text id="rg-brand" x="1172" y="651" text-anchor="end" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="600" fill="#ffffff" fill-opacity="0.6">repeatgrow.com</text>
 </svg>

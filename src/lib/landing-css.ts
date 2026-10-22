@@ -957,7 +957,7 @@ export const LANDING_CSS = `
 .lp-page footer{ padding: 72px 0 34px; background: var(--accent-deep); }
 .lp-page .footer-top{
   display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr 1fr;
   gap: 32px;
   padding-bottom: 52px;
   border-bottom: 1px solid rgba(255,255,255,0.18);

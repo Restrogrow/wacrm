@@ -57,4 +57,5 @@
     <text x="798" y="568" font-size="19" font-weight="700" fill="#92400e">Marketing template (0)</text>
     <text x="798" y="598" font-size="17" fill="#b45309">Needs opt-in; skips opt-outs.</text>
   </g>
+  <text id="rg-brand" x="1172" y="651" text-anchor="end" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="600" fill="#ffffff" fill-opacity="0.6">repeatgrow.com</text>
 </svg>

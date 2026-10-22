@@ -15,6 +15,7 @@ export const LANDING_NAV_HTML = `
       <a href="/#integrations">Integrations</a>
       <a href="/#why-us">Why Us</a>
       <a href="/pricing">Pricing</a>
+      <a href="/blog">Blog</a>
       <a href="/docs">Docs</a>
     </div>
     <div class="nav-right">
@@ -32,6 +33,7 @@ export const LANDING_NAV_HTML = `
     <a href="/#integrations">Integrations</a>
     <a href="/#why-us">Why Us</a>
     <a href="/pricing">Pricing</a>
+    <a href="/blog">Blog</a>
     <a href="/docs">Docs</a>
     <a href="/login">Login</a>
     <a href="/demo" class="btn btn-primary btn-sm">Book a demo</a>
@@ -77,9 +79,17 @@ export const LANDING_FOOTER_HTML = `
           <li><a href="/whatsapp-crm-for-ecommerce">E-commerce</a></li>
           <li><a href="/whatsapp-crm-for-real-estate">Real Estate</a></li>
           <li><a href="/whatsapp-crm-for-education">Coaching &amp; Education</a></li>
+          <li><a href="/whatsapp-crm-vs-whatsapp-business-app">CRM vs WhatsApp Business app</a></li>
+          <li><a href="/official-vs-unofficial-whatsapp-api">Official vs unofficial API</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Compare</h4>
+        <ul>
           <li><a href="/wati-alternative">WATI alternative</a></li>
           <li><a href="/interakt-alternative">Interakt alternative</a></li>
           <li><a href="/aisensy-alternative">AiSensy alternative</a></li>
+          <li><a href="/wati-vs-interakt-vs-aisensy">WATI vs Interakt vs AiSensy</a></li>
         </ul>
       </div>
       <div class="footer-col">

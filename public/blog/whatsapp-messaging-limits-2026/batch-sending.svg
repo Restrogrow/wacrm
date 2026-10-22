@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" role="img" aria-labelledby="t d">
+  <title id="t">Splitting a 5,000-person WhatsApp broadcast into batches over three days</title>
+  <desc id="d">Bar chart: 2,000 most engaged customers on day 1, 2,000 recent buyers on day 2, 1,000 others on day 3. Illustration by Repeat Grow (repeatgrow.com).</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#020617"/><stop offset="0.6" stop-color="#0f172a"/><stop offset="1" stop-color="#052e1e"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <g font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+    <text x="80" y="90" font-size="40" font-weight="700" fill="#f8fafc">Sending 5,000 people on a 2,000 limit</text>
+    <rect x="100" y="200" width="260" height="300" rx="14" fill="#34d399" filter="url(#soft)"/>
+    <text x="230" y="180" font-size="34" font-weight="700" fill="#f8fafc" text-anchor="middle">2,000</text>
+    <text x="230" y="545" font-size="26" font-weight="700" fill="#e5e7eb" text-anchor="middle">Day 1</text>
+    <text x="230" y="580" font-size="20" fill="#94a3b8" text-anchor="middle">Most engaged customers</text>
+    <rect x="460" y="200" width="260" height="300" rx="14" fill="#10b981" filter="url(#soft)"/>
+    <text x="590" y="180" font-size="34" font-weight="700" fill="#f8fafc" text-anchor="middle">2,000</text>
+    <text x="590" y="545" font-size="26" font-weight="700" fill="#e5e7eb" text-anchor="middle">Day 2</text>
+    <text x="590" y="580" font-size="20" fill="#94a3b8" text-anchor="middle">Recent buyers</text>
+    <rect x="820" y="350" width="260" height="150" rx="14" fill="#047857" filter="url(#soft)"/>
+    <text x="950" y="330" font-size="34" font-weight="700" fill="#f8fafc" text-anchor="middle">1,000</text>
+    <text x="950" y="545" font-size="26" font-weight="700" fill="#e5e7eb" text-anchor="middle">Day 3</text>
+    <text x="950" y="580" font-size="20" fill="#94a3b8" text-anchor="middle">Everyone else</text>
+    <line x1="80" y1="502" x2="1120" y2="502" stroke="#334155" stroke-width="3"/>
+  </g>
+  <text id="rg-brand" x="1172" y="651" text-anchor="end" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="600" fill="#ffffff" fill-opacity="0.6">repeatgrow.com</text>
+</svg>

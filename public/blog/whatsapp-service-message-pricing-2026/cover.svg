@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-labelledby="t">
+  <title id="t">A WhatsApp reply bubble with a rupee price tag on it</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#020617"/>
+      <stop offset="0.6" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#052e1e"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g opacity="0.08" stroke="#34d399" fill="none">
+    <circle cx="1040" cy="560" r="240"/><circle cx="1040" cy="560" r="340"/><circle cx="120" cy="60" r="160"/>
+  </g>
+  <g font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+
+    <g filter="url(#soft)">
+      <rect x="150" y="150" width="560" height="150" rx="26" fill="#1f2937"/>
+      <text x="190" y="215" font-size="30" fill="#e5e7eb">Sure! Your order ships today.</text>
+      <text x="190" y="260" font-size="22" fill="#9ca3af">Reply · inside 24 hours</text>
+      <rect x="400" y="340" width="560" height="150" rx="26" fill="#065f46"/>
+      <text x="440" y="405" font-size="30" fill="#ecfdf5">Thanks! Can I add one more?</text>
+      <text x="440" y="450" font-size="22" fill="#a7f3d0">Customer · free</text>
+    </g>
+    <g transform="translate(760 120) rotate(12)" filter="url(#soft)">
+      <path d="M0 0 H230 L290 60 L230 120 H0 Z" fill="#fbbf24"/>
+      <circle cx="232" cy="60" r="12" fill="#020617"/>
+      <text x="30" y="78" font-size="52" font-weight="700" fill="#020617">₹ billed</text>
+    </g>
+    <text x="150" y="570" font-size="34" font-weight="700" fill="#34d399">From 1 October 2026</text>
+  </g>
+  <text id="rg-brand" x="1172" y="606" text-anchor="end" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="600" fill="#ffffff" fill-opacity="0.6">repeatgrow.com</text>
+</svg>

@@ -99,7 +99,7 @@ export default function AppointmentRemindersPost() {
 
       <h2 id="schedule">The reminder schedule that works</h2>
       <BlogFigure
-        src="/blog/whatsapp-appointment-reminders/reminder-timeline.svg"
+        src="/blog/whatsapp-appointment-reminders/reminder-timeline.webp"
         alt="Timeline: confirmation after booking, reminder 24 hours before, reminder 1 hour before, follow-up after a cancellation or no-show"
         caption="Four WhatsApp messages per booking: confirm, remind twice, follow up."
       />

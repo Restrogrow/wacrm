@@ -28,4 +28,5 @@
     <path d="M0 -70 L20 -50 L48 -54 L52 -26 L72 -6 L58 18 L64 46 L38 56 L26 82 L0 72 L-26 82 L-38 56 L-64 46 L-58 18 L-72 -6 L-52 -26 L-48 -54 L-20 -50 Z" fill="#34d399"/>
     <path d="M-24 4 L-6 22 L26 -14" stroke="#052e1e" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
+  <text id="rg-brand" x="1172" y="606" text-anchor="end" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="600" fill="#ffffff" fill-opacity="0.6">repeatgrow.com</text>
 </svg>
