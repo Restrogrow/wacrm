@@ -6,16 +6,23 @@ const GRAPH = 'https://graph.facebook.com/v21.0'
 
 export type ReviewTone = 'ok' | 'wait' | 'bad'
 
-/** Meta's review_status → what the merchant sees. Empty means not reviewed yet. */
-export function reviewLabel(status: string | null | undefined): { label: string; tone: ReviewTone } {
+/**
+ * Meta's review_status → what the merchant sees, or null when there is
+ * nothing to say. Meta often leaves review_status empty even for products
+ * that WhatsApp can already send (seen live, Oct 2026), so empty is not
+ * treated as "waiting".
+ */
+export function reviewLabel(status: string | null | undefined): { label: string; tone: ReviewTone } | null {
   switch ((status ?? '').toLowerCase()) {
     case 'approved':
     case 'outdated':
       return { label: 'Approved by Meta', tone: 'ok' }
     case 'rejected':
       return { label: 'Rejected by Meta', tone: 'bad' }
-    default:
+    case 'pending':
       return { label: 'Waiting for Meta review', tone: 'wait' }
+    default:
+      return null
   }
 }
 
