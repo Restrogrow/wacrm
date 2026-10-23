@@ -246,7 +246,10 @@ Notes:
    (see [Running migrations](#running-migrations)). Every new feature
    fails safe until its migration is run, but run it **before** the code
    goes live.
-4. Check `/api/health` and `/admin/system` after the deploy.
+4. Check `/api/health` and `/admin/system` after the deploy. `/api/health`
+   returns `version.commit`; when it matches the merge commit, the deploy is
+   live. The same version, commit and build time show at the bottom of the
+   app's sidebar.
 
 Pushing changes to `.github/workflows/` needs the GitHub `workflow`
 permission. If a push is rejected for that reason, run

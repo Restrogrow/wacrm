@@ -21,7 +21,13 @@ Last reviewed: **17 Oct 2026** (after the blog, security, catalog, reports, jour
 
 ## ⚠️ Important to-do (do these first)
 
-Updated 22 Oct 2026. Tick them off and delete the line once done.
+Updated 23 Oct 2026. Tick them off and delete the line once done.
+
+- [ ] **0. Give the WhatsApp system user access to the catalog.** Fetch / Sync with Meta fails until then. Meta
+  Business Settings → System users → **sujay** → Assign assets → Catalogues → **Catalogue_Products** → Manage
+  catalogue (full control) → Save. If the error stays, generate a new token for sujay with `catalog_management`
+  (plus `whatsapp_business_management`, `whatsapp_business_messaging`) and save it in Settings → WhatsApp. Then
+  have the test agent rerun catalog steps 3–6 and 8–9.
 
 **Already done (17 Oct 2026):** the green redesign is on `main`; database migrations `059` to `080` are applied (078 to 080 on 20 Oct) to
 production and checked against the live database; the blog, security fixes, catalog, reports, journeys, business
@@ -361,6 +367,10 @@ Checks before merging: `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` (a
 
 ## 11. Change log (admin-relevant)
 
+- **23 Oct 2026** — Catalog fixes from the first live Commerce Manager test (Fetch still blocked by Meta access, see
+  to-do 0). Build version label in the sidebar and `/api/health`. New prices: Starter ₹999 / Growth ₹1,999 / Pro
+  ₹3,999 with plan contents (AI chatbot from Growth, AI voice agent on Pro) shown on the site but **not enforced**.
+  Meta Tech Provider blog post and mentions. Shiprocket App Store partner request submitted. No migration needed.
 - **22 Oct 2026 (night)** — Switching WhatsApp numbers: chats, broadcasts and templates now belong to the number (templates:
   the Business Account) they ran on (migration 083). Only the connected number's show; reconnecting the old number brings
   its history back. Contacts stay shared.

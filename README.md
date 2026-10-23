@@ -1,7 +1,8 @@
 # Repeat Grow
 
 > WhatsApp CRM for Indian businesses, built on the official WhatsApp
-> Business API (Meta Cloud API). A shared team inbox, contacts,
+> Business API (Meta Cloud API). Repeat Grow is an approved Meta Tech
+> Provider. A shared team inbox, contacts,
 > pipelines, broadcasts, no-code automations and flows, an AI chatbot,
 > a product catalog, reports, journeys (drip and win-back messages),
 > Shopify, WooCommerce, Calendly, Cal.com, Shiprocket and Razorpay

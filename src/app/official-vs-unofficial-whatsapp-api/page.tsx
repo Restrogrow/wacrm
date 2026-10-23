@@ -77,6 +77,15 @@ export default function OfficialVsUnofficialApiPage() {
             through Meta&apos;s approval process, and the number operates
             within WhatsApp&apos;s actual rules rather than around them.
           </p>
+          <p className="mt-2">
+            Repeat Grow is an approved Meta Tech Provider: you connect your own
+            number through Meta&apos;s Embedded Signup, and Meta bills message
+            fees to your WhatsApp Business Account directly.{" "}
+            <Link href="/blog/meta-tech-provider-whatsapp" className="underline underline-offset-2">
+              What a Meta Tech Provider is
+            </Link>
+            .
+          </p>
         </section>
 
         <section>

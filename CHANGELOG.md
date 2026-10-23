@@ -15,6 +15,14 @@ and polish.
 
 ### Added
 
+- **Build version label** (23 Oct 2026): the sidebar shows the version,
+  short commit and IST build time, and `/api/health` returns a `version`
+  block, so anyone can tell which deploy is live.
+- **Meta Tech Provider** (23 Oct 2026): blog post
+  `/blog/meta-tech-provider-whatsapp`, and the status is mentioned on the
+  homepage, Help Center FAQ, About, footer, Organization schema and
+  `llms.txt`.
+
 - **Shopify App Store install starts OAuth immediately** (Shopify's
   "Immediately authenticates after install" check). A Shopify-signed install
   goes straight to the permission screen; if the merchant has no Repeat Grow
@@ -33,6 +41,22 @@ and polish.
   in the inbox. Uses the existing `ai_usage_daily` counter (migration 074).
 
 ### Changed
+
+- **Pricing and plans** (23 Oct 2026): Starter ₹999, Growth ₹1,999, Pro
+  ₹3,999 a month (10% off quarterly, 17% yearly). The pricing page,
+  homepage and comparison pages now show what each plan adds: AI assistant
+  on Starter, AI chatbot from Growth (3,000 replies/month), AI voice agent
+  on Pro (300 min/month). These tiers are **advertised only, not
+  enforced**; the existing limits are unchanged.
+- **Pricing layouts** (23 Oct 2026): homepage pricing cards with limits and
+  a button each; `/pricing` cards are more compact, limits first.
+- **Catalog** (23 Oct 2026, from the first live test): the banner links to
+  Orders & payments (`/orders`), where the catalog ID is set; a saved
+  product updates its row at once and the WhatsApp column refreshes after
+  the auto-sync; errors stay 12 s with a close button; skipped products say
+  "Skipped" with the reason under the badge; the Sync button shows an
+  account-wide "N waiting" count; the Meta permission error explains that
+  the system user also needs access to the catalog.
 
 - **Inbox:** buttons, list and link-button messages sent by a teammate (API)
   or a Flow now show as an "Interactive" bubble with the photo header, not
