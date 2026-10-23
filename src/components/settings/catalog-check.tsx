@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { CheckCircle2, CircleAlert, Loader2, Search, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import type { SetupCheck } from '@/lib/catalog/meta-diagnose';
@@ -20,6 +21,23 @@ export function CatalogCheck({ disabled }: { disabled?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [checks, setChecks] = useState<SetupCheck[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [fixing, setFixing] = useState(false);
+
+  async function enableCart() {
+    setFixing(true);
+    try {
+      const res = await fetch('/api/whatsapp/commerce/enable-cart', { method: 'POST' });
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(json.error || 'Could not turn them on');
+      toast.success('Catalog and cart are on for this number');
+      await run();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not turn them on', { duration: 12_000 });
+    } finally {
+      setFixing(false);
+    }
+  }
 
   async function run() {
     setBusy(true);
@@ -51,6 +69,12 @@ export function CatalogCheck({ disabled }: { disabled?: boolean }) {
               {ICON[c.status]}
               <span className="min-w-0">
                 <b className="font-medium">{c.label}:</b> <span className="break-words text-muted-foreground">{c.detail}</span>
+                {c.fix === 'enable_catalog_cart' && (
+                  <Button type="button" size="sm" className="mt-2 flex" onClick={enableCart} disabled={fixing}>
+                    {fixing ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                    Turn on catalog &amp; cart
+                  </Button>
+                )}
               </span>
             </li>
           ))}
