@@ -162,7 +162,7 @@ export default function CatalogPage() {
   const [reviews, setReviews] = useState<Record<string, string> | null>(null)
   const [reviewTick, setReviewTick] = useState(0)
   const anyWaiting = useMemo(
-    () => !!reviews && syncedIds.split(',').some((id) => id && reviewLabel(reviews[id]).tone === 'wait'),
+    () => !!reviews && syncedIds.split(',').some((id) => id && reviewLabel(reviews[id])?.tone === 'wait'),
     [reviews, syncedIds],
   )
   useEffect(() => {

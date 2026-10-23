@@ -36,10 +36,15 @@ async function explainSendError(err: unknown, creds: CommerceCreds, catalogId: s
   console.error('[commerce/share] Meta refused', { kind, code, message, catalogId, retailerIds, phoneNumberId: creds.phoneNumberId })
   if (code !== 131009 || !retailerIds.length) return message
   const facts = await fetchCatalogFacts(creds.accessToken, creds.wabaId ?? null, catalogId, retailerIds, creds.phoneNumberId)
-  return (
-    explainProductSendFailure(catalogId, retailerIds, facts) ??
-    `${message}. Use "Check catalog connection" on the Orders & payments page to see what Meta has linked to your number.`
-  )
+  const explained = explainProductSendFailure(catalogId, retailerIds, facts)
+  if (explained) return explained
+  // Everything is linked and the catalog has the product, but WhatsApp can't
+  // find it yet: Meta is still processing a new product (took hours in the
+  // Oct 2026 live test, then sent fine).
+  if (/product not found|none of the products/i.test(message)) {
+    return 'WhatsApp can’t send this product yet. Meta is still processing it, which can take a few hours for a new product. Try again later; archiving and restoring won’t make it faster.'
+  }
+  return `${message}. Use "Check catalog connection" on the Orders & payments page to see what Meta has linked to your number.`
 }
 
 export async function POST(request: Request) {
