@@ -122,8 +122,14 @@ export default function CatalogPage() {
   const followUps = useRef<ReturnType<typeof setTimeout>[]>([])
   useEffect(() => () => followUps.current.forEach(clearTimeout), [])
 
-  /** Reload now and again shortly, so the WhatsApp column shows the auto-sync's result. */
-  function reloadAfterChange() {
+  /**
+   * Show a saved product right away, then reload now and again shortly so
+   * the WhatsApp column shows the auto-sync's result.
+   */
+  function reloadAfterChange(changed?: ProductRow) {
+    if (changed?.id) {
+      setData((d) => (d ? { ...d, products: d.products.map((p) => (p.id === changed.id ? changed : p)) } : d))
+    }
     void load()
     followUps.current.forEach(clearTimeout)
     followUps.current = FOLLOW_UP_RELOADS_MS.map((ms) => setTimeout(() => void load(), ms))
@@ -186,7 +192,7 @@ export default function CatalogPage() {
       method: 'PATCH',
       body: JSON.stringify({ status: p.status === 'archived' ? 'active' : 'archived' }),
     })
-    if (json?.product) reloadAfterChange()
+    if (json?.product) reloadAfterChange(json.product as ProductRow)
   }
 
   async function duplicate(p: ProductRow) {
@@ -255,7 +261,7 @@ export default function CatalogPage() {
         description="Your products, ready to share on WhatsApp. Add them here and sync them to your WhatsApp catalog."
         action={
           <div className="flex flex-wrap gap-2">
-            <StoreSyncMenu onDone={reloadAfterChange} />
+            <StoreSyncMenu onDone={() => reloadAfterChange()} />
             <Button variant="outline" size="sm" onClick={() => setImportOpen(true)} disabled={!canEdit}>
               <FileUp className="size-3.5" /> Import CSV
             </Button>
@@ -497,7 +503,7 @@ export default function CatalogPage() {
         canEdit={canEdit}
         onSaved={reloadAfterChange}
       />
-      <ImportDialog open={importOpen} onOpenChange={setImportOpen} onDone={reloadAfterChange} />
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} onDone={() => reloadAfterChange()} />
     </div>
   )
 }

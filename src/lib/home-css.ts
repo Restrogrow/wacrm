@@ -390,17 +390,26 @@ export const HOME_CSS = `
 .lp-page .home .h-why .h-tile{ background: rgba(255,255,255,.75); backdrop-filter: blur(8px); }
 
 /* ---------- Pricing teaser ---------- */
-.lp-page .home .h-plans{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1080px; margin: 0 auto; }
-.lp-page .home .h-plan{ text-align: center; padding: 26px 20px; border-radius: var(--h-radius); background: #fff; border: 1px solid var(--border); box-shadow: var(--h-shadow-sm); }
-.lp-page .home .h-plan.pop{ border-color: var(--accent); box-shadow: var(--h-shadow-lg); position: relative; }
-.lp-page .home .h-plan.pop::before{
-  content: "Most popular"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-  font-size: 11.5px; font-weight: 700; color: #fff; background: var(--accent); padding: 4px 12px; border-radius: 999px;
+.lp-page .home .h-plans{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; max-width: 1120px; margin: 0 auto; align-items: stretch; }
+.lp-page .home .h-plan{
+  display: flex; flex-direction: column; text-align: left; padding: 28px 24px 24px;
+  border-radius: var(--h-radius); background: #fff; border: 1px solid var(--border); box-shadow: var(--h-shadow-sm);
+  transition: transform .2s ease, box-shadow .2s ease;
 }
-.lp-page .home .h-plan span{ font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-dim); }
-.lp-page .home .h-plan b{ display: block; margin-top: 8px; font-size: 34px; letter-spacing: -0.03em; color: var(--h-ink); }
-.lp-page .home .h-plan b small{ font-size: 14px; font-weight: 600; color: var(--text-dim); letter-spacing: 0; }
-.lp-page .home .h-plan p{ margin-top: 6px; font-size: 13.5px; color: var(--text-muted); }
+.lp-page .home .h-plan:hover{ transform: translateY(-3px); box-shadow: var(--h-shadow-lg); }
+.lp-page .home .h-plan.pop{ position: relative; border: 2px solid var(--accent); box-shadow: var(--h-shadow-lg); background: linear-gradient(180deg, var(--accent-soft), #fff 45%); }
+.lp-page .home .h-plan.pop::before{
+  content: "Most popular"; position: absolute; top: -13px; left: 24px;
+  font-size: 12px; font-weight: 700; color: #fff; background: var(--accent); padding: 5px 12px; border-radius: 999px;
+}
+.lp-page .home .h-plan-name{ font-size: 18px; font-weight: 800; letter-spacing: -0.01em; color: var(--h-ink); }
+.lp-page .home .h-plan-tag{ margin-top: 4px; min-height: 40px; font-size: 14px; line-height: 1.45; color: var(--text-muted); }
+.lp-page .home .h-plan b{ display: block; margin-top: 16px; font-size: 38px; line-height: 1; letter-spacing: -0.03em; color: var(--h-ink); }
+.lp-page .home .h-plan b small{ margin-left: 2px; font-size: 14px; font-weight: 600; color: var(--text-dim); letter-spacing: 0; }
+.lp-page .home .h-plan ul{ list-style: none; margin: 22px 0 24px; padding: 18px 0 0; border-top: 1px solid var(--border); display: grid; gap: 10px; flex: 1; }
+.lp-page .home .h-plan li{ display: flex; align-items: center; gap: 9px; font-size: 14px; color: var(--text); }
+.lp-page .home .h-plan li svg{ width: 16px; height: 16px; flex: none; color: var(--accent-deep); }
+.lp-page .home .h-plan-cta{ width: 100%; justify-content: center; }
 .lp-page .home .h-plans-note{ margin-top: 26px; text-align: center; font-size: 15px; color: var(--text-muted); }
 .lp-page .home .h-center{ margin-top: 30px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
 
@@ -516,11 +525,12 @@ export const HOME_CSS = `
   .lp-page .home .h-stat:nth-child(3){ border-left: 0; }
   .lp-page .home .h-stat:nth-child(n+3){ border-top: 1px solid var(--border); }
   .lp-page .home .h-steps, .lp-page .home .h-grid3{ grid-template-columns: 1fr; }
-  .lp-page .home .h-plans{ grid-template-columns: 1fr 1fr; row-gap: 26px; }
+  .lp-page .home .h-plans{ grid-template-columns: 1fr 1fr; row-gap: 28px; max-width: 720px; }
   .lp-page .home .h-step::after{ display: none; }
   .lp-page .home .h-grid2{ grid-template-columns: 1fr; }
 }
 @media (max-width: 640px){
+  .lp-page .home .h-plans{ grid-template-columns: 1fr; max-width: 420px; }
   .lp-page .home .h-hero{ padding: 44px 0 64px; }
   .lp-page .home .h-sub{ font-size: 17px; }
   .lp-page .home .h-ctas .btn{ width: 100%; }

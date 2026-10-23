@@ -93,38 +93,39 @@ const LIMIT_ROW_LABELS: Record<(typeof LIMIT_KEYS)[number], string> = {
   team_members: "Team members",
 };
 
+// Short, one-line points; the numbers live in the limits table below them.
 const PLAN_FEATURES: Record<PaidPlan, string[]> = {
   starter: [
-    "Every feature: shared inbox, AI chatbot, broadcasts, automations, payments",
-    "Shopify, Calendly, public REST API &amp; webhooks",
-    "WhatsApp Business API setup included",
+    "Every feature included",
+    "Shopify, Calendly, API &amp; webhooks",
+    "WhatsApp API setup included",
     "Self-service support + docs",
   ],
   growth: [
     "Everything in Starter",
-    "25&times; more contacts and 4&times; the broadcasts",
+    "25&times; the contacts of Starter",
     "Room for a 25-person team",
     "Priority support (24&ndash;48 hrs)",
   ],
   pro: [
     "Everything in Growth",
-    "2,00,000 contacts and 1,000 broadcasts a month",
+    "Built for high volume",
     "Room for a 50-person team",
     "Priority support (24&ndash;48 hrs)",
   ],
   enterprise: [
-    "Everything in Pro, with no caps",
+    "Everything in Pro, no caps",
     "Dedicated onboarding &amp; training",
-    "Business Manager setup + call and WhatsApp support",
-    "Custom terms for multiple brands or high volume",
+    "Call and WhatsApp support",
+    "Custom terms, multiple brands",
   ],
 };
 
 const PLAN_DESC: Record<PaidPlan, string> = {
-  starter: "For a single team getting started with WhatsApp support and sales.",
-  growth: "For growing teams running more campaigns with more people on the inbox.",
-  pro: "For high-volume teams with large contact lists and many agents.",
-  enterprise: "For larger businesses that need no caps and hands-on setup.",
+  starter: "For one team starting WhatsApp sales and support.",
+  growth: "For growing teams with more campaigns and agents.",
+  pro: "For high-volume teams with big lists and many agents.",
+  enterprise: "For larger businesses that need no caps.",
 };
 
 const inr = (n: number) => n.toLocaleString("en-IN");
@@ -150,7 +151,7 @@ function priceCard(plan: PaidPlan, cycle: BillingCycle): string {
     cta = `<a href="mailto:support@repeatgrow.com?subject=${subject}" class="btn ${featured ? "btn-primary" : "btn-ghost"}">Choose ${info.label}</a>`;
   } else {
     priceHtml =
-      `<h3>Custom</h3><p class="price-period">Priced for your volume and team</p>` +
+      `<h3>Custom</h3><p class="price-period">Priced for your volume</p>` +
       `<p class="price-note">+ WhatsApp per-message fees billed by Meta</p>`;
     cta = `<a href="/demo" class="btn btn-ghost">Talk to sales</a>`;
   }
@@ -164,8 +165,8 @@ function priceCard(plan: PaidPlan, cycle: BillingCycle): string {
         <span class="plan-name mono">${info.label}</span>
         ${priceHtml}
         <p class="desc">${PLAN_DESC[plan]}</p>
-        <ul class="price-list">${features}</ul>
         <ul class="limits">${limitRows}</ul>
+        <ul class="price-list">${features}</ul>
         ${cta}
       </div>`;
 }
@@ -182,10 +183,21 @@ const PRICING_GRID_HTML =
       `<div class="pricing-grid-3 pricing-grid-4${i === 0 ? " reveal" : ""}" data-cycle-panel="${cycle}"${i === 0 ? "" : " hidden"}>${PLANS.map((p) => priceCard(p, cycle)).join("")}</div>`
   ).join("");
 
-// Four plans side by side; scoped to this page.
+// Four plans side by side, kept compact; scoped to this page.
 const PRICING_CSS = `
+.lp-page .pricing-hero{ padding: 72px 0 48px; }
+.lp-page .pricing-hero .section-head{ margin-bottom: 0; }
+.lp-page .pricing-hero + section{ padding-top: 48px; }
+.lp-page .pricing-toggle{ margin-bottom: 32px; }
 .lp-page .pricing-grid-4{ grid-template-columns: repeat(4, 1fr); gap: 18px; }
-.lp-page .pricing-grid-4 .price-card{ padding-left: 22px; padding-right: 22px; }
+.lp-page .pricing-grid-4 .price-card{ padding: 28px 22px 24px; }
+.lp-page .pricing-grid-4 .price-card h3{ margin-top: 10px; font-size: 2rem; }
+.lp-page .pricing-grid-4 .price-card .desc{ margin-top: 10px; min-height: 3em; font-size: 14px; line-height: 1.5; }
+.lp-page .pricing-grid-4 .price-card .limits{ margin-top: 18px; padding-top: 16px; gap: 7px; }
+.lp-page .pricing-grid-4 .price-list{ margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); gap: 9px; flex: none; }
+.lp-page .pricing-grid-4 .price-list li{ font-size: 13.5px; }
+.lp-page .pricing-grid-4 .price-card .btn{ margin-top: auto; }
+.lp-page .pricing-grid-4 .price-card .price-list{ margin-bottom: 22px; }
 @media (max-width: 1100px){ .lp-page .pricing-grid-4{ grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px){ .lp-page .pricing-grid-4{ grid-template-columns: 1fr; } }
 `;

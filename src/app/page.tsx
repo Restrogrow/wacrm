@@ -10,6 +10,7 @@ import {
   LANDING_WHATSAPP_FLOAT_HTML,
 } from "@/lib/landing-chrome";
 import { BLOG_POSTS } from "@/lib/blog";
+import { PLANS, PLAN_INFO, PLAN_LIMITS, formatInr, type PaidPlan } from "@/lib/billing/plans";
 import { brandSvg, type BrandIcon } from "@/lib/brand-icons";
 import { BRAND_KEYWORDS, SITE_URL, buildFAQNode, buildOrganizationNode, buildWebSiteNode } from "@/lib/seo";
 
@@ -143,6 +144,43 @@ const ICON_ARROW =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 const ICON_SEND =
   '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>';
+
+// Pricing teaser cards, built from the billing plans so prices and limits
+// always match /pricing and the app.
+const PLAN_TAGLINES: Record<PaidPlan, string> = {
+  starter: "For a small team getting started",
+  growth: "More contacts, campaigns and people",
+  pro: "High volume and bigger teams",
+  enterprise: "No caps and hands-on setup",
+};
+const fmtLimit = (n: number | null, unit: string) =>
+  n === null ? `Unlimited ${unit}` : `${n.toLocaleString("en-IN")} ${unit}`;
+const PLANS_HTML = PLANS.map((plan, i) => {
+  const info = PLAN_INFO[plan];
+  const l = PLAN_LIMITS[plan];
+  const price = info.prices
+    ? `<b>${formatInr(info.prices.monthly)}<small>/month</small></b>`
+    : `<b>Custom</b>`;
+  const items = [
+    fmtLimit(l.contacts, "contacts"),
+    fmtLimit(l.team_members, "team members"),
+    fmtLimit(l.broadcasts_per_month, "broadcasts / month"),
+    fmtLimit(l.automation_flows, "automations"),
+  ]
+    .map((t) => `<li>${ICON_CHECK}${t}</li>`)
+    .join("");
+  const cta = info.prices
+    ? `<a href="/signup" class="btn ${plan === "growth" ? "btn-primary" : "btn-ghost"} h-plan-cta">Start free trial</a>`
+    : `<a href="/demo" class="btn btn-ghost h-plan-cta">Talk to us</a>`;
+  return `
+      <div class="h-plan${plan === "growth" ? " pop" : ""} reveal" style="--d:${i % 4}">
+        <span class="h-plan-name">${info.label}</span>
+        <p class="h-plan-tag">${PLAN_TAGLINES[plan]}</p>
+        ${price}
+        <ul>${items}</ul>
+        ${cta}
+      </div>`;
+}).join("");
 
 const BLOG_CARDS_HTML = BLOG_POSTS.slice(0, 6)
   .map(
@@ -565,11 +603,7 @@ const LANDING_BODY_HTML = `
       <h2>Every feature on every plan</h2>
       <p>Start with a 7-day free trial. Plans only change the limits. WhatsApp API setup is included, and Meta's message fees are billed by Meta.</p>
     </div>
-    <div class="h-plans reveal">
-      <div class="h-plan"><span>Starter</span><b>&#8377;999<small>/month</small></b><p>For a small team getting started</p></div>
-      <div class="h-plan pop"><span>Growth</span><b>&#8377;1,999<small>/month</small></b><p>More contacts, campaigns and people</p></div>
-      <div class="h-plan"><span>Pro</span><b>&#8377;3,999<small>/month</small></b><p>High volume and bigger teams</p></div>
-      <div class="h-plan"><span>Enterprise</span><b>Custom</b><p>No caps and hands-on setup</p></div>
+    <div class="h-plans">${PLANS_HTML}
     </div>
     <p class="h-plans-note reveal">Pay monthly, or save about 10% quarterly and 17% yearly.</p>
     <div class="h-center reveal">
