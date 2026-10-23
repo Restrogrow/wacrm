@@ -336,6 +336,15 @@ already have an entry above are linked by number.
       allows three reply buttons).
 - [x] **QR code + wa.me link generator** (done 2026-10-16, Settings → QR & WhatsApp link) with a pre-filled message, for
       shops, flyers and packaging (Settings → Growth tools).
+- [ ] **Partner / marketplace listings** (2026-10-23):
+      - [x] Shiprocket App Store developer program: request submitted
+            2026-10-23 by the owner. Wait for their team to reach out,
+            then follow their developer-portal onboarding and review.
+      - [ ] Pabbly Connect "Integrate Your App" (pabbly.com footer →
+            Integrations): ask to be added; we have the REST API, signed
+            webhooks and inbound webhooks.
+      - [ ] Razorpay Partner Program as a **Service Partner** (needs owner
+            sign-up + KYC). Technology Partner is for marketplaces only.
 - [ ] **WooCommerce plugin on WordPress.org** (sales idea, 2026-10-23): a
       small plugin that connects a store to Repeat Grow in one click
       (creates the webhooks and REST keys) instead of copying URLs by

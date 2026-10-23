@@ -565,6 +565,11 @@ export default function DocsPage() {
                 We email the account owner 2 days before the trial ends, on the last day, and when it ends. On a
                 paid plan, we email 3 days before your paid-until date.
               </li>
+              <li>
+                Plans: <b>Starter ₹999</b> (inbox, broadcasts, AI assistant), <b>Growth ₹1,999</b> (adds the AI chatbot,
+                catalog and orders) and <b>Pro ₹3,999</b> (adds the AI voice agent), per month, or save with quarterly and
+                yearly billing. See <Ui to="/pricing">Pricing</Ui>.
+              </li>
               <li>WhatsApp conversation fees are billed by Meta directly, separately from your plan.</li>
             </ul>
           </Section>

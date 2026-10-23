@@ -50,8 +50,9 @@ Meta's menus change, so the exact names may differ slightly.
 ### Using it
 
 - **Sync to WhatsApp** pushes active products (it also runs automatically after a create / edit / archive / import and
-  removes archived or draft items from Meta). Products need a photo; others are marked _skipped_ with a reason. Up to
-  500 products per click.
+  removes archived or draft items from Meta). Products need a photo; others are marked **Skipped** with the reason shown under the badge. Up to
+  500 products per click. The button shows how many products account-wide are waiting (pending or failed), and the
+  WhatsApp column refreshes by itself a few seconds after a change.
 - **Fetch from WhatsApp** reads the products already in your Meta catalog and adds the ones not in the library yet
   (up to 2,000, and your plan's cap). It never overwrites products you already have. Meta does not send stock counts,
   only in stock / out of stock.
