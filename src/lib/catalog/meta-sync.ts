@@ -3,7 +3,8 @@
 // Uses the account's existing WhatsApp access token and the catalog ID set
 // on the Orders & payments page (commerce_settings.catalog_id) and calls
 // the Graph "items_batch" endpoint: one UPDATE-with-upsert request per active
-// product and one DELETE per removed one. Per-product results are written
+// product and one hiding UPDATE (visibility: staging) per archived / draft
+// one; deleting a product sends a DELETE. Per-product results are written
 // back to products.meta_sync_status / meta_sync_error.
 //
 // Server-only. Never logs the access token.
@@ -125,8 +126,9 @@ export async function pendingCount(db: SupabaseClient, accountId: string): Promi
 /**
  * Push products to the Meta catalog.
  * - `ids` given: just those. Otherwise everything pending or in error.
- * - Active products are created/updated; archived or draft ones that were on
- *   WhatsApp are removed; products without an image are skipped with a reason.
+ * - Active products are created/updated (and shown again if hidden); archived
+ *   or draft ones that were on WhatsApp are hidden; products without an image
+ *   are skipped with a reason.
  */
 export async function syncProductsToMeta(
   db: SupabaseClient,
@@ -229,12 +231,16 @@ export async function syncProductsToMeta(
     }
   }
 
+  // Archived / draft products are hidden, not deleted: a deleted product comes
+  // back as a new one that Meta has to review again (hours), while a hidden
+  // one keeps its approval and can be shared again as soon as it is restored.
+  // Deleting a product in Repeat Grow still removes it (deleteProductsFromMeta).
   for (let i = 0; i < removals.length && result.ok; i += CHUNK) {
     const chunk = removals.slice(i, i + CHUNK)
     const out = await postItemsBatch(
       catalogId,
       token,
-      chunk.map((p) => ({ method: 'DELETE' as const, data: { id: p.retailer_id } })),
+      chunk.map((p) => ({ method: 'UPDATE' as const, data: { id: p.retailer_id, visibility: 'staging' } })),
     )
     if (!out.ok) {
       await fail(chunk.map((p) => p.id), out.message)
@@ -242,8 +248,7 @@ export async function syncProductsToMeta(
     }
     await setStatus(db, accountId, chunk.map((p) => p.id), {
       meta_sync_status: 'skipped',
-      meta_sync_error: 'Draft and archived products are not shown on WhatsApp.',
-      meta_synced_at: null,
+      meta_sync_error: 'Hidden on WhatsApp while archived or draft. Restore it to show it again.',
     })
     result.deleted += chunk.length
   }

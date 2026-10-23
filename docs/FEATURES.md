@@ -50,7 +50,9 @@ Meta's menus change, so the exact names may differ slightly.
 ### Using it
 
 - **Sync to WhatsApp** pushes active products (it also runs automatically after a create / edit / archive / import and
-  removes archived or draft items from Meta). Products need a photo; others are marked **Skipped** with the reason shown under the badge. Up to
+  hides archived or draft items on WhatsApp; they stay in the Meta catalog, so a restored product keeps Meta's
+  approval and can be shared again at once. **Delete** removes it from Meta). Under "On WhatsApp" the list shows Meta's
+  review: Approved, Waiting for Meta review (new products, minutes to a day; they can't be shared yet) or Rejected. Products need a photo; others are marked **Skipped** with the reason shown under the badge. Up to
   500 products per click. The button shows how many products account-wide are waiting (pending or failed), and the
   WhatsApp column refreshes by itself a few seconds after a change.
 - **Fetch from WhatsApp** reads the products already in your Meta catalog and adds the ones not in the library yet

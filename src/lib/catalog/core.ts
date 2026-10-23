@@ -273,6 +273,8 @@ export interface MetaItem {
   sale_price?: string
   google_product_category?: string
   additional_image_link?: string
+  /** 'published' shows it on WhatsApp; 'staging' hides it but keeps it (and Meta's approval) in the catalog. */
+  visibility: 'published' | 'staging'
 }
 
 export type SyncableProduct = Pick<
@@ -313,6 +315,8 @@ export function toMetaItem(product: SyncableProduct, siteUrl: string, defaultBra
     link: product.product_url || siteUrl,
     image_link: product.image_url,
     brand: (product.brand || defaultBrand).slice(0, 100),
+    // Un-hides a product that was archived (hidden) before.
+    visibility: 'published',
   }
   if (product.sale_price_paise !== null && product.sale_price_paise !== undefined && product.sale_price_paise < product.price_paise) {
     item.sale_price = metaPrice(product.sale_price_paise, product.currency)
