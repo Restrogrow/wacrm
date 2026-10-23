@@ -42,7 +42,7 @@ Related: [README](../README.md) · [Admin handbook](./ADMIN.md) · [Operations r
 5. **Give the token permission.** Pushing and fetching products needs a token with `catalog_management`. In Business
    Settings → System users, give the system user **Manage catalog** on the catalog, generate a token with
    `catalog_management` plus `whatsapp_business_management` and `whatsapp_business_messaging`, and save it in Settings →
-   WhatsApp. Without it the app says "Your WhatsApp access token needs catalog_management permission." Sharing the
+   WhatsApp. Without it the app says "Meta blocked access to your catalog…". Both are needed: the token permission **and** the catalog assigned to the system user (Assign assets → Catalogues → Manage catalog); a new permission only appears in a newly generated token. Sharing the
    catalog and receiving catalog orders in chat work without this step.
 
 Meta's menus change, so the exact names may differ slightly.

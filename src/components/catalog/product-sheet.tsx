@@ -80,7 +80,8 @@ export function ProductSheet({
   /** null = add a new product. */
   product: ProductRow | null
   canEdit: boolean
-  onSaved: () => void
+  /** The saved product, so the list can show it right away. */
+  onSaved: (product?: ProductRow) => void
 }) {
   const [form, setForm] = useState<FormState>(EMPTY)
   const [saving, setSaving] = useState(false)
@@ -147,7 +148,7 @@ export function ProductSheet({
       const json = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(json.error || 'Could not save the product')
       toast.success(product ? 'Product updated' : 'Product added')
-      onSaved()
+      onSaved(json.product as ProductRow | undefined)
       onOpenChange(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not save the product')

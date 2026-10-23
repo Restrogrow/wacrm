@@ -340,7 +340,7 @@ export function mapMetaCatalogError(err: GraphErrorShape | null | undefined, htt
   const msg = `${err.error_user_msg ?? ''} ${err.message ?? ''}`.toLowerCase()
   if (err.code === 190) return 'Your WhatsApp access token has expired. Reconnect WhatsApp in Settings, then sync again.'
   if (err.code === 10 || err.code === 200 || err.code === 299 || msg.includes('permission')) {
-    return 'Your WhatsApp access token needs catalog_management permission. Add it to your Meta system user, then sync again.'
+    return 'Meta blocked access to your catalog. In Meta Business Settings → System users, give your system user access to this catalog (Manage catalog), make sure its token has catalog_management, then try again.'
   }
   if (err.code === 100 && /(object with id|does not exist|unsupported get request|unknown path)/.test(msg)) {
     return 'Meta could not find that catalog. Check the catalog ID in Orders & payments.'
