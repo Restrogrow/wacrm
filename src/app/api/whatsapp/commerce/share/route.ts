@@ -15,7 +15,8 @@ import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { accountCanSend } from '@/lib/billing/server'
 import { customerForConversation } from '@/lib/whatsapp/calling-server'
 import { CallingError } from '@/lib/whatsapp/calling'
-import { catalogMessage, loadCommerce, productMessage, sendWhatsApp } from '@/lib/whatsapp/commerce'
+import { WhatsAppSendError, catalogMessage, loadCommerce, productMessage, sendWhatsApp, type CommerceCreds } from '@/lib/whatsapp/commerce'
+import { explainProductSendFailure, fetchCatalogFacts } from '@/lib/catalog/meta-diagnose'
 import { logOutgoing } from '@/lib/whatsapp/commerce-server'
 import {
   ProductListError,
@@ -24,6 +25,19 @@ import {
   normaliseRetailerIds,
   type ProductListSection,
 } from '@/lib/catalog/messages'
+
+/**
+ * A product or list send failed: log what we sent (no token, no customer
+ * number) and, for Meta's vague "parameter not valid", ask Meta why.
+ */
+async function explainSendError(err: unknown, creds: CommerceCreds, catalogId: string, kind: string, retailerIds: string[]): Promise<string> {
+  const message = err instanceof Error ? err.message : 'Could not send.'
+  const code = err instanceof WhatsAppSendError ? err.code : null
+  console.error('[commerce/share] Meta refused', { kind, code, message, catalogId, retailerIds, phoneNumberId: creds.phoneNumberId })
+  if (code !== 131009 || !retailerIds.length) return message
+  const facts = await fetchCatalogFacts(creds.accessToken, creds.wabaId ?? null, catalogId, retailerIds)
+  return explainProductSendFailure(catalogId, retailerIds, facts) ?? message
+}
 
 export async function POST(request: Request) {
   try {
@@ -52,7 +66,7 @@ export async function POST(request: Request) {
 
     // Several products in one message (picked in the inbox, or a saved collection).
     if (b.kind === 'product_list') {
-      let sections: ProductListSection[]
+      let sections: ProductListSection[] = []
       let header = 'Our products'
       try {
         if (typeof b.collection_id === 'string' && b.collection_id) {
@@ -94,7 +108,8 @@ ${body}`,
         return NextResponse.json({ ok: true })
       } catch (err) {
         if (err instanceof ProductListError) return NextResponse.json({ error: err.message }, { status: 400 })
-        return NextResponse.json({ error: err instanceof Error ? err.message : 'Could not send.' }, { status: 400 })
+        const ids = sections.flatMap((s) => s.retailer_ids)
+        return NextResponse.json({ error: await explainSendError(err, creds, settings.catalog_id, 'product_list', ids) }, { status: 400 })
       }
     }
 
@@ -110,7 +125,8 @@ ${body}`,
         b.kind === 'product' ? productMessage(settings.catalog_id, retailerId, text) : catalogMessage(text, retailerId || undefined),
       )
     } catch (err) {
-      return NextResponse.json({ error: err instanceof Error ? err.message : 'Could not send.' }, { status: 400 })
+      const ids = b.kind === 'product' ? [retailerId] : []
+      return NextResponse.json({ error: await explainSendError(err, creds, settings.catalog_id, String(b.kind), ids) }, { status: 400 })
     }
 
     await logOutgoing(db, {

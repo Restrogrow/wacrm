@@ -226,7 +226,7 @@ export default function CatalogPage() {
     if (json.ok) {
       const created = json.created as number
       if (created > 0) toast.success(`Imported ${created} product${created === 1 ? '' : 's'} from your WhatsApp catalog`)
-      else toast.info((json.fetched as number) === 0 ? 'Your WhatsApp catalog has no products yet.' : 'Nothing new to import. Those products are already here.')
+      else toast.info((json.fetched as number) === 0 ? 'Connected to your WhatsApp catalog. It has no products yet, so there was nothing to fetch.' : 'Nothing new to import. Those products are already here.')
       if (json.message) toast.warning(json.message as string)
       if (json.truncated) toast.info('Your catalog is large. Only the first 2,000 products were read.')
       void load()
