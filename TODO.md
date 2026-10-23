@@ -336,6 +336,10 @@ already have an entry above are linked by number.
       allows three reply buttons).
 - [x] **QR code + wa.me link generator** (done 2026-10-16, Settings → QR & WhatsApp link) with a pre-filled message, for
       shops, flyers and packaging (Settings → Growth tools).
+- [ ] **WooCommerce plugin on WordPress.org** (sales idea, 2026-10-23): a
+      small plugin that connects a store to Repeat Grow in one click
+      (creates the webhooks and REST keys) instead of copying URLs by
+      hand, listed on WordPress.org for free discovery by Indian stores.
 - [ ] **Zapier, Make, Pabbly** native connectors. Inbound webhooks and
       Google Sheets shipped (migrations 071, 059). See #29.
 - [x] **WooCommerce integration** (done 2026-10-17, migration 063; no
@@ -403,6 +407,9 @@ Product
 - [ ] **Shopify `read_products` scope** so product sync can read stock
       counts (today it uses the public product feed without stock).
 - [ ] **Facebook Lead Ads** into contacts (needs Meta app review).
+      Owner liked this as a sales feature (2026-10-23), parked for later:
+      lead fills a Facebook/Instagram form → instant WhatsApp message →
+      contact in the pipeline. Pitch for real-estate and coaching pages.
 - [ ] **Instagram DM and Messenger** in the shared inbox (needs Meta app
       review).
 - [ ] **Per-account time zone setting** (scheduled messages use the

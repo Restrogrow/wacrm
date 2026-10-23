@@ -66,7 +66,7 @@ const TOC = [...TOPICS.map(({ id, label }) => ({ id, label })), { id: "faq", lab
 const FAQ = [
   {
     q: "Is Repeat Grow the official WhatsApp Business API?",
-    a: "Yes. Repeat Grow connects directly to Meta's WhatsApp Business Platform (Cloud API), so your number stays compliant and isn't at risk from unofficial clients.",
+    a: "Yes. Repeat Grow is an approved Meta Tech Provider and connects directly to Meta's WhatsApp Business Platform (Cloud API), so your number stays compliant and isn't at risk from unofficial clients.",
   },
   {
     q: "Can I keep using the WhatsApp app on my phone with the same number?",

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" width="1200" height="520" role="img" aria-labelledby="t">
+  <title id="t">Your business connects to Repeat Grow through Meta Embedded Signup and messages go over the official WhatsApp Cloud API</title>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#34d399"/></marker>
+  </defs>
+  <rect width="1200" height="520" fill="#0f172a"/>
+  <g font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" text-anchor="middle">
+    <rect x="60" y="150" width="300" height="190" rx="22" fill="#1f2937" stroke="#334155" stroke-width="2"/>
+    <text x="210" y="225" font-size="30" font-weight="700" fill="#ffffff">Your business</text>
+    <text x="210" y="265" font-size="21" fill="#94a3b8">Your number and</text>
+    <text x="210" y="293" font-size="21" fill="#94a3b8">WhatsApp Business Account</text>
+
+    <rect x="450" y="150" width="300" height="190" rx="22" fill="#065f46" stroke="#34d399" stroke-width="2"/>
+    <text x="600" y="225" font-size="30" font-weight="700" fill="#ffffff">Repeat Grow</text>
+    <text x="600" y="265" font-size="21" fill="#a7f3d0">Meta Tech Provider</text>
+    <text x="600" y="293" font-size="21" fill="#a7f3d0">Inbox, AI, broadcasts</text>
+
+    <rect x="840" y="150" width="300" height="190" rx="22" fill="#1f2937" stroke="#334155" stroke-width="2"/>
+    <text x="990" y="225" font-size="30" font-weight="700" fill="#ffffff">WhatsApp</text>
+    <text x="990" y="265" font-size="21" fill="#94a3b8">Official Cloud API</text>
+    <text x="990" y="293" font-size="21" fill="#94a3b8">run by Meta</text>
+
+    <line x1="365" y1="245" x2="440" y2="245" stroke="#34d399" stroke-width="4" marker-end="url(#a)"/>
+    <line x1="755" y1="245" x2="830" y2="245" stroke="#34d399" stroke-width="4" marker-end="url(#a)"/>
+    <text x="403" y="130" font-size="20" fill="#cbd5e1">Embedded Signup</text>
+    <text x="793" y="130" font-size="20" fill="#cbd5e1">Cloud API</text>
+
+    <text x="600" y="420" font-size="22" fill="#94a3b8">Meta bills message fees directly to your WhatsApp Business Account</text>
+  </g>
+  <text id="rg-brand" x="1172" y="496" text-anchor="end" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="600" fill="#ffffff" fill-opacity="0.6">repeatgrow.com</text>
+</svg>

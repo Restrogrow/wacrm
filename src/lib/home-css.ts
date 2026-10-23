@@ -387,6 +387,7 @@ export const HOME_CSS = `
 .lp-page .home .h-tile .more svg{ width: 15px; height: 15px; flex: none; transition: transform .2s ease; }
 .lp-page .home a.h-tile:hover .more svg{ transform: translateX(3px); }
 .lp-page .home .h-tile .cat{ display: inline-block; margin-bottom: 12px; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-deep); }
+.lp-page .home .h-tile p a{ color: var(--accent-deep); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .lp-page .home .h-why .h-tile{ background: rgba(255,255,255,.75); backdrop-filter: blur(8px); }
 
 /* ---------- Pricing teaser ---------- */

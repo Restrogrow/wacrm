@@ -44,7 +44,7 @@ export function buildOrganizationNode() {
     url: SITE_URL,
     logo: `${SITE_URL}/logo-v2.png`,
     description:
-      "WhatsApp CRM and official WhatsApp Business API platform for Indian businesses: shared inbox, AI chatbot, broadcasts, payments, Shopify and Calendly.",
+      "WhatsApp CRM and official WhatsApp Business API platform for Indian businesses, and an approved Meta Tech Provider: shared inbox, AI chatbot, broadcasts, payments, Shopify and Calendly.",
     areaServed: { "@type": "Country", name: "India" },
     sameAs: SOCIAL_PROFILES,
     email: SUPPORT_EMAIL,

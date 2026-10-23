@@ -47,7 +47,8 @@ export default function AboutPage() {
           a shared inbox with voice calls and an AI calling agent, contacts, sales pipelines,
           scheduled broadcasts, no-code automations, an AI chatbot, orders
           and payments, and Shopify and Calendly integrations, all built
-          on the official WhatsApp Business API.
+          on the official WhatsApp Business API. Repeat Grow is an approved
+          Meta Tech Provider.
         </p>
         <p>
           Most WhatsApp tools stop at messaging. We built Repeat Grow

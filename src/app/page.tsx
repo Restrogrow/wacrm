@@ -22,7 +22,7 @@ const HOME_FAQS = [
   {
     question: "Is Repeat Grow built on the official WhatsApp Business API?",
     answer:
-      "Yes. Repeat Grow runs entirely on Meta's official WhatsApp Business API (Cloud API), not a jailbroken app or an unofficial automation layer, so your number stays compliant and can't get banned for using third-party clients.",
+      "Yes. Repeat Grow is an approved Meta Tech Provider and runs entirely on Meta's official WhatsApp Business API (Cloud API), not a jailbroken app or an unofficial automation layer, so your number stays compliant and can't get banned for using third-party clients.",
   },
   {
     question: "How long does it take to get set up?",
@@ -357,13 +357,14 @@ const LANDING_BODY_HTML = `
     <div class="h-hero-copy">
       <a href="#ai-calls" class="h-badge"><span class="h-badge-new">New</span>An AI agent that calls your leads on WhatsApp <span aria-hidden="true">&rarr;</span></a>
       <h1>Turn every WhatsApp chat into a <span class="h-grad">repeat customer</span>.</h1>
-      <p class="h-sub">One shared WhatsApp inbox for your whole team, with an AI chatbot, an AI voice agent for calls, broadcasts, payments and Shopify built in. On the official WhatsApp Business API, and we set it up for you.</p>
+      <p class="h-sub">One shared WhatsApp inbox for your whole team, with an AI chatbot, an AI voice agent for calls, broadcasts, payments and Shopify built in. On the official WhatsApp Business API as a Meta Tech Provider, and we set it up for you.</p>
       <div class="h-ctas">
         <a href="/demo" class="btn btn-primary h-btn h-btn-glow">Book a free demo ${ICON_ARROW}</a>
         <a href="/signup" class="btn btn-ghost h-btn h-btn-ghost">Start 7-day free trial</a>
       </div>
       <ul class="h-checks">
         <li>${ICON_CHECK}No credit card</li>
+        <li>${ICON_CHECK}Meta Tech Provider</li>
         <li>${ICON_CHECK}Setup done for you</li>
         <li>${ICON_CHECK}Plans from &#8377;999/month</li>
       </ul>
@@ -593,7 +594,7 @@ const LANDING_BODY_HTML = `
       <p>Most WhatsApp tools are just messaging apps. Repeat Grow is a CRM: every conversation is tied to a contact, a deal and a next step.</p>
     </div>
     <div class="h-grid2">
-      <div class="h-tile reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.4 9.3-8 10-4.6-.7-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Official WhatsApp Business API</h3><p>Verified, compliant messaging on your own business number, not a jailbroken app or a tool that can get your number banned.</p></div>
+      <div class="h-tile reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.4 9.3-8 10-4.6-.7-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Meta Tech Provider, official API</h3><p>Repeat Grow is an approved Meta Tech Provider. Verified, compliant messaging on your own business number, not a jailbroken app or a tool that can get your number banned. <a href="/blog/meta-tech-provider-whatsapp">What that means</a></p></div>
       <div class="h-tile reveal" style="--d:1"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></div><h3>Live in days, not months</h3><p>We handle setup, WhatsApp verification and data import. Your team starts working from the shared inbox almost immediately.</p></div>
       <div class="h-tile reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5"/></svg></div><h3>Built for repeat business</h3><p>Pipelines, tags and automations keep every contact moving, so first-time buyers become repeat customers.</p></div>
       <div class="h-tile reveal" style="--d:1"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>Secure by default</h3><p>Encrypted credentials, strict access controls, verified webhooks and rate limiting protect your customer data around the clock.</p></div>
