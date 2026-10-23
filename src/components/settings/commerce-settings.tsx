@@ -26,6 +26,7 @@ import { rupees } from '@/lib/whatsapp/commerce-core';
 import { OrderRow, type OrderRowData } from '@/components/commerce/order-row';
 import { SettingsPanelHead } from './settings-panel-head';
 import { RazorpayLinksCard } from './razorpay-links-card';
+import { CatalogCheck } from './catalog-check';
 
 interface Settings {
   catalog_id: string;
@@ -273,6 +274,7 @@ export function CommerceSettings() {
                   and receive orders customers place from your catalog.
                 </p>
               </div>
+              <CatalogCheck disabled={!form.catalog_id.trim()} />
             </CardContent>
           </Card>
         </div>
