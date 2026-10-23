@@ -29,6 +29,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { useCan } from '@/hooks/use-can'
 import { formatPrice, type ProductRow } from '@/lib/catalog/core'
+import { reviewLabel, type ReviewTone } from '@/lib/catalog/meta-review'
 
 type StatusFilter = 'all' | 'active' | 'draft' | 'archived'
 
@@ -58,7 +59,14 @@ const STATUS_STYLE: Record<ProductRow['status'], string> = {
   archived: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
 }
 
-function SyncBadge({ p }: { p: ProductRow }) {
+const REVIEW_STYLE: Record<ReviewTone, string> = {
+  ok: 'text-emerald-700 dark:text-emerald-400',
+  wait: 'text-amber-700 dark:text-amber-400',
+  bad: 'text-red-700 dark:text-red-400',
+}
+
+/** `review` is Meta's review_status; undefined while unknown (not loaded or not on WhatsApp). */
+function SyncBadge({ p, review }: { p: ProductRow; review?: string }) {
   const map = {
     synced: ['On WhatsApp', 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'],
     pending: ['Not synced', 'bg-sky-500/15 text-sky-700 dark:text-sky-400'],
@@ -67,11 +75,20 @@ function SyncBadge({ p }: { p: ProductRow }) {
   } as const
   const [label, cls] = map[p.meta_sync_status]
   const reason = p.meta_sync_status === 'error' || p.meta_sync_status === 'skipped' ? p.meta_sync_error : null
+  const meta = p.meta_sync_status === 'synced' && review !== undefined ? reviewLabel(review) : null
   return (
     <div className="max-w-[14rem]">
       <span title={p.meta_sync_error ?? undefined} className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${cls}`}>
         {label}
       </span>
+      {meta && (
+        <p
+          className={`mt-1 text-xs font-medium ${REVIEW_STYLE[meta.tone]}`}
+          title={meta.tone === 'wait' ? 'Meta reviews new products before they can be shared in chats. This can take from a few minutes to a day.' : undefined}
+        >
+          {meta.label}
+        </p>
+      )}
       {reason && (
         <p title={reason} className="text-muted-foreground mt-1 line-clamp-2 text-xs">
           {reason}
@@ -136,6 +153,36 @@ export default function CatalogPage() {
   }
 
   const products = useMemo(() => data?.products ?? [], [data])
+
+  // Meta's review status for the products on WhatsApp (shown under "On WhatsApp").
+  const syncedIds = useMemo(
+    () => products.filter((p) => p.meta_sync_status === 'synced').map((p) => p.retailer_id).join(','),
+    [products],
+  )
+  const [reviews, setReviews] = useState<Record<string, string> | null>(null)
+  const [reviewTick, setReviewTick] = useState(0)
+  const anyWaiting = useMemo(
+    () => !!reviews && syncedIds.split(',').some((id) => id && reviewLabel(reviews[id]).tone === 'wait'),
+    [reviews, syncedIds],
+  )
+  useEffect(() => {
+    if (!anyWaiting) return
+    const t = setInterval(() => setReviewTick((n) => n + 1), 120_000)
+    return () => clearInterval(t)
+  }, [anyWaiting])
+  useEffect(() => {
+    if (!syncedIds || !data?.catalog_configured) return
+    let cancelled = false
+    void fetch(`/api/catalog/meta-review?ids=${encodeURIComponent(syncedIds)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { statuses?: Record<string, string> | null } | null) => {
+        if (!cancelled) setReviews(j?.statuses ?? null)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [syncedIds, data?.catalog_configured, reviewTick])
   const allSelected = products.length > 0 && products.every((p) => selected.has(p.id))
   const needsSync =
     data?.needs_sync ?? products.filter((p) => p.meta_sync_status === 'pending' || p.meta_sync_status === 'error').length
@@ -448,7 +495,7 @@ export default function CatalogPage() {
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_STYLE[p.status]}`}>{p.status}</span>
                     </td>
                     <td className="p-3">
-                      <SyncBadge p={p} />
+                      <SyncBadge p={p} review={reviews ? (reviews[p.retailer_id] ?? '') : undefined} />
                     </td>
                     <td className="p-3">
                       <div className="flex justify-end gap-1">
