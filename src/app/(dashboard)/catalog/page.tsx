@@ -287,7 +287,7 @@ export default function CatalogPage() {
     if (!json) return
     if (json.ok) {
       const parts = [`${json.synced as number} synced`]
-      if ((json.deleted as number) > 0) parts.push(`${json.deleted as number} removed`)
+      if ((json.deleted as number) > 0) parts.push(`${json.deleted as number} hidden`)
       if ((json.skipped as number) > 0) parts.push(`${json.skipped as number} skipped`)
       toast.success(`WhatsApp catalog: ${parts.join(', ')}`)
       if ((json.remaining as number) > 0) toast.info(`${json.remaining as number} more waiting. Press Sync again.`)

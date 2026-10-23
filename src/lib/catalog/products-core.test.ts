@@ -79,6 +79,8 @@ describe('toMetaItem', () => {
       link: 'https://repeatgrow.com',
       image_link: 'https://example.com/a.jpg',
       brand: 'My Shop',
+      // Always published, so restoring an archived (hidden) product shows it again.
+      visibility: 'published',
     })
     expect(item.sale_price).toBeUndefined()
   })
