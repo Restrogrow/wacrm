@@ -144,16 +144,29 @@ export const STATUS_MESSAGE: Record<Exclude<OrderStatus, 'pending'>, string> = {
 export interface CommerceCreds {
   phoneNumberId: string
   accessToken: string
+  /** WhatsApp Business Account ID, when known (used to explain catalog errors). */
+  wabaId?: string | null
+}
+
+/** A send Meta refused; `code` is Meta's error code (e.g. 131009). */
+export class WhatsAppSendError extends Error {
+  constructor(
+    message: string,
+    readonly code: number | null,
+  ) {
+    super(message)
+    this.name = 'WhatsAppSendError'
+  }
 }
 
 export async function loadCommerce(db: SupabaseClient, accountId: string): Promise<{ creds: CommerceCreds; settings: CommerceSettings }> {
   const [{ data: config }, { data: settings }] = await Promise.all([
-    db.from('whatsapp_config').select('phone_number_id, access_token').eq('account_id', accountId).maybeSingle(),
+    db.from('whatsapp_config').select('phone_number_id, access_token, waba_id').eq('account_id', accountId).maybeSingle(),
     db.from('commerce_settings').select('*').eq('account_id', accountId).maybeSingle(),
   ])
   if (!config?.phone_number_id || !config.access_token) throw new Error('Connect WhatsApp first (Settings → WhatsApp).')
   return {
-    creds: { phoneNumberId: config.phone_number_id, accessToken: decrypt(config.access_token) },
+    creds: { phoneNumberId: config.phone_number_id, accessToken: decrypt(config.access_token), wabaId: config.waba_id ?? null },
     settings: (settings as CommerceSettings | null) ?? {
       catalog_id: null,
       payment_mode: 'none',
@@ -172,10 +185,19 @@ export async function sendWhatsApp(creds: CommerceCreds, to: string, message: Re
     headers: { Authorization: `Bearer ${creds.accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to, ...message }),
   })
-  const json = (await res.json().catch(() => ({}))) as { messages?: { id: string }[]; error?: { message?: string; error_user_msg?: string; code?: number } }
+  const json = (await res.json().catch(() => ({}))) as {
+    messages?: { id: string }[]
+    error?: { message?: string; error_user_msg?: string; code?: number; error_data?: { details?: string } }
+  }
   if (!res.ok || json.error) {
-    const msg = json.error?.error_user_msg || json.error?.message || `WhatsApp returned ${res.status}`
-    throw new Error(/131047|re-?engagement|24 ?hours?/i.test(msg) ? 'This needs an open 24-hour chat window — the customer must have messaged in the last 24 hours.' : msg)
+    const base = json.error?.error_user_msg || json.error?.message || `WhatsApp returned ${res.status}`
+    // Meta puts the real reason (e.g. which parameter) in error_data.details.
+    const details = json.error?.error_data?.details
+    const msg = details && !base.includes(details) ? `${base}: ${details}` : base
+    throw new WhatsAppSendError(
+      /131047|re-?engagement|24 ?hours?/i.test(msg) ? 'This needs an open 24-hour chat window — the customer must have messaged in the last 24 hours.' : msg,
+      json.error?.code ?? null,
+    )
   }
   return json.messages?.[0]?.id ?? null
 }
