@@ -35,8 +35,11 @@ async function explainSendError(err: unknown, creds: CommerceCreds, catalogId: s
   const code = err instanceof WhatsAppSendError ? err.code : null
   console.error('[commerce/share] Meta refused', { kind, code, message, catalogId, retailerIds, phoneNumberId: creds.phoneNumberId })
   if (code !== 131009 || !retailerIds.length) return message
-  const facts = await fetchCatalogFacts(creds.accessToken, creds.wabaId ?? null, catalogId, retailerIds)
-  return explainProductSendFailure(catalogId, retailerIds, facts) ?? message
+  const facts = await fetchCatalogFacts(creds.accessToken, creds.wabaId ?? null, catalogId, retailerIds, creds.phoneNumberId)
+  return (
+    explainProductSendFailure(catalogId, retailerIds, facts) ??
+    `${message}. Use "Check catalog connection" on the Orders & payments page to see what Meta has linked to your number.`
+  )
 }
 
 export async function POST(request: Request) {

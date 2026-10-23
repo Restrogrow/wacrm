@@ -5,6 +5,12 @@ import { explainProductSendFailure } from './meta-diagnose'
 describe('explainProductSendFailure', () => {
   const cat = '1795207241689061'
 
+  it('says when the sending number is not in the saved account', () => {
+    expect(
+      explainProductSendFailure(cat, ['TEST-001'], { phoneInWaba: false, connectedCatalogIds: [cat], found: [{ retailer_id: 'TEST-001', review_status: 'approved' }] }),
+    ).toMatch(/not in the WhatsApp Business Account/)
+  })
+
   it('says when the catalog is not connected to the WABA', () => {
     expect(explainProductSendFailure(cat, ['TEST-001'], { connectedCatalogIds: [], found: null })).toMatch(/No catalog is connected/)
     expect(explainProductSendFailure(cat, ['TEST-001'], { connectedCatalogIds: ['999'], found: null })).toMatch(/isn't connected.*999/)
