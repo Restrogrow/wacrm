@@ -29,7 +29,7 @@ export interface ComparePageData {
 }
 
 const RG_PRICE =
-  "Starter ₹1,499, Growth ₹2,999, Pro ₹5,999 per month, Enterprise custom (save about 10% quarterly, 17% yearly)";
+  "Starter ₹999, Growth ₹1,999, Pro ₹3,999 per month, Enterprise custom (save about 10% quarterly, 17% yearly)";
 const RG_LIMITS =
   "Plans differ by limits: contacts (2,000 / 50,000 / 2,00,000 / unlimited), broadcasts per month (60 / 250 / 1,000 / unlimited), automations and flows (5 / 25 / 100 / unlimited), team members (5 / 25 / 50 / unlimited)";
 
@@ -44,7 +44,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
     intro:
       "WATI is a well-known WhatsApp platform with an omnichannel inbox and AI agents. If you are weighing it against Repeat Grow, here is a plain comparison of price, features and who each one suits.",
     quickAnswer:
-      "Repeat Grow starts lower and puts an AI voice agent for WhatsApp calls on its ₹5,999 Pro plan, where WATI keeps voice AI for its ₹16,799 Business plan. WATI is the better fit if you need Instagram, Facebook, TikTok and other channels in one inbox, or several WhatsApp numbers on one account.",
+      "Repeat Grow costs less and puts an AI voice agent for WhatsApp calls on its ₹3,999 Pro plan, where WATI keeps voice AI for its ₹16,799 Business plan. WATI is the better fit if you need Instagram, Facebook, TikTok and other channels in one inbox, or several WhatsApp numbers on one account.",
     table: {
       headers: ["", "Repeat Grow", "WATI"],
       rows: [
@@ -72,8 +72,8 @@ export const COMPARE_PAGES: ComparePageData[] = [
     chooseUs: {
       heading: "Choose Repeat Grow if",
       items: [
-        "You sell and support mainly on WhatsApp and want a lower entry price in rupees.",
-        "You want an AI voice agent on WhatsApp calls without paying for a top-tier plan.",
+        "You sell and support mainly on WhatsApp and want a lower monthly price in rupees.",
+        "You want the AI chatbot from Growth and an AI voice agent on Pro, at a lower price than WATI's matching plans.",
         "You want WhatsApp Pay and UPI orders, Shopify order messages and Calendly reminders ready to switch on.",
         "You want us to set up the WhatsApp Business API number and import your contacts.",
       ],
@@ -96,7 +96,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       {
         question: "Is Repeat Grow cheaper than WATI?",
         answer:
-          "On published list prices, yes. Repeat Grow starts at ₹1,499 per month, while WATI's cheapest plan is ₹2,699 per month billed quarterly. The two differ in features, so compare what you actually need.",
+          "On published list prices, yes. Repeat Grow starts at ₹999 per month, while WATI's cheapest plan is ₹2,699 per month billed quarterly. The two differ in features, so compare what you actually need.",
       },
       {
         question: "Does Repeat Grow support Instagram or Facebook inboxes like WATI?",
@@ -120,7 +120,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
     intro:
       "Interakt is a well-known WhatsApp platform used by many Indian businesses. Here is how it compares with Repeat Grow on price, features and fit.",
     quickAnswer:
-      "Interakt is cheaper at the entry level. Repeat Grow adds the AI chatbot on Growth and an AI voice agent on Pro. Interakt's higher plans add branching chatbot flows, native payments and auto-assignment, and it offers unlimited agents and an RCS channel on its top plan.",
+      "Repeat Grow is cheaper per month and adds the AI chatbot on Growth and an AI voice agent on Pro. Interakt's higher plans add branching chatbot flows, native payments and auto-assignment, and it offers unlimited agents and an RCS channel on its top plan.",
     table: {
       headers: ["", "Repeat Grow", "Interakt"],
       rows: [
@@ -173,7 +173,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       {
         question: "Is Repeat Grow cheaper than Interakt?",
         answer:
-          "Not at the entry level. Interakt's Starter is ₹3,499 per quarter (about ₹1,166 per month) plus taxes; Repeat Grow Starter is ₹1,499 per month, or ₹4,049 per quarter. Repeat Grow adds the AI chatbot on Growth and an AI voice agent on Pro, so compare on the features you need.",
+          "On published list prices, yes. Interakt's Starter is ₹3,499 per quarter (about ₹1,166 per month) plus taxes; Repeat Grow Starter is ₹999 per month, or ₹2,699 per quarter. Repeat Grow also adds the AI chatbot on Growth and an AI voice agent on Pro.",
       },
       {
         question: "Does Repeat Grow limit the number of agents?",
@@ -226,7 +226,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       heading: "Choose Repeat Grow if",
       items: [
         "You want the AI chatbot and chatbot flows included instead of paying for add-ons.",
-        "You want clear plans starting at ₹1,499 a month.",
+        "You want clear plans starting at ₹999 a month.",
         "You want WhatsApp Pay or UPI orders, Shopify and Calendly messages, browser voice calls and an AI agent that calls your leads.",
         "You want us to set up your WhatsApp Business API number and walk your team through it.",
       ],
@@ -246,7 +246,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
         heading: "A rough example at list prices",
         items: [
           "AiSensy Basic with the AI Chat Agent and Chatbot Flows add-ons: ₹1,425 + ₹1,350 + ₹2,500 = ₹5,275 per month, before WhatsApp message fees.",
-          "Repeat Grow Growth, with the AI chatbot included: ₹2,999 per month, before WhatsApp message fees.",
+          "Repeat Grow Growth, with the AI chatbot included: ₹1,999 per month, before WhatsApp message fees.",
           "Feature depth and AI message allowances differ, so compare on your own volume. Book a demo and we will walk through your numbers.",
         ],
       },
@@ -260,7 +260,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       {
         question: "Does Repeat Grow have a free plan?",
         answer:
-          "No. Every new account gets a 7-day free trial with Growth limits, and paid plans start at ₹1,499 per month.",
+          "No. Every new account gets a 7-day free trial with Growth limits, and paid plans start at ₹999 per month.",
       },
       {
         question: "Can I move from AiSensy to Repeat Grow?",
@@ -279,13 +279,13 @@ export const COMPARE_PAGES: ComparePageData[] = [
     intro:
       "Choosing a WhatsApp Business API platform in India usually comes down to three popular tools and a few newer ones. This page compares WATI, Interakt, AiSensy and Repeat Grow using each provider's public pricing page.",
     quickAnswer:
-      "For an AI chatbot and AI voice agent at a lower price than WATI, Repeat Grow starts at ₹1,499 per month. WATI suits teams that need many channels and enterprise AI. Interakt suits teams that want unlimited agents. AiSensy suits teams that want a free plan, ads tools or very high sending speeds.",
+      "For an AI chatbot and AI voice agent at a lower price than WATI, Repeat Grow starts at ₹999 per month. WATI suits teams that need many channels and enterprise AI. Interakt suits teams that want unlimited agents. AiSensy suits teams that want a free plan, ads tools or very high sending speeds.",
     table: {
       headers: ["", "Repeat Grow", "WATI", "Interakt", "AiSensy"],
       rows: [
-        ["Entry price", "Starter ₹1,499 per month", "₹2,699 per month, billed quarterly", "₹3,499 per quarter (about ₹1,166 per month) plus taxes", "Free plan; Basic ₹1,425 per month"],
-        ["Mid plan", "Growth ₹2,999 per month", "Pro ₹5,799 per month", "Growth ₹7,699 per quarter (about ₹2,566 per month)", "Pro ₹3,040 per month"],
-        ["Top public plan", "Pro ₹5,999 per month", "Business ₹16,799 per month", "Advanced ₹10,499 per quarter (about ₹3,500 per month)", "Unlimited ₹42,750 per month"],
+        ["Entry price", "Starter ₹999 per month", "₹2,699 per month, billed quarterly", "₹3,499 per quarter (about ₹1,166 per month) plus taxes", "Free plan; Basic ₹1,425 per month"],
+        ["Mid plan", "Growth ₹1,999 per month", "Pro ₹5,799 per month", "Growth ₹7,699 per quarter (about ₹2,566 per month)", "Pro ₹3,040 per month"],
+        ["Top public plan", "Pro ₹3,999 per month", "Business ₹16,799 per month", "Advanced ₹10,499 per quarter (about ₹3,500 per month)", "Unlimited ₹42,750 per month"],
         ["Team size", "5 / 25 / 50 / unlimited", "3 to 5 users included; extra users charged", "Unlimited agents", "5 agents on Basic; extra seats ₹750"],
         ["AI", "AI assistant on every plan; AI chatbot from Growth; AI voice agent on Pro", "AI and Astra agents, limited by AI credits", "Chatbot flows by plan", "AI Chat Agent add-on, ₹1,350 per month"],
         ["Chatbot flows", "Every plan", "Chatbots from Growth", "Linear on Growth, branching on Advanced", "Add-on, ₹2,500 per month"],
@@ -325,7 +325,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       {
         question: "Which is the cheapest WhatsApp Business API platform in India?",
         answer:
-          "On published list prices, Repeat Grow starts at ₹1,499 per month, AiSensy has a free plan (without broadcasting) and a Basic plan at ₹1,425 per month, Interakt Starter is about ₹1,166 per month, and WATI Growth is ₹2,699 per month. The right choice depends on the features and limits you need.",
+          "On published list prices, Repeat Grow starts at ₹999 per month, AiSensy has a free plan (without broadcasting) and a Basic plan at ₹1,425 per month, Interakt Starter is about ₹1,166 per month, and WATI Growth is ₹2,699 per month. The right choice depends on the features and limits you need.",
       },
       {
         question: "Do I still pay WhatsApp message fees?",
