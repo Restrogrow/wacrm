@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// Settings → Orders & payments → Razorpay payment links
+// Orders & payments → Razorpay payment links
 //
 // Admins connect their own Razorpay account (Key ID + Key Secret). Agents
 // then send a payment link from any chat. After connecting, the page

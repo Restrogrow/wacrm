@@ -164,7 +164,7 @@ export function OrderButton({ conversationId }: { conversationId: string }) {
               <p className="text-sm text-muted-foreground">
                 Choose how customers pay first in{' '}
                 <Link href="/orders" className="font-medium underline underline-offset-4">
-                  Settings → Orders & payments
+                  Orders & payments
                 </Link>
                 .
               </p>
@@ -218,7 +218,7 @@ export function OrderButton({ conversationId }: { conversationId: string }) {
               <p className="text-sm text-muted-foreground">
                 Add your catalog ID in{' '}
                 <Link href="/orders" className="font-medium underline underline-offset-4">
-                  Settings → Orders & payments
+                  Orders & payments
                 </Link>{' '}
                 to share products.
               </p>

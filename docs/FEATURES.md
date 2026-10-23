@@ -38,7 +38,7 @@ Related: [README](../README.md) · [Admin handbook](./ADMIN.md) · [Operations r
 2. **Connect it to your WhatsApp number** in WhatsApp Manager (the account's catalog settings), and turn on **Show
    catalog** and **Cart** so customers can browse and send carts.
 3. **Copy the catalog ID** (Commerce Manager → catalog Settings, or Business Settings → Data sources → Catalogs).
-4. **Paste it** in **Settings → Orders & payments** (field _WhatsApp catalog ID_) and save.
+4. **Paste it** in **sidebar → Orders & payments** (field _WhatsApp catalog ID_) and save.
 5. **Give the token permission.** Pushing and fetching products needs a token with `catalog_management`. In Business
    Settings → System users, give the system user **Manage catalog** on the catalog, generate a token with
    `catalog_management` plus `whatsapp_business_management` and `whatsapp_business_messaging`, and save it in Settings →
@@ -109,7 +109,7 @@ Meta's menus change, so the exact names may differ slightly.
 
 ## Razorpay payment links
 
-- **Where:** Settings → **Orders & payments** → Razorpay card (connect); in a chat, the link icon in the chat header → **Request payment**.
+- **Where:** sidebar → **Orders & payments** → Razorpay card (connect); in a chat, the link icon in the chat header → **Request payment**.
 - **Who:** admins connect; agent+ can request payments.
 - **Setup:** Razorpay Dashboard → Account & Settings → API Keys → generate a key; paste the key id and secret in the
   card and **Connect** (it is tested with a read-only call). The app then shows a webhook URL and secret **once**: in

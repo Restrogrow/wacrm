@@ -196,7 +196,7 @@
 - The broadcasts list shows 25 at a time with **Load more**.
 
 ### Orders, payments and catalog (India)
-- **Settings → Orders & payments:** choose how customers pay —
+- **sidebar → Orders & payments:** choose how customers pay —
   **WhatsApp Pay** (native "Review and pay" with UPI / card /
   netbanking, using a payment configuration made in WhatsApp Manager
   with Razorpay, PayU, BillDesk or Zaakpay — no gateway keys in Repeat
@@ -211,11 +211,11 @@
 - **Fulfilment:** processing → shipped → delivered (or cancelled); the
   customer is told each time (an `order_status` card for WhatsApp Pay
   orders, a short text otherwise). Recent orders with payment / status
-  controls are listed in Settings → Orders & payments.
+  controls are listed in sidebar → Orders & payments.
 - Amounts are stored in paise (`whatsapp_orders`). Code:
   `src/lib/whatsapp/commerce.ts`, `src/app/api/whatsapp/commerce/`,
   `src/components/inbox/order-button.tsx` (migration 053).
-- **Razorpay payment links** (Settings → Orders & payments → Razorpay
+- **Razorpay payment links** (sidebar → Orders & payments → Razorpay
   card): in a chat, request a payment of any amount (link icon in the chat header); a Razorpay Payment
   Link is sent in the conversation and a signed webhook marks it (and any
   linked order) paid, expired or failed and sends a confirmation. Keys
@@ -228,7 +228,7 @@
   use bulk actions.
 - **Meta sync both ways:** *Sync to WhatsApp* pushes products to your
   Meta catalog; *Fetch from WhatsApp* brings in products that already
-  exist there. Needs the catalog ID in Settings → Orders & payments and a
+  exist there. Needs the catalog ID in sidebar → Orders & payments and a
   token with `catalog_management`.
 - **Store sync:** pull products from Shopify and WooCommerce (WooCommerce
   needs optional REST API keys).
@@ -921,14 +921,14 @@ overlapping or retried runs never send twice.
    your Razorpay / PayU / BillDesk / Zaakpay account and name the
    configuration (Meta's Payments API for India must be enabled for
    your business).
-3. Repeat Grow → **Settings → Orders & payments** → WhatsApp Pay → pick
+3. Repeat Grow → **sidebar → Orders & payments** → WhatsApp Pay → pick
    the gateway and enter the configuration name.
 4. Payment updates arrive on the existing webhook (`messages` field,
    `statuses` with `type: payment`) — nothing extra to subscribe.
    Without WhatsApp Pay, choose **UPI ID** instead.
 5. For catalog sharing and catalog orders: create a catalog in Commerce
    Manager, connect it to the number in WhatsApp Manager → Catalog, and
-   paste the catalog ID in Settings → Orders & payments.
+   paste the catalog ID in sidebar → Orders & payments.
 
 ### WhatsApp calling
 

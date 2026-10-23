@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 
     const { creds, settings } = await loadCommerce(db, ctx.accountId)
     if (settings.payment_mode === 'none') {
-      return NextResponse.json({ error: 'Choose how customers pay in Settings → Orders & payments first.' }, { status: 400 })
+      return NextResponse.json({ error: 'Choose how customers pay in Orders & payments first.' }, { status: 400 })
     }
 
     const reference_id = newReferenceId()

@@ -106,7 +106,7 @@ export async function importFromMetaCatalog(
   const out: MetaImportResult = { ok: true, fetched: 0, created: 0, updated: 0, skipped: 0, truncated: false }
 
   const catalogId = await getCatalogId(db, accountId)
-  if (!catalogId) return { ...out, ok: false, code: 'no_catalog', message: 'Add your catalog ID in Settings → Orders & payments first.' }
+  if (!catalogId) return { ...out, ok: false, code: 'no_catalog', message: 'Add your catalog ID in Orders & payments first.' }
 
   let token: string
   try {

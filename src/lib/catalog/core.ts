@@ -343,7 +343,7 @@ export function mapMetaCatalogError(err: GraphErrorShape | null | undefined, htt
     return 'Your WhatsApp access token needs catalog_management permission. Add it to your Meta system user, then sync again.'
   }
   if (err.code === 100 && /(object with id|does not exist|unsupported get request|unknown path)/.test(msg)) {
-    return 'Meta could not find that catalog. Check the catalog ID in Settings → Orders & payments.'
+    return 'Meta could not find that catalog. Check the catalog ID in Orders & payments.'
   }
   if (err.code === 4 || err.code === 17 || err.code === 32 || err.code === 613) {
     return 'Meta is rate limiting catalog updates. Wait a few minutes and sync again.'

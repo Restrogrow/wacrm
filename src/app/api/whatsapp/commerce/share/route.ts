@@ -3,7 +3,7 @@
 // { conversation_id, kind: 'catalog' | 'product', retailer_id?, text? }
 // { conversation_id, kind: 'product_list', retailer_ids?: string[], collection_id?: string, text? }
 //   → interactive multi-product message (1-30 products, grouped by category).
-// Needs a catalog ID in Settings → Orders & payments and an open
+// Needs a catalog ID in Orders & payments and an open
 // 24-hour window. Agents and above.
 // ============================================================
 
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     const db = supabaseAdmin()
     const { creds, settings } = await loadCommerce(db, ctx.accountId)
     if (!settings.catalog_id) {
-      return NextResponse.json({ error: 'Add your catalog ID in Settings → Orders & payments first.' }, { status: 400 })
+      return NextResponse.json({ error: 'Add your catalog ID in Orders & payments first.' }, { status: 400 })
     }
     let customer
     try {

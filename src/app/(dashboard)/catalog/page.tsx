@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   Archive,
@@ -39,9 +39,18 @@ interface ListResponse {
   used: number
   catalog_configured: boolean
   unavailable?: boolean
+  /** Products (whole account) waiting for "Sync to WhatsApp": pending or failed. */
+  needs_sync?: number
 }
 
 const PAGE_SIZE = 100
+/** The auto-sync after an edit runs after the response, so look again a little later. */
+const FOLLOW_UP_RELOADS_MS = [3_000, 8_000]
+
+/** Errors stay up long enough to read (sonner's default is 4 s). */
+function showError(message: string) {
+  toast.error(message, { duration: 12_000, closeButton: true })
+}
 
 const STATUS_STYLE: Record<ProductRow['status'], string> = {
   active: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
@@ -54,13 +63,21 @@ function SyncBadge({ p }: { p: ProductRow }) {
     synced: ['On WhatsApp', 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'],
     pending: ['Not synced', 'bg-sky-500/15 text-sky-700 dark:text-sky-400'],
     error: ['Sync failed', 'bg-red-500/15 text-red-700 dark:text-red-400'],
-    skipped: ['Not on WhatsApp', 'bg-muted text-muted-foreground'],
+    skipped: ['Skipped', 'bg-amber-500/15 text-amber-700 dark:text-amber-400'],
   } as const
   const [label, cls] = map[p.meta_sync_status]
+  const reason = p.meta_sync_status === 'error' || p.meta_sync_status === 'skipped' ? p.meta_sync_error : null
   return (
-    <span title={p.meta_sync_error ?? undefined} className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
-      {label}
-    </span>
+    <div className="max-w-[14rem]">
+      <span title={p.meta_sync_error ?? undefined} className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${cls}`}>
+        {label}
+      </span>
+      {reason && (
+        <p title={reason} className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+          {reason}
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -89,9 +106,9 @@ export default function CatalogPage() {
       const res = await fetch(`/api/catalog/products?${params}`)
       const json = (await res.json()) as ListResponse
       if (res.ok) setData(json)
-      else toast.error('Could not load products')
+      else showError('Could not load products')
     } catch {
-      toast.error('Could not load products')
+      showError('Could not load products')
     } finally {
       setLoading(false)
     }
@@ -102,9 +119,20 @@ export default function CatalogPage() {
     void load()
   }, [load])
 
+  const followUps = useRef<ReturnType<typeof setTimeout>[]>([])
+  useEffect(() => () => followUps.current.forEach(clearTimeout), [])
+
+  /** Reload now and again shortly, so the WhatsApp column shows the auto-sync's result. */
+  function reloadAfterChange() {
+    void load()
+    followUps.current.forEach(clearTimeout)
+    followUps.current = FOLLOW_UP_RELOADS_MS.map((ms) => setTimeout(() => void load(), ms))
+  }
+
   const products = useMemo(() => data?.products ?? [], [data])
   const allSelected = products.length > 0 && products.every((p) => selected.has(p.id))
-  const needsSync = products.filter((p) => p.meta_sync_status === 'pending' || p.meta_sync_status === 'error').length
+  const needsSync =
+    data?.needs_sync ?? products.filter((p) => p.meta_sync_status === 'pending' || p.meta_sync_status === 'error').length
 
   function toggle(id: string) {
     setSelected((s) => {
@@ -121,7 +149,7 @@ export default function CatalogPage() {
       const res = await fetch(url, { ...init, headers: { 'Content-Type': 'application/json', ...(init.headers ?? {}) } })
       const json = (await res.json().catch(() => ({}))) as Record<string, unknown>
       if (!res.ok) {
-        toast.error((json.error as string) || (json.message as string) || 'Something went wrong')
+        showError((json.error as string) || (json.message as string) || 'Something went wrong')
         return json
       }
       return json
@@ -139,7 +167,7 @@ export default function CatalogPage() {
       toast.success(`${json.count as number} product${json.count === 1 ? '' : 's'} ${action === 'delete' ? 'deleted' : action === 'archive' ? 'archived' : 'activated'}`)
       if (json.warning) toast.warning(json.warning as string)
       setSelected(new Set())
-      void load()
+      reloadAfterChange()
     }
   }
 
@@ -149,7 +177,7 @@ export default function CatalogPage() {
     if (json?.ok) {
       toast.success('Product deleted')
       if (json.warning) toast.warning(json.warning as string)
-      void load()
+      reloadAfterChange()
     }
   }
 
@@ -158,7 +186,7 @@ export default function CatalogPage() {
       method: 'PATCH',
       body: JSON.stringify({ status: p.status === 'archived' ? 'active' : 'archived' }),
     })
-    if (json?.product) void load()
+    if (json?.product) reloadAfterChange()
   }
 
   async function duplicate(p: ProductRow) {
@@ -182,7 +210,7 @@ export default function CatalogPage() {
     })
     if (json?.product) {
       toast.success('Duplicated as a draft')
-      void load()
+      reloadAfterChange()
     }
   }
 
@@ -197,7 +225,7 @@ export default function CatalogPage() {
       if (json.truncated) toast.info('Your catalog is large. Only the first 2,000 products were read.')
       void load()
     } else if (json.message) {
-      toast.error(json.message as string)
+      showError(json.message as string)
     }
   }
 
@@ -211,7 +239,7 @@ export default function CatalogPage() {
       toast.success(`WhatsApp catalog: ${parts.join(', ')}`)
       if ((json.remaining as number) > 0) toast.info(`${json.remaining as number} more waiting. Press Sync again.`)
     } else if (json.message) {
-      toast.error(json.message as string)
+      showError(json.message as string)
     }
     void load()
   }
@@ -227,7 +255,7 @@ export default function CatalogPage() {
         description="Your products, ready to share on WhatsApp. Add them here and sync them to your WhatsApp catalog."
         action={
           <div className="flex flex-wrap gap-2">
-            <StoreSyncMenu onDone={() => void load()} />
+            <StoreSyncMenu onDone={reloadAfterChange} />
             <Button variant="outline" size="sm" onClick={() => setImportOpen(true)} disabled={!canEdit}>
               <FileUp className="size-3.5" /> Import CSV
             </Button>
@@ -256,8 +284,8 @@ export default function CatalogPage() {
           <TriangleAlert className="mt-0.5 size-4 shrink-0 text-sky-600" />
           <span>
             Products are saved here, but they will not appear on WhatsApp until you add your catalog ID in{' '}
-            <Link href="/settings" className="text-primary font-medium underline underline-offset-2">
-              Settings → Orders &amp; payments
+            <Link href="/orders" className="text-primary font-medium underline underline-offset-2">
+              Orders &amp; payments
             </Link>
             .
           </span>
@@ -304,7 +332,7 @@ export default function CatalogPage() {
           </Button>
           <Button variant="outline" size="sm" onClick={() => sync()} disabled={!canEdit || busy !== null || !data?.catalog_configured} title={data?.catalog_configured ? undefined : 'Add your catalog ID first'}>
             {busy === 'sync' ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
-            Sync to WhatsApp{needsSync > 0 ? ` (${needsSync})` : ''}
+            Sync to WhatsApp{needsSync > 0 ? ` (${needsSync} waiting)` : ''}
           </Button>
         </div>
       </div>
@@ -467,9 +495,9 @@ export default function CatalogPage() {
         onOpenChange={(open) => setSheet((s) => ({ ...s, open }))}
         product={sheet.product}
         canEdit={canEdit}
-        onSaved={() => void load()}
+        onSaved={reloadAfterChange}
       />
-      <ImportDialog open={importOpen} onOpenChange={setImportOpen} onDone={() => void load()} />
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} onDone={reloadAfterChange} />
     </div>
   )
 }

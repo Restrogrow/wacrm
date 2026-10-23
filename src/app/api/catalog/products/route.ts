@@ -7,7 +7,7 @@
 import { NextResponse, after } from 'next/server'
 
 import { getCurrentAccount, requireRole, toErrorResponse } from '@/lib/auth/account'
-import { autoSyncProducts, getCatalogId } from '@/lib/catalog/meta-sync'
+import { autoSyncProducts, getCatalogId, pendingCount } from '@/lib/catalog/meta-sync'
 import { listProducts, productCapacity, upsertProduct, validateProductInput, PRODUCT_STATUSES, type ProductStatus } from '@/lib/catalog/products'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     const status = (PRODUCT_STATUSES as readonly string[]).includes(rawStatus) ? (rawStatus as ProductStatus) : 'all'
 
     const admin = supabaseAdmin()
-    const [{ products, total }, capacity, catalogId] = await Promise.all([
+    const [{ products, total }, capacity, catalogId, needsSync] = await Promise.all([
       listProducts(ctx.supabase, ctx.accountId, {
         q: url.searchParams.get('q') ?? '',
         status,
@@ -29,6 +29,8 @@ export async function GET(request: Request) {
       }),
       productCapacity(admin, ctx.accountId),
       getCatalogId(admin, ctx.accountId),
+      // Whole account, not just this page: what "Sync to WhatsApp" will pick up.
+      pendingCount(admin, ctx.accountId),
     ])
     return NextResponse.json({
       products,
@@ -36,6 +38,7 @@ export async function GET(request: Request) {
       limit: capacity.limit,
       used: capacity.current,
       catalog_configured: !!catalogId,
+      needs_sync: needsSync,
     })
   } catch (err) {
     // Migration 076 not applied yet: tell the page instead of failing.

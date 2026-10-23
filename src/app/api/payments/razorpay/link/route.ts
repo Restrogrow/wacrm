@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     const db = supabaseAdmin()
     const creds = await loadRazorpayCreds(db, ctx.accountId)
     if (!creds) {
-      return NextResponse.json({ error: 'Connect Razorpay first (Settings → Orders & payments).' }, { status: 400 })
+      return NextResponse.json({ error: 'Connect Razorpay first (Orders & payments).' }, { status: 400 })
     }
 
     // Optional order: must belong to this account.

@@ -56,7 +56,7 @@ export function buildOrderDetailsInteractive(
   bodyText: string,
 ) {
   if (settings.payment_mode !== 'whatsapp_pay' || !settings.payment_configuration || !settings.payment_gateway) {
-    throw new Error('Set up WhatsApp Pay in Settings → Orders & payments first.')
+    throw new Error('Set up WhatsApp Pay in Orders & payments first.')
   }
   return {
     type: 'order_details',
@@ -102,7 +102,7 @@ export function buildUpiOrderText(
   order: { reference_id: string; items: OrderItem[] } & OrderAmounts,
   intro?: string,
 ): string {
-  if (!settings.upi_id) throw new Error('Add your UPI ID in Settings → Orders & payments first.')
+  if (!settings.upi_id) throw new Error('Add your UPI ID in Orders & payments first.')
   const lines = [
     intro?.trim() || 'Here is your order:',
     '',

@@ -1,7 +1,7 @@
 // Sync the product library to the Meta (WhatsApp) catalog.
 //
 // Uses the account's existing WhatsApp access token and the catalog ID set
-// in Settings > Orders & payments (commerce_settings.catalog_id) and calls
+// on the Orders & payments page (commerce_settings.catalog_id) and calls
 // the Graph "items_batch" endpoint: one UPDATE-with-upsert request per active
 // product and one DELETE per removed one. Per-product results are written
 // back to products.meta_sync_status / meta_sync_error.
@@ -113,7 +113,7 @@ async function setStatus(
   }
 }
 
-async function pendingCount(db: SupabaseClient, accountId: string): Promise<number> {
+export async function pendingCount(db: SupabaseClient, accountId: string): Promise<number> {
   const { count } = await db
     .from('products')
     .select('id', { count: 'exact', head: true })
@@ -137,7 +137,7 @@ export async function syncProductsToMeta(
 
   const catalogId = await getCatalogId(db, accountId)
   if (!catalogId) {
-    return { ...result, ok: false, code: 'no_catalog', message: 'Add your catalog ID in Settings → Orders & payments first.' }
+    return { ...result, ok: false, code: 'no_catalog', message: 'Add your catalog ID in Orders & payments first.' }
   }
 
   let token: string
