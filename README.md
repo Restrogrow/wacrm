@@ -401,9 +401,9 @@ the business pays (UPI / bank transfer).
 
 | | Starter | Growth | Pro | Enterprise |
 |---|---|---|---|---|
-| Monthly | ₹1,499 | ₹2,999 | ₹5,999 | Custom |
-| Quarterly | ₹4,049 | ₹8,099 | ₹16,199 | Custom |
-| Yearly | ₹14,999 | ₹29,999 | ₹59,999 | Custom |
+| Monthly | ₹999 | ₹1,999 | ₹3,999 | Custom |
+| Quarterly | ₹2,699 | ₹5,399 | ₹10,799 | Custom |
+| Yearly | ₹9,999 | ₹19,999 | ₹39,999 | Custom |
 | Contacts (dashboard adds + imports) | 2,000 | 50,000 | 2,00,000 | Unlimited |
 | Broadcasts per month | 60 | 250 | 1,000 | Unlimited |
 | Automations + flows | 5 | 25 | 100 | Unlimited |
