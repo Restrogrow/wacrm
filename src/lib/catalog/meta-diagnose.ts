@@ -100,6 +100,28 @@ export interface SetupCheck {
   label: string
   status: 'ok' | 'warn' | 'fail'
   detail: string
+  /** A one-click fix the page can offer for this check. */
+  fix?: 'enable_catalog_cart'
+}
+
+/**
+ * Turn on "show catalog" and "cart" for the phone number. Meta keeps these
+ * per number; without them product messages can fail with "product not found".
+ */
+export async function enableCatalogAndCart(creds: { phoneNumberId: string; accessToken: string }): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const res = await fetch(`${GRAPH}/${creds.phoneNumberId}/whatsapp_commerce_settings?is_catalog_visible=true&is_cart_enabled=true`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${creds.accessToken}` },
+    })
+    const json = (await res.json().catch(() => ({}))) as { success?: boolean; error?: { message?: string; error_user_msg?: string } }
+    if (!res.ok || json.error || json.success === false) {
+      return { ok: false, message: json.error?.error_user_msg || json.error?.message || `Meta returned ${res.status}` }
+    }
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : 'Could not reach Meta' }
+  }
 }
 
 /** Every link in the chain a product message needs, as Meta sees it. */
@@ -164,14 +186,21 @@ export async function runCatalogSetupChecks(
 
   const commerce = await graphGet(`${GRAPH}/${creds.phoneNumberId}/whatsapp_commerce_settings`, token)
   const commerceRow = dataOf(commerce)?.[0]
+  const allOn = !!commerceRow?.is_catalog_visible && !!commerceRow?.is_cart_enabled
   checks.push(
     commerceRow
       ? {
           label: 'Catalog and cart on this number',
-          status: commerceRow.is_catalog_visible && commerceRow.is_cart_enabled ? 'ok' : 'warn',
-          detail: `Catalog shown: ${commerceRow.is_catalog_visible ? 'yes' : 'no'}, cart: ${commerceRow.is_cart_enabled ? 'on' : 'off'}. Turn both on in WhatsApp Manager → Catalog.`,
+          status: allOn ? 'ok' : 'warn',
+          detail: `Catalog shown: ${commerceRow.is_catalog_visible ? 'yes' : 'no'}, cart: ${commerceRow.is_cart_enabled ? 'on' : 'off'}.`,
+          ...(allOn ? {} : { fix: 'enable_catalog_cart' as const }),
         }
-      : { label: 'Catalog and cart on this number', status: 'warn', detail: `Couldn't read: ${errorOf(commerce) ?? 'no settings'}` },
+      : {
+          label: 'Catalog and cart on this number',
+          status: 'warn',
+          detail: `Not set up on this number yet (${errorOf(commerce) ?? 'Meta has no settings'}). Product messages may fail until they are on.`,
+          fix: 'enable_catalog_cart',
+        },
   )
 
   if (catalogId) {
@@ -183,7 +212,7 @@ export async function runCatalogSetupChecks(
             label: 'Products Meta sees',
             status: rows.length ? 'ok' : 'warn',
             detail: rows.length
-              ? rows.map((p) => `${String(p.retailer_id)} (${String(p.review_status ?? 'no review status')})`).join(', ')
+              ? rows.map((p) => `${String(p.retailer_id)} (review: ${p.review_status ? String(p.review_status) : 'not reported by Meta'})`).join(', ')
               : 'The catalog is empty.',
           }
         : { label: 'Products Meta sees', status: 'fail', detail: `Couldn't read the catalog: ${errorOf(products)}` },

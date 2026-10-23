@@ -31,6 +31,7 @@ const BLOCKED_PREFIXES = [
   '/api/whatsapp/calls',
   '/api/whatsapp/react',
   '/api/whatsapp/commerce/share',
+  '/api/whatsapp/commerce/enable-cart',
   '/api/whatsapp/templates/submit',
   '/api/scheduled-messages',
   '/api/csat/request',
