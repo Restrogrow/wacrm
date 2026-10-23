@@ -77,7 +77,7 @@ export function buildProductListMessage(args: {
   footer?: string
   sections: ProductListSection[]
 }) {
-  if (!args.catalogId) throw new ProductListError('Add your catalog ID in Settings → Orders & payments first.')
+  if (!args.catalogId) throw new ProductListError('Add your catalog ID in Orders & payments first.')
   validateProductList(args.sections)
   const header = clean(args.header ?? '', 60) || 'Our products'
   const body = clean(args.body, 1024) || 'Take a look and order right here on WhatsApp.'

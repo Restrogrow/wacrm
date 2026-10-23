@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { buildLabel } from "@/lib/version";
 import { useAuth } from "@/hooks/use-auth";
 import { useTotalUnread } from "@/hooks/use-total-unread";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
@@ -339,6 +340,14 @@ export function Sidebar({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Which deploy is live (helps confirm a release reached production) */}
+          <p
+            suppressHydrationWarning
+            title={buildLabel()}
+            className={cn("truncate px-2 pt-1 text-[10px] text-white/40", hideWhenCollapsed)}
+          >
+            {buildLabel()}
+          </p>
         </div>
       </aside>
     </>

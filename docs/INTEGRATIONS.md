@@ -63,7 +63,7 @@ No abandoned-cart message: core WooCommerce has no such event.
 
 Request a payment in a chat; a Razorpay Payment Link is sent and a signed
 webhook marks it paid / expired / failed (and the linked order paid) and
-sends a confirmation. Settings → Orders & payments → Razorpay card. Code:
+sends a confirmation. sidebar → Orders & payments → Razorpay card. Code:
 `src/lib/payments/razorpay.ts`, migration `064_razorpay_payment_links.sql`.
 
 | Keys | |

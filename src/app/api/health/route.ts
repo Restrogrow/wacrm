@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+
+import { APP_VERSION, BUILD_COMMIT, BUILD_TIME } from '@/lib/version'
 import { checkRateLimit, getClientIp, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 
 import { getSystemHealth } from '@/lib/ops/health'
@@ -23,6 +25,7 @@ export async function GET(request: Request) {
     {
       status: health.status,
       checked_at: health.checkedAt,
+      version: { app: APP_VERSION, commit: BUILD_COMMIT || null, built_at: BUILD_TIME || null },
       checks: {
         database: health.database.state,
         database_latency_ms: health.database.latencyMs,

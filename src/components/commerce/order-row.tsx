@@ -2,7 +2,7 @@
 
 // One order with its payment + fulfilment badges and actions
 // (change status — the customer is told — and mark paid). Used in
-// Settings → Orders & payments and in the chat's order dialog.
+// Orders & payments and in the chat's order dialog.
 
 import { useState } from 'react';
 import { format } from 'date-fns';

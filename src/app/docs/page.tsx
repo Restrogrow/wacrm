@@ -400,7 +400,7 @@ export default function DocsPage() {
           <Section id="orders" n={7} title="Orders & payments" intro="Take orders and payments in the chat, share your catalog, and keep customers updated on delivery.">
             <ol className="steps">
               <Step title="Choose how customers pay">
-                In <Ui to="/settings?tab=commerce">Settings → Orders & payments</Ui>, pick <b>WhatsApp Pay</b> (customers
+                In <Ui to="/orders">Orders & payments</Ui>, pick <b>WhatsApp Pay</b> (customers
                 pay by UPI, card or netbanking inside WhatsApp; set up a payment configuration with Razorpay, PayU,
                 BillDesk or Zaakpay in WhatsApp Manager first) or <b>UPI ID</b> (we send your UPI ID with the order).
               </Step>

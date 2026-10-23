@@ -49,7 +49,7 @@ const FAQ: FaqItem[] = [
   {
     question: 'Can customers order from my catalog?',
     answer:
-      'Yes. Create a catalog in Commerce Manager, connect it to your number, and paste the catalog ID in Settings → Orders & payments. You can share the whole catalog or one product in a chat, and carts customers send become pending orders automatically.',
+      'Yes. Create a catalog in Commerce Manager, connect it to your number, and paste the catalog ID in Orders & payments. You can share the whole catalog or one product in a chat, and carts customers send become pending orders automatically.',
   },
   {
     question: 'Which currency and amounts are used?',
@@ -91,7 +91,7 @@ export default function WhatsAppPayPost() {
       </ul>
 
       <h2 id="two-ways">Two ways to get paid: WhatsApp Pay or UPI ID</h2>
-      <p>In <strong>Settings → Orders &amp; payments</strong> you choose how customers pay:</p>
+      <p>In <strong>Orders &amp; payments</strong> you choose how customers pay:</p>
       <ul>
         <li>
           <strong>WhatsApp Pay.</strong> The customer taps <em>Review and pay</em> and pays with UPI,
@@ -116,7 +116,7 @@ export default function WhatsAppPayPost() {
           Razorpay, PayU, BillDesk or Zaakpay account and name the configuration.
         </li>
         <li>
-          In Repeat Grow, open <strong>Settings → Orders &amp; payments</strong>, choose{' '}
+          In Repeat Grow, open <strong>Orders &amp; payments</strong>, choose{' '}
           <strong>WhatsApp Pay</strong>, pick the gateway and enter the configuration name.
         </li>
         <li>
@@ -140,7 +140,7 @@ export default function WhatsAppPayPost() {
         </li>
         <li>Send the payment request. The customer sees the total and a way to pay.</li>
         <li>
-          Follow the status in the chat and in the list of recent orders in Settings → Orders &amp;
+          Follow the status in the chat and in the list of recent orders in Orders &amp;
           payments.
         </li>
       </ol>
