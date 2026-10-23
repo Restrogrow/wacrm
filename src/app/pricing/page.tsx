@@ -93,39 +93,46 @@ const LIMIT_ROW_LABELS: Record<(typeof LIMIT_KEYS)[number], string> = {
   team_members: "Team members",
 };
 
-// Short, one-line points; the numbers live in the limits table below them.
+// Short, one-line points per plan. The numbers in the limits table are what
+// the app enforces; the AI volumes here are not enforced yet.
 const PLAN_FEATURES: Record<PaidPlan, string[]> = {
   starter: [
-    "Every feature included",
-    "Shopify, Calendly, API &amp; webhooks",
-    "WhatsApp API setup included",
-    "Self-service support + docs",
+    "Shared inbox, contacts &amp; broadcasts",
+    "Templates &amp; basic automations",
+    "AI assistant: suggest reply, summary, translate",
+    "Shopify integration",
+    "Docs + email support",
   ],
   growth: [
     "Everything in Starter",
-    "25&times; the contacts of Starter",
-    "Room for a 25-person team",
-    "Priority support (24&ndash;48 hrs)",
+    "Pipelines, journeys &amp; segments",
+    "Catalog, orders &amp; payments",
+    "AI chatbot: 3,000 replies / month",
+    "WooCommerce, Razorpay, Shiprocket, Cal.com",
+    "Priority support (24 hrs)",
   ],
   pro: [
     "Everything in Growth",
-    "Built for high volume",
-    "Room for a 50-person team",
-    "Priority support (24&ndash;48 hrs)",
+    "AI voice agent: 300 min / month",
+    "AI chatbot: 15,000 replies / month",
+    "Ad attribution &amp; reports",
+    "REST API &amp; webhooks",
+    "Priority support + onboarding call",
   ],
   enterprise: [
-    "Everything in Pro, no caps",
-    "Dedicated onboarding &amp; training",
-    "Call and WhatsApp support",
-    "Custom terms, multiple brands",
+    "Everything in Pro",
+    "Multiple WhatsApp numbers",
+    "Custom AI chatbot &amp; voice volume",
+    "Custom terms for brands &amp; agencies",
+    "Dedicated account manager",
   ],
 };
 
 const PLAN_DESC: Record<PaidPlan, string> = {
-  starter: "For one team starting WhatsApp sales and support.",
-  growth: "For growing teams with more campaigns and agents.",
-  pro: "For high-volume teams with big lists and many agents.",
-  enterprise: "For larger businesses that need no caps.",
+  starter: "For a small shop with 1&ndash;3 people.",
+  growth: "For growing D2C and sales teams.",
+  pro: "For high-volume, AI-first teams.",
+  enterprise: "For brands and agencies.",
 };
 
 const inr = (n: number) => n.toLocaleString("en-IN");
@@ -210,7 +217,7 @@ const PRICING_BODY_HTML = `
     <div class="section-head">
       <span class="eyebrow">Pricing</span>
       <h1>Pricing that fits your business</h1>
-      <p>Every new account gets a <b>7-day free trial</b> with Growth limits. Then pick a simple, published plan that scales with your contacts and team. No hidden fees. We handle WhatsApp Business API setup on every plan.</p>
+      <p>Every new account gets a <b>7-day free trial</b> with Growth limits. Then pick the plan that fits: from a simple shared inbox up to AI agents that chat and call for you. No hidden fees. We handle WhatsApp Business API setup on every plan.</p>
     </div>
   </div>
 </header>
@@ -226,9 +233,9 @@ const PRICING_BODY_HTML = `
 <section class="section-alt">
   <div class="container">
     <div class="section-head reveal">
-      <span class="eyebrow">On every plan</span>
-      <h2>Every feature on every plan</h2>
-      <p>Starter, Growth and Enterprise all include the full product. Plans differ in limits (contacts, broadcasts, automations, custom fields, team members) and in the level of support.</p>
+      <span class="eyebrow">What's inside</span>
+      <h2>Everything your team needs on WhatsApp</h2>
+      <p>Starter covers the inbox, broadcasts and the AI assistant. Growth adds sales tools and the AI chatbot, Pro adds the AI voice agent, and Enterprise is built around your volume.</p>
     </div>
     <div class="usecase-grid reveal">
       <div class="usecase-card">

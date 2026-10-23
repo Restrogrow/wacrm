@@ -86,18 +86,18 @@ export const PLAN_INFO: Record<
 > = {
   starter: {
     label: 'Starter',
-    prices: { monthly: 999, quarterly: 2699, yearly: 9999 },
+    prices: { monthly: 1499, quarterly: 4049, yearly: 14999 },
     blurb: 'For a single team getting started with WhatsApp support and sales.',
   },
   growth: {
     label: 'Growth',
-    prices: { monthly: 1999, quarterly: 5399, yearly: 19999 },
+    prices: { monthly: 2999, quarterly: 8099, yearly: 29999 },
     blurb:
       'For growing teams running more campaigns with more people on the inbox.',
   },
   pro: {
     label: 'Pro',
-    prices: { monthly: 3999, quarterly: 10799, yearly: 39999 },
+    prices: { monthly: 5999, quarterly: 16199, yearly: 59999 },
     blurb: 'For high-volume teams with large contact lists and many agents.',
   },
   enterprise: {

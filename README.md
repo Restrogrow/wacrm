@@ -401,14 +401,22 @@ the business pays (UPI / bank transfer).
 
 | | Starter | Growth | Pro | Enterprise |
 |---|---|---|---|---|
-| Monthly | ₹999 | ₹1,999 | ₹3,999 | Custom |
-| Quarterly | ₹2,699 | ₹5,399 | ₹10,799 | Custom |
-| Yearly | ₹9,999 | ₹19,999 | ₹39,999 | Custom |
+| Monthly | ₹1,499 | ₹2,999 | ₹5,999 | Custom |
+| Quarterly | ₹4,049 | ₹8,099 | ₹16,199 | Custom |
+| Yearly | ₹14,999 | ₹29,999 | ₹59,999 | Custom |
 | Contacts (dashboard adds + imports) | 2,000 | 50,000 | 2,00,000 | Unlimited |
 | Broadcasts per month | 60 | 250 | 1,000 | Unlimited |
 | Automations + flows | 5 | 25 | 100 | Unlimited |
 | Custom fields | 5 | 25 | 100 | Unlimited |
 | Team members (incl. pending invites) | 5 | 25 | 50 | Unlimited |
+
+Advertised since 2026-10-23 (pricing page, homepage, comparison pages):
+Starter = inbox, broadcasts, templates, basic automations, AI assistant,
+Shopify; Growth adds pipelines, journeys, segments, catalog/orders,
+more integrations and the AI chatbot (3,000 replies/month); Pro adds the
+AI voice agent (300 min/month), 15,000 chatbot replies, ad attribution,
+reports, API and webhooks. **Not enforced yet** by owner decision: every
+plan can still use every feature; only the limits in the table apply.
 
 Prices live in `src/lib/billing/plans.ts` (`PLAN_INFO`); the pricing page,
 Settings → Plan & billing and the reminder emails all read from there.
