@@ -25,6 +25,25 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'meta-tech-provider-whatsapp',
+    title: 'Repeat Grow Is a Meta Tech Provider: What It Means for Your WhatsApp Business',
+    seoTitle: 'Meta Tech Provider for WhatsApp | Repeat Grow',
+    description:
+      'Repeat Grow is an approved Meta Tech Provider for the WhatsApp Business Platform. What that means for your number, your data and your WhatsApp bill.',
+    category: 'WhatsApp API',
+    datePublished: '2026-10-23',
+    readMinutes: 5,
+    cover: '/blog/meta-tech-provider-whatsapp/cover.webp',
+    coverAlt: 'A verified shield badge reading Meta Tech Provider next to a WhatsApp chat bubble',
+    keywords: [
+      'meta tech provider',
+      'whatsapp tech provider india',
+      'official whatsapp business api provider',
+      'meta approved whatsapp crm',
+      'whatsapp bsp vs tech provider',
+    ],
+  },
+  {
     slug: 'diwali-whatsapp-marketing-templates',
     title: 'Diwali WhatsApp Marketing 2026: Campaign Plan and Templates That Get Approved',
     seoTitle: 'Diwali WhatsApp Marketing 2026: Plan & Templates',
