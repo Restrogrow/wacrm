@@ -32,7 +32,7 @@ const DEMO_FAQS = [
   {
     question: "What does Repeat Grow cost?",
     answer:
-      "Plans start at ₹999 per month (Starter), with Growth at ₹1,999 and Pro at ₹3,999. WhatsApp message fees are billed by Meta directly. We go through what your team would need in the demo.",
+      "Plans start at ₹1,499 per month (Starter), with Growth at ₹2,999 (adds the AI chatbot) and Pro at ₹5,999 (adds the AI voice agent). WhatsApp message fees are billed by Meta directly. We go through what your team would need in the demo.",
   },
   {
     question: "Can I try it myself instead?",

@@ -37,7 +37,7 @@ const HOME_FAQS = [
   {
     question: "What does Repeat Grow cost?",
     answer:
-      "Plans start at ₹999/month (Starter), with Growth at ₹1,999 and Pro at ₹3,999, and Enterprise is custom. Pay monthly, or save about 10% quarterly and 17% yearly. Every new account gets a 7-day free trial with Growth limits, and there are no hidden setup fees. WhatsApp Business API setup is included on every plan. WhatsApp conversation fees are billed by Meta directly.",
+      "Plans start at ₹1,499/month (Starter), with Growth at ₹2,999 and Pro at ₹5,999, and Enterprise is custom. Growth adds the AI chatbot and Pro adds the AI voice agent. Pay monthly, or save about 10% quarterly and 17% yearly. Every new account gets a 7-day free trial with Growth limits, and there are no hidden setup fees. WhatsApp Business API setup is included on every plan. WhatsApp conversation fees are billed by Meta directly.",
   },
   {
     question: "Can I take payments and send orders on WhatsApp?",
@@ -87,8 +87,8 @@ const STRUCTURED_DATA = {
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "INR",
-        lowPrice: "999",
-        highPrice: "3999",
+        lowPrice: "1499",
+        highPrice: "5999",
         offerCount: "3",
       },
       publisher: { "@id": SITE_URL },
@@ -148,13 +148,20 @@ const ICON_SEND =
 // Pricing teaser cards, built from the billing plans so prices and limits
 // always match /pricing and the app.
 const PLAN_TAGLINES: Record<PaidPlan, string> = {
-  starter: "For a small team getting started",
-  growth: "More contacts, campaigns and people",
-  pro: "High volume and bigger teams",
-  enterprise: "No caps and hands-on setup",
+  starter: "For a small shop with 1–3 people",
+  growth: "For growing D2C and sales teams",
+  pro: "For high-volume, AI-first teams",
+  enterprise: "For brands and agencies",
 };
 const fmtLimit = (n: number | null, unit: string) =>
   n === null ? `Unlimited ${unit}` : `${n.toLocaleString("en-IN")} ${unit}`;
+// What each plan adds; contacts and team come from the enforced limits.
+const PLAN_POINTS: Record<PaidPlan, string[]> = {
+  starter: ["Shared inbox &amp; broadcasts", "AI assistant (suggest, summary)"],
+  growth: ["Catalog, orders &amp; pipelines", "AI chatbot: 3,000 replies / mo"],
+  pro: ["AI voice agent: 300 min / mo", "AI chatbot: 15,000 replies / mo"],
+  enterprise: ["Multiple WhatsApp numbers", "Custom AI volume"],
+};
 const PLANS_HTML = PLANS.map((plan, i) => {
   const info = PLAN_INFO[plan];
   const l = PLAN_LIMITS[plan];
@@ -164,8 +171,7 @@ const PLANS_HTML = PLANS.map((plan, i) => {
   const items = [
     fmtLimit(l.contacts, "contacts"),
     fmtLimit(l.team_members, "team members"),
-    fmtLimit(l.broadcasts_per_month, "broadcasts / month"),
-    fmtLimit(l.automation_flows, "automations"),
+    ...PLAN_POINTS[plan],
   ]
     .map((t) => `<li>${ICON_CHECK}${t}</li>`)
     .join("");
@@ -359,7 +365,7 @@ const LANDING_BODY_HTML = `
       <ul class="h-checks">
         <li>${ICON_CHECK}No credit card</li>
         <li>${ICON_CHECK}Setup done for you</li>
-        <li>${ICON_CHECK}Plans from &#8377;999/month</li>
+        <li>${ICON_CHECK}Plans from &#8377;1,499/month</li>
       </ul>
     </div>
 
@@ -392,7 +398,7 @@ const LANDING_BODY_HTML = `
   <div class="container">
     <div class="h-stats reveal">
       <div class="h-stat"><b>Official</b><span>Meta WhatsApp Cloud API, no ban risk from unofficial tools</span></div>
-      <div class="h-stat"><b>&#8377;999</b><span>per month to start, every feature included</span></div>
+      <div class="h-stat"><b>&#8377;1,499</b><span>per month to start, AI assistant included</span></div>
       <div class="h-stat"><b>7 days</b><span>free trial, no credit card needed</span></div>
       <div class="h-stat"><b>Days</b><span>to go live, with API setup done for you</span></div>
     </div>
@@ -600,8 +606,8 @@ const LANDING_BODY_HTML = `
   <div class="container">
     <div class="h-head reveal">
       <span class="h-eyebrow">Pricing</span>
-      <h2>Every feature on every plan</h2>
-      <p>Start with a 7-day free trial. Plans only change the limits. WhatsApp API setup is included, and Meta's message fees are billed by Meta.</p>
+      <h2>Plans that grow with you</h2>
+      <p>Start with a 7-day free trial. Growth adds the AI chatbot and Pro adds the AI voice agent. WhatsApp API setup is included, and Meta's message fees are billed by Meta.</p>
     </div>
     <div class="h-plans">${PLANS_HTML}
     </div>
