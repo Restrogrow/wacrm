@@ -54,7 +54,7 @@ messages, driven by order status. Integrations → WooCommerce. Code:
 
 | Keys | |
 |---|---|
-| **Customer** | Repeat Grow shows a webhook URL and a secret. In WooCommerce → Settings → Advanced → Webhooks create `order.created` and `order.updated` (REST API v3) with that URL and secret; we verify `X-WC-Webhook-Signature` (base64 HMAC-SHA256). Optional: a REST API **consumer key + secret** (`ck_…` / `cs_…`), stored encrypted, to sync products into the catalog. |
+| **Customer** | **One click (https stores):** Connect in Repeat Grow or in the Repeat Grow WordPress plugin → approve on WooCommerce's `/wc-auth/v1/authorize` screen → WooCommerce posts a read/write REST key to `/api/integrations/woocommerce/wc-auth/callback` (signed 1-hour state, key stored encrypted) → Repeat Grow creates both webhooks via the REST API (`/setup-webhooks`). See `integrations/woocommerce-plugin/README.md`. **Manual:** Repeat Grow shows a webhook URL and a secret; in WooCommerce → Settings → Advanced → Webhooks create `order.created` and `order.updated` (REST API v3) with that URL and secret. Either way we verify `X-WC-Webhook-Signature` (base64 HMAC-SHA256). The REST key (one-click, or pasted `ck_…` / `cs_…`) also syncs products into the catalog. |
 | **Server** | None. |
 
 No abandoned-cart message: core WooCommerce has no such event.

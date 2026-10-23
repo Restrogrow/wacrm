@@ -13,6 +13,7 @@
 
 import { IconChip } from '@/components/icon-chip';
 import { WooApiKeysCard } from '@/components/settings/woocommerce-api-keys-card';
+import { WooConnectButton } from '@/components/integrations/woo-connect-button';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -203,6 +204,40 @@ export function WooCommerceSettings() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /** Create the order webhooks in the store with the one-click keys. */
+  const setupWebhooks = useCallback(async () => {
+    setBusy('webhooks');
+    try {
+      const res = await fetch('/api/integrations/woocommerce/setup-webhooks', { method: 'POST' });
+      const json = (await res.json().catch(() => ({}))) as { created?: string[]; existing?: string[]; error?: string };
+      if (!res.ok) {
+        toast.error(json.error ?? 'Could not set up the webhooks', { duration: 12_000, closeButton: true });
+        return;
+      }
+      toast.success(
+        json.created?.length
+          ? `Store connected. Created ${json.created.length} order webhook${json.created.length === 1 ? '' : 's'} in WooCommerce.`
+          : 'Store connected. The order webhooks were already set up.',
+      );
+      await load();
+    } finally {
+      setBusy(null);
+    }
+  }, [load]);
+
+  // Back from the store's "Approve Repeat Grow" screen (one-click connect).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('wc_return') !== '1') return;
+    window.history.replaceState(null, '', window.location.pathname);
+    if (params.get('success') === '0') {
+      toast.error('The store was not connected: the approval was cancelled in WooCommerce.');
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time follow-up to the WooCommerce redirect
+    void setupWebhooks();
+  }, [setupWebhooks]);
 
   const readOnly = !canEditSettings;
 
@@ -474,9 +509,21 @@ export function WooCommerceSettings() {
               </div>
             </div>
 
+            {!readOnly && (
+              <div className="flex flex-col gap-2 rounded-2xl border border-primary/30 bg-primary-soft/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-muted-foreground text-sm">
+                  Connected in one click? Repeat Grow can create (or repair) the order webhooks in your store for you.
+                </p>
+                <Button size="sm" onClick={() => void setupWebhooks()} disabled={busy === 'webhooks'} className="shrink-0">
+                  {busy === 'webhooks' ? <Loader2 className="size-4 animate-spin" /> : <Webhook className="size-4" />}
+                  Set up order webhooks automatically
+                </Button>
+              </div>
+            )}
+
             <div className="border-border bg-muted/30 space-y-3 rounded-2xl border p-4">
               <p className="text-foreground text-sm font-medium">
-                Webhooks to add in WooCommerce
+                Webhooks to add in WooCommerce (manual setup)
               </p>
               <ol className="text-muted-foreground list-decimal space-y-1 pl-5 text-sm">
                 <li>
@@ -563,7 +610,12 @@ export function WooCommerceSettings() {
                   Connect your WooCommerce store
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  We create a delivery URL and a secret; you paste them into WooCommerce. No passwords or API keys needed.
+                  Enter your store address and click Connect. Your store asks you to approve Repeat Grow, and the order
+                  webhooks are created for you. Or install the{' '}
+                  <a href="/downloads/repeat-grow-for-woocommerce.zip" className="text-primary underline underline-offset-2">
+                    Repeat Grow plugin
+                  </a>{' '}
+                  and click Connect inside WordPress.
                 </p>
               </div>
             </div>
@@ -573,18 +625,18 @@ export function WooCommerceSettings() {
               placeholder="https://mystore.com"
               disabled={readOnly}
             />
-            <Button
-              onClick={() => connect(false)}
-              disabled={readOnly || busy === 'connect' || !urlInput}
-              className="w-full sm:w-auto"
-            >
-              {busy === 'connect' ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <ShoppingCart className="size-4" />
-              )}
-              Get webhook URL and secret
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <WooConnectButton storeUrl={readOnly ? '' : urlInput} className="w-full sm:w-auto" />
+              <Button
+                variant="outline"
+                onClick={() => connect(false)}
+                disabled={readOnly || busy === 'connect' || !urlInput}
+                className="w-full sm:w-auto"
+              >
+                {busy === 'connect' ? <Loader2 className="size-4 animate-spin" /> : <Webhook className="size-4" />}
+                Manual setup: get webhook URL and secret
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

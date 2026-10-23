@@ -41,6 +41,8 @@ const PUBLIC_ROUTES: Record<string, string> = {
   'widget/[publicId]/route.ts': 'public website-widget config for visitors; returns only a non-sensitive subset, rate limited per IP',
   'widget/[publicId]/event/route.ts': 'public website-widget impression/click counter; no visitor data stored, rate limited per IP+widget',
   'demo-request/route.ts': 'public demo request form; honeypot, validation and rate limit per IP, writes with the service role',
+  'integrations/woocommerce/wc-auth/callback/route.ts':
+    "WooCommerce's server-to-server app-authorization callback; only accepted with our HMAC-signed, 1-hour state naming the account and store (must match the saved store), rate limited per IP, body capped",
 }
 
 function routeFiles(dir: string): string[] {

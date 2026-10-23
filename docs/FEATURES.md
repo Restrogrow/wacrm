@@ -99,10 +99,16 @@ Meta's menus change, so the exact names may differ slightly.
 ## WooCommerce
 
 - **Where:** sidebar → Integrations → **WooCommerce**. **Who:** admin+.
-- **Setup:** click **Get webhook URL and secret**; in WordPress go to WooCommerce → Settings → Advanced → Webhooks and
-  add two webhooks, `order.created` and `order.updated` (status Active, REST API v3, that URL and secret). Create
-  Utility templates, choose one per event (order placed, COD order placed, completed, cancelled, refunded), save, and
-  use **Send test**.
+- **One-click setup (stores on https):** enter the store address and click **Connect in one click**, or install the
+  plugin (`/downloads/repeat-grow-for-woocommerce.zip`, source in `integrations/woocommerce-plugin/`) and click
+  **WooCommerce → Repeat Grow → Connect**. The store's own WooCommerce screen asks to approve Repeat Grow; the REST key
+  it sends is stored encrypted and the two order webhooks are created automatically. **Set up order webhooks
+  automatically** repairs them later. The plugin's Disconnect removes the webhooks and the key.
+- **Manual setup:** click **Manual setup: get webhook URL and secret**; in WordPress go to WooCommerce → Settings →
+  Advanced → Webhooks and add two webhooks, `order.created` and `order.updated` (status Active, REST API v3, that URL
+  and secret).
+- **Then:** create Utility templates, choose one per event (order placed, COD order placed, completed, cancelled,
+  refunded), save, and use **Send test**.
 - **Behaviour:** signature `X-WC-Webhook-Signature` is verified; replays are ignored; the customer is matched by the
   billing phone (then shipping phone); each message goes out at most once per order. Pending / failed checkouts send
   nothing.
