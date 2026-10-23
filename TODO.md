@@ -345,10 +345,13 @@ already have an entry above are linked by number.
             webhooks and inbound webhooks.
       - [ ] Razorpay Partner Program as a **Service Partner** (needs owner
             sign-up + KYC). Technology Partner is for marketplaces only.
-- [ ] **WooCommerce plugin on WordPress.org** (sales idea, 2026-10-23): a
-      small plugin that connects a store to Repeat Grow in one click
-      (creates the webhooks and REST keys) instead of copying URLs by
-      hand, listed on WordPress.org for free discovery by Indian stores.
+- [ ] **WooCommerce plugin on WordPress.org** (sales idea, 2026-10-23).
+      **Built 2026-10-24:** one-click connect (wc-auth + automatic
+      webhooks) in Repeat Grow and in the plugin
+      (`integrations/woocommerce-plugin/`, zip at
+      `/downloads/repeat-grow-for-woocommerce.zip`). Still open (owner):
+      test on a real https store, WordPress.org account + submission
+      (steps in the plugin README), screenshots and banner.
 - [ ] **Zapier, Make, Pabbly** native connectors. Inbound webhooks and
       Google Sheets shipped (migrations 071, 059). See #29.
 - [x] **WooCommerce integration** (done 2026-10-17, migration 063; no

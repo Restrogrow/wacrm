@@ -15,6 +15,14 @@ and polish.
 
 ### Added
 
+- **WooCommerce one-click connect + WordPress plugin** (24 Oct 2026): connect
+  a store (https) from Repeat Grow or from the new *Repeat Grow for
+  WooCommerce* plugin (WooCommerce → Repeat Grow). WooCommerce's own
+  approval screen hands Repeat Grow a REST key (stored encrypted), and the
+  `order.created` / `order.updated` webhooks are created automatically. New
+  routes: `/woocommerce/connect`, `/api/integrations/woocommerce/authorize`,
+  `/wc-auth/callback` (public, signed state) and `/setup-webhooks`. No
+  migration. Plugin source in `integrations/woocommerce-plugin/`.
 - **Build version label** (23 Oct 2026): the sidebar shows the version,
   short commit and IST build time, and `/api/health` returns a `version`
   block, so anyone can tell which deploy is live.
