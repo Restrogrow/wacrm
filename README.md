@@ -68,6 +68,20 @@
   browser as Ogg/Opus), reactions, swipe-replies and approved templates.
   The 24-hour customer-service window is tracked; outside it only
   templates can be sent.
+- **Blue ticks and typing:** opening a chat marks the customer's messages
+  as read on WhatsApp, and while an agent types (or the AI chatbot writes
+  a reply) the customer sees "typing…". `POST /api/whatsapp/read`. Code:
+  `src/lib/whatsapp/read-receipts.ts`.
+- **Why a message failed:** hover the red ✕ on a failed message to see
+  Meta's error code, its message and what to do (e.g. 131049 marketing
+  limit, 131026 not on WhatsApp, 131042 payment problem). Code:
+  `src/lib/whatsapp/send-errors.ts` (migration 079).
+- **Contact cards:** contacts a customer shares (vCards) show as name,
+  phone numbers and email instead of an empty message.
+- **Template media headers:** templates with an image, video or document
+  header ask for the file link when sent from the inbox. The file is
+  uploaded to Meta and sent as a media ID (cached 25 days), so a slow or
+  blocked host can't fail the send (error 131053).
 - **Saved replies:** type `/` in the message box to pick a team reply
   (↑↓, Enter); `{{name}}`, `{{full_name}}` and `{{agent}}` are filled in.
   Admins manage them in **Settings → Saved replies**.
@@ -190,9 +204,14 @@
 - Broadcast an approved template to all contacts, tags, a custom-field
   filter or a CSV, with per-recipient variables (contact fields or custom
   fields) and media headers.
-- **Send now** or **Schedule for later**: scheduled broadcasts are sent
-  by the server at the chosen time, in batches, so the browser doesn't
-  need to stay open. Cancel from the broadcast page.
+- **Send now** or **Schedule for later**: every broadcast is sent by the
+  server in batches (a queue run by the cron), so the browser can be
+  closed as soon as it starts. Cancel from the broadcast page.
+- **Automatic retries:** recipients that fail for a temporary reason
+  (Meta rate limits, timeouts, Meta outages) are retried after 1, 5 and
+  15 minutes (4 tries in all) before being marked failed. Permanent
+  errors fail at once. Code: `src/lib/broadcasts/scheduled.ts`
+  (migration 085).
 - Live sent / delivered / read / replied / failed counts per broadcast.
 - The broadcasts list shows 25 at a time with **Load more**.
 
@@ -297,6 +316,30 @@
   emails cover yesterday, afternoon/evening ones today so far: messages
   received and sent, new conversations and contacts, chats waiting for a
   reply, broadcasts, deals created and won, opt-outs.
+
+### WhatsApp spend (Meta billing)
+- **WhatsApp spend** (sidebar, `/whatsapp-spend`, admins): what Meta is
+  charging the business, read from the WhatsApp Business Account. Meta
+  bills the business directly, so cards and payments are still managed
+  in Meta (the page links to Meta's billing hub and WhatsApp Manager).
+- **Payment & account status:** whether a payment method is linked, the
+  account currency, whether Meta lets the number send, payment-related
+  health warnings and messages that failed with 131042 (payment problem)
+  in the last 7 days.
+- **Spend:** total cost, paid vs free messages, cost by category
+  (marketing, utility, authentication, service) and per day, from
+  Meta's `pricing_analytics` (falls back to `conversation_analytics`).
+  Meta's numbers lag a few hours; the invoice is final.
+- **Cost per broadcast:** estimated cost of each broadcast = messages
+  Meta marked billable (from status webhooks) × the account's average
+  cost per paid message in that category. Older broadcasts count
+  delivered messages in the template's category. CSV export.
+- **Messages sent and why they failed:** messages and broadcast messages
+  sent, delivered, read and failed in the range, and failures grouped by
+  Meta error code with plain-language reasons.
+- Date range and time zone like Reports; Meta data cached 10 minutes
+  (**Refresh** to re-read). `GET /api/whatsapp/spend`. Code:
+  `src/lib/whatsapp/spend.ts` (migration 086).
 
 ### Reports
 - **Reports** (sidebar, `/reports`): messaging volume and delivery
@@ -544,6 +587,11 @@ REST API at `https://repeatgrow.com/api/v1`: send messages and templates,
 manage contacts, read conversations, create and list templates, launch broadcasts,
 and subscribe to signed outbound webhooks (`message.received`,
 `message.status_updated`, `conversation.created`).
+
+Webhooks are delivered **at least once**: a failed delivery is retried
+after 1 min, 5 min, 30 min, 2 h and 6 h (6 tries in all) before it
+counts as a failure. Every try is logged and readable at
+`GET /api/v1/webhooks/{id}/deliveries` (kept 14 days).
 
 | Resource | Where |
 |---|---|
@@ -879,9 +927,15 @@ is idempotent where possible. Recent ones:
 | `075_journeys` | Journeys: steps, enrollments, send ledger, sending rules |
 | `076_products_catalog` | Product library (`products`) and the `catalog-media` image bucket |
 | `077_catalog_collections_stock` | Collections, stock ledger, stock trigger on paid orders, optional WooCommerce REST keys |
+| `078_device_push_tokens` | Mobile app push tokens (written by the server only) |
+| `079_message_error_code` | Meta's error code and detail on failed messages (`messages.error_code`, `error_detail`) |
 | `080_ai_voice_calls` | AI calls: call script and voice on `ai_chatbot_settings`, `whatsapp_calls.ai_agent` |
 | `081_ai_inbound_calls` | AI answers incoming calls: switch, ring delay and incoming-call script on `ai_chatbot_settings` |
 | `082_shopify_pending_installs` | Shopify App Store installs waiting for the merchant to sign in (encrypted tokens, 1 hour, service role only) |
+| `083_number_scoped_data` | Chats, broadcasts and templates tagged with the WhatsApp number / Business Account they belong to, so a new number starts clean |
+| `084_number_scope_policy_speed` | Cheaper current-number policies (follow-up to 083) |
+| `085_broadcast_retries_webhook_deliveries` | Broadcast retry columns (`attempts`, `next_attempt_at`), `webhook_deliveries` log with retries, locks `record_webhook_failure` |
+| `086_broadcast_pricing` | Billable flag and pricing category on broadcast recipients; `broadcast_cost_counts()` for cost per broadcast |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -902,7 +956,7 @@ Hostinger calls these every minute with the header
 
 | Endpoint | Runs |
 |---|---|
-| `GET /api/automations/cron` | Delayed automation steps (`automation-steps`), **scheduled broadcasts** (`scheduled-broadcasts`, batched, leased), **scheduled chat messages** (`scheduled-messages`), **Shopify abandoned-cart reminders** (`shopify-reminders`), **Calendly** and **Cal.com 24 h / 1 h reminders** (`calendly-reminders`, `calcom-reminders`), **daily summary emails** (`daily-summaries`), **WhatsApp number health** (`number-health`, daily per account, 10 per run), **trial / renewal reminder emails** (`billing-reminders`), **reply-time SLA alerts** (`sla-alerts`), **AI lead scoring** (`ai-analysis`, a few chats per run) and **Journeys** (`journeys`) |
+| `GET /api/automations/cron` | Delayed automation steps (`automation-steps`), **broadcasts** (`scheduled-broadcasts`: send-now and scheduled, batched, leased, with retries), **webhook delivery retries** (`webhook-retries`), **scheduled chat messages** (`scheduled-messages`), **Shopify abandoned-cart reminders** (`shopify-reminders`), **Calendly** and **Cal.com 24 h / 1 h reminders** (`calendly-reminders`, `calcom-reminders`), **daily summary emails** (`daily-summaries`), **WhatsApp number health** (`number-health`, daily per account, 10 per run), **trial / renewal reminder emails** (`billing-reminders`), **reply-time SLA alerts** (`sla-alerts`), **AI lead scoring** (`ai-analysis`, a few chats per run) and **Journeys** (`journeys`) |
 | `GET /api/flows/cron` | Flow waits and timeouts (every 5 minutes is enough) |
 | `GET /api/health` | No secret; hit it from an uptime monitor every 5 minutes |
 

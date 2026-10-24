@@ -10,7 +10,7 @@ live services (Meta, WooCommerce, Razorpay, Shiprocket, Cal.com, Slack, Gemini).
 Related: [README](../README.md) · [Admin handbook](./ADMIN.md) · [Operations runbook](./OPERATIONS.md) ·
 [Integrations plan](./INTEGRATIONS.md)
 
-**Contents:** [Catalog](#catalog) · [Reports](#reports) · [Ad attribution](#ad-attribution) ·
+**Contents:** [Catalog](#catalog) · [WhatsApp spend](#whatsapp-spend) · [Broadcast delivery](#broadcast-delivery) · [Reports](#reports) · [Ad attribution](#ad-attribution) ·
 [WooCommerce](#woocommerce) · [Razorpay payment links](#razorpay-payment-links) · [Shiprocket](#shiprocket) ·
 [Cal.com](#calcom) · [Inbound webhooks and team alerts](#inbound-webhooks-and-team-alerts) ·
 [Website chat widget](#website-chat-widget) · [Short links](#short-links) · [Business hours and SLA](#business-hours-and-sla) ·
@@ -71,6 +71,29 @@ Meta's menus change, so the exact names may differ slightly.
 - **Known limits:** no variant groups (each size / colour is a product); the SKU can't be changed after creation; prices
   are entered in rupees; the order route does not itself block out-of-stock items (the picker does).
 - **Migrations:** 076, 077.
+
+## WhatsApp spend
+
+- **Where:** sidebar → **WhatsApp spend** (`/whatsapp-spend`). **Who:** admins and owners.
+- **What:** payment & account status (payment method linked, currency, can the number send, payment warnings, 131042
+  failures in the last 7 days), spend by day and category with paid vs free messages, **cost per broadcast**, messages
+  sent / delivered / read / failed, and failures grouped by Meta error code. CSV export per table.
+- **Paying Meta:** Meta bills the business directly. Cards, invoices and credit lines are managed in Meta Business
+  Settings → Billing; the page links there. Repeat Grow can't add a card or pay.
+- **Accuracy:** spend comes from Meta's `pricing_analytics` (or `conversation_analytics` on older accounts), lags a few
+  hours and is final only on Meta's invoice. Cost per broadcast is an estimate: messages Meta marked billable × the
+  average cost per paid message in that category for the range. Broadcasts from before migration 086 count delivered
+  messages in the template's category. Without Meta prices for the range, only paid-message counts are shown.
+- **Migration:** 086 (085 for broadcast retries).
+
+## Broadcast delivery
+
+- Every broadcast, **Send now** included, is sent by the server in batches from a queue the cron runs every minute;
+  the tab can be closed once it starts. The broadcast page refreshes every 5 seconds while sending.
+- Temporary failures (rate limits, timeouts, Meta 5xx) are retried after 1, 5 and 15 minutes (4 tries in all); the
+  recipient shows "Retrying: …" meanwhile. Permanent errors (not on WhatsApp, marketing limit 131049, …) fail at once.
+- Broadcasts created by the demo login are failed without sending.
+- **Migration:** 085.
 
 ## Reports
 

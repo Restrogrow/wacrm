@@ -435,7 +435,7 @@ const LANDING_BODY_HTML = `
       </article>
       <article class="h-card reveal" style="--d:1">
         <div class="h-card-visual" style="height:250px">${UI_CAMPAIGN}</div>
-        <div class="h-card-body"><span class="h-card-tag">Broadcasts</span><h3>Campaigns people actually read</h3><p>Approved templates and carousels, sent now or scheduled, with delivered, read and replied counts.</p></div>
+        <div class="h-card-body"><span class="h-card-tag">Broadcasts</span><h3>Campaigns people actually read</h3><p>Approved templates and carousels, sent now or scheduled, with delivered, read and replied counts and an estimate of what each one cost on Meta.</p></div>
       </article>
       <article class="h-card reveal" style="--d:2">
         <div class="h-card-visual" style="height:250px">${UI_CALL}</div>
@@ -456,7 +456,7 @@ const LANDING_BODY_HTML = `
           <div class="h-card-body">
             <span class="h-card-tag">Integrations &amp; API</span>
             <h3>Plugs into your store, calendar and code</h3>
-            <p>Shopify order, COD, shipping and abandoned-cart messages. Calendly confirmations and reminders. A public REST API with scoped keys and signed webhooks for everything else.</p>
+            <p>Shopify order, COD, shipping and abandoned-cart messages. Calendly confirmations and reminders. A public REST API with scoped keys and signed webhooks (retried automatically) for everything else.</p>
             <div class="h-int-badges"><span>Shopify</span><span>Calendly</span><span>REST API</span><span>Webhooks</span><span>Connect RepeatGrow</span></div>
           </div>
           <div class="h-card-visual">${UI_CODE}</div>
@@ -484,6 +484,9 @@ const LANDING_BODY_HTML = `
       <span>${ICON_CHECK}WhatsApp forms</span>
       <span>${ICON_CHECK}Carousel templates</span>
       <span>${ICON_CHECK}Scheduled broadcasts</span>
+      <span>${ICON_CHECK}Broadcast auto-retry</span>
+      <span>${ICON_CHECK}WhatsApp spend tracking</span>
+      <span>${ICON_CHECK}Blue ticks &amp; typing</span>
       <span>${ICON_CHECK}STOP opt-outs</span>
       <span>${ICON_CHECK}Number health checks</span>
       <span>${ICON_CHECK}Daily summary email</span>

@@ -6,19 +6,19 @@ Repeat Grow is an approved Meta Tech Provider for the WhatsApp Business Platform
 
 ## Product
 
-- Shared inbox: multiple agents on one WhatsApp Business number, with assignment, status, internal notes, saved replies, voice notes and in-browser WhatsApp voice calls. Works alongside the WhatsApp Business app (coexistence).
+- Shared inbox: multiple agents on one WhatsApp Business number, with assignment, status, internal notes, saved replies, voice notes, read receipts and typing indicators, failure reasons on failed messages, and in-browser WhatsApp voice calls. Works alongside the WhatsApp Business app (coexistence).
 - AI voice agent: an AI calls leads on WhatsApp (English, Hindi or Hinglish), answers incoming calls the team misses, can be taken over live, and saves call notes (summary, to-dos, follow-up). Templates can carry a "Call Now" WhatsApp call button.
 - Mobile app: Android app in early access (inbox, contacts, push notifications, calls with AI notes, broadcasts, pipeline); iOS coming soon.
 - Contacts: custom fields, CSV import and export, deduplication, opt-out (STOP) handling, full conversation and deal history.
 - Sales pipelines: Kanban boards with deals linked to WhatsApp conversations. Default currency is Indian rupees.
-- Broadcasts: Meta-approved templates, including carousel templates. Send now or schedule, with delivery and read tracking and per-recipient variables.
+- Broadcasts: Meta-approved templates, including carousel templates. Send now or schedule, sent by the server with automatic retries, delivery and read tracking, per-recipient variables and an estimated Meta cost per broadcast.
 - Automations and flows: visual builder with triggers, branches, waits, tags, deals and webhooks. Chatbot flows can be generated with AI.
 - AI chatbot: answers from the business's own knowledge base, knows opening hours, hands over to a human on request.
 - Orders and payments: send an order with a payment request in chat using WhatsApp Pay (Razorpay, PayU, BillDesk, Zaakpay) or a UPI ID. Share a catalog and turn catalog carts into orders.
 - WhatsApp forms: forms that open inside WhatsApp, with answers saved to the contact.
 - Integrations: Shopify (order, shipping, delivery and abandoned-cart messages), Calendly (confirmations and reminders), Connect RepeatGrow for partner apps.
-- Public REST API with scoped, revocable API keys, signed outbound webhooks and an OpenAPI 3.1 spec.
-- Reporting: real-time dashboard, daily summary email, WhatsApp number health checks.
+- Public REST API with scoped, revocable API keys, signed outbound webhooks with automatic retries and a delivery log, and an OpenAPI 3.1 spec.
+- Reporting: real-time dashboard, reports, daily summary email, WhatsApp number health checks, and a WhatsApp spend page showing Meta charges by day and category, payment-method status, messages sent and why messages failed.
 - Team accounts with roles: owner, admin, agent, viewer.
 - Privacy: users can download their data and request account deletion (DPDP Act and GDPR aware).
 

@@ -11,9 +11,33 @@ and polish.
 
 ## [Unreleased]
 
-**Migration required:** `082_shopify_pending_installs.sql`.
+**Migration required:** `082_shopify_pending_installs.sql`,
+`085_broadcast_retries_webhook_deliveries.sql`, `086_broadcast_pricing.sql`.
 
 ### Added
+
+- **WhatsApp spend page** (24 Oct 2026, sidebar → WhatsApp spend, admins):
+  Meta's charges by day and category, paid vs free messages, whether a
+  payment method is linked, payment warnings and 131042 failures, messages
+  sent / delivered / read / failed, failures grouped by error code, and
+  **cost per broadcast** (billable messages × average cost per category).
+  Cards are still managed in Meta; the page links there. Migration 086.
+- **Broadcast retries** (24 Oct 2026): temporary failures (rate limits,
+  timeouts, Meta outages) are retried after 1, 5 and 15 minutes before a
+  recipient is marked failed. Migration 085.
+- **Webhook retries and delivery log** (24 Oct 2026): outbound webhooks
+  are retried after 1 min, 5 min, 30 min, 2 h and 6 h; every try is
+  logged at `GET /api/v1/webhooks/{id}/deliveries` (14 days). Migration 085.
+- **Blue ticks and typing** (24 Oct 2026): opening a chat marks messages
+  read on WhatsApp; customers see "typing…" while an agent or the AI
+  chatbot is replying.
+- **Failure reasons in the inbox** (24 Oct 2026): hover the red ✕ on a
+  failed message for Meta's error code and what to do.
+- **Shared contact cards** (24 Oct 2026): vCards customers send show as
+  name, numbers and email.
+- **Media headers from the inbox** (24 Oct 2026): image / video / document
+  header templates ask for the file link; the file is uploaded to Meta and
+  sent as a media ID, so slow hosts no longer cause error 131053.
 
 - **WooCommerce one-click connect + WordPress plugin** (24 Oct 2026): connect
   a store (https) from Repeat Grow or from the new *Repeat Grow for
@@ -49,6 +73,15 @@ and polish.
   in the inbox. Uses the existing `ai_usage_daily` counter (migration 074).
 
 ### Changed
+
+- **All broadcasts are sent by the server** (24 Oct 2026), including
+  "Send now", so closing the tab no longer stops a broadcast. The
+  broadcast page refreshes while sending. The demo login can't send
+  broadcasts.
+- **Template dry-run is off in production** (24 Oct 2026): templates are
+  always really submitted to Meta on the live site.
+- **Dialogs scroll on short screens** (24 Oct 2026); the Send template
+  dialog keeps its buttons visible.
 
 - **Pricing and plans** (23 Oct 2026): Starter ₹999, Growth ₹1,999, Pro
   ₹3,999 a month (10% off quarterly, 17% yearly). The pricing page,
