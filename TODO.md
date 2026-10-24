@@ -124,7 +124,7 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       broadcasts, flows, automations, chatbot and the API.
 - [x] **#11 Catalog, orders and payments** — moved to the WhatsApp
       platform section above (#40).
-- [x] **#12 Conversation cost tracking:** Done 2026-10-24 as the **WhatsApp spend** page (`/whatsapp-spend`, admins): Meta spend by day and category, payment method / payment problems, account health, messages sent / delivered / read / failed and failure reasons. Not yet: cost per broadcast. Was: show Meta's per-conversation
+- [x] **#12 Conversation cost tracking:** Done 2026-10-24 as the **WhatsApp spend** page (`/whatsapp-spend`, admins): Meta spend by day and category, payment method / payment problems, account health, messages sent / delivered / read / failed and failure reasons. Cost per broadcast added (migration 086). Was: show Meta's per-conversation
       charges (from the `pricing` object in status webhooks) per account,
       per broadcast and per month.
 - [ ] **#13 Cap AI usage per account.** Every chatbot reply and AI

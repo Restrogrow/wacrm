@@ -6,6 +6,10 @@ import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import {
   codeFromErrorMessage,
+  estimateBroadcastCosts,
+  ratesByCategory,
+  type BroadcastForCost,
+  type PricedCount,
   fetchSpend,
   fetchWabaBilling,
   groupFailures,
@@ -210,6 +214,11 @@ export async function GET(request: Request) {
     ]
     const paymentStatus = problems.length > 0 ? 'problem' : w?.fundingLinked ? 'ok' : 'unknown'
 
+    // ---- Cost per broadcast ---------------------------------------------
+    const s = spend as (SpendSummary & { source: 'pricing' | 'conversation' }) | null
+    const rates = s ? ratesByCategory(s.byCategory) : {}
+    const broadcastCosts = await loadBroadcastCosts(db, accountId, fromIso, toIso, rates)
+
     return NextResponse.json({
       connected: true,
       wabaId,
@@ -228,6 +237,7 @@ export async function GET(request: Request) {
       },
       spend,
       spendError,
+      broadcasts: broadcastCosts,
       sent,
       failures,
       checkedAt: new Date().toISOString(),
@@ -235,4 +245,73 @@ export async function GET(request: Request) {
   } catch (err) {
     return toErrorResponse(err)
   }
+}
+
+const MAX_BROADCASTS = 200
+
+/** Broadcasts created in the range with their estimated Meta cost. */
+async function loadBroadcastCosts(
+  db: ReturnType<typeof supabaseAdmin>,
+  accountId: string,
+  fromIso: string,
+  toIso: string,
+  rates: Record<string, number>,
+) {
+  const { data: rows } = await db
+    .from('broadcasts')
+    .select('id, name, created_at, status, template_name, template_language, total_recipients, sent_count, delivered_count, read_count, failed_count')
+    .eq('account_id', accountId)
+    .neq('status', 'draft')
+    .gte('created_at', fromIso)
+    .lt('created_at', toIso)
+    .order('created_at', { ascending: false })
+    .limit(MAX_BROADCASTS)
+  const list = rows ?? []
+  if (list.length === 0) return { rows: [], totalCost: 0, hasRates: Object.keys(rates).length > 0 }
+
+  const names = [...new Set(list.map((b) => b.template_name as string | null).filter((n): n is string => !!n))]
+  const { data: templates } = names.length
+    ? await db
+        .from('message_templates')
+        .select('name, language, category')
+        .eq('account_id', accountId)
+        .in('name', names)
+    : { data: [] as { name: string; language: string | null; category: string | null }[] }
+  const categoryOf = (name: string | null, language: string | null) => {
+    const t =
+      (templates ?? []).find((x) => x.name === name && x.language === language) ??
+      (templates ?? []).find((x) => x.name === name)
+    return (t?.category as string | null | undefined)?.toUpperCase() ?? null
+  }
+
+  // Billable counts from Meta's status webhooks (migration 086).
+  const { data: pricedRows, error: pricedErr } = await db.rpc('broadcast_cost_counts', {
+    p_account_id: accountId,
+    p_from: fromIso,
+    p_to: toIso,
+  })
+  if (pricedErr) console.warn('[spend] broadcast_cost_counts unavailable (run migration 086):', pricedErr.message)
+  const priced: PricedCount[] = ((pricedErr ? [] : pricedRows) ?? []).map((r: Record<string, unknown>) => ({
+    broadcastId: String(r.broadcast_id),
+    category: String(r.pricing_category ?? 'UNKNOWN'),
+    priced: Number(r.priced) || 0,
+    billable: Number(r.billable) || 0,
+  }))
+
+  const input: BroadcastForCost[] = list.map((b) => ({
+    id: b.id as string,
+    name: (b.name as string) || 'Untitled broadcast',
+    createdAt: b.created_at as string,
+    status: b.status as string,
+    templateName: (b.template_name as string | null) ?? null,
+    templateCategory: categoryOf(b.template_name as string | null, b.template_language as string | null),
+    recipients: Number(b.total_recipients) || 0,
+    sent: Number(b.sent_count) || 0,
+    delivered: Number(b.delivered_count) || 0,
+    read: Number(b.read_count) || 0,
+    failed: Number(b.failed_count) || 0,
+  }))
+  const costed = estimateBroadcastCosts(input, priced, rates)
+  const totalCost = Math.round(costed.reduce((n, b) => n + (b.cost ?? 0), 0) * 100) / 100
+  return { rows: costed, totalCost, hasRates: Object.keys(rates).length > 0 }
 }

@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   codeFromErrorMessage,
   dayInZone,
+  estimateBroadcastCosts,
+  ratesByCategory,
   groupFailures,
   isPaymentError,
   parseConversationAnalytics,
@@ -92,5 +94,50 @@ describe('helpers', () => {
       { code: null, count: 1 },
       { code: 131026, count: 1 },
     ])
+  })
+})
+
+describe('estimateBroadcastCosts', () => {
+  const base = {
+    name: 'Diwali offer',
+    createdAt: '2026-10-20T10:00:00Z',
+    status: 'sent',
+    templateName: 'diwali',
+    templateCategory: 'MARKETING',
+    recipients: 100,
+    sent: 100,
+    read: 40,
+    failed: 0,
+  }
+
+  it('prices billable messages per category and falls back to the template category', () => {
+    const rates = ratesByCategory([
+      { category: 'MARKETING', volume: 200, billable: 200, cost: 172 },
+      { category: 'SERVICE', volume: 10, billable: 0, cost: 0 },
+    ])
+    expect(rates).toEqual({ MARKETING: 0.86 })
+
+    const [withPricing, withoutPricing] = estimateBroadcastCosts(
+      [
+        { ...base, id: 'b1', delivered: 90 },
+        { ...base, id: 'b2', delivered: 50 },
+      ],
+      [{ broadcastId: 'b1', category: 'MARKETING', priced: 95, billable: 88 }],
+      rates,
+    )
+    // b1: 88 billable reported; delivered (90) <= priced (95) so nothing unpriced.
+    expect(withPricing.paid).toBe(88)
+    expect(withPricing.cost).toBeCloseTo(75.68)
+    // b2: no pricing yet → 50 delivered counted as marketing.
+    expect(withoutPricing.paid).toBe(50)
+    expect(withoutPricing.cost).toBe(43)
+  })
+
+  it('returns null cost when there is no rate for the category', () => {
+    const [b] = estimateBroadcastCosts([{ ...base, id: 'b3', delivered: 10, templateCategory: 'UTILITY' }], [], {
+      MARKETING: 0.86,
+    })
+    expect(b.paid).toBe(10)
+    expect(b.cost).toBeNull()
   })
 })

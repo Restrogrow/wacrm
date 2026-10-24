@@ -136,6 +136,7 @@ interface WhatsAppWebhookEntry {
         timestamp: string
         recipient_id?: string
         errors?: Array<{ code?: number; title?: string; message?: string; error_data?: { details?: string } }>
+        pricing?: { billable?: boolean; category?: string; pricing_model?: string; type?: string }
       }>
     }
     field: string
@@ -492,6 +493,8 @@ async function handleStatusUpdate(status: {
   timestamp: string
   recipient_id?: string
   errors?: Array<{ code?: number; title?: string; message?: string; error_data?: { details?: string } }>
+  /** Whether Meta charges for this message, and its pricing category. */
+  pricing?: { billable?: boolean; category?: string; pricing_model?: string; type?: string }
 }) {
   // Meta reports WHY a send failed (e.g. 131042 payment, 131047 24h window)
   // only here. Keep it on the message and in the logs.
@@ -562,6 +565,19 @@ async function handleStatusUpdate(status: {
     if (recUpdateErr) {
       console.error('Error updating broadcast recipient status:', recUpdateErr)
     }
+  }
+
+  // Billable + category for the cost-per-broadcast estimate (migration
+  // 086). Stored whatever the status order; a no-op before the migration.
+  if (recipient && status.pricing && typeof status.pricing.billable === 'boolean') {
+    const { error: pricingErr } = await supabaseAdmin()
+      .from('broadcast_recipients')
+      .update({
+        billable: status.pricing.billable,
+        pricing_category: status.pricing.category?.toLowerCase() ?? null,
+      })
+      .eq('id', recipient.id)
+    if (pricingErr) console.warn('[whatsapp] broadcast pricing not stored (run migration 086):', pricingErr.message)
   }
 
   // 3) Webhook fan-out for messages we store (inbox / API sends).

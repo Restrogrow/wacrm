@@ -252,3 +252,91 @@ export function codeFromErrorMessage(message: string | null | undefined): number
   const m = message?.match(/^\s*(?:Retrying:\s*)?\(?#?(\d{3,6})\)?/)
   return m ? Number(m[1]) : null
 }
+
+// ---- Cost per broadcast -------------------------------------------------
+
+/** Average cost per paid message by category, from Meta's spend summary. */
+export function ratesByCategory(byCategory: SpendSummary['byCategory']): Record<string, number> {
+  const rates: Record<string, number> = {}
+  for (const c of byCategory) {
+    if (c.billable > 0 && c.cost > 0) rates[c.category] = c.cost / c.billable
+  }
+  return rates
+}
+
+export interface BroadcastForCost {
+  id: string
+  name: string
+  createdAt: string
+  status: string
+  templateName: string | null
+  /** The template's category (MARKETING / UTILITY / …), if known. */
+  templateCategory: string | null
+  recipients: number
+  sent: number
+  delivered: number
+  read: number
+  failed: number
+}
+
+export interface PricedCount {
+  broadcastId: string
+  category: string
+  /** Recipients Meta sent pricing for. */
+  priced: number
+  /** Of those, the ones Meta charges for. */
+  billable: number
+}
+
+export interface BroadcastCost extends BroadcastForCost {
+  /** Messages Meta charges for (reported, plus delivered ones not reported yet). */
+  paid: number
+  /** Estimated cost, or null when there is no rate to price it with. */
+  cost: number | null
+}
+
+/**
+ * Estimate each broadcast's Meta cost: billable messages per category
+ * (from status webhooks) × the account's average cost per paid message in
+ * that category. Delivered messages Meta hasn't sent pricing for yet
+ * (older broadcasts, before migration 086) count as billable in the
+ * template's category — marketing messages are charged on delivery.
+ */
+export function estimateBroadcastCosts(
+  broadcasts: BroadcastForCost[],
+  priced: PricedCount[],
+  rates: Record<string, number>,
+): BroadcastCost[] {
+  const byBroadcast = new Map<string, PricedCount[]>()
+  for (const p of priced) {
+    const list = byBroadcast.get(p.broadcastId) ?? []
+    list.push(p)
+    byBroadcast.set(p.broadcastId, list)
+  }
+
+  return broadcasts.map((b) => {
+    const counts = byBroadcast.get(b.id) ?? []
+    const pricedTotal = counts.reduce((n, c) => n + c.priced, 0)
+    const unpricedDelivered = Math.max(0, b.delivered - pricedTotal)
+    const fallbackCategory = (b.templateCategory ?? 'MARKETING').toUpperCase()
+
+    let paid = 0
+    let cost = 0
+    let missingRate = false
+    const add = (category: string, n: number) => {
+      if (n <= 0) return
+      paid += n
+      const rate = rates[category.toUpperCase()]
+      if (rate === undefined) missingRate = true
+      else cost += n * rate
+    }
+    for (const c of counts) add(c.category, c.billable)
+    add(fallbackCategory, unpricedDelivered)
+
+    return {
+      ...b,
+      paid,
+      cost: paid === 0 ? 0 : missingRate && cost === 0 ? null : Math.round(cost * 100) / 100,
+    }
+  })
+}

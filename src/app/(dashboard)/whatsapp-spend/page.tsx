@@ -1,8 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import {
   AlertTriangle,
+  Radio,
   CheckCircle2,
   CreditCard,
   ExternalLink,
@@ -49,6 +51,22 @@ interface SentCounts {
   totalFailed: number
 }
 
+interface BroadcastCostRow {
+  id: string
+  name: string
+  createdAt: string
+  status: string
+  templateName: string | null
+  templateCategory: string | null
+  recipients: number
+  sent: number
+  delivered: number
+  read: number
+  failed: number
+  paid: number
+  cost: number | null
+}
+
 interface SpendData {
   connected: boolean
   wabaId?: string
@@ -75,6 +93,11 @@ interface SpendData {
     source: 'pricing' | 'conversation'
   } | null
   spendError?: string | null
+  broadcasts?: {
+    rows: BroadcastCostRow[]
+    totalCost: number
+    hasRates: boolean
+  }
   sent: SentCounts
   failures: { code: number | null; count: number }[]
   checkedAt?: string
@@ -199,6 +222,7 @@ export default function WhatsAppSpendPage() {
 
       <BillingStatusPanel data={data} loading={!current} />
       <SpendPanel data={data} loading={!current} range={range} />
+      <BroadcastCostPanel data={data} loading={!current} />
       <SentPanel data={data} loading={!current} />
       <FailuresPanel data={data} loading={!current} />
     </div>
@@ -422,6 +446,86 @@ function SpendBody({
         </p>
       ) : null}
     </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 2b. Cost per broadcast (estimate)
+// ---------------------------------------------------------------------------
+
+function BroadcastCostPanel({ data, loading }: { data?: SpendData; loading: boolean }) {
+  const currency = data?.currency || 'INR'
+  const money = (v: number | null) => (v === null ? '—' : formatCurrency(v, currency))
+  const columns: Column<BroadcastCostRow>[] = [
+    {
+      header: 'Broadcast',
+      cell: (r) => (
+        <Link href={`/broadcasts/${r.id}`} className="font-medium text-foreground hover:underline">
+          {r.name}
+        </Link>
+      ),
+      csv: (r) => r.name,
+    },
+    {
+      header: 'Date',
+      cell: (r) => new Date(r.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }),
+      csv: (r) => r.createdAt,
+    },
+    { header: 'Category', cell: (r) => (r.templateCategory ? categoryLabel(r.templateCategory) : '—'), csv: (r) => r.templateCategory ?? '' },
+    { header: 'Recipients', align: 'right', cell: (r) => formatCount(r.recipients), csv: (r) => r.recipients },
+    { header: 'Delivered', align: 'right', cell: (r) => formatCount(r.delivered), csv: (r) => r.delivered },
+    { header: 'Paid messages', align: 'right', cell: (r) => formatCount(r.paid), csv: (r) => r.paid },
+    { header: 'Est. cost', align: 'right', cell: (r) => money(r.cost), csv: (r) => r.cost ?? '' },
+    {
+      header: 'Per delivered',
+      align: 'right',
+      cell: (r) => (r.cost !== null && r.delivered > 0 ? money(r.cost / r.delivered) : '—'),
+      csv: (r) => (r.cost !== null && r.delivered > 0 ? Math.round((r.cost / r.delivered) * 10000) / 10000 : ''),
+    },
+  ]
+
+  return (
+    <ReportPanel
+      icon={Radio}
+      title="Cost per broadcast"
+      subtitle="Broadcasts created in this range"
+      note="Estimate: messages Meta marks as billable for each broadcast × your average cost per paid message in that category (from Meta). Delivered messages without Meta's billing info yet count as paid in the template's category. Your Meta invoice is final."
+    >
+      {loading || !data ? (
+        <Skeleton className="h-40 w-full" />
+      ) : !data.connected ? (
+        <EmptyState icon={Radio} title="Connect WhatsApp to see broadcast costs" />
+      ) : !data.broadcasts || data.broadcasts.rows.length === 0 ? (
+        <EmptyState icon={Radio} title="No broadcasts in this range" />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Kpi label="Broadcasts" value={formatCount(data.broadcasts.rows.length)} />
+            <Kpi label="Estimated broadcast spend" value={money(data.broadcasts.totalCost)} />
+            <Kpi
+              label="Paid broadcast messages"
+              value={formatCount(data.broadcasts.rows.reduce((n, r) => n + r.paid, 0))}
+            />
+            <Kpi
+              label="Average per broadcast"
+              value={money(Math.round((data.broadcasts.totalCost / data.broadcasts.rows.length) * 100) / 100)}
+            />
+          </div>
+          {!data.broadcasts.hasRates ? (
+            <p className="text-xs text-muted-foreground">
+              Meta hasn&apos;t reported prices for this period yet, so costs can&apos;t be estimated. Paid message counts are shown.
+            </p>
+          ) : null}
+          <DataTable
+            columns={columns}
+            rows={data.broadcasts.rows}
+            rowKey={(r) => r.id}
+            filename="broadcast-costs.csv"
+            empty={null}
+          />
+        </>
+      )}
+    </ReportPanel>
   )
 }
 
