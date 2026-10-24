@@ -35,6 +35,15 @@ describe('ensureImageHeaderHandle', () => {
     vi.unstubAllEnvs();
   });
 
+  it('derives + sets header_handle from a video URL', async () => {
+    vi.stubEnv('META_APP_ID', 'app-1');
+    vi.stubGlobal('fetch', vi.fn(async () => imgResponse('video/mp4', 4096)));
+    const p = payload({ header_type: 'video', header_media_url: 'https://93.184.216.34/demo.mp4' });
+    await ensureImageHeaderHandle(p, 'tok');
+    expect(uploadResumableMedia).toHaveBeenCalledWith(expect.objectContaining({ mimeType: 'video/mp4', fileName: 'video.mp4' }));
+    expect(p.header_handle).toBe('HANDLE123');
+  });
+
   it('is a no-op for non-image headers', async () => {
     const p = payload({ header_type: 'text', header_content: 'Hi' });
     await ensureImageHeaderHandle(p, 'tok');

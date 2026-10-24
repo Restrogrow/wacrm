@@ -10,9 +10,8 @@ import { readBodyCapped, safeFetch, UnsafeUrlError } from '@/lib/webhooks/ssrf'
  * into a handle and writes it onto the payload, so both the upload path
  * and the legacy URL path actually succeed.
  *
- * No-op unless the header is an image that has a URL but no handle yet.
- * Image-only for now (the #230 scope); video/document handles can follow
- * the same shape.
+ * No-op unless the header is an image or video that has a URL but no
+ * handle yet. Document handles can follow the same shape.
  */
 
 // Meta's image-header sample limits.
@@ -93,9 +92,15 @@ export async function ensureImageHeaderHandle(
   payload: TemplatePayload,
   accessToken: string,
 ): Promise<void> {
-  if (payload.header_type !== 'image') return
   if (payload.header_handle) return // already have one
   if (!payload.header_media_url) return // validator already requires url-or-handle
+  // Video headers need a handle too: Meta answers a plain header_url with
+  // "Invalid parameter".
+  if (payload.header_type === 'video') {
+    payload.header_handle = await uploadHeaderSample(payload.header_media_url, 'video', accessToken, 'Header video')
+    return
+  }
+  if (payload.header_type !== 'image') return
 
   const appId = process.env.META_APP_ID
   if (!appId) {
