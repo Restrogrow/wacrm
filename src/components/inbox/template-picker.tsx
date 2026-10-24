@@ -292,10 +292,10 @@ export function TemplatePicker({
                 />
                 <p className="text-[11px] text-muted-foreground">
                   {slots.mediaHeader === "video"
-                    ? "WhatsApp downloads this file when sending. Use a public, direct https link to an MP4 (H.264 video, AAC audio) under 16 MB. YouTube or Google Drive pages don't work."
+                    ? "We upload this file to WhatsApp when sending. Use a public, direct https link to an MP4 (H.264 video, AAC audio) under 16 MB. YouTube or Google Drive pages don't work."
                     : slots.mediaHeader === "image"
-                      ? "WhatsApp downloads this file when sending. Use a public, direct https link to a JPEG or PNG under 5 MB."
-                      : "WhatsApp downloads this file when sending. Use a public, direct https link to the PDF (under 100 MB)."}
+                      ? "We upload this file to WhatsApp when sending. Use a public, direct https link to a JPEG or PNG under 5 MB."
+                      : "We upload this file to WhatsApp when sending. Use a public, direct https link to the PDF (under 100 MB)."}
                 </p>
               </div>
             )}

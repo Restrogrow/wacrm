@@ -536,6 +536,7 @@ export async function sendMediaMessage(
 }
 
 import type { MessageTemplate } from '@/types'
+import { forgetHeaderMediaId, resolveHeaderMediaId } from './header-media'
 import {
   buildSendComponents,
   type SendTimeParams,
@@ -599,53 +600,81 @@ export async function sendTemplateMessage(
   } = args
   const url = `${META_API_BASE}/${phoneNumberId}/messages`
 
-  const templatePayload: Record<string, unknown> = {
-    name: templateName,
-    language: { code: language },
-  }
+  // Media header: send a WhatsApp media ID instead of the link, so Meta
+  // doesn't have to download from the customer's host on every send
+  // (lib/whatsapp/header-media.ts). Falls back to the link.
+  const headerKind =
+    template?.header_type === 'image' ||
+    template?.header_type === 'video' ||
+    template?.header_type === 'document'
+      ? template.header_type
+      : null
+  const headerLink = messageParams?.headerMediaUrl || template?.header_media_url || undefined
+  const uploadedId =
+    headerKind && headerLink && !messageParams?.headerMediaId
+      ? await resolveHeaderMediaId({ phoneNumberId, accessToken, url: headerLink, kind: headerKind })
+      : null
 
-  if (template) {
-    const components = buildSendComponents(template, {
-      // Legacy callers pass body values in `params`; fold them into
-      // `messageParams.body` so the new path covers them too.
-      body: messageParams?.body ?? params,
-      headerText: messageParams?.headerText,
-      headerMediaUrl: messageParams?.headerMediaUrl,
-      headerMediaId: messageParams?.headerMediaId,
-      buttonParams: messageParams?.buttonParams,
-    })
-    if (components.length > 0) {
-      templatePayload.components = components
+  const post = async (headerMediaId: string | undefined): Promise<Response> => {
+    const templatePayload: Record<string, unknown> = {
+      name: templateName,
+      language: { code: language },
     }
-  } else if (params && params.length > 0) {
-    // Legacy body-only path — no template row available.
-    templatePayload.components = [
-      {
-        type: 'body',
-        parameters: params.map((p) => ({ type: 'text', text: String(p) })),
+
+    if (template) {
+      const components = buildSendComponents(template, {
+        // Legacy callers pass body values in `params`; fold them into
+        // `messageParams.body` so the new path covers them too.
+        body: messageParams?.body ?? params,
+        headerText: messageParams?.headerText,
+        headerMediaUrl: messageParams?.headerMediaUrl,
+        headerMediaId,
+        buttonParams: messageParams?.buttonParams,
+      })
+      if (components.length > 0) {
+        templatePayload.components = components
+      }
+    } else if (params && params.length > 0) {
+      // Legacy body-only path — no template row available.
+      templatePayload.components = [
+        {
+          type: 'body',
+          parameters: params.map((p) => ({ type: 'text', text: String(p) })),
+        },
+      ]
+    }
+
+    const body: Record<string, unknown> = {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      ...metaRecipient(to),
+      type: 'template',
+      template: templatePayload,
+    }
+    if (contextMessageId) {
+      body.context = { message_id: contextMessageId }
+    }
+
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
       },
-    ]
+      body: JSON.stringify(body),
+    })
   }
 
-  const body: Record<string, unknown> = {
-    messaging_product: 'whatsapp',
-    recipient_type: 'individual',
-    ...metaRecipient(to),
-    type: 'template',
-    template: templatePayload,
+  let response = await post(messageParams?.headerMediaId ?? uploadedId ?? undefined)
+  if (!response.ok && uploadedId) {
+    // Meta refused the uploaded ID (expired, wrong number): forget it and
+    // send the link once. Nothing was sent, so this can't double-send.
+    const firstError = await response.clone().text().catch(() => '')
+    if (/media|131053|132012|parameter/i.test(firstError)) {
+      forgetHeaderMediaId(phoneNumberId, headerKind!, headerLink!)
+      response = await post(undefined)
+    }
   }
-  if (contextMessageId) {
-    body.context = { message_id: contextMessageId }
-  }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(body),
-  })
   if (!response.ok) {
     await throwMetaError(response, `Meta API error: ${response.status}`)
   }
