@@ -27,6 +27,7 @@ import {
   Workflow,
   Zap,
   type LucideIcon,
+  Wallet,
 } from "lucide-react";
 
 export interface NavItem {
@@ -54,6 +55,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/calls", label: "Calls", icon: Phone },
       { href: "/daily-summary", label: "Daily summary", icon: Mail },
       { href: "/reports", label: "Reports", icon: BarChart3 },
+      { href: "/whatsapp-spend", label: "WhatsApp spend", icon: Wallet },
     ],
   },
   {
