@@ -550,6 +550,47 @@ export const OPENAPI_SPEC = {
         },
       },
     },
+    '/webhooks/{id}/deliveries': {
+      parameters: [idParam('Webhook endpoint id.')],
+      get: {
+        tags: ['Webhooks'],
+        operationId: 'listWebhookDeliveries',
+        summary: 'List recent deliveries to an endpoint',
+        description:
+          'Newest first, kept for 14 days. Failed tries are retried after 1 min, 5 min, 30 min, 2 h and 6 h. ' +
+          'Scope: `webhooks:manage`.',
+        'x-scope': 'webhooks:manage',
+        parameters: [
+          { name: 'status', in: 'query', schema: { type: 'string', enum: ['pending', 'delivered', 'failed'] } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 50 } },
+        ],
+        responses: {
+          '200': {
+            description: 'Deliveries.',
+            content: json(
+              dataEnvelope({
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string', format: 'uuid' },
+                    event: { type: 'string' },
+                    status: { type: 'string', enum: ['pending', 'delivered', 'failed'] },
+                    attempts: { type: 'integer' },
+                    next_attempt_at: { type: ['string', 'null'], format: 'date-time' },
+                    last_status_code: { type: ['integer', 'null'] },
+                    last_error: { type: ['string', 'null'] },
+                    created_at: { type: 'string', format: 'date-time' },
+                    delivered_at: { type: ['string', 'null'], format: 'date-time' },
+                  },
+                },
+              })
+            ),
+          },
+          ...errorResponses(400, 401, 403, 404, 429),
+        },
+      },
+    },
   },
   webhooks: {
     event: {
@@ -559,7 +600,8 @@ export const OPENAPI_SPEC = {
         description:
           'Repeat Grow POSTs this envelope to each active endpoint subscribed to the event. Verify the ' +
           '`X-Wacrm-Signature` header (`t=<unix>,v1=<hex>`, where `v1 = HMAC-SHA256(secret, "${t}.${rawBody}")`) ' +
-          'and dedupe on `id`. Delivery is a single best-effort attempt; redirects are not followed.',
+          'and dedupe on `id`. Failed deliveries (timeout, network error, non-2xx) are retried with the same body after ' +
+          '1 min, 5 min, 30 min, 2 h and 6 h; redirects are not followed.',
         parameters: [
           { name: 'X-Wacrm-Event', in: 'header', schema: { type: 'string', enum: [...WEBHOOK_EVENTS] } },
           { name: 'X-Wacrm-Webhook-Id', in: 'header', schema: { type: 'string', format: 'uuid' } },

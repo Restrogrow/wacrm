@@ -26,6 +26,8 @@ import { extractVariableIndices } from "@/lib/whatsapp/template-validators";
 export interface TemplateSendValues {
   body: string[];
   headerText?: string;
+  /** Photo / video / document for a media header (defaults to the template's file). */
+  headerMediaUrl?: string;
   buttonParams?: Record<number, string>;
 }
 
@@ -58,6 +60,8 @@ function collectVariableSlots(template: MessageTemplate): {
   bodyVars: number[];
   headerVarCount: number;
   urlButtonSlots: UrlButtonSlot[];
+  /** Set for photo / video / document headers, which need a file link. */
+  mediaHeader: "image" | "video" | "document" | null;
 } {
   const bodyVars = extractVariableIndices(template.body_text);
   const headerVarCount =
@@ -70,7 +74,13 @@ function collectVariableSlots(template: MessageTemplate): {
       urlButtonSlots.push({ index: i, text: b.text, url: b.url });
     }
   });
-  return { bodyVars, headerVarCount, urlButtonSlots };
+  const mediaHeader =
+    template.header_type === "image" ||
+    template.header_type === "video" ||
+    template.header_type === "document"
+      ? template.header_type
+      : null;
+  return { bodyVars, headerVarCount, urlButtonSlots, mediaHeader };
 }
 
 export function TemplatePicker({
@@ -83,6 +93,7 @@ export function TemplatePicker({
   const [selected, setSelected] = useState<MessageTemplate | null>(null);
   const [params, setParams] = useState<string[]>([]);
   const [headerText, setHeaderText] = useState<string>("");
+  const [headerMediaUrl, setHeaderMediaUrl] = useState<string>("");
   const [buttonParams, setButtonParams] = useState<Record<number, string>>({});
 
   useEffect(() => {
@@ -133,6 +144,7 @@ export function TemplatePicker({
     setSelected(null);
     setParams([]);
     setHeaderText("");
+    setHeaderMediaUrl("");
     setButtonParams({});
   }
 
@@ -143,10 +155,13 @@ export function TemplatePicker({
 
   function pickTemplate(template: MessageTemplate) {
     const slots = collectVariableSlots(template);
+    // Media headers always show the form, so the agent sees (and can
+    // change) the photo / video / document that will go out.
     const noInputsNeeded =
       slots.bodyVars.length === 0 &&
       slots.headerVarCount === 0 &&
-      slots.urlButtonSlots.length === 0;
+      slots.urlButtonSlots.length === 0 &&
+      !slots.mediaHeader;
     if (noInputsNeeded) {
       onSelect(template, { body: [] });
       handleOpenChange(false);
@@ -155,6 +170,7 @@ export function TemplatePicker({
     setSelected(template);
     setParams(new Array(slots.bodyVars.length).fill(""));
     setHeaderText("");
+    setHeaderMediaUrl(slots.mediaHeader ? template.header_media_url ?? "" : "");
     setButtonParams({});
   }
 
@@ -162,6 +178,9 @@ export function TemplatePicker({
     if (!selected) return;
     const values: TemplateSendValues = { body: params };
     if (headerText.trim()) values.headerText = headerText.trim();
+    if (collectVariableSlots(selected).mediaHeader && headerMediaUrl.trim()) {
+      values.headerMediaUrl = headerMediaUrl.trim();
+    }
     if (Object.keys(buttonParams).length > 0) {
       values.buttonParams = Object.fromEntries(
         Object.entries(buttonParams).map(([k, v]) => [Number(k), v.trim()]),
@@ -180,6 +199,7 @@ export function TemplatePicker({
     !!slots &&
     slots.bodyVars.every((_, i) => (params[i] ?? "").trim().length > 0) &&
     (slots.headerVarCount === 0 || headerText.trim().length > 0) &&
+    (!slots.mediaHeader || /^https:\/\/\S+$/i.test(headerMediaUrl.trim())) &&
     slots.urlButtonSlots.every(
       (s) => (buttonParams[s.index] ?? "").trim().length > 0,
     );
@@ -259,6 +279,26 @@ export function TemplatePicker({
                 </p>
               )}
             </div>
+            {slots?.mediaHeader && (
+              <div className="space-y-1">
+                <Label className="text-xs text-popover-foreground">
+                  {`Header ${slots.mediaHeader} link`}
+                </Label>
+                <Input
+                  value={headerMediaUrl}
+                  onChange={(e) => setHeaderMediaUrl(e.target.value)}
+                  placeholder="https://… (direct link to the file)"
+                  className="border-border bg-muted text-foreground placeholder:text-muted-foreground"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  {slots.mediaHeader === "video"
+                    ? "WhatsApp downloads this file when sending. Use a public, direct https link to an MP4 (H.264 video, AAC audio) under 16 MB. YouTube or Google Drive pages don't work."
+                    : slots.mediaHeader === "image"
+                      ? "WhatsApp downloads this file when sending. Use a public, direct https link to a JPEG or PNG under 5 MB."
+                      : "WhatsApp downloads this file when sending. Use a public, direct https link to the PDF (under 100 MB)."}
+                </p>
+              </div>
+            )}
             {slots && slots.headerVarCount > 0 && (
               <div className="space-y-1">
                 <Label className="text-xs text-popover-foreground">

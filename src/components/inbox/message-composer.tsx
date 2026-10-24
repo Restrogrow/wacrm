@@ -370,13 +370,29 @@ export function MessageComposer({
     [handleSend, pickerOpen, replyMatches, replyIndex, insertSavedReply, text]
   );
 
+  // Show the customer "typing…" while the agent writes. Meta keeps it
+  // up for 25 s or until we reply, so re-send at most every 20 s.
+  const typingSentRef = useRef<{ id: string; at: number } | null>(null);
+  const signalTyping = useCallback(() => {
+    if (sessionExpired) return;
+    const last = typingSentRef.current;
+    if (last && last.id === conversationId && Date.now() - last.at < 20_000) return;
+    typingSentRef.current = { id: conversationId, at: Date.now() };
+    void fetch("/api/whatsapp/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversation_id: conversationId, typing: true }),
+    }).catch(() => {});
+  }, [conversationId, sessionExpired]);
+
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setText(e.target.value);
       setReplyIndex(0);
       adjustHeight();
+      if (e.target.value.trim() && !e.target.value.startsWith("/")) signalTyping();
     },
-    [adjustHeight]
+    [adjustHeight, signalTyping]
   );
 
   // Upload a captured file to chat-media and stage it as a draft.

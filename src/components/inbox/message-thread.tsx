@@ -474,6 +474,12 @@ export function MessageThread({
       .then(({ error }) => {
         if (error) console.error("Failed to reset unread_count:", error);
       });
+    // Blue ticks for the customer (best-effort; viewers get a 403).
+    void fetch("/api/whatsapp/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversation_id: conversationId }),
+    }).catch(() => {});
   }, [conversationId, hasUnread]);
 
   // Auto-scroll to bottom on new messages. After "Load earlier" the
@@ -673,6 +679,7 @@ export function MessageThread({
       values: {
         body: string[];
         headerText?: string;
+        headerMediaUrl?: string;
         buttonParams?: Record<number, string>;
       },
     ) => {
@@ -710,6 +717,7 @@ export function MessageThread({
             template_message_params: {
               body: values.body,
               headerText: values.headerText,
+              headerMediaUrl: values.headerMediaUrl,
               buttonParams: values.buttonParams,
             },
             template_params: values.body,

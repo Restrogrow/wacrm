@@ -913,6 +913,42 @@ export async function sendReactionMessage(
   return { messageId: data.messages[0].id }
 }
 
+export interface MarkMessageReadArgs {
+  phoneNumberId: string
+  accessToken: string
+  /** Meta's message_id of the customer message to mark read. */
+  messageId: string
+  /**
+   * Also show "typing…" to the customer. Meta clears it when we reply
+   * or after 25 seconds, whichever comes first.
+   */
+  typing?: boolean
+}
+
+/**
+ * Mark a customer message (and every earlier one) as read, so the
+ * customer sees blue ticks, optionally with a typing indicator.
+ */
+export async function markMessageRead(args: MarkMessageReadArgs): Promise<void> {
+  const { phoneNumberId, accessToken, messageId, typing } = args
+  const response = await fetch(`${META_API_BASE}/${phoneNumberId}/messages`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      status: 'read',
+      message_id: messageId,
+      ...(typing ? { typing_indicator: { type: 'text' } } : {}),
+    }),
+  })
+  if (!response.ok) {
+    await throwMetaError(response, `Meta API error: ${response.status}`)
+  }
+}
+
 // ============================================================
 // Interactive (button replies + list messages)
 // ============================================================

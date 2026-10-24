@@ -496,17 +496,26 @@ const ok = crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(v1));
 
 ### Delivery semantics
 
-Delivery is **best-effort**: a single attempt per event with a short
-timeout, and **redirects are not followed**. `message.status_updated`
+Delivery is **at-least-once with retries**. Each event is tried right
+away with a short timeout (5 s); **redirects are not followed**. If your
+endpoint times out, can't be reached or answers anything but `2xx`, the
+same body (same `id`) is sent again after 1 min, 5 min, 30 min, 2 h and
+6 h — 6 tries in all — each with a fresh signature timestamp. Answer
+`2xx` quickly and do slow work afterwards. `message.status_updated`
 covers messages Repeat Grow stores (inbox + API sends), not broadcast-only
 sends, and — because providers re-send and re-order status callbacks —
 the same status may arrive more than once or out of order; **dedupe on
-`id` and don't assume ordering**. Each consecutive failure increments
-`failure_count`; after enough consecutive failures the endpoint is
-auto-disabled (`is_active: false`) — re-enable it with `PATCH` (which
-resets the counter). Durable retry-with-backoff (a delivery queue) is a
-future enhancement; today, treat missed deliveries as possible and
-reconcile with the read endpoints when it matters.
+`id` and don't assume ordering**. Each delivery that fails all its tries
+increments `failure_count`; after 15 such failures in a row the endpoint
+is auto-disabled (`is_active: false`) — re-enable it with `PATCH` (which
+resets the counter).
+
+**Delivery log.** `GET /api/v1/webhooks/{id}/deliveries` (scope
+`webhooks:manage`, optional `?status=pending|delivered|failed` and
+`?limit=1..100`) lists recent deliveries, newest first, with `event`,
+`status`, `attempts`, `next_attempt_at`, `last_status_code`,
+`last_error`, `created_at` and `delivered_at`. Deliveries are kept for
+14 days.
 
 **Target restrictions (SSRF).** The `url` must be `https://` and must
 resolve to a public address — requests to `localhost`, private/RFC1918
@@ -517,5 +526,4 @@ internal targets are refused at delivery time.
 
 The public API covers messaging, contacts, conversations,
 broadcasts, templates, partner connect and outbound webhooks. Future
-ideas (deals/pipelines, flows, orders, forms, a delivery queue for
-webhooks) are not yet scheduled.
+ideas (deals/pipelines, flows, orders, forms) are not yet scheduled.

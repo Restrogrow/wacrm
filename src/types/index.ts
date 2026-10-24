@@ -234,6 +234,9 @@ export interface Message {
   interactive_reply_id?: string;
   /** Voice-note AI result for a customer voice note (migration 058). */
   ai_transcript?: import("@/lib/ai/voice-note").VoiceNoteAi | null;
+  /** Meta's reason when status is 'failed' (status webhook, migration 079). */
+  error_code?: number | null;
+  error_detail?: string | null;
 }
 
 export type ReactionActor = 'customer' | 'agent';

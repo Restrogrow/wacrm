@@ -83,10 +83,10 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       the `user_id_update` webhook when a BSUID changes, show the
       username in the public API contact serializer, and support
       parent BSUIDs if the portfolio is enrolled.
-- [ ] **#43 Read receipts & typing indicator.** Mark inbound messages
+- [x] **#43 Read receipts & typing indicator.** Done 2026-10-24 (`/api/whatsapp/read`; web inbox and AI chatbot; not yet in the mobile app). Mark inbound messages
       read when an agent opens the conversation and show "typing…"
       while an agent or the chatbot composes a reply.
-- [ ] **#44 Shared contacts & order messages in the inbox.** Render
+- [x] **#44 Shared contacts & order messages in the inbox.** Done 2026-10-24 (contact cards shown as text; Meta `unsupported` messages explained). Render
       inbound `contacts` (vCards) and `order` messages instead of
       "[Unsupported message type]".
 
@@ -134,11 +134,11 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
 
 ## 🟡 Reliability and scaling
 
-- [ ] **#14 Broadcast queue.** Sends run inside one request (`after()`,
+- [x] **#14 Broadcast queue.** Done 2026-10-24 (migration 085): every broadcast (Send now, scheduled, API) is stored and sent by the server in leased batches that resume on the next cron run; temporary Meta errors are retried (1 / 5 / 15 min). Was: Sends run inside one request (`after()`,
       `maxDuration` 60s); ~1,000 recipients can time out and leave the
       broadcast stuck on "sending" (`src/app/api/v1/broadcasts/route.ts`).
       Move fan-out to a durable queue / cron drain with resume.
-- [ ] **#15 Webhook delivery retries** with backoff and a delivery log
+- [x] **#15 Webhook delivery retries** Done 2026-10-24 (migration 085): 6 tries (1 min … 6 h), log in `webhook_deliveries`, `GET /api/v1/webhooks/{id}/deliveries`. Was: with backoff and a delivery log
       (`src/lib/webhooks/deliver.ts` sends once today).
 - [ ] **#16 Shared rate limiting.** `src/lib/rate-limit.ts` is in-memory
       per process; move to Redis/Upstash before running more than one
@@ -148,7 +148,7 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       Sentry.
 - [x] **#18 End-to-end tests** (Playwright) — public, auth and health tests in CI; signed-in smoke tests with E2E_EMAIL. for signup → connect WhatsApp
       → send → broadcast → template, run in CI.
-- [ ] **#19 Block dry-run in production.** Ignore
+- [x] **#19 Block dry-run in production.** Done 2026-10-24. Ignore
       `WHATSAPP_TEMPLATES_DRY_RUN` when `NODE_ENV=production` (it already
       stopped real templates reaching Meta once).
 - [ ] **#20 OneDrive locks `.next`.** Exclude `.next` and `node_modules`
@@ -325,7 +325,7 @@ already have an entry above are linked by number.
       agent who picks it up (uses the existing Gemini setup).
 - [x] **Auto-translate chats** (done 2026-10-16: message → English, reply → 14 languages) both ways (Hindi, Tamil, Marathi, etc.):
       agent writes in English, customer gets their language.
-- [ ] **Broadcast failed-message auto-retry** with a retry log.
+- [x] **Broadcast failed-message auto-retry** (done 2026-10-24 with #14: temporary errors only; the reason stays on the recipient row).
 - [x] **Saved audience segments** (done 2026-10-17, migration 068; usable as
       a broadcast audience).
 - [x] **Agent performance reports + downloadable reports** (done 2026-10-17,
@@ -352,6 +352,17 @@ already have an entry above are linked by number.
       `/downloads/repeat-grow-for-woocommerce.zip`). Still open (owner):
       test on a real https store, WordPress.org account + submission
       (steps in the plugin README), screenshots and banner.
+      Owner steps, in order:
+      1. Test: upload the zip on an https WooCommerce site (Plugins → Add
+         New → Upload), WooCommerce → Repeat Grow → Connect → Approve,
+         check "Connected" in Repeat Grow and send a test order.
+      2. Register at login.wordpress.org/register, username `repeatgrow`
+         (if taken, update `Contributors:` in `readme.txt`), email
+         support@repeatgrow.com, turn on two-factor.
+      3. Submit the zip at wordpress.org/plugins/developers/add/ (keep the
+         slug `repeat-grow-for-woocommerce`).
+      4. Review takes 1–4 weeks; paste reviewer emails to Claude for fixes.
+         After approval: SVN upload of code, icon, banner, screenshots.
 - [ ] **Zapier, Make, Pabbly** native connectors. Inbound webhooks and
       Google Sheets shipped (migrations 071, 059). See #29.
 - [x] **WooCommerce integration** (done 2026-10-17, migration 063; no

@@ -6,6 +6,7 @@
 import { supabaseAdmin } from "@/lib/flows/admin-client";
 import { engineSendText } from "@/lib/flows/meta-send";
 import { consumeAiQuota } from "@/lib/ai/quota";
+import { markConversationRead } from "@/lib/whatsapp/read-receipts";
 import {
   HISTORY_LIMIT,
   chatbotTimeZone,
@@ -133,6 +134,9 @@ export async function maybeReplyWithAI(input: ChatbotInbound): Promise<void> {
       console.warn(`[ai-chatbot] daily cap reached for account ${input.accountId}; not replying`);
       return;
     }
+
+    // Blue ticks + "typing…" while the reply is generated (best-effort).
+    void markConversationRead(db, input.accountId, input.conversationId, { typing: true });
 
     // Recent thread (includes the messages that just arrived) and who
     // the customer is.

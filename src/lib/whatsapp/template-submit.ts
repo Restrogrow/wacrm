@@ -41,6 +41,9 @@ export class TemplateSubmitError extends Error {
 }
 
 export function isTemplatesDryRun(): boolean {
+  // Never in production: a leftover flag once kept real templates from
+  // ever reaching Meta while the UI showed them as submitted.
+  if (process.env.NODE_ENV === 'production') return false;
   return (
     process.env.WHATSAPP_TEMPLATES_DRY_RUN === 'true' ||
     process.env.WHATSAPP_TEMPLATES_DRY_RUN === '1'

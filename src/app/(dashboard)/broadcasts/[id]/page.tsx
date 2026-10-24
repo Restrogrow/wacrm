@@ -155,6 +155,7 @@ export default function BroadcastDetailPage() {
   );
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
     async function fetchData() {
@@ -186,7 +187,16 @@ export default function BroadcastDetailPage() {
     }
 
     fetchData();
-  }, [broadcastId]);
+  }, [broadcastId, refreshTick]);
+
+  // The server sends in batches (lib/broadcasts/scheduled.ts); refresh
+  // the counts and recipient list while it is still going.
+  const isSending = broadcast?.status === 'sending';
+  useEffect(() => {
+    if (!isSending) return;
+    const timer = setInterval(() => setRefreshTick((t) => t + 1), 5000);
+    return () => clearInterval(timer);
+  }, [isSending]);
 
   const filteredRecipients = useMemo(
     () =>

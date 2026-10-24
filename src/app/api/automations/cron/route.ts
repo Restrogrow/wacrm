@@ -8,6 +8,7 @@ import { processDueCalendlyReminders } from '@/lib/calendly/process'
 import { processDueCalComReminders } from '@/lib/calcom/process'
 import { processScheduledBroadcasts } from '@/lib/broadcasts/scheduled'
 import { processScheduledMessages } from '@/lib/scheduled-messages/process'
+import { processWebhookRetries } from '@/lib/webhooks/deliver'
 import { processDailySummaries } from '@/lib/summary/daily'
 import { withHeartbeat } from '@/lib/ops/monitoring'
 import { processDueNumberHealth } from '@/lib/whatsapp/number-health'
@@ -86,6 +87,12 @@ async function runCron() {
     return 0
   })
 
+  // Outbound webhook retries (backoff) and delivery-log pruning.
+  const webhookRetries = await withHeartbeat('webhook-retries', () => processWebhookRetries(supabaseAdmin())).catch((err) => {
+    console.error('[cron] webhook retries failed:', err)
+    return 0
+  })
+
   const dailySummaries = await withHeartbeat('daily-summaries', processDailySummaries).catch((err) => {
     console.error('[cron] daily summaries failed:', err)
     return 0
@@ -131,6 +138,7 @@ async function runCron() {
     billing_reminders: billingReminders,
     scheduled_broadcast_sends: scheduledBroadcastSends,
     scheduled_message_sends: scheduledMessageSends,
+    webhook_retries: webhookRetries,
     daily_summaries: dailySummaries,
     shopify_reminders: shopifyReminders,
     calendly_reminders: calendlyReminders,

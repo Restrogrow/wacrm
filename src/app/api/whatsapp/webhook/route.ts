@@ -42,6 +42,7 @@ import {
   handleCoexistenceWebhookChange,
   isCoexistenceWebhookField,
 } from '@/lib/whatsapp/smb-webhook'
+import { formatSharedContacts, type SharedContact } from '@/lib/whatsapp/shared-contacts'
 
 // The `after()` callback in POST runs within this route's max duration.
 // Inbound processing can fan out to per-media Meta verification calls, so
@@ -83,6 +84,10 @@ interface WhatsAppMessage {
   sticker?: { id: string; mime_type: string }
   location?: { latitude: number; longitude: number; name?: string; address?: string }
   reaction?: { message_id: string; emoji: string }
+  /** One or more contact cards (vCards) the customer shared. */
+  contacts?: SharedContact[]
+  /** Set by Meta for types its API can't deliver (polls, view-once, …). */
+  errors?: Array<{ code?: number; title?: string; message?: string }>
   /**
    * Set when the customer taps a quick-reply button on a TEMPLATE
    * message (e.g. "Stop promotions", "Yes, confirm"). `payload` is the
@@ -1258,6 +1263,18 @@ async function parseMessageContent(
 
     case 'reaction':
       return { ...empty, contentText: message.reaction?.emoji || null }
+
+    case 'contacts':
+      return { ...empty, contentText: formatSharedContacts(message.contacts) }
+
+    case 'unsupported':
+      // Meta can't pass these through the API (polls, view-once media,
+      // some newer message kinds). Say so plainly instead of a raw type.
+      return {
+        ...empty,
+        contentText:
+          'The customer sent a message WhatsApp does not share with business apps (for example a poll or view-once media). Ask them to send it again as a normal message.',
+      }
 
     case 'button': {
       // The customer tapped a quick-reply button on a TEMPLATE message

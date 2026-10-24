@@ -14,8 +14,9 @@
 //   }
 //
 // The broadcast + its recipient rows are persisted synchronously, then
-// the Meta fan-out runs in `after()` so the request returns fast. Poll
-// `GET /api/v1/broadcasts/{id}` for progress.
+// the server-side sender starts in `after()` so the request returns
+// fast; the every-minute cron continues whatever doesn't fit in this
+// request. Poll `GET /api/v1/broadcasts/{id}` for progress.
 //
 // Response (202):
 //   { "data": { "broadcast_id", "status": "sending",
@@ -26,22 +27,12 @@ import { after } from 'next/server';
 
 import { requireApiKey } from '@/lib/auth/api-context';
 
-// The `after()` fan-out below sends to every recipient sequentially and
-// runs within this route's max duration (the same constraint the
-// webhook route documents). Give it headroom beyond the platform
-// default so a modest batch isn't cut off mid-send — which would leave
-// recipient rows 'pending' and the broadcast stuck 'sending'. This is a
-// bound, not a guarantee: a near-cap (MAX_RECIPIENTS) audience can
-// still exceed 60s, so very large sends should be split across
-// requests. A durable queue/cron drain is the complete fix (follow-up).
+// The `after()` run sends for up to ~40 s; the cron picks up the rest.
 export const maxDuration = 60;
 import { ok, fail, toApiErrorResponse } from '@/lib/api/v1/respond';
 import { resolveAuditUserId, ContactError } from '@/lib/api/v1/contacts';
-import {
-  createBroadcast,
-  deliverBroadcast,
-  BroadcastError,
-} from '@/lib/whatsapp/broadcast-core';
+import { sendBroadcastNow } from '@/lib/broadcasts/scheduled';
+import { createBroadcast, BroadcastError } from '@/lib/whatsapp/broadcast-core';
 
 export async function POST(request: Request) {
   try {
@@ -74,17 +65,15 @@ export async function POST(request: Request) {
       })),
     });
 
-    // Fan out after the response is sent. Uses the same service-role
-    // client — no request-scoped auth needed for the Meta calls or
-    // the account-scoped row updates.
-    after(() => deliverBroadcast(ctx.supabase, plan));
+    // Start sending after the response is sent.
+    after(() => sendBroadcastNow(plan.broadcastId));
 
     return ok(
       {
         broadcast_id: plan.broadcastId,
         status: 'sending',
-        total_recipients: plan.planned.length,
-        accepted: plan.planned.length,
+        total_recipients: plan.accepted,
+        accepted: plan.accepted,
         rejected: plan.rejected,
       },
       202

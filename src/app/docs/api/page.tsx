@@ -461,9 +461,11 @@ export default function ApiReferencePage() {
             <CodeTabs tabs={VERIFY_TABS} />
             <div className="prose" style={{ marginTop: 18 }}>
               <ul className="bullets">
-                <li>Reply with any 2xx quickly. Each event is sent once with a short timeout, and redirects aren&apos;t followed.</li>
+                <li>Reply with any 2xx within 5 seconds. Redirects aren&apos;t followed.</li>
+                <li>If a delivery fails we send it again after 1 min, 5 min, 30 min, 2 h and 6 h (same body, same <Ic>id</Ic>).</li>
+                <li>See what was sent and why something failed with <Ic>GET /api/v1/webhooks/{"{id}"}/deliveries</Ic> (last 14 days).</li>
                 <li>Events can repeat or arrive out of order, so dedupe on <Ic>id</Ic>.</li>
-                <li>After repeated failures an endpoint is switched off. Turn it back on with <Ic>PATCH</Ic> and <Ic>{`{ "is_active": true }`}</Ic>.</li>
+                <li>After 15 deliveries in a row fail every retry, an endpoint is switched off. Turn it back on with <Ic>PATCH</Ic> and <Ic>{`{ "is_active": true }`}</Ic>.</li>
                 <li>The URL must be public HTTPS. Private and local addresses are refused.</li>
               </ul>
             </div>

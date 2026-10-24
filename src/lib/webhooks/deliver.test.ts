@@ -11,7 +11,12 @@ vi.mock('@/lib/webhooks/ssrf', () => ({
   isDeliverableUrl: vi.fn(async () => true),
 }));
 
-import { dispatchWebhookEvent, MAX_CONSECUTIVE_FAILURES } from './deliver';
+import {
+  dispatchWebhookEvent,
+  MAX_ATTEMPTS,
+  MAX_CONSECUTIVE_FAILURES,
+  nextAttemptAt,
+} from './deliver';
 import { isDeliverableUrl } from './ssrf';
 
 interface Row {
@@ -21,10 +26,11 @@ interface Row {
 }
 interface Calls {
   updates: { id: string; payload: Record<string, unknown> }[];
+  inserts: Record<string, unknown>[];
   rpcs: { name: string; args: Record<string, unknown> }[];
 }
 
-function makeDb(rows: Row[], calls: Calls) {
+function makeDb(rows: Row[], calls: Calls, opts: { logMissing?: boolean } = {}) {
   const from = () => {
     let mode: 'select' | 'update' = 'select';
     let payload: Record<string, unknown> = {};
@@ -34,6 +40,13 @@ function makeDb(rows: Row[], calls: Calls) {
       eq: (col: string, val: string) => {
         if (col === 'id') id = val;
         return b;
+      },
+      insert: (p: Record<string, unknown>) => {
+        calls.inserts.push(p);
+        return Promise.resolve({
+          data: null,
+          error: opts.logMissing ? { message: 'relation "webhook_deliveries" does not exist' } : null,
+        });
       },
       update: (p: Record<string, unknown>) => {
         mode = 'update';
@@ -55,7 +68,7 @@ function makeDb(rows: Row[], calls: Calls) {
   return { from, rpc } as unknown as SupabaseClient;
 }
 
-const emptyCalls = (): Calls => ({ updates: [], rpcs: [] });
+const emptyCalls = (): Calls => ({ updates: [], inserts: [], rpcs: [] });
 
 beforeEach(() => {
   vi.mocked(isDeliverableUrl).mockResolvedValue(true);
@@ -85,10 +98,17 @@ describe('dispatchWebhookEvent', () => {
     // Payload carries a dedupe id.
     expect(JSON.parse(opts.body).id).toMatch(/[0-9a-f-]{36}/);
     expect(calls.updates[0]).toMatchObject({ id: 'a', payload: { failure_count: 0 } });
+    expect(calls.inserts[0]).toMatchObject({
+      endpoint_id: 'a',
+      event: 'message.received',
+      status: 'delivered',
+      attempts: 1,
+      last_status_code: 200,
+    });
     expect(calls.rpcs).toHaveLength(0);
   });
 
-  it('records an atomic failure (RPC) when the endpoint errors', async () => {
+  it('queues a retry (not a failure) when the endpoint errors', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 } as Response));
     const calls = emptyCalls();
 
@@ -99,11 +119,32 @@ describe('dispatchWebhookEvent', () => {
       {}
     );
 
+    expect(calls.inserts[0]).toMatchObject({
+      endpoint_id: 'b',
+      status: 'pending',
+      attempts: 1,
+      last_status_code: 500,
+    });
+    expect(typeof calls.inserts[0].next_attempt_at).toBe('string');
+    expect(calls.rpcs).toHaveLength(0);
+    expect(calls.updates).toHaveLength(0);
+  });
+
+  it('records an atomic failure (RPC) when there is no delivery log to retry from', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 } as Response));
+    const calls = emptyCalls();
+
+    await dispatchWebhookEvent(
+      makeDb([{ id: 'b', url: 'https://b.test/hook', secret: 's2' }], calls, { logMissing: true }),
+      'acct-1',
+      'message.received',
+      {}
+    );
+
     expect(calls.rpcs[0]).toEqual({
       name: 'record_webhook_failure',
       args: { endpoint_id: 'b', max_failures: MAX_CONSECUTIVE_FAILURES },
     });
-    expect(calls.updates).toHaveLength(0);
   });
 
   it('blocks a non-public target (SSRF guard) without fetching', async () => {
@@ -120,6 +161,8 @@ describe('dispatchWebhookEvent', () => {
     );
 
     expect(fetchMock).not.toHaveBeenCalled();
+    // Retrying can't help: failed for good straight away.
+    expect(calls.inserts[0]).toMatchObject({ status: 'failed', next_attempt_at: null });
     expect(calls.rpcs[0].name).toBe('record_webhook_failure');
   });
 
@@ -131,5 +174,15 @@ describe('dispatchWebhookEvent', () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(calls.rpcs).toHaveLength(0);
     expect(calls.updates).toHaveLength(0);
+  });
+});
+
+describe('nextAttemptAt', () => {
+  it('backs off and gives up after the last try', () => {
+    const now = 1_000_000;
+    expect(nextAttemptAt(1, now)).toBe(new Date(now + 60_000).toISOString());
+    expect(nextAttemptAt(2, now)).toBe(new Date(now + 5 * 60_000).toISOString());
+    expect(nextAttemptAt(MAX_ATTEMPTS - 1, now)).not.toBeNull();
+    expect(nextAttemptAt(MAX_ATTEMPTS, now)).toBeNull();
   });
 });

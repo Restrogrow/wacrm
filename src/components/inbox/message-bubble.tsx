@@ -20,6 +20,8 @@ import { format } from "date-fns";
 import { ReplyQuote } from "./reply-quote";
 import { MessageReactions } from "./message-reactions";
 import { VoiceNoteAi } from "./voice-note-ai";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { describeSendFailure } from "@/lib/whatsapp/send-errors";
 
 interface MessageBubbleProps {
   message: Message;
@@ -41,7 +43,15 @@ function isWebUrl(url: string): boolean {
   return isHttpUrl(url) || /^\/api\/whatsapp\/media\/\d+$/.test(url);
 }
 
-function StatusIcon({ status }: { status: Message["status"] }) {
+function StatusIcon({
+  status,
+  errorCode,
+  errorDetail,
+}: {
+  status: Message["status"];
+  errorCode?: number | null;
+  errorDetail?: string | null;
+}) {
   switch (status) {
     case "sending":
       return <Clock className="h-3 w-3 text-muted-foreground" />;
@@ -51,8 +61,27 @@ function StatusIcon({ status }: { status: Message["status"] }) {
       return <CheckCheck className="h-3 w-3 text-muted-foreground" />;
     case "read":
       return <CheckCheck className="h-3 w-3 text-blue-400" />;
-    case "failed":
-      return <XCircle className="h-3 w-3 text-red-400" />;
+    case "failed": {
+      const reason = describeSendFailure(errorCode, errorDetail);
+      return (
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                aria-label={`Not delivered: ${reason}`}
+                className="inline-flex cursor-help rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+              />
+            }
+          >
+            <XCircle className="h-3 w-3 text-red-400" />
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs text-left">
+            <span className="font-medium">Not delivered.</span> {reason}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
     default:
       return null;
   }
@@ -432,7 +461,13 @@ export function MessageBubble({
               · {senderLabel}
             </span>
           )}
-          {isAgent && <StatusIcon status={message.status} />}
+          {isAgent && (
+            <StatusIcon
+              status={message.status}
+              errorCode={message.error_code}
+              errorDetail={message.error_detail}
+            />
+          )}
         </div>
       </div>
       {reactions && reactions.length > 0 && onToggleReaction && (
