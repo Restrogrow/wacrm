@@ -85,7 +85,7 @@ report anything that looks wrong.
   Invite user, Change email, Reauthentication). Also copy each subject line.
 - [ ] **7. Email deliverability.** Confirm SPF, DKIM and DMARC for `repeatgrow.com` in Hostinger DNS (Google Workspace →
   Admin console → Gmail → Authenticate email). Without them, mail may go to spam.
-- [ ] **8. Check the cron jobs exist on Hostinger** (see [Crons](#crons-background-jobs)) and that
+- [x] **8. Check the cron jobs exist on Hostinger** (done 26 Oct 2026: both run every minute; /api/health jobs ok) (see [Crons](#crons-background-jobs)) and that
   `AUTOMATION_CRON_SECRET` is set. Open `/admin/system`: every job (now 14, including `sla-alerts`,
   `scheduled-messages`, `journeys`, `ai-analysis`, `calcom-reminders`) should say OK.
 - [ ] **9. Delete the plain-text demo passwords. NOT DONE: both files were still there on 22 Oct 2026.** The demo
