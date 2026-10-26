@@ -988,26 +988,10 @@ export async function markMessageRead(args: MarkMessageReadArgs): Promise<void> 
 // limits BEFORE the network call so the failure mode is a
 // developer-facing error rather than a customer-facing one.
 
-/**
- * Meta limits for interactive messages, hard-coded so violations
- * fail at build/save time rather than as a 400 from the Meta API
- * mid-conversation. See:
- *   https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive-reply-buttons-messages
- *   https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive-list-messages
- */
-export const INTERACTIVE_LIMITS = {
-  maxButtons: 3,
-  buttonTitleMaxLength: 20,
-  maxListSections: 10,
-  maxListRowsTotal: 10,
-  listRowTitleMaxLength: 24,
-  listRowDescriptionMaxLength: 72,
-  bodyMaxLength: 1024,
-  footerMaxLength: 60,
-  headerTextMaxLength: 60,
-  buttonIdMaxLength: 256,
-  listRowIdMaxLength: 200,
-} as const
+// Kept in its own module so client code (the flow editor) can import
+// the limits without bundling this server-only file.
+import { INTERACTIVE_LIMITS } from './interactive-limits'
+export { INTERACTIVE_LIMITS }
 
 export interface InteractiveButton {
   /** Stable id sent back in the webhook when tapped (≤ 256 chars). */
