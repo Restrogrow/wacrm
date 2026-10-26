@@ -977,6 +977,15 @@ export const LANDING_CSS = `
   transition: border-color .15s ease, color .15s ease;
 }
 .lp-page .footer-social a:hover{ color: #fff; border-color: rgba(255,255,255,0.6); }
+.lp-page .play-badge{
+  display: inline-flex; align-items: center; gap: 10px; margin-top: 18px;
+  padding: 7px 18px 7px 12px; border-radius: 10px;
+  background: #000; color: #fff; border: 1px solid rgba(255,255,255,0.35);
+  font-size: 18px; font-weight: 600; line-height: 1.1; letter-spacing: -0.01em;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.lp-page .play-badge:hover{ border-color: #fff; transform: translateY(-1px); }
+.lp-page .play-badge small{ display: block; font-size: 10px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
 .lp-page .footer-col h4{
   font-family: var(--font-mono);
   font-size: 11.5px;

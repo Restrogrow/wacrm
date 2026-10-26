@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { RESTROGROW_LABEL, RESTROGROW_TITLE, RESTROGROW_URL } from "@/lib/landing-chrome";
+import {
+  PLAY_LOGO_SVG,
+  PLAY_STORE_URL,
+  RESTROGROW_LABEL,
+  RESTROGROW_TITLE,
+  RESTROGROW_URL,
+} from "@/lib/landing-chrome";
 
 // Compact footer of the marketing site's main pages, for the pages that
 // don't use the landing-page chrome (blog, comparison and industry pages).
@@ -17,6 +23,7 @@ const GROUPS: { heading: string; links: SiteLink[] }[] = [
       { href: "/pricing", label: "Pricing" },
       { href: "/demo", label: "Book a demo" },
       { href: "/docs", label: "Help Center" },
+      { href: PLAY_STORE_URL, label: "Android app", external: true },
     ],
   },
   {
@@ -81,9 +88,26 @@ export function SiteLinks() {
           </div>
         ))}
       </div>
-      <p className="mt-10 text-xs text-muted-foreground">
-        &copy; 2026 Repeat Grow. WhatsApp CRM on the official WhatsApp Business API.
-      </p>
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
+        <p className="text-xs text-muted-foreground">
+          &copy; 2026 Repeat Grow. WhatsApp CRM on the official WhatsApp Business API.
+        </p>
+        <a
+          href={PLAY_STORE_URL}
+          target="_blank"
+          rel="noopener"
+          aria-label="Get Repeat Grow on Google Play"
+          className="inline-flex items-center gap-2.5 rounded-lg border border-white/30 bg-black py-1.5 pr-4 pl-3 text-white transition hover:-translate-y-px"
+        >
+          <span dangerouslySetInnerHTML={{ __html: PLAY_LOGO_SVG }} className="flex" />
+          <span className="text-base leading-tight font-semibold">
+            <small className="block text-[10px] font-medium tracking-wider uppercase">
+              Get it on
+            </small>
+            Google Play
+          </span>
+        </a>
+      </div>
     </nav>
   );
 }

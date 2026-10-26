@@ -49,6 +49,13 @@ export const RESTROGROW_LABEL = "RestroGrow";
 // Tooltip, so visitors know what it is (carries little SEO weight).
 export const RESTROGROW_TITLE = "Our restaurant software";
 
+// The Android app's Play Store listing, linked from both footers.
+export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.repeatgrow.app";
+
+// Google Play logo, in the four official colours. Shared by both footers'
+// "Get it on Google Play" badge.
+export const PLAY_LOGO_SVG = `<svg viewBox="0 0 28 32" width="22" height="25" aria-hidden="true"><path fill="#00A0FF" d="M1 1l15 15L1 31c-.6-.3-1-1-1-1.8V2.8C0 2 .4 1.3 1 1z"/><path fill="#00F076" d="M1 1c.6-.3 1.4-.3 2.1.1L20.6 11 16 16z"/><path fill="#FF3A44" d="M16 16l4.6 5L3.1 30.9c-.7.4-1.5.4-2.1.1z"/><path fill="#FFD500" d="M20.6 11l5.3 3c1.4.8 1.4 2.4 0 3.2l-5.3 3.8L16 16z"/></svg>`;
+
 export const LANDING_FOOTER_HTML = `
 <footer>
   <div class="container">
@@ -69,6 +76,10 @@ export const LANDING_FOOTER_HTML = `
             Review us on Trustpilot
           </a>
         </div>
+        <a href="${PLAY_STORE_URL}" target="_blank" rel="noopener" class="play-badge" aria-label="Get Repeat Grow on Google Play">
+          ${PLAY_LOGO_SVG}
+          <span><small>Get it on</small>Google Play</span>
+        </a>
       </div>
       <div class="footer-col">
         <h4>Product</h4>
@@ -78,6 +89,7 @@ export const LANDING_FOOTER_HTML = `
           <li><a href="/#why-us">Why Us</a></li>
           <li><a href="/pricing">Pricing</a></li>
           <li><a href="/demo">Book a demo</a></li>
+          <li><a href="${PLAY_STORE_URL}" target="_blank" rel="noopener">Android app</a></li>
           <li><a href="/login">Login</a></li>
         </ul>
       </div>
@@ -125,6 +137,7 @@ export const LANDING_FOOTER_HTML = `
       <p>&copy; 2026 Repeat Grow. All rights reserved.</p>
       <div class="footer-badges">
         <span class="pill">Official WhatsApp Business API</span>
+        <span class="pill">Now on Google Play</span>
       </div>
     </div>
   </div>
