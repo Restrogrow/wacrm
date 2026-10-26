@@ -36,6 +36,10 @@ Shiprocket, Cal.com, inbound webhooks and alerts, website widget, short links an
 Nothing new has been tried against the real services yet, so click through the new screens after the deploy and
 report anything that looks wrong.
 
+- [ ] **0b. Switch Hostinger to Node.js 22.** hPanel → repeatgrow.com → Node.js → version **22** → redeploy. The
+  build runs on Node 20, but `@supabase/supabase-js` 2.117+ needs Node 22 or newer (`EBADENGINE` warnings in every
+  build log since Oct 2026). It works today; a later Supabase update could break auth or database calls on Node 20.
+  After switching, check the build log and `/api/health`.
 - [ ] **1. Set the environment variables in Hostinger hPanel, then redeploy.**
   - Demo login: `DEMO_LOGIN_EMAIL` (the demo workspace **admin**, e.g. `support.repeatgrow+anjali@gmail.com`) and
     `DEMO_LOGIN_PASSWORD` (that account's current password, which you set in Supabase; the old `.env.demo-login` file was deleted). Without them, typing

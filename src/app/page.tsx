@@ -8,6 +8,7 @@ import {
   LANDING_NAV_HTML,
   LANDING_FOOTER_HTML,
   LANDING_WHATSAPP_FLOAT_HTML,
+  PLAY_STORE_URL,
 } from "@/lib/landing-chrome";
 import { BLOG_POSTS } from "@/lib/blog";
 import { PLANS, PLAN_INFO, PLAN_LIMITS, formatInr, type PaidPlan } from "@/lib/billing/plans";
@@ -91,6 +92,17 @@ const STRUCTURED_DATA = {
         highPrice: "3999",
         offerCount: "3",
       },
+      publisher: { "@id": SITE_URL },
+    },
+    // The Android app, so Google can tie the Play listing to this site.
+    {
+      "@type": "MobileApplication",
+      name: "Repeat Grow",
+      url: PLAY_STORE_URL,
+      installUrl: PLAY_STORE_URL,
+      operatingSystem: "Android",
+      applicationCategory: "BusinessApplication",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
       publisher: { "@id": SITE_URL },
     },
     buildFAQNode(HOME_FAQS),
