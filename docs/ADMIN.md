@@ -99,7 +99,7 @@ report anything that looks wrong.
   `DEMO_LOGIN_PASSWORD` to the demo **viewer** (Kabir Khan) for a mostly read-only demo, then redeploy. (b) Supabase
   → Authentication → turn on **Secure password change**. Decide (a) first: as a viewer the visitor can't edit
   sample data either.
-- [ ] **9c. Run migration `082_shopify_pending_installs.sql`** on production **before** deploying the Shopify install
+- [x] **9c. Run migration `082_shopify_pending_installs.sql`** (done: table confirmed on production 26 Oct 2026) on production **before** deploying the Shopify install
   fix (Supabase SQL Editor or `node scripts/run-migration.mjs`). Without it, an App Store install by a merchant who
   isn't signed in fails with "Could not finish connecting".
 - [ ] **9b. Enforce the Content Security Policy.** It only reports today (`Content-Security-Policy-Report-Only` in
