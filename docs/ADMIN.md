@@ -23,7 +23,7 @@ Last reviewed: **17 Oct 2026** (after the blog, security, catalog, reports, jour
 
 Updated 23 Oct 2026. Tick them off and delete the line once done.
 
-- [ ] **0. Give the WhatsApp system user access to the catalog.** Fetch / Sync with Meta fails until then. Meta
+- [x] **0. Give the WhatsApp system user access to the catalog.** (done and tested by the owner 26 Oct 2026) Fetch / Sync with Meta fails until then. Meta
   Business Settings → System users → **sujay** → Assign assets → Catalogues → **Catalogue_Products** → Manage
   catalogue (full control) → Save. If the error stays, generate a new token for sujay with `catalog_management`
   (plus `whatsapp_business_management`, `whatsapp_business_messaging`) and save it in Settings → WhatsApp. Then
