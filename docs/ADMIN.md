@@ -49,7 +49,7 @@ report anything that looks wrong.
   `scripts/run-migration.mjs`, so resetting it does not affect the site. The service-role key is used by the site:
   after rotating it, update `SUPABASE_SERVICE_ROLE_KEY` in Hostinger **and** `wacrm/.env.local` at the same time, or
   server features fail until you do. Never paste either into a chat again; keep `SUPABASE_DB_URL` in `.env.local` only.
-- [ ] **3. Captcha (Cloudflare Turnstile).** **Built and ready; only switching it on is left.** The Turnstile widget
+- [x] **3. Captcha (Cloudflare Turnstile).** **ON** (site key confirmed in the live login page 26 Oct 2026). The Turnstile widget
   "Repeat Grow" exists in the Cloudflare account (hostnames `repeatgrow.com`, `www.repeatgrow.com`, `localhost`, mode
   Managed). The signup, login, forgot-password, Settings password form and the `demo` / `demo` login already send
   the captcha token. Steps: (a) add the **public** variable `NEXT_PUBLIC_TURNSTILE_SITE_KEY` on Hostinger (it is in
