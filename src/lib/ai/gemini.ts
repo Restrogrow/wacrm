@@ -91,6 +91,28 @@ export interface AiChatOptions {
    * default if the model rejects the setting.
    */
   fast?: boolean;
+  /** Log tokens for /admin/ai-usage under this feature (and account, if known). */
+  track?: { feature: string; accountId?: string | null };
+}
+
+type UsageMetadata = {
+  promptTokenCount?: number;
+  candidatesTokenCount?: number;
+  thoughtsTokenCount?: number;
+  promptTokensDetails?: { modality?: string; tokenCount?: number }[];
+};
+
+/** Gemini usageMetadata → our token columns. */
+export function usageFromMetadata(u: UsageMetadata | undefined) {
+  const byModality = (m: string) =>
+    (u?.promptTokensDetails ?? []).filter((d) => d.modality === m).reduce((n, d) => n + (d.tokenCount ?? 0), 0);
+  return {
+    input_tokens: u?.promptTokenCount ?? 0,
+    input_audio_tokens: byModality("AUDIO"),
+    input_image_tokens: byModality("IMAGE"),
+    output_tokens: u?.candidatesTokenCount ?? 0,
+    thinking_tokens: u?.thoughtsTokenCount ?? 0,
+  };
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -128,6 +150,7 @@ async function aiChatOnce(opts: AiChatOptions): Promise<string> {
   }
   let res: Response;
   let text: string;
+  const started = Date.now();
   try {
     res = await fetch(`${GEMINI_BASE}/${encodeURIComponent(opts.model)}:generateContent`, {
       method: "POST",
@@ -174,6 +197,14 @@ async function aiChatOnce(opts: AiChatOptions): Promise<string> {
     throw new Error(`AI request failed (${res.status}): ${msg}`);
   }
   const data = JSON.parse(text);
+  if (opts.track) {
+    const usage = { ...usageFromMetadata(data?.usageMetadata), latency_ms: Date.now() - started };
+    const track = opts.track;
+    // Fire and forget; the server-only recorder is loaded lazily.
+    void import("./usage")
+      .then((m) => m.recordAiUsage({ accountId: track.accountId ?? null, feature: track.feature, model: opts.model, ...usage }))
+      .catch(() => {});
+  }
   const blocked = data?.promptFeedback?.blockReason;
   if (blocked) throw new Error(`AI declined to answer (${blocked}).`);
   const parts: { text?: string; thought?: boolean }[] = data?.candidates?.[0]?.content?.parts ?? [];

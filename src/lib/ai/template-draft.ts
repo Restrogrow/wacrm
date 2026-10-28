@@ -180,7 +180,7 @@ export async function draftTemplateWithAi(
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     let raw: string;
     try {
-      raw = await chat({ apiKey, model: aiModel(opts.model), messages, temperature: 0.3, maxTokens: 2500 });
+      raw = await chat({ apiKey, model: aiModel(opts.model), track: { feature: 'template_draft' }, messages, temperature: 0.3, maxTokens: 2500 });
     } catch (err) {
       return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }

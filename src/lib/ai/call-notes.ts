@@ -58,6 +58,7 @@ export async function summarizeCallAudio(
   const raw = await aiChat({
     apiKey,
     model: aiModel(),
+    track: { feature: 'call_notes' },
     temperature: 0.2,
     maxTokens: 2000,
     retries: 1,

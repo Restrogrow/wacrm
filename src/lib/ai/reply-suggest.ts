@@ -86,6 +86,7 @@ export async function suggestReplies(lines: HistoryLine[], contactName: string, 
   const obj = await chatJson({
     apiKey: key,
     model: aiModel(),
+    track: { feature: 'suggest' },
     temperature: 0.6,
     maxTokens: 700,
     retries: 1,

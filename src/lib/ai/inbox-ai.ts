@@ -72,6 +72,7 @@ export async function translateText(text: string, target: TranslateLanguage): Pr
   const obj = await chatJson({
     apiKey: requireKey(),
     model: aiModel(),
+    track: { feature: 'translate' },
     temperature: 0.2,
     maxTokens: 2000,
     retries: 1,
@@ -140,6 +141,7 @@ export async function summarizeConversation(
   const obj = await chatJson({
     apiKey: requireKey(),
     model: aiModel(),
+    track: { feature: 'summary' },
     temperature: 0.2,
     maxTokens: 1500,
     retries: 1,

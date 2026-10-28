@@ -106,6 +106,7 @@ export async function generateAssistantReply(
     const raw = await (opts.chat ?? aiChat)({
       apiKey,
       model: aiModel(opts.model),
+      track: { feature: 'app_assistant' },
       messages,
       temperature: 0.3,
       maxTokens: 700,

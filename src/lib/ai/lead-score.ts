@@ -66,6 +66,7 @@ export async function analyzeLines(lines: HistoryLine[]): Promise<LeadAnalysis> 
   const obj = await chatJson({
     apiKey: key,
     model: aiModel(),
+    track: { feature: 'lead_score' },
     temperature: 0.1,
     maxTokens: 300,
     retries: 1,

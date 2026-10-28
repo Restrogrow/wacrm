@@ -229,7 +229,7 @@ export function normalizeGenerated(
 }
 
 const callAi = (apiKey: string, model: string, messages: ChatMessage[]) =>
-  aiChat({ apiKey, model, messages });
+  aiChat({ apiKey, model, messages, track: { feature: 'flow_generate' } });
 
 type AiOpts = { apiKey?: string; model?: string };
 

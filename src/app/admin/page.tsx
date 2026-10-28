@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Activity, FileText, RefreshCw, Mail, ShieldCheck } from 'lucide-react';
+import { Activity, FileText, RefreshCw, Mail, ShieldCheck, Sparkles } from 'lucide-react';
 
 import { loadAdminDashboard } from '@/lib/admin/dashboard';
 import { formatDelta } from '@/lib/admin/time';
@@ -82,6 +82,14 @@ export default async function PlatformAdminPage() {
           >
             <Activity className="size-3.5" />
             System health
+          </Link>
+          <Link
+            href="/admin/ai-usage"
+            prefetch={false}
+            className="border-border text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm"
+          >
+            <Sparkles className="size-3.5" />
+            AI usage
           </Link>
           <Link
             href="/admin"

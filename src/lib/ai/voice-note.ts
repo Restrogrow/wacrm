@@ -55,6 +55,7 @@ export async function transcribeVoiceNote(
   const obj = await chatJson({
     apiKey,
     model: aiModel(),
+    track: { feature: 'voice_note' },
     temperature: 0.1,
     maxTokens: 2500,
     retries: 1,
