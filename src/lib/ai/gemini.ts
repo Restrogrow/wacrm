@@ -85,6 +85,12 @@ export interface AiChatOptions {
    * hang a spinner or hold a webhook until the platform kills it.
    */
   timeoutMs?: number;
+  /**
+   * Answer quickly: on Gemini 3+ ask for low thinking (much faster first
+   * reply, fine for short chat answers). Falls back to the model's
+   * default if the model rejects the setting.
+   */
+  fast?: boolean;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -112,6 +118,7 @@ async function aiChatOnce(opts: AiChatOptions): Promise<string> {
   const isGemini25 = opts.model.startsWith("gemini-2.5");
   const thinking = isGemini25 ? 512 : 0;
   const thinkingRoom = isGemini25 ? thinking : /^gemini-[3-9]/.test(opts.model) ? 2048 : 0;
+  const thinkingLevel = opts.fast && !isGemini25 && /^gemini-[3-9]/.test(opts.model) ? "low" : null;
   const request = toGeminiRequest(opts.messages);
   if (opts.inlineData) {
     // Attach the file to the last user turn, before its text.
@@ -137,6 +144,7 @@ async function aiChatOnce(opts: AiChatOptions): Promise<string> {
             ? { responseMimeType: "application/json", responseSchema: opts.responseSchema }
             : {}),
           ...(thinking ? { thinkingConfig: { thinkingBudget: thinking } } : {}),
+          ...(thinkingLevel ? { thinkingConfig: { thinkingLevel } } : {}),
         },
       }),
       signal: AbortSignal.timeout(opts.timeoutMs ?? 60_000),
@@ -159,6 +167,10 @@ async function aiChatOnce(opts: AiChatOptions): Promise<string> {
       throw new AiRateLimitError(`AI rate limit reached — wait a minute and try again. (${msg})`);
     }
     if (res.status >= 500) throw new AiTransientError(`AI request failed (${res.status}): ${msg}`);
+    // Model doesn't accept the thinking level: ask again with its defaults.
+    if (thinkingLevel && res.status === 400 && /thinking/i.test(msg)) {
+      return aiChatOnce({ ...opts, fast: false });
+    }
     throw new Error(`AI request failed (${res.status}): ${msg}`);
   }
   const data = JSON.parse(text);

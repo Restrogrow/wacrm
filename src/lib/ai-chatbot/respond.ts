@@ -22,7 +22,7 @@ import {
  * waiting lets the bot answer them together once, and lets an
  * automation or a teammate who answered meanwhile take precedence.
  */
-export const REPLY_DEBOUNCE_MS = 4000;
+export const REPLY_DEBOUNCE_MS = 1500;
 
 type LatestMessage = { id: string; sender_type: string } | null;
 

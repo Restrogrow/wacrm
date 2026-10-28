@@ -320,6 +320,7 @@ export async function generateChatbotReply(
       // One retry on rate limits / 5xx so a blip doesn't leave the
       // customer unanswered.
       retries: 1,
+      fast: true,
     });
     return { ok: true, ...parseChatbotReply(raw) };
   } catch (err) {

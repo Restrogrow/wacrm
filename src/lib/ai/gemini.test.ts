@@ -74,6 +74,26 @@ describe("aiChat", () => {
     expect(body.generationConfig.thinkingConfig).toBeUndefined();
   });
 
+  it("asks for low thinking in fast mode, and retries with defaults if refused", async () => {
+    const ok = { candidates: [{ content: { parts: [{ text: "ok" }] }, finishReason: "STOP" }] };
+    let fetchFn = mockFetch(200, ok);
+    await aiChat({ apiKey: "k", model: "gemini-3.8-flash", messages: [{ role: "user", content: "hi" }], fast: true });
+    let body = JSON.parse((fetchFn.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
+    expect(body.generationConfig.thinkingConfig).toEqual({ thinkingLevel: "low" });
+
+    const responses = [
+      new Response(JSON.stringify({ error: { message: "thinking_level is not supported" } }), { status: 400 }),
+      new Response(JSON.stringify(ok), { status: 200 }),
+    ];
+    fetchFn = vi.fn(async () => responses.shift()!);
+    vi.stubGlobal("fetch", fetchFn);
+    const out = await aiChat({ apiKey: "k", model: "gemini-3.8-flash", messages: [{ role: "user", content: "hi" }], fast: true });
+    expect(out).toBe("ok");
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    body = JSON.parse((fetchFn.mock.calls[1] as unknown as [string, RequestInit])[1].body as string);
+    expect(body.generationConfig.thinkingConfig).toBeUndefined();
+  });
+
   it("skips thought parts", async () => {
     mockFetch(200, {
       candidates: [{ content: { parts: [{ text: "thinking…", thought: true }, { text: "Answer" }] } }],
