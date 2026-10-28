@@ -18,6 +18,7 @@ interface Row {
   intent: Intent;
   sentiment: Sentiment;
   lead_score: number;
+  reason: string | null;
 }
 
 let rows: ReadonlyMap<string, Row> = new Map();
@@ -29,21 +30,26 @@ async function refresh() {
   if (loading) return;
   loading = true;
   try {
-    const { data, error } = await createClient()
-      .from("conversation_ai")
-      .select("conversation_id, intent, sentiment, lead_score")
-      .order("analyzed_at", { ascending: false })
-      .limit(1000);
+    const query = (cols: string) =>
+      createClient()
+        .from("conversation_ai")
+        .select(cols)
+        .order("analyzed_at", { ascending: false })
+        .limit(1000);
+    let { data, error } = await query("conversation_id, intent, sentiment, lead_score, reason");
+    // Migration 088 (reason) not applied yet.
+    if (error) ({ data, error } = await query("conversation_id, intent, sentiment, lead_score"));
     // Table missing (migration not applied) or signed out: show nothing.
     const next = new Map<string, Row>(
       error
         ? []
-        : (data ?? []).map((r) => [
+        : ((data ?? []) as unknown as Array<Record<string, unknown>>).map((r) => [
             r.conversation_id as string,
             {
               intent: r.intent as Intent,
               sentiment: r.sentiment as Sentiment,
               lead_score: r.lead_score as number,
+              reason: (r.reason as string | null | undefined) ?? null,
             },
           ]),
     );
@@ -54,6 +60,7 @@ async function refresh() {
         return (
           !old ||
           old.lead_score !== v.lead_score ||
+          old.reason !== v.reason ||
           old.intent !== v.intent ||
           old.sentiment !== v.sentiment
         );
@@ -115,7 +122,7 @@ export function LeadBadge({
   const mood = row.sentiment === "negative" ? " · unhappy" : "";
   return (
     <span
-      title={`AI read: ${INTENT_LABELS[row.intent]} · mood ${row.sentiment} · lead score ${row.lead_score}/100`}
+      title={`AI read: ${INTENT_LABELS[row.intent]} · mood ${row.sentiment} · lead score ${row.lead_score}/100${row.reason ? `\nWhy: ${row.reason}` : ""}`}
       className={cn(
         "inline-flex max-w-full shrink-0 items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-medium",
         row.sentiment === "negative" && row.lead_score < 40

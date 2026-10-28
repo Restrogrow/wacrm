@@ -14,7 +14,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { aiApiKey } from './gemini'
 import { messageAsText } from './inbox-ai'
-import { analyzeLines, type LeadAnalysis } from './lead-score'
+import { ANALYSIS_HISTORY, analyzeLines, type LeadAnalysis } from './lead-score'
 import { consumeAiQuota } from './quota'
 import type { HistoryLine } from './reply-suggest'
 
@@ -41,6 +41,46 @@ export async function loadHistory(db: SupabaseClient, conversationId: string, li
     .filter((l) => l.text)
 }
 
+/**
+ * History for lead scoring: like loadHistory, but a customer voice note
+ * that was transcribed (messages.ai_transcript, migration 058) shows what
+ * was said instead of just "[audio]".
+ */
+export async function loadAnalysisHistory(db: SupabaseClient, conversationId: string): Promise<HistoryLine[]> {
+  const cols = 'sender_type, content_type, content_text, template_name, created_at'
+  let res = await db
+    .from('messages')
+    .select(`${cols}, ai_transcript`)
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: false })
+    .limit(ANALYSIS_HISTORY)
+  if (res.error) {
+    res = (await db
+      .from('messages')
+      .select(cols)
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: false })
+      .limit(ANALYSIS_HISTORY)) as typeof res
+  }
+  if (res.error || !res.data) return []
+  return (res.data as Array<Record<string, unknown>>)
+    .reverse()
+    .map((m) => {
+      const transcript = m.ai_transcript as { english?: string; transcript?: string } | null | undefined
+      const heard = transcript?.english || transcript?.transcript
+      const text =
+        m.content_type === 'audio' && heard
+          ? `[voice note] ${heard}`
+          : messageAsText(m as { content_type: string; content_text?: string | null; template_name?: string | null })
+      return {
+        from: (m.sender_type === 'customer' || m.sender_type === 'bot' ? m.sender_type : 'agent') as HistoryLine['from'],
+        text,
+        at: m.created_at as string,
+      }
+    })
+    .filter((l) => l.text)
+}
+
 export type AnalyzeOutcome =
   | { ok: true; analysis: LeadAnalysis }
   | { ok: false; reason: 'quota' | 'no_messages'; message?: string }
@@ -52,25 +92,37 @@ export async function analyzeAndStore(input: {
   lastMessageAt: string | null
 }): Promise<AnalyzeOutcome> {
   const db = supabaseAdmin()
-  const lines = await loadHistory(db, input.conversationId, 12)
+  const lines = await loadAnalysisHistory(db, input.conversationId)
   if (!lines.some((l) => l.from === 'customer')) return { ok: false, reason: 'no_messages' }
 
   const quota = await consumeAiQuota(input.accountId, 'analysis')
   if (!quota.allowed) return { ok: false, reason: 'quota', message: quota.message }
 
-  const analysis = await analyzeLines(lines)
-  const { error } = await db.from('conversation_ai').upsert(
-    {
-      conversation_id: input.conversationId,
-      account_id: input.accountId,
-      intent: analysis.intent,
-      sentiment: analysis.sentiment,
-      lead_score: analysis.lead_score,
-      analyzed_message_at: input.lastMessageAt,
-      analyzed_at: new Date().toISOString(),
-    },
-    { onConflict: 'conversation_id' },
-  )
+  // What the business sells, so "do you have X?" can be judged.
+  const { data: bot } = await db
+    .from('ai_chatbot_settings')
+    .select('knowledge_base')
+    .eq('account_id', input.accountId)
+    .maybeSingle()
+  const analysis = await analyzeLines(lines, { business: (bot?.knowledge_base as string | null | undefined) ?? '' })
+
+  const row = {
+    conversation_id: input.conversationId,
+    account_id: input.accountId,
+    intent: analysis.intent,
+    sentiment: analysis.sentiment,
+    lead_score: analysis.lead_score,
+    reason: analysis.reason ?? null,
+    analyzed_message_at: input.lastMessageAt,
+    analyzed_at: new Date().toISOString(),
+  }
+  let { error } = await db.from('conversation_ai').upsert(row, { onConflict: 'conversation_id' })
+  // Migration 088 (reason column) not applied yet: store without it.
+  if (error && /reason/.test(error.message)) {
+    const { reason: _reason, ...withoutReason } = row
+    void _reason
+    ;({ error } = await db.from('conversation_ai').upsert(withoutReason, { onConflict: 'conversation_id' }))
+  }
   if (error) throw new Error(`could not store AI score: ${error.message}`)
   return { ok: true, analysis }
 }
@@ -124,7 +176,8 @@ export async function processAiAnalysis(now = Date.now()): Promise<number> {
       const lines = await loadHistory(db, c.id, 3)
       const last = lines[lines.length - 1]
       // An agent already answered: keep the old score, just remember we looked.
-      if (last && last.from !== 'customer' && analyzedAt.has(c.id)) {
+      // (A score queued for a rescore has analyzed_message_at = NULL.)
+      if (last && last.from !== 'customer' && analyzedAt.get(c.id)) {
         await db.from('conversation_ai').update({ analyzed_message_at: c.last_message_at }).eq('conversation_id', c.id)
         continue
       }

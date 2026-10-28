@@ -10,6 +10,8 @@ export interface LeadAnalysis {
   intent: Intent
   sentiment: Sentiment
   lead_score: number
+  /** One line: why this score (migration 088). */
+  reason?: string
 }
 
 export const INTENT_LABELS: Record<Intent, string> = {
