@@ -238,7 +238,7 @@ export function ProductPickerButton({ conversationId, disabled }: { conversation
           if (!v) reset();
         }}
       >
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
+        <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Share products</DialogTitle>
             <DialogDescription>Pick products to share, send a saved collection, or turn your picks into an order.</DialogDescription>
@@ -259,7 +259,7 @@ export function ProductPickerButton({ conversationId, disabled }: { conversation
           </div>
 
           {tab === 'products' && (
-            <div className="space-y-3">
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
               <div className="relative">
                 <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                 <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or SKU" className="pl-9" />
@@ -276,7 +276,7 @@ export function ProductPickerButton({ conversationId, disabled }: { conversation
                   {q ? 'No products match.' : 'No products yet. Add some on the Catalog page, or sync them from your store.'}
                 </p>
               ) : (
-                <ul className="max-h-72 divide-y overflow-y-auto rounded-lg border">
+                <ul className="min-h-24 flex-1 divide-y overflow-y-auto rounded-lg border [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {products.map((p) => {
                     const on = selected.has(p.retailer_id);
                     const out = isOut(p);
@@ -309,14 +309,14 @@ export function ProductPickerButton({ conversationId, disabled }: { conversation
               )}
 
               {chosen.length > 0 && (
-                <div className="space-y-3 rounded-lg border p-3">
+                <div className="shrink-0 space-y-3 rounded-lg border p-3">
                   <p className="text-sm font-semibold">
                     {chosen.length} selected
                     <button type="button" onClick={reset} className="text-muted-foreground hover:text-foreground ml-2 text-xs font-normal underline">
                       clear
                     </button>
                   </p>
-                  <ul className="space-y-1.5">
+                  <ul className="max-h-24 space-y-1.5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {chosen.map((p) => (
                       <li key={p.retailer_id} className="flex items-center gap-2 text-xs">
                         <span className="min-w-0 flex-1 truncate">{p.title}</span>
@@ -353,7 +353,7 @@ export function ProductPickerButton({ conversationId, disabled }: { conversation
           )}
 
           {tab === 'collections' && (
-            <div className="space-y-3">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <Input value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Optional message to go with it" maxLength={1000} />
               {collections.length === 0 ? (
                 <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm">
