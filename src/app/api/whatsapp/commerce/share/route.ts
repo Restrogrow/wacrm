@@ -3,8 +3,9 @@
 // { conversation_id, kind: 'catalog' | 'product', retailer_id?, text? }
 // { conversation_id, kind: 'product_list', retailer_ids?: string[], collection_id?: string, text? }
 //   → interactive multi-product message (1-30 products, grouped by category).
-// Needs a catalog ID in Orders & payments and an open
-// 24-hour window. Agents and above.
+// Needs an open 24-hour window. Agents and above. Without a catalog ID
+// in Orders & payments, products go as photo + price + store link
+// messages (up to 10); sharing the whole catalog needs the ID.
 // ============================================================
 
 import { NextResponse } from 'next/server'
@@ -25,6 +26,7 @@ import {
   normaliseRetailerIds,
   type ProductListSection,
 } from '@/lib/catalog/messages'
+import { MAX_LINK_PRODUCTS, productCaption, productLinkMessage, productTextMessage, type LinkProduct } from '@/lib/catalog/link-share'
 
 /**
  * A product or list send failed: log what we sent (no token, no customer
@@ -61,7 +63,7 @@ export async function POST(request: Request) {
 
     const db = supabaseAdmin()
     const { creds, settings } = await loadCommerce(db, ctx.accountId)
-    if (!settings.catalog_id) {
+    if (!settings.catalog_id && b.kind !== 'product' && b.kind !== 'product_list') {
       return NextResponse.json({ error: 'Add your catalog ID in Orders & payments first.' }, { status: 400 })
     }
     let customer
@@ -70,6 +72,70 @@ export async function POST(request: Request) {
     } catch (err) {
       if (err instanceof CallingError) return NextResponse.json({ error: err.message }, { status: err.status })
       throw err
+    }
+
+    // No Meta catalog: send each product as a photo with name, price and store link.
+    if (!settings.catalog_id) {
+      let ids: string[]
+      if (typeof b.collection_id === 'string' && b.collection_id) {
+        const { data: items } = await db
+          .from('catalog_collection_items')
+          .select('retailer_id, position')
+          .eq('collection_id', b.collection_id)
+          .eq('account_id', ctx.accountId)
+          .order('position', { ascending: true })
+        ids = normaliseRetailerIds((items ?? []).map((i) => i.retailer_id))
+      } else {
+        ids = b.kind === 'product' ? normaliseRetailerIds([b.retailer_id]) : normaliseRetailerIds(b.retailer_ids)
+      }
+      if (!ids.length) return NextResponse.json({ error: 'Pick at least one product.' }, { status: 400 })
+      if (ids.length > MAX_LINK_PRODUCTS) {
+        return NextResponse.json(
+          { error: `Without a WhatsApp catalog you can send up to ${MAX_LINK_PRODUCTS} products at once. Add your catalog ID in Orders & payments to send more as one list.` },
+          { status: 400 },
+        )
+      }
+      const { data: rows } = await db
+        .from('products')
+        .select('retailer_id, title, price_paise, sale_price_paise, currency, image_url, product_url')
+        .eq('account_id', ctx.accountId)
+        .in('retailer_id', ids)
+      const byId = new Map((rows ?? []).map((r) => [r.retailer_id as string, r as LinkProduct]))
+      const products = ids.map((id) => byId.get(id)).filter((p): p is LinkProduct => Boolean(p))
+      if (!products.length) return NextResponse.json({ error: 'Those products are not in your product library.' }, { status: 404 })
+
+      const intro = typeof b.text === 'string' && b.text.trim() ? b.text.trim() : undefined
+      let sent = 0
+      for (const [i, p] of products.entries()) {
+        const first = i === 0 ? intro : undefined
+        let wamid: string | null
+        try {
+          wamid = await sendWhatsApp(creds, customer.phone, productLinkMessage(p, first))
+        } catch (err) {
+          // Meta could not fetch the photo (format/size): send the text, whose link still previews.
+          if (!(err instanceof WhatsAppSendError) || !p.image_url || /24-hour/.test(err.message)) {
+            if (sent) break
+            return NextResponse.json({ error: err instanceof Error ? err.message : 'Could not send.' }, { status: 400 })
+          }
+          try {
+            wamid = await sendWhatsApp(creds, customer.phone, productTextMessage(p, first))
+          } catch (err2) {
+            if (sent) break
+            return NextResponse.json({ error: err2 instanceof Error ? err2.message : 'Could not send.' }, { status: 400 })
+          }
+        }
+        await logOutgoing(db, {
+          conversationId: customer.conversationId,
+          userId: ctx.userId,
+          text: `🛍️ ${productCaption(p, first)}`,
+          wamid,
+        })
+        sent++
+      }
+      if (sent < products.length) {
+        return NextResponse.json({ error: `Sent ${sent} of ${products.length} products; the rest failed.` }, { status: 502 })
+      }
+      return NextResponse.json({ ok: true, mode: 'links', sent })
     }
 
     // Several products in one message (picked in the inbox, or a saved collection).

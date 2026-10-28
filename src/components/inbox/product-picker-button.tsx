@@ -130,12 +130,12 @@ export function ProductPickerButton({ conversationId, disabled }: { conversation
   async function share() {
     try {
       const ids = chosen.map((p) => p.retailer_id);
-      await post('/api/whatsapp/commerce/share', {
+      const res = await post('/api/whatsapp/commerce/share', {
         conversation_id: conversationId,
         ...(ids.length === 1 ? { kind: 'product', retailer_id: ids[0] } : { kind: 'product_list', retailer_ids: ids }),
         text: message.trim() || undefined,
       });
-      toast.success(ids.length === 1 ? 'Product sent' : 'Product list sent');
+      toast.success(ids.length === 1 ? 'Product sent' : res?.mode === 'links' ? `${ids.length} products sent` : 'Product list sent');
       setOpen(false);
       reset();
     } catch (err) {
