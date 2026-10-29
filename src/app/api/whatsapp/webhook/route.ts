@@ -364,6 +364,17 @@ async function processWebhook(body: { entry?: WhatsAppWebhookEntry[] }) {
 
       const value = change.value
 
+      // One line per delivery (counts only, no message content), so the
+      // runtime log shows whether Meta delivers a number's messages at all.
+      console.log(
+        '[webhook] received',
+        change.field,
+        value?.metadata?.phone_number_id ?? '-',
+        `messages=${value?.messages?.length ?? 0}`,
+        `statuses=${value?.statuses?.length ?? 0}`,
+        `contacts=${value?.contacts?.length ?? 0}`,
+      )
+
       // Handle status updates
       if (value.statuses) {
         for (const status of value.statuses) {
@@ -380,8 +391,11 @@ async function processWebhook(body: { entry?: WhatsAppWebhookEntry[] }) {
         }
       }
 
-      // Handle incoming messages
-      if (!value.messages || !value.contacts) continue
+      // Handle incoming messages. A delivery without the `contacts` block
+      // used to be skipped silently; the sender is on the message itself
+      // (from / from_user_id), so keep it and fall back to that.
+      if (!value.messages?.length) continue
+      const contacts = value.contacts ?? []
 
       const phoneNumberId = value.metadata.phone_number_id
 
@@ -426,14 +440,15 @@ async function processWebhook(body: { entry?: WhatsAppWebhookEntry[] }) {
 
       for (let i = 0; i < value.messages.length; i++) {
         const message = value.messages[i]
-        const contact =
-          value.contacts.find(
+        const contact: WebhookContact =
+          contacts.find(
             (c) =>
               (message.from_user_id && c.user_id === message.from_user_id) ||
               (message.from && c.wa_id === message.from)
           ) ||
-          value.contacts[i] ||
-          value.contacts[0]
+          contacts[i] ||
+          contacts[0] ||
+          { wa_id: message.from, user_id: message.from_user_id }
 
         await processMessage(
           message,
