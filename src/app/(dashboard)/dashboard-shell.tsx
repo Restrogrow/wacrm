@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { Sidebar } from "@/components/layout/sidebar";
-import { HelpWidget } from "@/components/assistant/help-widget";
+import { HelpWidget, helpWidgetCoversContent } from "@/components/assistant/help-widget";
+import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { Header } from "@/components/layout/header";
 import { PresenceHeartbeat } from "@/components/presence/presence-heartbeat";
@@ -20,6 +21,7 @@ import { NumberHealthBanner } from "@/components/settings/number-health-banner";
 function DashboardShellInner({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   // Sidebar drawer state — only used on mobile. On lg+ the sidebar is
   // always visible and this stays at `false` (ignored by the component).
@@ -100,7 +102,9 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
           onOpenPalette={() => setPaletteOpen(true)}
         />
         {/* Thinner horizontal padding on mobile so cards have room to breathe. */}
-        <main className="flex-1 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:var(--border)_transparent] bg-muted/30 p-4 sm:p-6 lg:p-8">{children}</main>
+        {/* Extra bottom room where the help bubble floats, so a page's
+            last buttons can scroll out from under it. */}
+        <main className={cn("flex-1 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:var(--border)_transparent] bg-muted/30 p-4 sm:p-6 lg:p-8", helpWidgetCoversContent(pathname) && "pb-24 sm:pb-24 lg:pb-24")}>{children}</main>
       </div>
     </div>
     </CallProvider>

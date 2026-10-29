@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { Bell, HelpCircle, LogOut, Menu, Search, Settings as SettingsIcon, User } from "lucide-react";
+import { Bell, HelpCircle, LogOut, Menu, MessageCircle, Search, Settings as SettingsIcon, User } from "lucide-react";
+import { showHelpWidget } from "@/components/assistant/help-widget";
 import { getPageTitle } from "./nav-config";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 import {
@@ -150,6 +151,13 @@ export function Header({ onOpenSidebar, onOpenPalette }: HeaderProps) {
           >
             <SettingsIcon className="size-4" />
             Settings
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={showHelpWidget}
+            className="text-popover-foreground focus:bg-accent focus:text-accent-foreground"
+          >
+            <MessageCircle className="size-4" />
+            Help assistant
           </DropdownMenuItem>
           <DropdownMenuSeparator className="bg-border" />
           <DropdownMenuItem

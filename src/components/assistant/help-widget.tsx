@@ -17,6 +17,10 @@ import { parseAssistantReply } from "@/lib/ai/app-assistant";
 type Turn = { role: "user" | "assistant"; content: string };
 
 const STORAGE_KEY = "repeatgrow.assistant.v1";
+// "1" when the user hid the bubble; remembered per browser.
+const HIDDEN_KEY = "repeatgrow.assistant.hidden";
+// Fired by the profile menu's "Help assistant" item to bring it back.
+const SHOW_EVENT = "repeatgrow:show-assistant";
 const MAX_TURNS = 20;
 
 const SUGGESTIONS = [
@@ -30,15 +34,59 @@ const SUGGESTIONS = [
 // their controls.
 const HIDDEN_ON = [/^\/flows\/[^/]+/, /^\/automations\/new/, /^\/automations\/[^/]+\/edit/];
 
+/**
+ * Whether the bubble sits over this page's content, so the page needs
+ * room at the bottom to scroll its last buttons clear of it. Not the
+ * builders (no bubble) or the inbox (fills the screen, lifts the bubble).
+ */
+export function helpWidgetCoversContent(pathname: string): boolean {
+  return !HIDDEN_ON.some((re) => re.test(pathname)) && !pathname.startsWith("/inbox");
+}
+
+/** Bring the hidden bubble back and open it (used by the profile menu). */
+export function showHelpWidget() {
+  window.dispatchEvent(new Event(SHOW_EVENT));
+}
+
 export function HelpWidget() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    try {
+      setHidden(localStorage.getItem(HIDDEN_KEY) === "1");
+    } catch {
+      /* ignore */
+    }
+    const onShow = () => {
+      try {
+        localStorage.removeItem(HIDDEN_KEY);
+      } catch {
+        /* ignore */
+      }
+      setHidden(false);
+      setOpen(true);
+    };
+    window.addEventListener(SHOW_EVENT, onShow);
+    return () => window.removeEventListener(SHOW_EVENT, onShow);
+  }, []);
+
+  function hide() {
+    try {
+      localStorage.setItem(HIDDEN_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+    setOpen(false);
+    setHidden(true);
+  }
 
   // Restore the conversation for this browser tab.
   useEffect(() => {
@@ -71,7 +119,7 @@ export function HelpWidget() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  if (HIDDEN_ON.some((re) => re.test(pathname))) return null;
+  if (hidden || HIDDEN_ON.some((re) => re.test(pathname))) return null;
 
   async function ask(override?: string) {
     const text = (override ?? draft).trim();
@@ -105,13 +153,21 @@ export function HelpWidget() {
       className={cn(
         "fixed right-4 z-40 flex flex-col items-end gap-3 sm:right-6",
         lifted ? "bottom-24" : "bottom-4 sm:bottom-6",
+        // On a phone the inbox list and thread fill the screen; the
+        // bubble would sit on chats and messages. Help stays in the menu.
+        lifted && !open && "max-sm:hidden",
       )}
     >
       {open && (
         <div
           role="dialog"
           aria-label="Help assistant"
-          className="flex h-[min(560px,calc(100vh-8rem))] w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
+          className={cn(
+            "flex w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl",
+            // Panel + gap + launcher + bottom offset must fit the screen
+            // (dvh: the visible height on phones, minus browser bars).
+            lifted ? "h-[min(560px,calc(100dvh-12rem))]" : "h-[min(560px,calc(100dvh-7rem))]",
+          )}
         >
           {/* Header */}
           <div className="flex items-center gap-3 bg-gradient-to-r from-[var(--rail)] to-primary px-4 py-3.5 text-white">
@@ -242,19 +298,34 @@ export function HelpWidget() {
       )}
 
       {/* Launcher */}
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Close help assistant" : "Open help assistant"}
-        aria-expanded={open}
-        className="group flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/35 transition-transform hover:scale-105 active:scale-95"
-      >
-        {open ? (
-          <X className="size-6" />
-        ) : (
-          <BrandMark className="size-11 rounded-full transition-transform group-hover:-rotate-6" />
+      <div className="group/launcher relative">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={open ? "Close help assistant" : "Open help assistant"}
+          aria-expanded={open}
+          className="group flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/35 transition-transform hover:scale-105 active:scale-95"
+        >
+          {open ? (
+            <X className="size-6" />
+          ) : (
+            <BrandMark className="size-11 rounded-full transition-transform group-hover:-rotate-6" />
+          )}
+        </button>
+        {/* Hide the bubble. Always shown on touch screens (no hover);
+            on desktop it appears when the pointer is over the bubble. */}
+        {!open && (
+          <button
+            type="button"
+            onClick={hide}
+            aria-label="Hide help assistant"
+            title="Hide (bring it back from your profile menu)"
+            className="absolute -top-1.5 -right-1.5 flex size-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-md transition-opacity hover:text-foreground focus-visible:opacity-100 sm:opacity-0 sm:group-hover/launcher:opacity-100"
+          >
+            <X className="size-3.5" />
+          </button>
         )}
-      </button>
+      </div>
     </div>
   );
 }
