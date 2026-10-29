@@ -21,6 +21,7 @@ import { isUniqueViolation } from '@/lib/contacts/dedupe';
 import { normalizeIntegrationPhone } from '@/lib/integrations/phone';
 import { resolveConversationByPhone } from '@/lib/whatsapp/resolve-conversation';
 import { sendMessageToConversation } from '@/lib/whatsapp/send-message';
+import { HOLD_WAITING_TEXT } from '@/lib/whatsapp/billing-hold';
 
 import {
   bookingContext,
@@ -160,6 +161,8 @@ export async function sendCalComEvent(
       templateLanguage: rule.template_language || 'en_US',
       templateMessageParams: { body: resolveCalComParams(variables, req.ctx) },
     });
+    // Billing hold: saved and sent automatically once Meta can charge again.
+    if (result.held) return finish({ status: 'skipped', detail: HOLD_WAITING_TEXT });
     return finish({ status: 'sent', whatsappMessageId: result.whatsappMessageId });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);

@@ -4,6 +4,7 @@ import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { accountCanSend } from '@/lib/billing/server'
 import { PLAN_EXPIRED_MESSAGE } from '@/lib/billing/plans'
 import { sendBroadcastNow } from '@/lib/broadcasts/scheduled'
+import { getBillingHold } from '@/lib/whatsapp/billing-hold'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 
 // POST /api/whatsapp/broadcast/:id/send
@@ -43,6 +44,12 @@ export async function POST(_request: Request, { params }: Ctx) {
       // The sender marks it failed with the same reason.
       after(() => sendBroadcastNow(id))
       return NextResponse.json({ error: PLAN_EXPIRED_MESSAGE, code: 'plan_expired' }, { status: 402 })
+    }
+
+    // Billing hold (Meta can't charge): the broadcast is saved and waits;
+    // it starts by itself once billing works. Tell the sender up front.
+    if (await getBillingHold(accountId)) {
+      return NextResponse.json({ ok: true, billing_hold: true }, { status: 202 })
     }
 
     after(() => sendBroadcastNow(id))

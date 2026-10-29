@@ -30,6 +30,7 @@ import { normalizeIntegrationPhone } from '@/lib/integrations/phone';
 import { recordWebhookFailure } from '@/lib/ops/monitoring';
 import { resolveConversationByPhone } from '@/lib/whatsapp/resolve-conversation';
 import { sendMessageToConversation } from '@/lib/whatsapp/send-message';
+import { HOLD_WAITING_TEXT } from '@/lib/whatsapp/billing-hold';
 
 import {
   eventsForStatus,
@@ -198,6 +199,8 @@ export async function sendWooEvent(
         body: resolveWooBodyParams(ruleVariables(rule), req.ctx),
       },
     });
+    // Billing hold: saved and sent automatically once Meta can charge again.
+    if (result.held) return finish({ status: 'skipped', detail: HOLD_WAITING_TEXT });
     return finish({
       status: 'sent',
       whatsappMessageId: result.whatsappMessageId,

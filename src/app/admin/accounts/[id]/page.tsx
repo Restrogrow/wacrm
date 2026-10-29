@@ -21,6 +21,7 @@ import {
 } from "@/lib/auth/business-profile";
 import { WhatsappDiagnosticsPanel } from "@/components/admin/whatsapp-diagnostics-panel";
 import { PlanEditor } from "@/components/admin/plan-editor";
+import { ResetPasswordButton } from "@/components/admin/reset-password-button";
 import { EFFECTIVE_PLAN_LABELS, effectivePlan, type AccountBilling } from "@/lib/billing/plans";
 
 export const metadata: Metadata = {
@@ -311,6 +312,7 @@ export default async function AdminAccountDetailPage({
                 <TableHead>Signed up via</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead>Last sign-in</TableHead>
+                <TableHead className="text-right">Password</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -345,6 +347,13 @@ export default async function AdminAccountDetailPage({
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDateTime(member.lastSignInAt)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <ResetPasswordButton
+                        accountId={account.id}
+                        userId={member.userId}
+                        email={member.email}
+                      />
                     </TableCell>
                   </TableRow>
                 );

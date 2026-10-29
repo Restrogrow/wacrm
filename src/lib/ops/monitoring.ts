@@ -29,6 +29,7 @@ export const MONITORED_JOBS = {
   journeys: { label: 'Journeys (lifecycle messages)', maxAgeMinutes: 10 },
   'ai-analysis': { label: 'AI lead scoring', maxAgeMinutes: 10 },
   'shopify-sync': { label: 'Shopify store sync (every 30 min)', maxAgeMinutes: 10 },
+  'billing-hold': { label: 'Billing hold (held messages)', maxAgeMinutes: 10 },
 } as const
 
 export type MonitoredJob = keyof typeof MONITORED_JOBS

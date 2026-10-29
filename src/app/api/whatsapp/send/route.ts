@@ -195,6 +195,8 @@ export async function POST(request: Request) {
         success: true,
         message_id: result.messageId,
         whatsapp_message_id: result.whatsappMessageId,
+        // Billing hold: saved, goes out once Meta can charge again.
+        held: result.held ?? false,
       })
     } catch (err) {
       if (err instanceof SendMessageError) {

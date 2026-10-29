@@ -13,6 +13,7 @@ import { MessageNotifier } from "@/components/notifications/message-notifier";
 import { PlanBanner } from "@/components/billing/plan-banner";
 import { CallProvider } from "@/components/calls/call-provider";
 import { NumberHealthBanner } from "@/components/settings/number-health-banner";
+import { BillingHoldBanner } from "@/components/settings/billing-hold-banner";
 
 // Auth-gated dashboard shell. Extracted from the layout so the layout
 // itself can stay a server component and export metadata (noindex) —
@@ -97,6 +98,7 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 flex-col overflow-hidden">
         <PlanBanner />
         <NumberHealthBanner />
+        <BillingHoldBanner />
         <Header
           onOpenSidebar={() => setSidebarOpen(true)}
           onOpenPalette={() => setPaletteOpen(true)}

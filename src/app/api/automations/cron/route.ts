@@ -5,6 +5,7 @@ import { resumePendingExecution } from '@/lib/automations/engine'
 import type { AutomationContext } from '@/lib/automations/engine'
 import { processDueCheckouts } from '@/lib/shopify/process'
 import { processShopifyAutoSync } from '@/lib/shopify/auto-sync'
+import { processBillingHolds } from '@/lib/whatsapp/billing-hold-process'
 import { processDueCalendlyReminders } from '@/lib/calendly/process'
 import { processDueCalComReminders } from '@/lib/calcom/process'
 import { processScheduledBroadcasts } from '@/lib/broadcasts/scheduled'
@@ -130,6 +131,13 @@ async function runCron() {
     return 0
   })
 
+  // Billing hold: re-check accounts Meta couldn't charge, and send the
+  // messages held for them once billing works again.
+  const heldReleased = await withHeartbeat('billing-hold', processBillingHolds).catch((err) => {
+    console.error('[cron] billing hold failed:', err)
+    return 0
+  })
+
   // Shopify products / customers / missed orders, each store every 30
   // minutes, a few stores per run. Last: it's the slowest task.
   const shopifyStoresSynced = await withHeartbeat('shopify-sync', processShopifyAutoSync).catch((err) => {
@@ -140,6 +148,7 @@ async function runCron() {
   return {
     processed,
     shopify_stores_synced: shopifyStoresSynced,
+    held_messages_released: heldReleased,
     journey_sends: journeySends,
     ai_scored: aiScored,
     sla_alerts: slaAlerts,

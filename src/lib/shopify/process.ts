@@ -50,6 +50,7 @@ import {
   type ShopifyVariable,
 } from './events';
 import { normalizeIntegrationPhone } from '@/lib/integrations/phone';
+import { HOLD_WAITING_TEXT } from '@/lib/whatsapp/billing-hold';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Json = Record<string, any>;
@@ -218,6 +219,8 @@ export async function sendShopifyEvent(
       // is "Free"), so they keep sending after the trial ends.
       planExempt: true,
     });
+    // Billing hold: saved and sent automatically once Meta can charge again.
+    if (result.held) return finish({ status: 'skipped', detail: HOLD_WAITING_TEXT });
     return finish({
       status: 'sent',
       whatsappMessageId: result.whatsappMessageId,

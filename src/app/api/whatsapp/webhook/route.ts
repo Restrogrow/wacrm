@@ -43,6 +43,13 @@ import {
   isCoexistenceWebhookField,
 } from '@/lib/whatsapp/smb-webhook'
 import { formatSharedContacts, type SharedContact } from '@/lib/whatsapp/shared-contacts'
+import {
+  holdFailedMessage,
+  holdFailedRecipient,
+  isBillingError,
+  startBillingHold,
+  type HeldParams,
+} from '@/lib/whatsapp/billing-hold'
 
 // The `after()` callback in POST runs within this route's max duration.
 // Inbound processing can fan out to per-media Meta verification calls, so
@@ -487,6 +494,54 @@ function isValidStatusTransition(current: string, incoming: string): boolean {
   return ii > ci
 }
 
+/**
+ * A message Meta accepted, then failed with 131042: send it again after
+ * the billing hold. Broadcast recipients go back to pending; templates
+ * sent from the inbox / integrations / automations are re-queued from
+ * their send_params. Returns false when nothing could be put back (then
+ * the normal "failed" handling runs), though the hold still starts.
+ */
+async function holdOnPaymentFailure(wamid: string): Promise<boolean> {
+  const db = supabaseAdmin()
+  let handled = false
+
+  const { data: recipient } = await db
+    .from('broadcast_recipients')
+    .select('id, broadcast_id, broadcasts!inner(account_id)')
+    .eq('whatsapp_message_id', wamid)
+    .maybeSingle()
+  if (recipient) {
+    const accountId = (recipient.broadcasts as unknown as { account_id: string }).account_id
+    await holdFailedRecipient(db, accountId, recipient.id as string, recipient.broadcast_id as string)
+    handled = true
+  }
+
+  // send_params comes from migration 091; before it, fall back to the
+  // plain select so the hold still starts.
+  let rows: Array<{ id: string; send_params?: HeldParams | null; conversations: unknown }> = []
+  const withParams = await db
+    .from('messages')
+    .select('id, send_params, conversations(account_id)')
+    .eq('message_id', wamid)
+  if (withParams.error) {
+    const plain = await db.from('messages').select('id, conversations(account_id)').eq('message_id', wamid)
+    rows = (plain.data ?? []) as typeof rows
+  } else {
+    rows = (withParams.data ?? []) as typeof rows
+  }
+  for (const row of rows) {
+    const accountId = (row.conversations as { account_id?: string } | null)?.account_id
+    if (!accountId) continue
+    if (row.send_params) {
+      await holdFailedMessage(accountId, row.id, row.send_params)
+      handled = true
+    } else {
+      await startBillingHold(accountId, 'Meta could not charge your payment method (error 131042).')
+    }
+  }
+  return handled
+}
+
 async function handleStatusUpdate(status: {
   id: string
   status: string
@@ -499,6 +554,11 @@ async function handleStatusUpdate(status: {
   // Meta reports WHY a send failed (e.g. 131042 payment, 131047 24h window)
   // only here. Keep it on the message and in the logs.
   const failure = status.status === 'failed' ? status.errors?.[0] : undefined
+
+  // 131042 = Meta couldn't charge the business. Don't fail the message:
+  // hold the account and put it back in line (billing-hold.ts).
+  if (failure && isBillingError(failure.code) && (await holdOnPaymentFailure(status.id))) return
+
   if (failure) {
     console.error('[whatsapp] message failed', status.id, failure.code, failure.title ?? failure.message)
     const detail = failure.error_data?.details ?? failure.message ?? failure.title ?? null

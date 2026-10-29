@@ -8,6 +8,13 @@ import {
 import { supabaseAdmin } from './admin-client'
 import { accountCanSend } from '@/lib/billing/server'
 import { PLAN_EXPIRED_MESSAGE } from '@/lib/billing/plans'
+import {
+  heldParams,
+  isBillingError,
+  queueHeldMessage,
+  startBillingHold,
+  type HeldParams,
+} from '@/lib/whatsapp/billing-hold'
 
 // ------------------------------------------------------------
 // Automation-side Meta sender.
@@ -106,6 +113,22 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
   }
   await assertChatOnNumber(db, input.conversationId, config.phone_number_id)
 
+  // Billing hold (Meta can't charge the business): templates wait and
+  // are sent later by billing-hold-process.ts, as a 'bot' message.
+  const held: HeldParams = {
+    conversationId: input.conversationId,
+    messageType: input.kind,
+    contentText: input.kind === 'text' ? input.text : null,
+    templateName: input.kind === 'template' ? input.templateName : null,
+    templateLanguage: input.kind === 'template' ? input.language ?? null : null,
+    templateParams: input.kind === 'template' ? input.params ?? [] : [],
+    senderType: 'bot',
+  }
+  if (input.kind === 'template' && config.billing_hold_at) {
+    await queueHeldMessage(input.accountId, held)
+    return { whatsapp_message_id: '' }
+  }
+
   const accessToken = decrypt(config.access_token)
 
   const attempt = async (phone: string): Promise<string> => {
@@ -136,19 +159,26 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
   let workingPhone = sanitized
   let waMessageId = ''
   let lastError: unknown = null
-  for (const v of variants) {
-    try {
-      waMessageId = await attempt(v)
-      workingPhone = v
-      lastError = null
-      break
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      if (!isRecipientNotAllowedError(msg)) throw err
-      lastError = err
+  try {
+    for (const v of variants) {
+      try {
+        waMessageId = await attempt(v)
+        workingPhone = v
+        lastError = null
+        break
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        if (!isRecipientNotAllowedError(msg)) throw err
+        lastError = err
+      }
     }
+    if (lastError) throw lastError
+  } catch (err) {
+    if (!isBillingError(err)) throw err
+    await startBillingHold(input.accountId, err instanceof Error ? err.message : String(err))
+    await queueHeldMessage(input.accountId, held)
+    return { whatsapp_message_id: '' }
   }
-  if (lastError) throw lastError
 
   if (workingPhone !== sanitized) {
     await db.from('contacts').update({ phone: workingPhone }).eq('id', contact.id)
@@ -161,7 +191,7 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
   const content_text = input.kind === 'text' ? input.text : null
   const template_name = input.kind === 'template' ? input.templateName : null
 
-  const { error: msgErr } = await db.from('messages').insert({
+  const row: Record<string, unknown> = {
     conversation_id: input.conversationId,
     sender_type: 'bot',
     content_type,
@@ -169,7 +199,15 @@ async function sendViaMeta(input: SendInput): Promise<{ whatsapp_message_id: str
     template_name,
     message_id: waMessageId,
     status: 'sent',
-  })
+  }
+  // send_params: how to send it again if Meta later fails it with
+  // 131042 (migration 091; saved without it before that migration).
+  let { error: msgErr } = await db
+    .from('messages')
+    .insert(input.kind === 'template' ? { ...row, send_params: heldParams(held) } : row)
+  if (msgErr && /send_params/.test(msgErr.message)) {
+    ;({ error: msgErr } = await db.from('messages').insert(row))
+  }
   if (msgErr) {
     // Meta already has the message; record the DB error but don't pretend
     // the send failed. The engine wraps this in a log line.

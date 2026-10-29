@@ -41,6 +41,13 @@ import type { MessageTemplate } from '@/types';
 import { isMessageTemplate } from '@/lib/whatsapp/template-row-guard';
 import { accountCanSend } from '@/lib/billing/server';
 import { PLAN_EXPIRED_MESSAGE } from '@/lib/billing/plans';
+import {
+  HOLD_WAITING_TEXT,
+  heldParams,
+  isBillingError,
+  queueHeldMessage,
+  startBillingHold,
+} from '@/lib/whatsapp/billing-hold';
 
 export const MEDIA_KINDS = ['image', 'video', 'document', 'audio'] as const;
 export const VALID_MESSAGE_TYPES = [
@@ -198,13 +205,27 @@ export interface SendMessageParams {
    * Omitted for API-key sends, which have no user.
    */
   senderId?: string | null;
+  /** Stored as messages.sender_type; automations send as 'bot'. */
+  senderType?: 'agent' | 'bot';
+  /**
+   * Billing hold release only (billing-hold-process.ts): send past the
+   * hold, update this held "sending" chat row instead of adding one, and
+   * throw `billing_hold` if Meta still refuses payment.
+   */
+  releasingHeld?: { messageRowId: string | null };
 }
 
 export interface SendMessageResult {
   /** Our `messages.id` (the persisted row). */
   messageId: string;
-  /** Meta's `wamid` for the delivered message. */
+  /** Meta's `wamid` for the delivered message; '' when held. */
   whatsappMessageId: string;
+  /**
+   * True when the account is on billing hold (Meta payment problem):
+   * the message is saved as "sending" and goes out automatically once
+   * billing works (lib/whatsapp/billing-hold.ts). Not an error.
+   */
+  held?: boolean;
 }
 
 /**
@@ -482,6 +503,13 @@ export async function sendMessageToConversation(
     templateRow = data ?? null;
   }
 
+  // Billing hold (Meta can't charge the business): templates wait in
+  // held_messages instead of failing. Free replies still go out.
+  const hold = () => queueHeldMessage(accountId, { ...params, interactive });
+  if (messageType === 'template' && config.billing_hold_at && !params.releasingHeld) {
+    return { messageId: await hold(), whatsappMessageId: '', held: true };
+  }
+
   const attempt = async (phone: string): Promise<string> => {
     if (interactive?.kind === 'buttons') {
       const result = await sendInteractiveButtons({
@@ -579,6 +607,13 @@ export async function sendMessageToConversation(
   } catch (err) {
     const message =
       err instanceof Error ? err.message : 'Unknown Meta API error';
+    if (isBillingError(err)) {
+      if (params.releasingHeld) {
+        throw new SendMessageError('billing_hold', HOLD_WAITING_TEXT, 402);
+      }
+      await startBillingHold(accountId, message);
+      return { messageId: await hold(), whatsappMessageId: '', held: true };
+    }
     console.error('[send-message] Meta send failed for all variants:', message);
     throw new SendMessageError('meta_error', `Meta API error: ${message}`, 502);
   }
@@ -594,24 +629,35 @@ export async function sendMessageToConversation(
   }
 
   // Persist the sent message. Field names MUST match the messages
-  // schema (see 001_initial_schema.sql).
-  const { data: messageRecord, error: msgError } = await db
-    .from('messages')
-    .insert({
-      conversation_id: conversationId,
-      sender_type: 'agent',
-      sender_id: senderId || null,
-      content_type: messageType,
-      content_text: contentText || null,
-      // a buttons message's photo header; the inbox bubble shows it above the text
-      media_url: mediaUrl || (interactive?.kind === 'buttons' ? interactive.header_image_url : null) || null,
-      template_name: templateName || null,
-      message_id: waMessageId,
-      status: 'sent',
-      reply_to_message_id: replyToMessageId || null,
-    })
-    .select()
-    .single();
+  // schema (see 001_initial_schema.sql). A held message already has its
+  // "sending" row: update it in place.
+  const heldRowId = params.releasingHeld?.messageRowId ?? null;
+  const row = {
+    conversation_id: conversationId,
+    sender_type: params.senderType ?? 'agent',
+    sender_id: senderId || null,
+    content_type: messageType,
+    content_text: contentText || null,
+    // a buttons message's photo header; the inbox bubble shows it above the text
+    media_url: mediaUrl || (interactive?.kind === 'buttons' ? interactive.header_image_url : null) || null,
+    template_name: templateName || null,
+    message_id: waMessageId,
+    status: 'sent',
+    reply_to_message_id: replyToMessageId || null,
+  };
+  // How to send it again if Meta later fails it with 131042 (migration 091).
+  const sendParams = messageType === 'template' ? heldParams({ ...params, interactive }) : null;
+  const persist = (withParams: boolean) => {
+    const values = withParams && sendParams ? { ...row, send_params: sendParams } : row;
+    return heldRowId
+      ? db.from('messages').update(values).eq('id', heldRowId).select().single()
+      : db.from('messages').insert(values).select().single();
+  };
+  let { data: messageRecord, error: msgError } = await persist(true);
+  if (msgError && sendParams && /send_params/.test(msgError.message)) {
+    // Migration 091 not applied yet: save without it.
+    ({ data: messageRecord, error: msgError } = await persist(false));
+  }
 
   if (msgError) {
     console.error('[send-message] error inserting sent message:', msgError);
@@ -632,8 +678,9 @@ export async function sendMessageToConversation(
     .eq('id', conversationId);
 
   // Pause any active Flow run for this contact — the agent stepping in
-  // is the strongest "yield, human is here" signal. Best-effort.
-  try {
+  // is the strongest "yield, human is here" signal. Best-effort. A held
+  // automation message going out later is not an agent stepping in.
+  if (params.senderType !== 'bot') try {
     const { error: pauseErr } = await supabaseAdmin()
       .from('flow_runs')
       .update({

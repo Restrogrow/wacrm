@@ -735,6 +735,12 @@ export function MessageThread({
           return;
         }
 
+        // Billing hold: saved as "sending"; goes out once Meta can charge.
+        if (payload?.held) {
+          toast.info("Saved: it sends automatically once your WhatsApp billing works again.");
+          onUpdateMessage(tempId, { status: "sending" });
+          return;
+        }
         onUpdateMessage(tempId, { status: "sent" });
       } catch (err) {
         console.error("Failed to send template:", err);

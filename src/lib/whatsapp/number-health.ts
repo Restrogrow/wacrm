@@ -20,6 +20,8 @@ import { decrypt } from '@/lib/whatsapp/encryption'
 import { isEmailConfigured, sendEmail } from '@/lib/email/mailer'
 import { numberHealthAlertEmail } from '@/lib/email/content'
 import { SITE_URL } from '@/lib/seo'
+import { startBillingHold } from '@/lib/whatsapp/billing-hold'
+import { isPaymentError } from '@/lib/whatsapp/spend'
 
 const GRAPH = 'https://graph.facebook.com/v21.0'
 const CHECK_EVERY_MS = 24 * 60 * 60 * 1000
@@ -214,6 +216,14 @@ export async function refreshNumberHealth(accountId: string, db: SupabaseClient 
   }
 
   await maybeAlertOwner(db, saved as NumberHealth, previous?.last_alert_key ?? null)
+
+  // Meta reports a payment problem: hold templates and broadcasts before
+  // any of them fail (billing-hold.ts). The hold re-checks itself.
+  const paymentError = ((saved as NumberHealth).health_errors ?? []).find((e) =>
+    isPaymentError({ code: e.error_code ?? null, description: e.error_description ?? '', solution: e.possible_solution ?? null }),
+  )
+  if (paymentError) await startBillingHold(accountId, paymentError.error_description ?? 'Meta reports a payment problem')
+
   return saved as NumberHealth
 }
 

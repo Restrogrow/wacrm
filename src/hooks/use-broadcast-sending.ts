@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { Contact, MessageTemplate } from '@/types';
@@ -433,6 +434,10 @@ export function useBroadcastSending(): UseBroadcastSendingReturn {
       if (res && res.status === 402) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Your plan does not allow sending right now.');
+      }
+      // Billing hold: saved, starts by itself once Meta can charge again.
+      if (res?.ok && (await res.json().catch(() => ({}))).billing_hold) {
+        toast.info('Broadcast saved. WhatsApp billing has a problem, so it will start by itself once billing works again.');
       }
       setProgress(100);
       return broadcastId;

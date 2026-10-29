@@ -41,6 +41,12 @@ import {
   sanitizePhoneForMeta,
 } from '@/lib/whatsapp/phone-utils';
 import { isMessageTemplate } from '@/lib/whatsapp/template-row-guard';
+import {
+  HOLD_WAITING_TEXT,
+  getBillingHold,
+  isBillingError,
+  startBillingHold,
+} from '@/lib/whatsapp/billing-hold';
 import type { SendTimeParams } from '@/lib/whatsapp/template-send-builder';
 import type { MessageTemplate } from '@/types';
 
@@ -203,6 +209,11 @@ async function sendPending(broadcast: ServerBroadcast, deadline: number): Promis
     await failRemaining(broadcast.id, 'Not sent: it was created on a WhatsApp number that is no longer connected.');
     return 0;
   }
+  // Billing hold (Meta can't charge the business): send nothing; the
+  // recipients stay pending until the hold ends (billing-hold.ts).
+  if (await getBillingHold(broadcast.account_id)) return 0;
+  let onHold = false;
+
   const accessToken = decrypt(config.access_token);
   const language = broadcast.template_language || 'en_US';
 
@@ -270,6 +281,20 @@ async function sendPending(broadcast: ServerBroadcast, deadline: number): Promis
       return;
     }
 
+    if (isBillingError(lastError)) {
+      // Payment problem: hold the account and stop; this recipient stays
+      // pending (not a failed try) and is sent after the hold.
+      if (!onHold) {
+        onHold = true;
+        await startBillingHold(broadcast.account_id, lastError);
+      }
+      await db
+        .from('broadcast_recipients')
+        .update({ error_message: HOLD_WAITING_TEXT, ...clearRetry(retries) })
+        .eq('id', row.id);
+      return;
+    }
+
     const attempts = (row.attempts ?? 0) + 1;
     const retryAt = retries && isTransientSendError(lastError) ? nextRetryAt(attempts) : null;
     if (retryAt) {
@@ -290,7 +315,7 @@ async function sendPending(broadcast: ServerBroadcast, deadline: number): Promis
     }
   };
 
-  while (Date.now() < deadline) {
+  while (Date.now() < deadline && !onHold) {
     const nowIso = new Date().toISOString();
     let query = db
       .from('broadcast_recipients')
@@ -302,7 +327,7 @@ async function sendPending(broadcast: ServerBroadcast, deadline: number): Promis
     if (!batch || batch.length === 0) break;
 
     for (let i = 0; i < batch.length; i += CONCURRENCY) {
-      if (Date.now() >= deadline) break;
+      if (Date.now() >= deadline || onHold) break;
       await Promise.all(
         (batch.slice(i, i + CONCURRENCY) as unknown as RecipientRow[]).map((row) =>
           sendOne(row).catch((err) => {
