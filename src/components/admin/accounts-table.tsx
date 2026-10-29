@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { ResetPasswordButton } from '@/components/admin/reset-password-button';
 import type { AdminAccountRow } from '@/lib/admin/dashboard';
 import { EFFECTIVE_PLAN_LABELS } from '@/lib/billing/plans';
 
@@ -208,9 +209,21 @@ export function AccountsTable({ rows }: { rows: AdminAccountRow[] }) {
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    <div>{r.ownerEmail ?? '—'}</div>
-                    <div className="text-xs">
-                      {[r.ownerName, r.ownerMobile].filter(Boolean).join(' · ')}
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0">
+                        <div>{r.ownerEmail ?? '—'}</div>
+                        <div className="text-xs">
+                          {[r.ownerName, r.ownerMobile].filter(Boolean).join(' · ')}
+                        </div>
+                      </div>
+                      {r.ownerUserId && r.ownerEmail && (
+                        <ResetPasswordButton
+                          accountId={r.id}
+                          userId={r.ownerUserId}
+                          email={r.ownerEmail}
+                          compact
+                        />
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground whitespace-nowrap">

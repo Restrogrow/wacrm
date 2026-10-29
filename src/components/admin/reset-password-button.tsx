@@ -33,10 +33,13 @@ export function ResetPasswordButton({
   accountId,
   userId,
   email,
+  compact = false,
 }: {
   accountId: string;
   userId: string;
   email: string;
+  /** Icon-only button, for the dashboard's accounts list. */
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
@@ -85,10 +88,23 @@ export function ResetPasswordButton({
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={openDialog}>
-        <KeyRound className="size-3.5" />
-        Reset password
-      </Button>
+      {compact ? (
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={openDialog}
+          aria-label={`Reset password for ${email}`}
+          title="Reset password"
+          className="size-7 shrink-0"
+        >
+          <KeyRound className="size-3.5" />
+        </Button>
+      ) : (
+        <Button variant="outline" size="sm" onClick={openDialog}>
+          <KeyRound className="size-3.5" />
+          Reset password
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={(o) => !saving && setOpen(o)}>
         <DialogContent>

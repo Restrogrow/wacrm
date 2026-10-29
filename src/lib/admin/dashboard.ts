@@ -32,6 +32,7 @@ export interface AdminAccountRow {
   id: string;
   name: string;
   createdAt: string;
+  ownerUserId: string | null;
   ownerEmail: string | null;
   ownerName: string | null;
   ownerMobile: string | null;
@@ -243,6 +244,7 @@ export async function loadAdminDashboard(
       id: a.id,
       name: a.name,
       createdAt: a.created_at,
+      ownerUserId: a.owner_user_id ?? null,
       ownerEmail: owner?.email ?? null,
       ownerName: owner?.full_name ?? null,
       ownerMobile: owner?.mobile_number ?? null,
