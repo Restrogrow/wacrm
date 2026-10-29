@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { Bell, HelpCircle, LogOut, Menu, MessageCircle, Search, Settings as SettingsIcon, User } from "lucide-react";
+import { Bell, Handshake, HelpCircle, LogOut, Menu, MessageCircle, Search, Settings as SettingsIcon, User } from "lucide-react";
 import { showHelpWidget } from "@/components/assistant/help-widget";
 import { getPageTitle } from "./nav-config";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
@@ -20,6 +20,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ModeToggle } from "@/components/layout/mode-toggle";
+
+// The partner program is live at /partner but not announced yet; set
+// NEXT_PUBLIC_PARTNER_PROGRAM=on (and rebuild) to show it in this menu.
+const SHOW_PARTNER_PROGRAM = process.env.NEXT_PUBLIC_PARTNER_PROGRAM === "on";
 
 interface HeaderProps {
   /** Wired to the shell's drawer state. Used only on mobile — the
@@ -159,6 +163,19 @@ export function Header({ onOpenSidebar, onOpenPalette }: HeaderProps) {
             <MessageCircle className="size-4" />
             Help assistant
           </DropdownMenuItem>
+          {SHOW_PARTNER_PROGRAM && (
+            <DropdownMenuItem
+              render={
+                <Link
+                  href="/partner"
+                  className="text-popover-foreground focus:bg-accent focus:text-accent-foreground"
+                />
+              }
+            >
+              <Handshake className="size-4" />
+              Partner program
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator className="bg-border" />
           <DropdownMenuItem
             onClick={signOut}

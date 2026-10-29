@@ -114,5 +114,6 @@ export function getPageTitle(pathname: string): string {
   const match = ALL_NAV_ITEMS.filter((i) => isActivePath(pathname, i.href)).sort(
     (a, b) => b.href.length - a.href.length,
   )[0];
+  if (!match && isActivePath(pathname, "/partner")) return "Partner program";
   return match?.label ?? "Dashboard";
 }

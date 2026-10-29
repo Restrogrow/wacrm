@@ -21,6 +21,7 @@ import {
 } from "@/lib/auth/business-profile";
 import { WhatsappDiagnosticsPanel } from "@/components/admin/whatsapp-diagnostics-panel";
 import { PlanEditor } from "@/components/admin/plan-editor";
+import { getReferrerOf } from "@/lib/partners/server";
 import { ResetPasswordButton } from "@/components/admin/reset-password-button";
 import { EFFECTIVE_PLAN_LABELS, effectivePlan, type AccountBilling } from "@/lib/billing/plans";
 
@@ -174,7 +175,10 @@ export default async function AdminAccountDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const account = await loadAccount(id);
+  const [account, referrer] = await Promise.all([
+    loadAccount(id),
+    getReferrerOf(id).catch(() => null),
+  ]);
 
   if (!account) {
     notFound();
@@ -373,6 +377,15 @@ export default async function AdminAccountDetailPage({
               {EFFECTIVE_PLAN_LABELS[effectivePlan(account.billing)]}
             </Badge>
           </h2>
+          {referrer && (
+            <p className="mb-3 text-sm text-muted-foreground">
+              Referred by partner{" "}
+              <Link href={`/admin/partners/${referrer.id}`} prefetch={false} className="font-medium text-foreground hover:underline">
+                {referrer.name}
+              </Link>{" "}
+              — enter the amount received when you save a payment so their commission is added.
+            </p>
+          )}
           <PlanEditor
             accountId={account.id}
             plan={account.billing.plan}

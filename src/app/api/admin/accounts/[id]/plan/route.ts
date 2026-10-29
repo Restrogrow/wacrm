@@ -2,15 +2,18 @@ import { NextResponse } from 'next/server';
 import { recordAudit } from '@/lib/audit';
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
+import { recordPaymentCommission } from '@/lib/partners/server';
 
 /**
  * PATCH /api/admin/accounts/[id]/plan — platform admin only.
  *
- * { plan, trial_ends_at?, plan_expires_at?, billing_note? }
+ * { plan, trial_ends_at?, plan_expires_at?, billing_note?, amount_received? }
  *
  * No payment gateway yet: when a business pays (UPI / bank transfer),
  * support sets their plan and paid-until date here. Dates are ISO
- * strings or null (null paid-until = no end date).
+ * strings or null (null paid-until = no end date). `amount_received` (₹)
+ * records the payment for the partner program: if a partner referred
+ * this account, their commission is added (lib/partners/server.ts).
  */
 const PLANS = new Set(['trial', 'starter', 'growth', 'pro', 'enterprise']);
 
@@ -34,6 +37,7 @@ export async function PATCH(
     trial_ends_at?: unknown;
     plan_expires_at?: unknown;
     billing_note?: unknown;
+    amount_received?: unknown;
   } | null;
 
   if (typeof body?.plan !== 'string' || !PLANS.has(body.plan)) {
@@ -46,6 +50,13 @@ export async function PATCH(
     (body.plan_expires_at !== undefined && planExpiresAt === undefined)
   ) {
     return NextResponse.json({ error: 'Invalid date' }, { status: 400 });
+  }
+  const amountReceived =
+    body.amount_received === undefined || body.amount_received === null || body.amount_received === ''
+      ? 0
+      : Number(body.amount_received);
+  if (!Number.isFinite(amountReceived) || amountReceived < 0 || amountReceived > 10_000_000) {
+    return NextResponse.json({ error: 'Invalid amount received' }, { status: 400 });
   }
   const note =
     typeof body.billing_note === 'string'
@@ -72,5 +83,23 @@ export async function PATCH(
     { accountId: id, actorUserId: admin.userId, action: 'plan.changed', targetType: 'account', targetId: id, metadata: { plan: body.plan, trial_ends_at: trialEndsAt ?? null, plan_expires_at: planExpiresAt ?? null, by: 'platform_admin' } },
     request
   );
-  return NextResponse.json({ ok: true });
+
+  // The plan is saved either way; a failed commission is reported so it
+  // can be added by hand from /admin/partners.
+  let commission: { partnerName: string; amount: number } | null = null;
+  let commissionError = false;
+  if (amountReceived > 0) {
+    try {
+      commission = await recordPaymentCommission({
+        accountId: id,
+        paymentAmount: Math.round(amountReceived * 100) / 100,
+        description: `${body.plan} plan payment${note ? ` — ${note}` : ''}`.slice(0, 300),
+        adminUserId: admin.userId,
+      });
+    } catch (err) {
+      console.error('[admin/plan] commission failed:', err);
+      commissionError = true;
+    }
+  }
+  return NextResponse.json({ ok: true, commission, commissionError });
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Activity, FileText, RefreshCw, Mail, ShieldCheck, Sparkles } from 'lucide-react';
+import { Activity, FileText, Handshake, RefreshCw, Mail, ShieldCheck, Sparkles } from 'lucide-react';
 
 import { loadAdminDashboard } from '@/lib/admin/dashboard';
 import { formatDelta } from '@/lib/admin/time';
@@ -50,7 +50,7 @@ export default async function PlatformAdminPage() {
             .
           </p>
         </div>
-        <div className="flex gap-2 self-start">
+        <div className="flex flex-wrap gap-2 self-start">
           <Link
             href="/admin/security"
             prefetch={false}
@@ -82,6 +82,14 @@ export default async function PlatformAdminPage() {
           >
             <Activity className="size-3.5" />
             System health
+          </Link>
+          <Link
+            href="/admin/partners"
+            prefetch={false}
+            className="border-border text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm"
+          >
+            <Handshake className="size-3.5" />
+            Partners
           </Link>
           <Link
             href="/admin/ai-usage"

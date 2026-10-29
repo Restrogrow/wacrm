@@ -52,6 +52,8 @@ export function PlanEditor({
   const [trialEnd, setTrialEnd] = useState(toDateInput(trialEndsAt));
   const [paidUntil, setPaidUntil] = useState(toDateInput(planExpiresAt));
   const [note, setNote] = useState(billingNote ?? '');
+  // Money received with this change — credits the referring partner.
+  const [amount, setAmount] = useState('');
   const [saving, setSaving] = useState(false);
 
   async function save() {
@@ -65,6 +67,7 @@ export function PlanEditor({
           trial_ends_at: fromDateInput(trialEnd),
           plan_expires_at: fromDateInput(paidUntil),
           billing_note: note,
+          amount_received: amount || undefined,
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -73,6 +76,14 @@ export function PlanEditor({
         return;
       }
       toast.success('Plan updated');
+      if (json.commission) {
+        toast.success(
+          `${json.commission.partnerName} earns ₹${Number(json.commission.amount).toLocaleString('en-IN')} commission`
+        );
+      } else if (json.commissionError) {
+        toast.error('Partner commission was not saved — add it in Admin → Partners');
+      }
+      setAmount('');
       router.refresh();
     } finally {
       setSaving(false);
@@ -120,17 +131,38 @@ export function PlanEditor({
           />
         </div>
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="billing-note" className="text-muted-foreground text-xs">
-          Note (internal)
-        </Label>
-        <Input
-          id="billing-note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="e.g. Paid ₹999 via UPI on 14 Oct, ref 1234"
-        />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="amount-received" className="text-muted-foreground text-xs">
+            Amount received now (₹, optional)
+          </Label>
+          <Input
+            id="amount-received"
+            type="number"
+            min="0"
+            step="1"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="e.g. 2999"
+          />
+        </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label htmlFor="billing-note" className="text-muted-foreground text-xs">
+            Note (internal)
+          </Label>
+          <Input
+            id="billing-note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="e.g. Paid ₹999 via UPI on 14 Oct, ref 1234"
+          />
+        </div>
       </div>
+      <p className="text-muted-foreground text-xs">
+        Enter the amount only when a payment comes in: if a partner brought this business, their
+        commission is added automatically.
+      </p>
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving}>
           {saving && <Loader2 className="size-4 animate-spin" />}

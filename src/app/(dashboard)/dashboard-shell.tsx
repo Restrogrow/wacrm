@@ -14,6 +14,7 @@ import { PlanBanner } from "@/components/billing/plan-banner";
 import { CallProvider } from "@/components/calls/call-provider";
 import { NumberHealthBanner } from "@/components/settings/number-health-banner";
 import { BillingHoldBanner } from "@/components/settings/billing-hold-banner";
+import { ReferralClaim } from "@/components/partners/referral-claim";
 
 // Auth-gated dashboard shell. Extracted from the layout so the layout
 // itself can stay a server component and export metadata (noindex) —
@@ -87,6 +88,8 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
       <PresenceHeartbeat />
       {/* Desktop alert + sound for new customer messages, on every page. */}
       <MessageNotifier />
+      {/* Credits a new signup to the partner who referred it. Headless. */}
+      <ReferralClaim />
       <Sidebar
         open={sidebarOpen}
         onClose={closeSidebar}
