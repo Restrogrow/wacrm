@@ -611,10 +611,12 @@ async function handleHistory(
             updated_at: new Date().toISOString(),
           })
           .eq('id', conversation.id)
-          // Postgres compares timestamptz lexicographically in ISO
-          // (UTC) form, so this guards against an older chunk
-          // regressing the preview after a newer chunk landed.
-          .lt('last_message_at', createdAt)
+          // Guards against an older chunk regressing the preview after
+          // a newer chunk landed. A chat the import just created has
+          // last_message_at NULL, and `NULL < x` is never true, so NULL
+          // must match too — otherwise imported chats keep no date and
+          // sink below every other chat in the inbox.
+          .or(`last_message_at.is.null,last_message_at.lt."${createdAt}"`)
       }
     }
   }

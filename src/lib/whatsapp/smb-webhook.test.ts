@@ -48,7 +48,8 @@ function makeSupabaseStub(results: Partial<Record<Table, Array<{ data: unknown; 
         entry.filters.push({ column, value: 'lt' });
         return q;
       },
-      or(_filter: string) {
+      or(filter: string) {
+        entry.filters.push({ column: 'or', value: filter });
         return q;
       },
       order(_column: string, _opts?: unknown) {
@@ -435,6 +436,14 @@ describe('history — past chat import', () => {
     // No `to` → customer
     expect(inserts[1].payload?.sender_type).toBe('customer');
     expect(inserts[1].payload?.content_text).toBe('from customer');
+
+    // A chat the import just created has last_message_at NULL — the
+    // preview update must match it, not only older timestamps.
+    const previews = calls.filter((c) => c.op === 'update' && c.table === 'conversations');
+    expect(previews).toHaveLength(2);
+    const orFilter = previews[0].filters.find((f) => f.column === 'or')?.value;
+    expect(orFilter).toContain('last_message_at.is.null');
+    expect(orFilter).toContain('last_message_at.lt.');
   });
 
   it('records the decline error (2593109) on the config row', async () => {
