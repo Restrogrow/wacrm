@@ -8,7 +8,7 @@ application_url = "https://repeatgrow.com/api/integrations/shopify/install"
 embedded = false
 
 [access_scopes]
-scopes = "read_fulfillments,read_orders"
+scopes = "read_customers,read_fulfillments,read_orders,read_products"
 use_legacy_install_flow = true
 
 [auth]

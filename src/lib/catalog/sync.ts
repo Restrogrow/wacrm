@@ -198,35 +198,63 @@ function isMissingTable(err: { code?: string; message?: string } | null): boolea
   return !!err && (err.code === '42P01' || err.code === 'PGRST205' || /does not exist|schema cache/i.test(err.message ?? ''))
 }
 
-/** Insert new rows, update known ones (matched on source + source_id). */
+// Store-owned fields a sync writes. A known product whose values all
+// match is left alone, so the 30-minute auto-sync doesn't flag the whole
+// library as "needs WhatsApp sync" (meta_sync_status) on every run.
+const SYNCED_FIELDS = [
+  'title',
+  'description',
+  'price_paise',
+  'sale_price_paise',
+  'currency',
+  'image_url',
+  'additional_image_urls',
+  'product_url',
+  'brand',
+  'category',
+  'availability',
+  'stock_qty',
+  'status',
+] as const
+
+type KnownProduct = { id: string; retailer_id: string } & Partial<Record<(typeof SYNCED_FIELDS)[number], unknown>>
+
+export function productChanged(known: KnownProduct, incoming: SyncProduct): boolean {
+  return SYNCED_FIELDS.some((f) => JSON.stringify(known[f] ?? null) !== JSON.stringify(incoming[f] ?? null))
+}
+
+/** Insert new rows, update known ones that changed (matched on source + source_id). */
 export async function persistProducts(
   db: SupabaseClient,
   accountId: string,
   source: SyncSource,
   incoming: SyncProduct[],
 ): Promise<{ created: number; updated: number; over_limit: number }> {
-  const existing = new Map<string, { id: string; retailer_id: string }>()
+  const existing = new Map<string, KnownProduct>()
   const taken = new Set<string>()
 
   for (let from = 0; ; from += 1000) {
     const { data, error } = await db
       .from('products')
-      .select('id, source, source_id, retailer_id')
+      .select(`id, source, source_id, retailer_id, ${SYNCED_FIELDS.join(', ')}`)
       .eq('account_id', accountId)
       .range(from, from + 999)
     if (error) {
       if (isMissingTable(error)) throw new CatalogSyncError('The product library is not set up yet. Apply the catalog migration (076) first.', 503)
       throw new CatalogSyncError('Could not read your products.', 500)
     }
-    for (const r of data ?? []) {
-      taken.add(r.retailer_id as string)
-      if (r.source === source && r.source_id) existing.set(r.source_id as string, { id: r.id as string, retailer_id: r.retailer_id as string })
+    for (const r of (data ?? []) as unknown as Array<KnownProduct & { source: string; source_id: string | null }>) {
+      taken.add(r.retailer_id)
+      if (r.source === source && r.source_id) existing.set(r.source_id, r)
     }
     if (!data || data.length < 1000) break
   }
 
   const now = new Date().toISOString()
-  const toUpdate: SyncProduct[] = incoming.filter((r) => existing.has(r.source_id))
+  const toUpdate: SyncProduct[] = incoming.filter((r) => {
+    const known = existing.get(r.source_id)
+    return known !== undefined && productChanged(known, r)
+  })
   let toCreate = dedupeRetailerIds(
     incoming.filter((r) => !existing.has(r.source_id)),
     taken,

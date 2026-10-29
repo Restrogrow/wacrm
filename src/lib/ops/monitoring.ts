@@ -28,6 +28,7 @@ export const MONITORED_JOBS = {
   'sla-alerts': { label: 'Reply-time (SLA) alerts', maxAgeMinutes: 10 },
   journeys: { label: 'Journeys (lifecycle messages)', maxAgeMinutes: 10 },
   'ai-analysis': { label: 'AI lead scoring', maxAgeMinutes: 10 },
+  'shopify-sync': { label: 'Shopify store sync (every 30 min)', maxAgeMinutes: 10 },
 } as const
 
 export type MonitoredJob = keyof typeof MONITORED_JOBS

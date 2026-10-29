@@ -48,6 +48,29 @@ interface StoreInfo {
   webhook_url: string | null;
 }
 
+type SyncPart = Record<string, number | string>;
+
+interface SyncInfo {
+  interval_minutes: number;
+  last_synced_at: string | null;
+  last_sync_error: string | null;
+  summary: { products?: SyncPart; customers?: SyncPart; orders?: SyncPart } | null;
+  missing_scopes: string[];
+}
+
+/** One line per synced part: "12 new · 3 updated", or why it was skipped. */
+function syncPartText(part: SyncPart | undefined): string {
+  if (!part) return 'Not synced yet';
+  if (part.error) return `Failed: ${part.error}`;
+  if (part.skipped) return String(part.skipped);
+  const bits: string[] = [];
+  if (part.created !== undefined) bits.push(`${part.created} new`);
+  if (part.updated !== undefined) bits.push(`${part.updated} updated`);
+  if (part.added !== undefined) bits.push(`${part.added} missed orders added`);
+  if (part.over_limit) bits.push(`${part.over_limit} over plan limit`);
+  return bits.join(' · ') || 'Up to date';
+}
+
 interface Rule {
   event: ShopifyEvent;
   enabled: boolean;
@@ -128,6 +151,7 @@ export function ShopifySettings() {
   const [oauthAvailable, setOauthAvailable] = useState(false);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [store, setStore] = useState<StoreInfo | null>(null);
+  const [sync, setSync] = useState<SyncInfo | null>(null);
   const [rules, setRules] = useState<Record<ShopifyEvent, Rule>>(
     () =>
       Object.fromEntries(
@@ -161,6 +185,7 @@ export function ShopifySettings() {
       setOauthAvailable(json.oauth_available);
       setTopics(json.topics ?? []);
       setStore(json.store);
+      setSync(json.sync ?? null);
       setCountryCode(json.store?.default_country_code ?? '91');
       setActivity(json.events ?? []);
       setRules((prev) => {
@@ -408,6 +433,41 @@ export function ShopifySettings() {
                 </Button>
               )}
             </div>
+
+            {sync && (
+              <div className="border-border bg-muted/30 space-y-2 rounded-2xl border p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-foreground text-sm font-medium">
+                    Auto-sync every {sync.interval_minutes} minutes
+                  </p>
+                  <span className="text-muted-foreground text-xs">
+                    Last sync {fmtActivityTime(sync.last_synced_at)}
+                  </span>
+                </div>
+                <dl className="text-muted-foreground grid gap-1 text-xs sm:grid-cols-[auto_1fr] sm:gap-x-3">
+                  <dt className="text-foreground font-medium">Products → Catalog</dt>
+                  <dd>{syncPartText(sync.summary?.products)}</dd>
+                  <dt className="text-foreground font-medium">Customers → Contacts</dt>
+                  <dd>{syncPartText(sync.summary?.customers)}</dd>
+                  <dt className="text-foreground font-medium">Missed orders</dt>
+                  <dd>{syncPartText(sync.summary?.orders)}</dd>
+                </dl>
+                {sync.missing_scopes.length > 0 && !readOnly && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
+                    <span>
+                      Reconnect once to allow product and customer access in Shopify.
+                    </span>
+                    {/* A real navigation: the install route redirects to Shopify. */}
+                    <a
+                      href={`/api/integrations/shopify/install?shop=${encodeURIComponent(store.shop_domain)}`}
+                      className="rounded-lg bg-primary px-3 py-1.5 font-semibold text-primary-foreground"
+                    >
+                      Reconnect Shopify
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-col gap-1.5 sm:max-w-xs">
               <Label

@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/automations/admin-client'
 import { resumePendingExecution } from '@/lib/automations/engine'
 import type { AutomationContext } from '@/lib/automations/engine'
 import { processDueCheckouts } from '@/lib/shopify/process'
+import { processShopifyAutoSync } from '@/lib/shopify/auto-sync'
 import { processDueCalendlyReminders } from '@/lib/calendly/process'
 import { processDueCalComReminders } from '@/lib/calcom/process'
 import { processScheduledBroadcasts } from '@/lib/broadcasts/scheduled'
@@ -129,8 +130,16 @@ async function runCron() {
     return 0
   })
 
+  // Shopify products / customers / missed orders, each store every 30
+  // minutes, a few stores per run. Last: it's the slowest task.
+  const shopifyStoresSynced = await withHeartbeat('shopify-sync', processShopifyAutoSync).catch((err) => {
+    console.error('[cron] shopify sync failed:', err)
+    return 0
+  })
+
   return {
     processed,
+    shopify_stores_synced: shopifyStoresSynced,
     journey_sends: journeySends,
     ai_scored: aiScored,
     sla_alerts: slaAlerts,

@@ -19,7 +19,8 @@ import {
   toErrorResponse,
 } from '@/lib/auth/account';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
-import { manualWebhookUrl, shopifyAppCredentials } from '@/lib/shopify/config';
+import { manualWebhookUrl, missingScopes, shopifyAppCredentials } from '@/lib/shopify/config';
+import { SYNC_INTERVAL_MINUTES } from '@/lib/shopify/auto-sync';
 import { SHOPIFY_TOPICS } from '@/lib/shopify/events';
 
 export async function GET() {
@@ -67,8 +68,28 @@ export async function GET() {
       );
     }
 
+    // Auto-sync state (migration 090), read on its own so the page still
+    // works before that migration runs.
+    const { data: sync } = store
+      ? await db
+          .from('shopify_stores')
+          .select('scopes, last_synced_at, last_sync_error, last_sync_summary')
+          .eq('account_id', ctx.accountId)
+          .maybeSingle()
+      : { data: null };
+
     return NextResponse.json({
       oauth_available: shopifyAppCredentials() !== null,
+      sync: sync
+        ? {
+            interval_minutes: SYNC_INTERVAL_MINUTES,
+            last_synced_at: sync.last_synced_at,
+            last_sync_error: sync.last_sync_error,
+            summary: sync.last_sync_summary,
+            missing_scopes:
+              store?.connection_type === 'oauth' ? missingScopes(sync.scopes) : [],
+          }
+        : null,
       topics: SHOPIFY_TOPICS,
       store: store
         ? {

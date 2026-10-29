@@ -84,6 +84,7 @@ Code: `src/app/api/health/route.ts`, `src/lib/ops/health.ts`.
 | Reply-time (SLA) alerts (`sla-alerts`) | automations cron | 10 min |
 | AI lead scoring (`ai-analysis`) | automations cron (a few chats per run) | 10 min |
 | Journeys (`journeys`) | automations cron | 10 min |
+| Shopify store sync (`shopify-sync`) | automations cron (each store every 30 min: products, customers, missed orders) | 10 min |
 | Flows cron (`flows-cron`) | `GET /api/flows/cron` | 30 min |
 
 Heartbeats are stored in `system_heartbeats`; failures in
