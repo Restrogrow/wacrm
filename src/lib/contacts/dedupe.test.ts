@@ -94,4 +94,26 @@ describe("findExistingContact", () => {
     const db = stubDb([{ id: "c1", phone: "15551234567" }]);
     expect(await findExistingContact(db, "acct", "   ")).toBeNull();
   });
+
+  it("finds a contact saved with spaces (suffix matched on digits only)", async () => {
+    // The SQL pre-filter must run on phone_normalized: "+91 95098 66536"
+    // doesn't end in "09866536", so a LIKE on `phone` missed it and the
+    // inbound message from that contact was dropped.
+    const likes: Array<[string, string]> = [];
+    const builder = {
+      select: () => builder,
+      eq: () => builder,
+      like: (column: string, pattern: string) => {
+        likes.push([column, pattern]);
+        return Promise.resolve({
+          data: [{ id: "c1", phone: "+91 95098 66536" }],
+          error: null,
+        });
+      },
+    };
+    const db = { from: () => builder } as unknown as SupabaseClient;
+    const hit = await findExistingContact(db, "acct", "919509866536");
+    expect(hit?.id).toBe("c1");
+    expect(likes).toEqual([["phone_normalized", "%09866536"]]);
+  });
 });

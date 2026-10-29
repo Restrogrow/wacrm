@@ -42,11 +42,25 @@ export async function findExistingContact(
 
   const suffix = normalized.length >= 8 ? normalized.slice(-8) : normalized;
 
-  const { data, error } = await db
+  // Match the suffix on the digits-only phone_normalized column
+  // (migration 022), not on `phone`: a number saved with spaces or
+  // dashes ("+91 95098 66536") never ends in its last 8 digits, so the
+  // contact was missed, the insert hit the unique index, and inbound
+  // messages from that contact were dropped.
+  let { data, error } = await db
     .from("contacts")
     .select("*")
     .eq("account_id", accountId)
-    .like("phone", `%${suffix}`);
+    .like("phone_normalized", `%${suffix}`);
+
+  // Before migration 022 there is no phone_normalized: old lookup.
+  if (error && /phone_normalized/.test(error.message ?? "")) {
+    ({ data, error } = await db
+      .from("contacts")
+      .select("*")
+      .eq("account_id", accountId)
+      .like("phone", `%${suffix}`));
+  }
 
   if (error || !data) return null;
 

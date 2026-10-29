@@ -186,11 +186,20 @@ async function findExistingContactRow(
   phone: string,
 ): Promise<{ id: string; name?: string | null } | null> {
   const suffix = phone.length >= 8 ? phone.slice(-8) : phone
-  const { data, error } = await supabase
+  // Digits-only column (migration 022): a phone saved with spaces
+  // ("+91 95098 66536") doesn't end in its last 8 digits.
+  let { data, error } = await supabase
     .from('contacts')
     .select('id, name, phone')
     .eq('account_id', accountId)
-    .like('phone', `%${suffix}`)
+    .like('phone_normalized', `%${suffix}`)
+  if (error && /phone_normalized/.test(error.message ?? '')) {
+    ;({ data, error } = await supabase
+      .from('contacts')
+      .select('id, name, phone')
+      .eq('account_id', accountId)
+      .like('phone', `%${suffix}`))
+  }
   if (error || !data) return null
   const match = (data as Array<{ id: string; name?: string | null; phone: string }>).find(
     (c) => c.phone.replace(/\D/g, '') === phone,
