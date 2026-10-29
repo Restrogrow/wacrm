@@ -260,6 +260,60 @@ export interface SubscribedApp {
     name?: string
     link?: string
   }
+  /** Set when that app routes this WABA's webhooks to its own URL. */
+  override_callback_uri?: string
+}
+
+/**
+ * Where Meta sends this number's webhooks for the calling app, most
+ * specific first: a phone-number override, a WABA override, or the
+ * app's own callback URL.
+ * https://developers.facebook.com/docs/whatsapp/embedded-signup/webhooks/override
+ */
+export interface WebhookConfiguration {
+  phone_number?: string
+  whatsapp_business_account?: string
+  application?: string
+}
+
+export async function getPhoneWebhookConfiguration(args: {
+  phoneNumberId: string
+  accessToken: string
+}): Promise<WebhookConfiguration | null> {
+  const response = await fetch(
+    `${META_API_BASE}/${args.phoneNumberId}?fields=webhook_configuration`,
+    { headers: { Authorization: `Bearer ${args.accessToken}` } }
+  )
+  if (!response.ok) {
+    await throwMetaError(response, `Meta API error: ${response.status}`)
+  }
+  const data = (await response.json()) as { webhook_configuration?: WebhookConfiguration }
+  return data.webhook_configuration ?? null
+}
+
+/** Point this number's webhooks (for the calling app) at `callbackUrl`. */
+export async function setPhoneWebhookOverride(args: {
+  phoneNumberId: string
+  accessToken: string
+  callbackUrl: string
+  verifyToken: string
+}): Promise<void> {
+  const response = await fetch(`${META_API_BASE}/${args.phoneNumberId}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${args.accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      webhook_configuration: {
+        override_callback_uri: args.callbackUrl,
+        verify_token: args.verifyToken,
+      },
+    }),
+  })
+  if (!response.ok) {
+    await throwMetaError(response, `Meta API error: ${response.status}`)
+  }
 }
 
 /**

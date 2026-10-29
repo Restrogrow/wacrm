@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle, Loader2, Zap } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Zap, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { WhatsappDiagnostics } from "@/lib/whatsapp/diagnostics";
 
@@ -17,9 +17,25 @@ interface Props {
 // customer's login.
 export function WhatsappDiagnosticsPanel({ accountId }: Props) {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<WhatsappDiagnostics | { message: string } | null>(
-    null
-  );
+  const [reconnecting, setReconnecting] = useState(false);
+  const [result, setResult] = useState<
+    (WhatsappDiagnostics & { reconnect_steps?: string[] }) | { message: string } | null
+  >(null);
+
+  // Re-subscribe our app to the WABA and point the number's webhook back
+  // at Repeat Grow, then show the fresh checks.
+  const reconnect = async () => {
+    setReconnecting(true);
+    try {
+      const res = await fetch(`/api/admin/accounts/${accountId}/verify-whatsapp`, { method: "POST" });
+      const data = await res.json();
+      setResult(res.ok ? data : { message: data.error ?? "Reconnect failed" });
+    } catch (err) {
+      setResult({ message: err instanceof Error ? err.message : "Request failed" });
+    } finally {
+      setReconnecting(false);
+    }
+  };
 
   const runCheck = async () => {
     setLoading(true);
@@ -42,20 +58,33 @@ export function WhatsappDiagnosticsPanel({ accountId }: Props) {
         <h3 className="text-sm font-semibold text-foreground">
           Live status check
         </h3>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={runCheck}
-          disabled={loading}
-          className="h-8 gap-1.5"
-        >
-          {loading ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Zap className="size-3.5" />
-          )}
-          Check against Meta
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={reconnect}
+            disabled={loading || reconnecting}
+            className="h-8 gap-1.5"
+            title="Use when customer messages don't arrive: re-links Repeat Grow to this number's webhooks"
+          >
+            {reconnecting ? <Loader2 className="size-3.5 animate-spin" /> : <Link2 className="size-3.5" />}
+            Reconnect webhooks
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={runCheck}
+            disabled={loading || reconnecting}
+            className="h-8 gap-1.5"
+          >
+            {loading ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Zap className="size-3.5" />
+            )}
+            Check against Meta
+          </Button>
+        </div>
       </div>
 
       {result && "message" in result && (
@@ -85,6 +114,27 @@ export function WhatsappDiagnosticsPanel({ accountId }: Props) {
               </li>
             ))}
           </ul>
+
+          <div className="space-y-0.5 border-t border-border/60 pt-2 text-muted-foreground">
+            <p>
+              Messages go to:{" "}
+              <code className="break-all text-foreground">{result.webhook_url ?? "unknown"}</code>
+            </p>
+            <p>
+              Apps on this WhatsApp account:{" "}
+              <span className="text-foreground">
+                {result.subscribed_apps?.length ? result.subscribed_apps.join(", ") : "none"}
+              </span>
+            </p>
+          </div>
+
+          {result.reconnect_steps && result.reconnect_steps.length > 0 && (
+            <ul className="space-y-1 border-t border-border/60 pt-2 text-emerald-400">
+              {result.reconnect_steps.map((step, i) => (
+                <li key={i}>✓ {step}</li>
+              ))}
+            </ul>
+          )}
 
           {result.errors.length > 0 && (
             <ul className="space-y-1 border-t border-border/60 pt-2 text-red-300">

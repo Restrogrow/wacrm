@@ -4,8 +4,10 @@ import {
   verifyPhoneNumber,
   checkCoexistenceStatus,
   getAppWebhookSubscriptions,
+  getPhoneWebhookConfiguration,
   type MetaPhoneInfo,
 } from "@/lib/whatsapp/meta-api";
+import { publicOrigin } from "@/lib/public-origin";
 import type { WhatsAppConfig } from "@/types";
 
 export interface WhatsappDiagnostics {
@@ -18,8 +20,14 @@ export interface WhatsappDiagnostics {
     locally_marked_registered: boolean;
     is_coexistence_number: boolean;
     messages_field_subscribed: boolean | null;
+    /** Meta sends this number's webhooks to Repeat Grow's URL (null = unknown). */
+    webhooks_reach_repeatgrow: boolean | null;
   };
   errors: string[];
+  /** Apps subscribed to the WABA (name or id), e.g. a previous provider's. */
+  subscribed_apps: string[];
+  /** Where Meta actually sends this number's messages for our app. */
+  webhook_url: string | null;
   phone_info: MetaPhoneInfo | null;
   last_registration_error: string | null;
   registered_at: string | null;
@@ -57,7 +65,10 @@ export async function runWhatsappDiagnostics(
     locally_marked_registered: config.registered_at != null,
     is_coexistence_number: config.is_on_biz_app === true,
     messages_field_subscribed: null,
+    webhooks_reach_repeatgrow: null,
   };
+  let subscribedApps: string[] = [];
+  let webhookUrl: string | null = null;
   const errors: string[] = [];
   let phoneInfo: MetaPhoneInfo | null = null;
 
@@ -100,10 +111,20 @@ export async function runWhatsappDiagnostics(
         wabaId: config.waba_id,
         accessToken,
       });
-      checks.waba_subscribed_to_app = subs.length > 0;
+      subscribedApps = subs.map(
+        (s) => s.whatsapp_business_api_data?.name || s.whatsapp_business_api_data?.id || "unknown app"
+      );
+      // Our own app must be among them; another provider's app (e.g. the
+      // one the number came from) doesn't deliver messages to us.
+      const ourAppId = process.env.META_APP_ID;
+      checks.waba_subscribed_to_app = ourAppId
+        ? subs.some((s) => s.whatsapp_business_api_data?.id === ourAppId)
+        : subs.length > 0;
       if (!checks.waba_subscribed_to_app) {
         errors.push(
-          "WABA has no subscribed apps. Re-save the configuration to subscribe."
+          subs.length > 0
+            ? `Repeat Grow's app is not subscribed to this WABA (subscribed: ${subscribedApps.join(", ")}). Use "Reconnect webhooks".`
+            : 'WABA has no subscribed apps. Use "Reconnect webhooks".'
         );
       }
     } catch (err) {
@@ -136,6 +157,28 @@ export async function runWhatsappDiagnostics(
     );
   }
 
+  // 4. Where Meta really sends this number's messages for our app: a
+  // phone or WABA override pointing elsewhere silently diverts them.
+  try {
+    const cfg = await getPhoneWebhookConfiguration({
+      phoneNumberId: config.phone_number_id,
+      accessToken,
+    });
+    webhookUrl = cfg?.phone_number || cfg?.whatsapp_business_account || cfg?.application || null;
+    if (webhookUrl) {
+      checks.webhooks_reach_repeatgrow = isOurWebhookUrl(webhookUrl);
+      if (!checks.webhooks_reach_repeatgrow) {
+        errors.push(
+          `Meta sends this number's messages to ${webhookUrl}, not to Repeat Grow. Use "Reconnect webhooks".`
+        );
+      }
+    }
+  } catch (err) {
+    errors.push(
+      `Webhook destination check failed: ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
+
   // Coexistence numbers are registered by the Business app itself —
   // they're live as soon as metadata + subscription check out.
   const isCoexistence = checks.is_coexistence_number;
@@ -143,12 +186,15 @@ export async function runWhatsappDiagnostics(
     checks.phone_metadata_ok &&
     (checks.waba_subscribed_to_app ?? false) &&
     (checks.messages_field_subscribed ?? true) &&
+    (checks.webhooks_reach_repeatgrow ?? true) &&
     (isCoexistence || checks.locally_marked_registered);
 
   return {
     live,
     checks,
     errors,
+    subscribed_apps: subscribedApps,
+    webhook_url: webhookUrl,
     phone_info: phoneInfo,
     last_registration_error: config.last_registration_error ?? null,
     registered_at: config.registered_at ?? null,
@@ -161,4 +207,19 @@ export async function runWhatsappDiagnostics(
       sync_error: config.smb_sync_error ?? null,
     },
   };
+}
+
+/** Repeat Grow's WhatsApp webhook endpoint. */
+export function repeatGrowWebhookUrl(): string {
+  return `${publicOrigin()}/api/whatsapp/webhook`;
+}
+
+export function isOurWebhookUrl(url: string): boolean {
+  try {
+    const target = new URL(url);
+    const ours = new URL(repeatGrowWebhookUrl());
+    return target.host === ours.host && target.pathname.replace(/\/+$/, "") === ours.pathname;
+  } catch {
+    return false;
+  }
 }
