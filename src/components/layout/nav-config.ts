@@ -114,6 +114,7 @@ export function getPageTitle(pathname: string): string {
   const match = ALL_NAV_ITEMS.filter((i) => isActivePath(pathname, i.href)).sort(
     (a, b) => b.href.length - a.href.length,
   )[0];
-  if (!match && isActivePath(pathname, "/partner")) return "Partner program";
+  // No /partner special case any more — the partner portal is /agent
+  // and has its own shell, so it never asks this for a title.
   return match?.label ?? "Dashboard";
 }

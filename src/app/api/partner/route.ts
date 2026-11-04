@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
@@ -7,12 +7,13 @@ import { PAYOUT_METHODS } from '@/lib/partners/program'
 import { createApplication, getPartnerByUser, loadPartnerLedger, type PartnerRow } from '@/lib/partners/server'
 
 /**
- * The signed-in user's partner page.
+ * The signed-in partner's own data, for the /agent portal.
  *
- *   GET   → { partner, link, earnings, referrals, commissions, payouts }
- *           (partner = null until they apply)
- *   POST  → apply { name, phone, company?, website?, pitch, payout_method?, payout_details? }
- *   PATCH → update { phone?, company?, website?, payout_method?, payout_details? }
+ *   GET   â†’ { partner, link, earnings, referrals, commissions, payouts }
+ *   PATCH â†’ update { phone?, company?, website?, payout_method?, payout_details? }
+ *
+ * Applying is NOT here any more: it happens on the public /partners
+ * page via /api/partners/apply, because an applicant has no login yet.
  *
  * Partners see only their own rows; admin-only fields (admin_note) are
  * never returned.
@@ -61,41 +62,6 @@ function payoutFields(body: Record<string, unknown>) {
     ? body.payout_method
     : null
   return { payout_method: method, payout_details: text(body.payout_details, 300) }
-}
-
-export async function POST(request: Request) {
-  const user = await currentUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const body = ((await request.json().catch(() => null)) ?? {}) as Record<string, unknown>
-
-  const name = text(body.name, 100)
-  const phone = text(body.phone, 30)
-  const pitch = text(body.pitch, 1000)
-  if (!name || !phone || !pitch) {
-    return NextResponse.json({ error: 'Fill in your name, phone and how you will find clients' }, { status: 400 })
-  }
-  if ((phone.match(/\d/g) ?? []).length < 8) {
-    return NextResponse.json({ error: 'Enter a valid phone number' }, { status: 400 })
-  }
-
-  try {
-    if (await getPartnerByUser(user.id)) {
-      return NextResponse.json({ error: 'You have already applied' }, { status: 409 })
-    }
-    await createApplication(user.id, {
-      name,
-      email: user.email ?? null,
-      phone,
-      company: text(body.company, 120),
-      website: text(body.website, 200),
-      pitch,
-      ...payoutFields(body),
-    })
-    return NextResponse.json({ ok: true })
-  } catch (err) {
-    console.error('[partner] apply failed:', err)
-    return NextResponse.json({ error: 'Could not send your application. Please try again.' }, { status: 500 })
-  }
 }
 
 export async function PATCH(request: Request) {

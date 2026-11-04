@@ -160,8 +160,19 @@ export async function proxy(request: NextRequest) {
     return withRefreshedCookies(NextResponse.redirect(url))
   }
 
-  // Protected pages - redirect to login if not authenticated
-  const protectedPaths = ['/dashboard', '/inbox', '/contacts', '/pipelines', '/broadcasts', '/automations', '/flows', '/notifications', '/calls', '/ai-chatbot', '/forms', '/templates', '/qr-link', '/daily-summary', '/orders', '/catalog', '/reports', '/whatsapp-spend', '/journeys', '/integrations', '/settings', '/partner', '/admin', '/onboarding']
+  // Protected pages - redirect to login if not authenticated.
+  //
+  // These are prefixes, matched with startsWith. '/partner' used to be
+  // here for the old in-app partner page; it also matched the PUBLIC
+  // /partners landing page and bounced every visitor to /login, so it's
+  // gone along with that page.
+  //
+  // The partner portal at /agent is deliberately not listed: its layout
+  // guard (lib/partners/guard.ts) has to run anyway to tell an approved
+  // partner from a pending one, and it redirects with ?next=/agent so
+  // signing in returns them to the portal. An edge redirect here would
+  // get there first and drop the `next`.
+  const protectedPaths = ['/dashboard', '/inbox', '/contacts', '/pipelines', '/broadcasts', '/automations', '/flows', '/notifications', '/calls', '/ai-chatbot', '/forms', '/templates', '/qr-link', '/daily-summary', '/orders', '/catalog', '/reports', '/whatsapp-spend', '/journeys', '/integrations', '/settings', '/admin', '/onboarding']
   if (!user && protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
