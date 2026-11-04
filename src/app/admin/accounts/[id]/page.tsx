@@ -23,6 +23,7 @@ import { WhatsappDiagnosticsPanel } from "@/components/admin/whatsapp-diagnostic
 import { PlanEditor } from "@/components/admin/plan-editor";
 import { getReferrerOf } from "@/lib/partners/server";
 import { ResetPasswordButton } from "@/components/admin/reset-password-button";
+import { ImpersonateButton } from "@/components/admin/impersonate-button";
 import { EFFECTIVE_PLAN_LABELS, effectivePlan, type AccountBilling } from "@/lib/billing/plans";
 
 export const metadata: Metadata = {
@@ -38,6 +39,9 @@ interface MemberRow {
   joinedAt: string;
   lastSignInAt: string | null;
   signupMethod: string;
+  /** False for Repeat Grow staff — the impersonate route refuses
+   *  admin-on-admin, so don't offer a button that can only 403. */
+  canImpersonate: boolean;
 }
 
 interface AccountDetail {
@@ -114,6 +118,16 @@ async function loadAccount(id: string): Promise<AccountDetail | null> {
     })
   );
 
+  // One batched lookup rather than isPlatformAdmin() per member.
+  const { data: staff } = await supabase
+    .from("platform_admins")
+    .select("user_id")
+    .in(
+      "user_id",
+      (profiles ?? []).map((p) => p.user_id)
+    );
+  const staffIds = new Set((staff ?? []).map((s) => s.user_id));
+
   const members: MemberRow[] = (profiles ?? []).map((p) => ({
     userId: p.user_id,
     fullName: p.full_name,
@@ -123,6 +137,7 @@ async function loadAccount(id: string): Promise<AccountDetail | null> {
     joinedAt: p.created_at,
     lastSignInAt: authByUserId.get(p.user_id)?.lastSignInAt ?? null,
     signupMethod: signupProviderLabel(authByUserId.get(p.user_id)?.provider),
+    canImpersonate: !staffIds.has(p.user_id),
   }));
 
   return {
@@ -316,7 +331,7 @@ export default async function AdminAccountDetailPage({
                 <TableHead>Signed up via</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead>Last sign-in</TableHead>
-                <TableHead className="text-right">Password</TableHead>
+                <TableHead className="text-right">Support</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -353,11 +368,25 @@ export default async function AdminAccountDetailPage({
                       {formatDateTime(member.lastSignInAt)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <ResetPasswordButton
-                        accountId={account.id}
-                        userId={member.userId}
-                        email={member.email}
-                      />
+                      <div className="flex items-center justify-end gap-2">
+                        {member.canImpersonate ? (
+                          <ImpersonateButton
+                            accountId={account.id}
+                            userId={member.userId}
+                            email={member.email}
+                            name={member.fullName}
+                          />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            Repeat Grow staff
+                          </span>
+                        )}
+                        <ResetPasswordButton
+                          accountId={account.id}
+                          userId={member.userId}
+                          email={member.email}
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
