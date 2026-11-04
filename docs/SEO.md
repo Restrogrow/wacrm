@@ -142,7 +142,7 @@ to be replaced with measured demand.
 | API access | `whatsapp business api`, `whatsapp business api india`, `official whatsapp api provider` | `/`, `/official-vs-unofficial-whatsapp-api` | Live |
 | Competitor swaps | `wati alternative`, `interakt alternative`, `aisensy alternative`, `wati vs interakt` | 4 comparison pages | Live |
 | Pricing | `whatsapp business api pricing india`, `whatsapp api price per message`, `whatsapp marketing cost` | `/pricing`, blog post (blocked, §5) | **Gap** |
-| Bulk sending | `bulk whatsapp sender`, `whatsapp broadcast software`, `bulk whatsapp message india` | None | **Gap — high intent** |
+| Bulk sending | `bulk whatsapp sender`, `whatsapp broadcast software`, `bulk whatsapp message india` | `/bulk-whatsapp-sender` | ✅ Live 2026-11-05 |
 | Green tick | `whatsapp green tick`, `whatsapp blue tick verification`, `whatsapp business verification india` | None | **Gap** |
 
 #### Tier B — problem-aware, blog territory
@@ -152,7 +152,7 @@ to be replaced with measured demand.
 | Cart recovery | `abandoned cart recovery whatsapp`, `whatsapp abandoned cart india`, `shopify abandoned cart whatsapp` | ✅ `/blog/abandoned-cart-recovery-whatsapp-india` |
 | Order notifications | `shopify whatsapp order notification`, `whatsapp order confirmation message` | ✅ `/blog/shopify-whatsapp-order-notifications` |
 | COD / RTO | `cod confirmation whatsapp`, `reduce rto shopify india`, `cod order confirmation message` | **Gap — strong D2C pain** |
-| Ban risk | `whatsapp bulk message without ban`, `whatsapp number banned marketing`, `whatsapp quality rating` | **Gap** |
+| Ban risk | `whatsapp bulk message without ban`, `whatsapp number banned marketing`, `whatsapp quality rating` | ✅ `/blog/bulk-whatsapp-without-getting-banned` |
 | Templates | `whatsapp marketing template examples`, `whatsapp template approved samples` | Partly (Diwali, broadcast rules) |
 | Consent / law | `dpdp act whatsapp marketing`, `whatsapp marketing consent india` | **Gap — pairs with the cart post** |
 | Chatbot | `whatsapp chatbot india`, `whatsapp chatbot without code` | **Gap** |
@@ -229,9 +229,14 @@ them. Not worth it until English Nepal pages prove the market.
 
 Ordered by intent strength, not by measured volume (§0).
 
-- [ ] **Bulk WhatsApp messages in India without getting banned** — best
-      unclaimed Tier A term. Quality rating, messaging limits, opt-in,
-      what actually triggers a ban.
+- [x] **Bulk WhatsApp messages in India without getting banned** — done
+      2026-11-05, `/blog/bulk-whatsapp-without-getting-banned`, paired
+      with the `/bulk-whatsapp-sender` landing page. The post is the
+      problem-aware half (what actually gets a number throttled) and the
+      landing page is the commercial half; each links to the other.
+      Deliberately avoids quoting messaging-tier numbers — Meta changes
+      them, so it points at Settings → WhatsApp → Number health for the
+      reader's real limit instead of printing a figure that will rot.
 - [ ] **COD order confirmation on WhatsApp to cut RTO** — the clearest
       money argument we have for D2C, and the feature is live.
 - [ ] **WhatsApp Business API pricing in India (2026)** — **BLOCKED.**

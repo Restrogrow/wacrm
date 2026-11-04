@@ -25,6 +25,29 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'bulk-whatsapp-without-getting-banned',
+    title: 'How to Send Bulk WhatsApp Messages in India Without Getting Banned',
+    seoTitle: 'Bulk WhatsApp in India Without Getting Banned',
+    description:
+      'What actually gets a WhatsApp number banned or throttled in India, how the quality rating and messaging tiers really work, and the rules that keep a number healthy.',
+    category: 'WhatsApp API',
+    datePublished: '2026-11-05',
+    readMinutes: 10,
+    // Uses its own generated Open Graph card as the hero, like the
+    // cart post — no placeholder illustration shipped.
+    cover: '/blog/bulk-whatsapp-without-getting-banned/opengraph-image',
+    coverAlt:
+      'How to send bulk WhatsApp messages in India without getting banned',
+    keywords: [
+      'whatsapp bulk message without ban',
+      'whatsapp number banned marketing',
+      'whatsapp quality rating',
+      'whatsapp messaging limit india',
+      'bulk whatsapp sender ban',
+      'whatsapp business api ban reasons',
+    ],
+  },
+  {
     slug: 'abandoned-cart-recovery-whatsapp-india',
     title: 'Abandoned Cart Recovery on WhatsApp: A Playbook for Indian Stores',
     seoTitle: 'WhatsApp Abandoned Cart Recovery for Indian Stores',
