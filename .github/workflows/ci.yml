@@ -27,6 +27,13 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://ci.example.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-dummy-anon-key
+      # Needed since the blog moved into the database: /blog is
+      # prerendered at build time and getAllPosts() goes through
+      # supabaseAdmin(), whose `SUPABASE_SERVICE_ROLE_KEY!` assertion
+      # throws "supabaseKey is required" before blog-db.ts can fall back
+      # to the static posts. Without this the Build step fails on every
+      # branch, main included.
+      SUPABASE_SERVICE_ROLE_KEY: ci-dummy-service-role-key
       ENCRYPTION_KEY: '0000000000000000000000000000000000000000000000000000000000000000'
       META_APP_SECRET: 'ci-dummy-meta-secret'
     steps:
