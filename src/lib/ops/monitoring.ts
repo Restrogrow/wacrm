@@ -20,6 +20,7 @@ export const MONITORED_JOBS = {
   'webhook-retries': { label: 'Outgoing webhook retries', maxAgeMinutes: 10 },
   'scheduled-messages': { label: 'Scheduled chat messages', maxAgeMinutes: 10 },
   'shopify-reminders': { label: 'Shopify abandoned carts', maxAgeMinutes: 10 },
+  'shopify-steps': { label: 'Shopify follow-up steps', maxAgeMinutes: 10 },
   'calendly-reminders': { label: 'Calendly reminders', maxAgeMinutes: 10 },
   'calcom-reminders': { label: 'Cal.com reminders', maxAgeMinutes: 10 },
   'daily-summaries': { label: 'Daily summary emails', maxAgeMinutes: 10 },

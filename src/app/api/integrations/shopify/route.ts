@@ -43,9 +43,13 @@ export async function GET() {
       db
         .from('shopify_event_rules')
         .select(
-          'event, enabled, template_name, template_language, body_variables, delay_minutes'
+          'event, step_order, enabled, template_name, template_language, body_variables, delay_minutes, delay_unit, url_button_variable'
         )
-        .eq('account_id', ctx.accountId),
+        .eq('account_id', ctx.accountId)
+        // The client groups these into per-event sequences, so hand
+        // them over already in step order.
+        .order('event', { ascending: true })
+        .order('step_order', { ascending: true }),
       db
         .from('shopify_events')
         .select(

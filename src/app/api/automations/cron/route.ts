@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/automations/admin-client'
 import { resumePendingExecution } from '@/lib/automations/engine'
 import type { AutomationContext } from '@/lib/automations/engine'
 import { processDueCheckouts } from '@/lib/shopify/process'
+import { processDueShopifyMessages } from '@/lib/shopify/schedule'
 import { processShopifyAutoSync } from '@/lib/shopify/auto-sync'
 import { processBillingHolds } from '@/lib/whatsapp/billing-hold-process'
 import { processDueCalendlyReminders } from '@/lib/calendly/process'
@@ -66,6 +67,13 @@ async function runCron() {
   // Never let them fail the run.
   const shopifyReminders = await withHeartbeat('shopify-reminders', processDueCheckouts).catch((err) => {
     console.error('[cron] shopify abandoned checkouts failed:', err)
+    return 0
+  })
+  // Drains the multi-step queue (migration 093). Runs after
+  // processDueCheckouts so a cart that just became due can have its
+  // first step go out on this same tick rather than the next one.
+  const shopifySteps = await withHeartbeat('shopify-steps', processDueShopifyMessages).catch((err) => {
+    console.error('[cron] shopify scheduled steps failed:', err)
     return 0
   })
   const calendlyReminders = await withHeartbeat('calendly-reminders', processDueCalendlyReminders).catch((err) => {
@@ -159,6 +167,7 @@ async function runCron() {
     webhook_retries: webhookRetries,
     daily_summaries: dailySummaries,
     shopify_reminders: shopifyReminders,
+    shopify_steps: shopifySteps,
     calendly_reminders: calendlyReminders,
     calcom_reminders: calcomReminders,
   }
