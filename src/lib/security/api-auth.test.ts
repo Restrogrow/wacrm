@@ -43,6 +43,17 @@ const PUBLIC_ROUTES: Record<string, string> = {
   'demo-request/route.ts': 'public demo request form; honeypot, validation and rate limit per IP, writes with the service role',
   'integrations/woocommerce/wc-auth/callback/route.ts':
     "WooCommerce's server-to-server app-authorization callback; only accepted with our HMAC-signed, 1-hour state naming the account and store (must match the saved store), rate limited per IP, body capped",
+  // Both of these run while the session belongs to the impersonated
+  // CUSTOMER, who is not a platform admin — requirePlatformAdmin would
+  // 404 every legitimate call. Authorisation is instead the httpOnly
+  // impersonation token matching a live, unexpired, not-yet-ended
+  // impersonation_sessions row (lib/auth/impersonation.ts), so neither
+  // route does anything at all for a caller who isn't already inside
+  // an impersonation.
+  'admin/impersonate/status/route.ts':
+    "reads the current impersonation for the warning banner; needs the httpOnly token cookie AND a live session whose user matches the row's target, returns null otherwise",
+  'admin/impersonate/stop/route.ts':
+    'ends an impersonation and restores the admin; gated on the httpOnly token cookie, single-use, and re-checks that the admin it would restore still has platform access',
 }
 
 function routeFiles(dir: string): string[] {

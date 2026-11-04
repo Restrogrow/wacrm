@@ -8,6 +8,7 @@ export const AUDIT_ACTIONS = [
   'member.role_changed',
   'member.removed',
   'member.password_reset',
+  'member.impersonation_started',
   'ownership.transferred',
   'api_key.created',
   'api_key.revoked',
@@ -28,6 +29,10 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   'member.role_changed': 'Changed a member role',
   'member.removed': 'Removed a team member',
   'member.password_reset': 'Password reset by Repeat Grow support',
+  // These labels are read by the customer, so this one says plainly
+  // that support was inside their account. Support access the customer
+  // can't see isn't support access they agreed to.
+  'member.impersonation_started': 'Repeat Grow support signed in to this account',
   'ownership.transferred': 'Transferred ownership',
   'api_key.created': 'Created an API key',
   'api_key.revoked': 'Revoked an API key',
