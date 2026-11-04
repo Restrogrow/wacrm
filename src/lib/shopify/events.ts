@@ -18,6 +18,8 @@ export const SHOPIFY_EVENTS = [
   'order_shipped',
   'out_for_delivery',
   'order_delivered',
+  'feedback_request',
+  'reorder_reminder',
   'order_cancelled',
   'abandoned_checkout',
 ] as const;
@@ -66,6 +68,18 @@ export const EVENT_META: Record<ShopifyEvent, EventMeta> = {
     description:
       'When the carrier marks the shipment delivered. Good moment to ask for a review.',
     marketing: false,
+  },
+  feedback_request: {
+    label: 'Feedback request',
+    description:
+      'Asks how the order went, a few days after it was delivered. Set the delay in days on the step. Treated as marketing, so opted-out customers are skipped.',
+    marketing: true,
+  },
+  reorder_reminder: {
+    label: 'Reorder reminder',
+    description:
+      'Nudges the customer to buy again, a few weeks after delivery. Set the delay in days on the step. Must be a Marketing template; opted-out customers are skipped.',
+    marketing: true,
   },
   order_cancelled: {
     label: 'Order cancelled',
@@ -178,6 +192,124 @@ export function isShopifyVariable(value: unknown): value is ShopifyVariable {
   return (
     typeof value === 'string' && SHOPIFY_VARIABLES.some((v) => v.key === value)
   );
+}
+
+// ------------------------------------------------------------
+// Dynamic URL buttons
+// ------------------------------------------------------------
+
+/**
+ * The variables that hold a link, and so can fill a URL button's
+ * {{1}}. The other variables (names, totals, item lists) would produce
+ * a nonsense URL, so the mapping dropdown only offers these.
+ */
+export const URL_BUTTON_VARIABLES: readonly ShopifyVariable[] = [
+  'checkout_url',
+  'order_status_url',
+  'tracking_url',
+] as const;
+
+export function isUrlButtonVariable(
+  value: unknown
+): value is ShopifyVariable {
+  return (
+    isShopifyVariable(value) &&
+    (URL_BUTTON_VARIABLES as readonly string[]).includes(value)
+  );
+}
+
+export type UrlButtonParam =
+  | { ok: true; value: string }
+  | { ok: false; reason: string };
+
+/**
+ * Turn a full URL into the path suffix a dynamic URL button expects.
+ *
+ * A template button is registered with Meta as a fixed prefix plus one
+ * variable — `https://momperfume.in/{{1}}` — and the send supplies only
+ * what goes after the prefix. Handing Meta the whole URL would produce
+ * `https://momperfume.in/https://momperfume.in/checkouts/abc`, so the
+ * origin has to come off.
+ *
+ * It only comes off if it actually matches the button's own domain.
+ * Shopify hands out links on several hosts — the store's myshopify.com
+ * domain, the custom domain, and a courier's tracking domain that is
+ * nobody's store — and silently stripping a mismatched origin would
+ * send the customer to a URL on the wrong site that happens to parse.
+ * A mismatch is therefore an error the caller logs and skips, never a
+ * best-effort guess.
+ *
+ * Returns the path WITHOUT a leading slash, because the button prefix
+ * in practice ends with one.
+ */
+export function urlButtonParam(
+  rawUrl: string | null | undefined,
+  buttonUrl: string | null | undefined
+): UrlButtonParam {
+  const value = (rawUrl ?? '').trim();
+  if (!value) {
+    return { ok: false, reason: 'Shopify did not provide this link' };
+  }
+
+  let link: URL;
+  try {
+    link = new URL(value);
+  } catch {
+    return { ok: false, reason: `"${value}" is not a valid URL` };
+  }
+
+  // No button prefix to compare against (manually-written template, or
+  // a button whose URL we couldn't read): pass the path through. There
+  // is no domain to mismatch, so nothing to protect against.
+  const prefix = (buttonUrl ?? '').trim();
+  if (!prefix) {
+    return { ok: true, value: pathSuffix(link) };
+  }
+
+  let button: URL;
+  try {
+    // The prefix contains `{{1}}`, which is not URL-legal; chop the
+    // placeholder before parsing so only the origin + fixed path is left.
+    button = new URL(prefix.replace(/\{\{\s*\d+\s*\}\}/g, ''));
+  } catch {
+    return { ok: true, value: pathSuffix(link) };
+  }
+
+  if (!sameHost(link.hostname, button.hostname)) {
+    return {
+      ok: false,
+      reason: `Link is on ${link.hostname} but the template's button points at ${button.hostname}`,
+    };
+  }
+
+  // Also drop the button's own fixed path, if it has one — a button of
+  // `https://shop.in/track/{{1}}` wants just the bit after /track/.
+  const fixed = button.pathname.replace(/\/+$/, '');
+  let path = pathSuffix(link);
+  if (fixed && fixed !== '/') {
+    const fixedNoSlash = fixed.replace(/^\/+/, '');
+    if (path === fixedNoSlash) {
+      path = '';
+    } else if (path.startsWith(`${fixedNoSlash}/`)) {
+      path = path.slice(fixedNoSlash.length + 1);
+    }
+  }
+
+  if (!path) {
+    return { ok: false, reason: 'Link has nothing after the button prefix' };
+  }
+  return { ok: true, value: path };
+}
+
+/** Path + query + hash, with no leading slash. */
+function pathSuffix(url: URL): string {
+  return `${url.pathname}${url.search}${url.hash}`.replace(/^\/+/, '');
+}
+
+/** Treat `shop.in` and `www.shop.in` as the same host. */
+function sameHost(a: string, b: string): boolean {
+  const norm = (h: string) => h.toLowerCase().replace(/^www\./, '');
+  return norm(a) === norm(b);
 }
 
 /** Example context for test sends from Settings. */
