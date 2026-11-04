@@ -67,10 +67,28 @@ impressions that cannot become customers.
 
 | Blocker | Evidence | Impact |
 |---|---|---|
-| **No NPR currency** | `src/lib/currency.ts` — `CURRENCIES` has exactly one entry, `INR`. `DEFAULT_CURRENCY = "INR"` | A Nepali store cannot price in NPR. Order totals inside WhatsApp messages render as ₹, to a customer paying in रु |
-| **Payments are India-only** | `src/lib/payments/razorpay.ts` hardcodes `currency: 'INR'`. Razorpay needs an Indian entity and bank account | A Nepali merchant cannot collect payment through the product at all. eSewa / Khalti / Fonepay / ConnectIPS are the rails there, and none are supported |
-| **Every schema signal says India** | `src/lib/seo.ts`: `areaServed: { Country: "India" }`, `areaServed: "IN"`, `inLanguage: "en-IN"` | We are actively telling Google this is an India-only business |
-| **Plan pricing is ₹-only** | `src/lib/billing/plans.ts` | A Nepali visitor on `/pricing` has to do FX maths to understand the offer |
+| **Plan pricing is ₹-only** | `src/lib/billing/plans.ts` — `PLAN_INFO` prices are bare numbers (999 / 1999 / 3999) rendered with `currency: 'INR'` | A Nepali visitor on `/pricing` has to do FX maths to work out the offer. This is the blocker that actually loses the lead |
+| **Repeat Grow can't bill a Nepali customer** | Own-plan billing is still manual (UPI / bank transfer, see `TODO.md` #1) | Workable by hand today, but there is no self-serve path for a Nepali customer |
+| **Customers can't collect payments** | `src/lib/payments/razorpay.ts` hardcodes `currency: 'INR'`, and Razorpay needs an Indian entity and bank account | A Nepali merchant cannot use the in-chat payment-link feature at all. eSewa / Khalti / Fonepay / ConnectIPS are the rails there; none are supported |
+| **Every schema signal says India** | `src/lib/seo.ts`: `areaServed: { Country: "India" }`, `areaServed: "IN"`, `inLanguage: "en-IN"` | We actively tell Google this is an India-only business |
+| **NPR missing from the currency picker** | `src/lib/currency.ts` — `CURRENCIES` carries 14 currencies but not `NPR` | Affects deal/pipeline values only (`accounts.default_currency`). Small fix |
+
+### Two things that are NOT blockers (corrected 2026-11-05)
+
+An earlier draft of this document claimed the product was INR-only in
+two ways it isn't. Both were wrong, and the correction shrinks the Nepal
+problem considerably:
+
+- **`CURRENCIES` is not INR-only.** It already offers 14 currencies
+  (USD, EUR, GBP, AED, SGD and more). Only `NPR` is absent.
+- **WhatsApp order totals already use the store's own currency.**
+  `formatMoney(order.total_price, order.currency)` in
+  `src/lib/shopify/events.ts` takes the currency straight from the
+  Shopify webhook, so a Nepali store's NPR totals render as NPR. They
+  were never going to show ₹.
+
+What's left is a pricing-page and payments problem, not a messaging one.
+The product can already *message* Nepali customers correctly today.
 
 ### One market fact to verify before investing
 
@@ -89,9 +107,11 @@ looks and the effort belongs in India tier-2 instead.
 ### Recommended sequence
 
 1. **Verify the market fact above.** Cheap, and it decides everything else.
-2. **If it checks out — ship NPR first.** Add `NPR` to `CURRENCIES`,
-   show `/pricing` in NPR for Nepali visitors, and widen `areaServed` to
-   `["IN", "NP"]`. Without this, step 3 is wasted.
+2. **If it checks out — fix `/pricing` first.** Decide the NPR prices
+   (a business call: straight FX conversion, or Nepal-specific pricing),
+   show them to Nepali visitors, add `NPR` to `CURRENCIES`, and widen
+   `areaServed` to `["IN", "NP"]`. Without this, step 3 buys traffic
+   that bounces on the pricing page.
 3. **Then the SEO**: a `/whatsapp-crm-nepal` landing page, the Nepal
    keyword cluster (§3.2), and `hreflang` (§4).
 4. **Payments last**, and only if real Nepali demand shows up — eSewa /
