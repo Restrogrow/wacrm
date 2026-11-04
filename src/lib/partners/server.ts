@@ -19,7 +19,12 @@ import {
 
 export interface PartnerRow {
   id: string;
-  user_id: string;
+  /**
+   * The login this partner uses for their portal, once they have one.
+   * Null for a public application that hasn't been approved yet — see
+   * migration 095. Approval creates or links the login and fills this.
+   */
+  user_id: string | null;
   code: string;
   status: PartnerStatus;
   name: string;
@@ -89,6 +94,22 @@ export async function getPartnerByUser(userId: string): Promise<PartnerRow | nul
   return data ? toPartner(data) : null;
 }
 
+/**
+ * Looks an application up by the address it was submitted with, so a
+ * public form can reject a second application and so approval can
+ * attach a login to the right row. Case-insensitive: people retype
+ * their own email with different capitalisation.
+ */
+export async function getPartnerByEmail(email: string): Promise<PartnerRow | null> {
+  const { data, error } = await supabaseAdmin()
+    .from('partners')
+    .select(PARTNER_COLUMNS)
+    .ilike('email', email.trim())
+    .maybeSingle();
+  if (error) throw new Error(`partner lookup failed: ${error.message}`);
+  return data ? toPartner(data) : null;
+}
+
 export async function getPartner(id: string): Promise<PartnerRow | null> {
   const { data, error } = await supabaseAdmin()
     .from('partners')
@@ -110,8 +131,18 @@ export interface Application {
   payout_details: string | null;
 }
 
-/** Creates the partner row with a free referral code (status pending). */
-export async function createApplication(userId: string, app: Application): Promise<PartnerRow> {
+/**
+ * Creates the partner row with a free referral code (status pending).
+ *
+ * `userId` is null for an application from the public /partners page,
+ * which is now the only way in — the applicant has no account yet and
+ * gets one when they're approved. It stays a parameter because an admin
+ * can still create a partner from an existing login.
+ */
+export async function createApplication(
+  userId: string | null,
+  app: Application
+): Promise<PartnerRow> {
   const db = supabaseAdmin();
   for (let attempt = 0; attempt < 5; attempt++) {
     const { data, error } = await db
@@ -129,6 +160,83 @@ export async function createApplication(userId: string, app: Application): Promi
     }
   }
   throw new Error('partner apply failed: no free referral code');
+}
+
+/**
+ * Give an approved partner a login for their portal.
+ *
+ * Partners aren't CRM customers — they get an auth user and nothing
+ * else: no `accounts` row, no `profiles` row, so none of the tenant app
+ * is reachable with it. `/agent` is the only thing this login opens.
+ *
+ * Idempotent, and tolerant of the applicant already having an account
+ * (a customer who also wants to resell): an existing auth user with
+ * that address is linked rather than duplicated.
+ *
+ * Returns how the login was obtained, so the approval email can decide
+ * whether to include a set-password link.
+ */
+export async function ensurePartnerLogin(
+  partner: PartnerRow
+): Promise<{ userId: string; created: boolean } | null> {
+  if (partner.user_id) return { userId: partner.user_id, created: false };
+  if (!partner.email) return null;
+
+  const db = supabaseAdmin();
+  const email = partner.email.trim();
+
+  let userId: string | null = null;
+  let created = false;
+
+  const { data: createdUser, error: createErr } = await db.auth.admin.createUser({
+    email,
+    // No password: they set one through the link in the approval email.
+    // Confirmed because we're vouching for the address — we just mailed
+    // them at it to say they were approved.
+    email_confirm: true,
+  });
+
+  if (createdUser?.user) {
+    userId = createdUser.user.id;
+    created = true;
+  } else {
+    // Already a user (they're also a customer, or approval ran twice).
+    // There's no get-by-email in the admin API, so page the list.
+    const { data: list } = await db.auth.admin.listUsers({ page: 1, perPage: 200 });
+    const match = list?.users.find(
+      (u) => (u.email ?? '').toLowerCase() === email.toLowerCase()
+    );
+    if (!match) {
+      throw new Error(
+        `could not create or find a login for ${email}: ${createErr?.message ?? 'unknown'}`
+      );
+    }
+    userId = match.id;
+  }
+
+  const { error } = await db.from('partners').update({ user_id: userId }).eq('id', partner.id);
+  if (error) throw new Error(`could not link partner login: ${error.message}`);
+
+  return { userId, created };
+}
+
+/**
+ * A password-set link for a freshly created partner login, so the
+ * approval email can hand them a way in. Null when email isn't
+ * configured or the link can't be minted — the partner can always fall
+ * back to "Forgot password" on /login.
+ */
+export async function partnerPasswordLink(email: string): Promise<string | null> {
+  const { data, error } = await supabaseAdmin().auth.admin.generateLink({
+    type: 'recovery',
+    email,
+    options: { redirectTo: `${SITE_URL}/auth/callback?next=/reset-password` },
+  });
+  if (error || !data?.properties?.action_link) {
+    console.warn('[partners] could not mint a password link:', error?.message);
+    return null;
+  }
+  return data.properties.action_link;
 }
 
 async function mail(to: string[], subject: string, body: Omit<BrandedEmailInput, 'reason'>) {
@@ -168,7 +276,15 @@ async function notifyTeamOfApplication(p: PartnerRow) {
   });
 }
 
-export async function notifyPartnerOfStatus(p: PartnerRow) {
+export async function notifyPartnerOfStatus(
+  p: PartnerRow,
+  /**
+   * Set when approval just created their login, so the email carries a
+   * way to set a password. Without it they'd be told to sign in to an
+   * account they've never had a password for.
+   */
+  passwordLink?: string | null
+) {
   if (!p.email || (p.status !== 'approved' && p.status !== 'rejected')) return;
   const approved = p.status === 'approved';
   await mail([p.email], approved ? 'You are now a Repeat Grow partner' : 'Your Repeat Grow partner application', {
@@ -176,12 +292,26 @@ export async function notifyPartnerOfStatus(p: PartnerRow) {
     eyebrow: 'Partner program',
     title: approved ? 'Welcome to the partner program' : 'About your application',
     intro: approved
-      ? `You earn ${p.commission_rate}% of what your clients pay. Share your link and track every signup and payout from your partner page.`
+      ? `You earn ${p.commission_rate}% of what your clients pay. Share your link, and track every client, commission and payout from your partner dashboard.${
+          passwordLink ? ' Set a password below to open it.' : ''
+        }`
       : 'Thank you for applying. We are not able to approve your application right now. Reply to this email if you have questions.',
-    rows: approved ? [{ label: 'Your link', value: `${SITE_URL}/r/${p.code}` }] : undefined,
-    buttons: approved ? [{ label: 'Open partner page', href: `${SITE_URL}/partner` }] : undefined,
+    rows: approved
+      ? [
+          { label: 'Your link', value: `${SITE_URL}/r/${p.code}` },
+          { label: 'Your dashboard', value: `${SITE_URL}/agent` },
+        ]
+      : undefined,
+    buttons: approved
+      ? passwordLink
+        ? [{ label: 'Set your password', href: passwordLink }]
+        : [{ label: 'Open partner dashboard', href: `${SITE_URL}/agent` }]
+      : undefined,
   });
 }
+
+// The /agent route guard lives in ./guard.ts — see the note there for
+// why it isn't in this file.
 
 /**
  * Credits the signed-in user's account to the partner whose link they

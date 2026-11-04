@@ -1,14 +1,20 @@
-'use client'
+﻿'use client'
 
-// Partner program page: apply, then share your link and track clients,
-// commissions and payouts. Data: GET/POST/PATCH /api/partner. Not in the
-// sidebar until the program is announced (NEXT_PUBLIC_PARTNER_PROGRAM).
+// The agent's home: referral link, the clients they brought,
+// commissions, payouts and their payout details.
+//
+// Applying happens on the PUBLIC /partners page, not here â€” an
+// applicant has no login yet, so there would be nobody to show a form
+// to. By the time anyone reaches this page the (agent)/layout.tsx guard
+// has already established they're an approved (or suspended) partner,
+// which is why there are no apply / pending / rejected branches left.
+//
+// Data: GET /api/partner (PATCH for payout details).
 
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Check, Copy, Handshake, Loader2, MousePointerClick, Users, Wallet, BadgeIndianRupee } from 'lucide-react'
+import { Check, Copy, Loader2, MousePointerClick, Users, Wallet, BadgeIndianRupee } from 'lucide-react'
 
-import { PageHero } from '@/components/layout/page-hero'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,8 +23,6 @@ import {
   COMMISSION_MONTHS,
   formatInr,
   MIN_PAYOUT,
-  PARTNER_STATUS_LABELS,
-  PROGRAM_POINTS,
   type PartnerStatus,
 } from '@/lib/partners/program'
 
@@ -98,121 +102,6 @@ function Stat({ icon: Icon, label, value, sub }: { icon: typeof Users; label: st
   )
 }
 
-function ApplyForm({ email, onDone }: { email: string | null; onDone: () => void }) {
-  const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    company: '',
-    website: '',
-    pitch: '',
-    payout_method: 'upi',
-    payout_details: '',
-  })
-  const [saving, setSaving] = useState(false)
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }))
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    setSaving(true)
-    try {
-      const res = await fetch('/api/partner', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        toast.error(json.error ?? 'Could not send your application')
-        return
-      }
-      toast.success('Application sent')
-      onDone()
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div className="grid gap-6 lg:grid-cols-5">
-      <div className="space-y-4 rounded-2xl border border-border bg-card p-5 lg:col-span-2">
-        <h3 className="font-semibold">How it works</h3>
-        <ol className="space-y-3 text-sm">
-          {['Apply below. We review it within 2 working days.', 'Share your personal link with businesses.', ...PROGRAM_POINTS].map(
-            (point, i) => (
-              <li key={point} className="flex gap-3">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                  {i + 1}
-                </span>
-                <span className="text-muted-foreground">{point}</span>
-              </li>
-            )
-          )}
-        </ol>
-      </div>
-
-      <form onSubmit={submit} className="space-y-4 rounded-2xl border border-border bg-card p-5 lg:col-span-3">
-        <h3 className="font-semibold">Apply to become a partner</h3>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="p-name">Your name *</Label>
-            <Input id="p-name" value={form.name} onChange={set('name')} required maxLength={100} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="p-phone">WhatsApp number *</Label>
-            <Input id="p-phone" value={form.phone} onChange={set('phone')} required maxLength={30} inputMode="tel" placeholder="+91 98765 43210" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="p-company">Company / agency</Label>
-            <Input id="p-company" value={form.company} onChange={set('company')} maxLength={120} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="p-website">Website or Instagram</Label>
-            <Input id="p-website" value={form.website} onChange={set('website')} maxLength={200} />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="p-pitch">How will you find clients? *</Label>
-          <Textarea
-            id="p-pitch"
-            value={form.pitch}
-            onChange={set('pitch')}
-            required
-            maxLength={1000}
-            rows={3}
-            placeholder="e.g. I run a digital marketing agency for D2C brands and salons in Pune"
-          />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="p-method">Get paid by</Label>
-            <select
-              id="p-method"
-              value={form.payout_method}
-              onChange={(e) => setForm((f) => ({ ...f, payout_method: e.target.value }))}
-              className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-            >
-              <option value="upi">UPI</option>
-              <option value="bank">Bank transfer</option>
-            </select>
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="p-details">{form.payout_method === 'upi' ? 'UPI ID' : 'Account name, number, IFSC'}</Label>
-            <Input id="p-details" value={form.payout_details} onChange={set('payout_details')} maxLength={300} />
-          </div>
-        </div>
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">We will email {email ?? 'you'} when you are approved.</p>
-          <Button type="submit" disabled={saving}>
-            {saving && <Loader2 className="size-4 animate-spin" />}
-            Send application
-          </Button>
-        </div>
-      </form>
-    </div>
-  )
-}
-
 function PayoutDetails({ partner, onSaved }: { partner: Partner; onSaved: () => void }) {
   const [method, setMethod] = useState(partner.payout_method ?? 'upi')
   const [details, setDetails] = useState(partner.payout_details ?? '')
@@ -285,7 +174,7 @@ function Dashboard({ data, reload }: { data: PortalData; reload: () => void }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      toast.error('Copy failed — select the link and copy it')
+      toast.error('Copy failed â€” select the link and copy it')
     }
   }
 
@@ -389,7 +278,7 @@ function Dashboard({ data, reload }: { data: PortalData; reload: () => void }) {
                     <p className="truncate">{c.description ?? 'Commission'}</p>
                     <p className="text-xs text-muted-foreground">
                       {day(c.created_at)}
-                      {c.payment_amount ? ` · ${c.rate}% of ${formatInr(c.payment_amount)}` : ''}
+                      {c.payment_amount ? ` Â· ${c.rate}% of ${formatInr(c.payment_amount)}` : ''}
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
@@ -414,7 +303,7 @@ function Dashboard({ data, reload }: { data: PortalData; reload: () => void }) {
                   <div className="min-w-0">
                     <p>{day(p.paid_at)}</p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {[p.method, p.reference].filter(Boolean).join(' · ') || 'Sent'}
+                      {[p.method, p.reference].filter(Boolean).join(' Â· ') || 'Sent'}
                     </p>
                   </div>
                   <p className="shrink-0 font-medium tabular-nums">{formatInr(p.amount)}</p>
@@ -430,7 +319,7 @@ function Dashboard({ data, reload }: { data: PortalData; reload: () => void }) {
   )
 }
 
-export default function PartnerPage() {
+export default function AgentHomePage() {
   const [data, setData] = useState<PortalData | null>(null)
   const [error, setError] = useState(false)
 
@@ -449,60 +338,34 @@ export default function PartnerPage() {
     void load()
   }, [load])
 
-  const status = data?.partner?.status
+  if (error) {
+    return (
+      <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+        Could not load your dashboard.{' '}
+        <button className="text-primary underline" onClick={() => void load()}>
+          Try again
+        </button>
+      </p>
+    )
+  }
+
+  if (!data?.partner) {
+    return (
+      <div className="flex justify-center p-10">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <PageHero
-        icon={Handshake}
-        title="Partner program"
-        description="Bring businesses to Repeat Grow and earn a share of everything they pay."
-        badge={
-          status ? (
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-              {PARTNER_STATUS_LABELS[status]}
-            </span>
-          ) : undefined
-        }
-      />
-
-      {error ? (
-        <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
-          Could not load the partner program.{' '}
-          <button className="text-primary underline" onClick={() => void load()}>
-            Try again
-          </button>
+    <div className="space-y-6">
+      {data.partner.status === 'suspended' ? (
+        <p className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300">
+          Your partner account is paused: your link does not credit new sign-ups right now. Commission you already earned
+          is still paid. Write to support@repeatgrow.com for details.
         </p>
-      ) : !data ? (
-        <div className="flex justify-center p-10">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : !data.partner ? (
-        <ApplyForm email={data.email ?? null} onDone={() => void load()} />
-      ) : status === 'pending' ? (
-        <div className="rounded-2xl border border-border bg-card p-6 text-sm">
-          <p className="font-semibold">Thanks, {data.partner.name.split(' ')[0]}! Your application is under review.</p>
-          <p className="mt-1 text-muted-foreground">
-            We usually reply within 2 working days. You will get an email at {data.partner.email ?? 'your login email'}{' '}
-            with your referral link as soon as you are approved.
-          </p>
-        </div>
-      ) : status === 'rejected' ? (
-        <div className="rounded-2xl border border-border bg-card p-6 text-sm">
-          <p className="font-semibold">Your application was not approved.</p>
-          <p className="mt-1 text-muted-foreground">Write to support@repeatgrow.com if you have questions.</p>
-        </div>
-      ) : (
-        <>
-          {status === 'suspended' ? (
-            <p className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300">
-              Your partner account is paused: your link does not credit new sign-ups right now. Commission you already earned
-              is still paid. Write to support@repeatgrow.com for details.
-            </p>
-          ) : null}
-          <Dashboard data={data} reload={() => void load()} />
-        </>
-      )}
+      ) : null}
+      <Dashboard data={data} reload={() => void load()} />
     </div>
   )
 }

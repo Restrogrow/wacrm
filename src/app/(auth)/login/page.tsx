@@ -95,7 +95,24 @@ function LoginPageInner() {
       // another site needs a full navigation, not a client transition.
       window.location.assign(nextPath);
     } else {
-      router.push(nextPath);
+      // Partners sign in here too, and /dashboard is useless to them —
+      // their login has no account behind it. Ask where this user
+      // belongs; only partners get a different answer, and only when
+      // they haven't asked for a specific page.
+      let destination = nextPath;
+      if (nextPath === "/dashboard") {
+        try {
+          const res = await fetch("/api/partner/home", { cache: "no-store" });
+          if (res.ok) {
+            const json = await res.json();
+            if (typeof json.redirectTo === "string") destination = json.redirectTo;
+          }
+        } catch {
+          // Fall through to /dashboard; the (agent) guard and the
+          // approval email both still point partners at /agent.
+        }
+      }
+      router.push(destination);
     }
   };
 
