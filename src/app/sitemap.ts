@@ -33,6 +33,7 @@ const PAGES: Entry[] = [
   { path: "/", updated: "2026-10-22", changeFrequency: "weekly", priority: 1 },
   { path: "/pricing", updated: "2026-10-20", changeFrequency: "weekly", priority: 0.9 },
   { path: "/demo", updated: "2026-10-22", changeFrequency: "monthly", priority: 0.9 },
+  { path: "/partners", updated: "2026-11-05", changeFrequency: "monthly", priority: 0.8 },
   { path: "/about", updated: "2026-10-20", changeFrequency: "monthly", priority: 0.7 },
   { path: "/contact", updated: "2026-10-16", changeFrequency: "monthly", priority: 0.7 },
   { path: "/whatsapp-crm-for-ecommerce", updated: "2026-10-16", changeFrequency: "monthly", priority: 0.8 },

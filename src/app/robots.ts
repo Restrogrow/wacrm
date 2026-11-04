@@ -36,7 +36,11 @@ const PRIVATE_PATHS = [
   "/orders",
   "/integrations",
   "/settings",
-  "/partner",
+  // The partner PORTAL, not the public /partners landing page. These
+  // entries are prefixes, so "/partner" also matched "/partners" and
+  // told Google not to crawl the one partner page whose whole purpose
+  // is to be found. (proxy.ts had the same prefix bug.)
+  "/agent",
   "/r/",
   "/login",
   "/signup",

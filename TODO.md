@@ -257,10 +257,22 @@ Done so far: `/demo` page, comparison pages (WATI / Interakt / AiSensy),
 GA4 (`G-L56ZRQGJ67`), AI crawler rules, `llms.txt`, FAQ schema, short
 titles and descriptions, LinkedIn + Trustpilot in `sameAs` and footer.
 
+Added 2026-11-05: `/partners` landing page, indexable and in the
+sitemap. Worth knowing why it nearly wasn't — `robots.ts` and `proxy.ts`
+both match `PRIVATE_PATHS` / `protectedPaths` as **prefixes**, and the
+old `"/partner"` entry silently covered `/partners` too: robots told
+Google not to crawl it and the proxy bounced every visitor to `/login`.
+Any new public page whose path starts like a private one needs checking
+against both lists.
+
 ### Blog posts, one a week (answer first, a table, an FAQ, link to /demo)
 - [ ] **WhatsApp Business API pricing in India (2026):** per-message
       costs, GST, worked examples. Check Meta's official rate card first
       (marketing ~₹0.86 before GST since 2026-01-01); add "last updated".
+      **Blocked on that check** — this post is all externally-verifiable
+      numbers, and publishing a stale rate card is worse than having no
+      post. Someone has to open Meta's current rate card before it can
+      be written.
 - [ ] **How to send bulk WhatsApp messages in India without getting banned.**
 - [ ] **How to get the WhatsApp green tick (blue tick) in India.**
 - [ ] **WhatsApp Business app vs WhatsApp Business API** (expand the
@@ -271,8 +283,20 @@ titles and descriptions, LinkedIn + Trustpilot in `sameAs` and footer.
 - [ ] **Click-to-WhatsApp ads: working Meta ad leads in a WhatsApp CRM.**
 - [ ] **WhatsApp CRM for real estate: site-visit follow-ups.**
 - [ ] **WhatsApp for coaching institutes: admissions, fees, parent updates.**
-- [ ] **Abandoned cart recovery on WhatsApp for Indian stores.**
-- [ ] **DPDP Act and WhatsApp marketing: consent rules.**
+- [x] **Abandoned cart recovery on WhatsApp for Indian stores** — done
+      2026-11-05, `/blog/abandoned-cart-recovery-whatsapp-india`.
+      Targets "abandoned cart recovery whatsapp" / "whatsapp abandoned
+      cart india" / "shopify abandoned cart whatsapp". No cover
+      illustration: it uses its own generated OG card as the hero
+      rather than shipping a placeholder, so a designed cover is still
+      worth adding later.
+- [ ] **DPDP Act and WhatsApp marketing: consent rules.** Natural
+      follow-on from the cart post, which leans on consent without
+      explaining it.
+- [ ] **Partner / reseller programme landing content** — `/partners`
+      now exists and is indexable; "whatsapp crm reseller india" and
+      "white label whatsapp crm" are unaddressed and have real
+      commercial intent.
 
 ### Bigger pieces
 - [ ] **WhatsApp API pricing calculator** page (`/whatsapp-api-pricing-calculator`).
