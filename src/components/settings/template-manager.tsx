@@ -125,6 +125,63 @@ function emptyButton(type: TemplateButton['type']): TemplateButton {
   }
 }
 
+/**
+ * The body bubble in the template list.
+ *
+ * Clamped to three lines so the list stays scannable, but with a way
+ * OUT of the clamp — a long template used to be cut off at three lines
+ * with no expand and no detail view behind it, so there was simply no
+ * way to read the rest of your own template from this page.
+ *
+ * `whitespace-pre-wrap` matters as much as the toggle: template bodies
+ * are written with deliberate line breaks, and collapsing them made
+ * even a short template read nothing like what the customer receives.
+ *
+ * The toggle only appears when the text is actually being clipped,
+ * measured rather than guessed from a character count — the bubble's
+ * width varies with the viewport, so a fixed threshold would show
+ * "Show more" on text that already fits.
+ */
+function TemplateBodyPreview({ text }: { text: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [clipped, setClipped] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setClipped(el.scrollHeight > el.clientHeight + 1);
+    measure();
+    // Re-measure on resize: the same text clips at one width and not
+    // another.
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [text]);
+
+  return (
+    <div className="max-w-prose">
+      <p
+        ref={ref}
+        className={`rounded-2xl rounded-tl-sm bg-primary-soft px-3.5 py-2.5 text-sm whitespace-pre-wrap text-foreground ${
+          expanded ? '' : 'line-clamp-3'
+        }`}
+      >
+        {text}
+      </p>
+      {(clipped || expanded) && (
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          className="mt-1 text-xs font-medium text-primary hover:underline"
+        >
+          {expanded ? 'Show less' : 'Show full message'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function TemplateManager() {
   const supabase = createClient();
   const { user, loading: authLoading } = useAuth();
@@ -619,9 +676,7 @@ export function TemplateManager() {
                         </span>
                       )}
                     </div>
-                    <p className="line-clamp-3 max-w-prose rounded-2xl rounded-tl-sm bg-primary-soft px-3.5 py-2.5 text-sm text-foreground">
-                      {template.body_text}
-                    </p>
+                    <TemplateBodyPreview text={template.body_text} />
                     {template.carousel_cards?.length ? (
                       <div className="flex items-center gap-1.5">
                         <span className="text-[11px] font-medium text-muted-foreground">
