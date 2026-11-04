@@ -36,14 +36,36 @@
 ALTER TABLE shopify_event_rules
   ADD COLUMN IF NOT EXISTS step_order integer NOT NULL DEFAULT 0;
 
--- Repoint the primary key at (account_id, event, step_order). Dropping
--- by the conventional name rather than a catalogue lookup: this table
--- was created in 039 with an inline PRIMARY KEY, so Postgres named it
--- predictably.
-ALTER TABLE shopify_event_rules
-  DROP CONSTRAINT IF EXISTS shopify_event_rules_pkey;
-ALTER TABLE shopify_event_rules
-  ADD PRIMARY KEY (account_id, event, step_order);
+-- Repoint the primary key at (account_id, event, step_order).
+--
+-- Guarded rather than a bare DROP + ADD, because `ADD PRIMARY KEY` is
+-- the one statement in this file that isn't re-runnable on its own: a
+-- second pass fails with "multiple primary keys for table are not
+-- allowed", and migrations get pasted into the SQL editor more than
+-- once. Comparing pg_constraint against the new column list makes a
+-- re-run a no-op instead of an error that aborts the rest of the file.
+DO $$
+DECLARE
+  want smallint[];
+BEGIN
+  SELECT array_agg(a.attnum ORDER BY x.ord)
+    INTO want
+    FROM unnest(ARRAY['account_id', 'event', 'step_order']) WITH ORDINALITY AS x(name, ord)
+    JOIN pg_attribute a
+      ON a.attrelid = 'shopify_event_rules'::regclass
+     AND a.attname = x.name;
+
+  IF NOT EXISTS (
+    SELECT 1
+      FROM pg_constraint
+     WHERE conrelid = 'shopify_event_rules'::regclass
+       AND contype = 'p'
+       AND conkey = want
+  ) THEN
+    ALTER TABLE shopify_event_rules DROP CONSTRAINT IF EXISTS shopify_event_rules_pkey;
+    ALTER TABLE shopify_event_rules ADD PRIMARY KEY (account_id, event, step_order);
+  END IF;
+END $$;
 
 -- `delay_minutes` is the single source of truth for when a step fires,
 -- measured from the event (not from the previous step) so re-ordering
