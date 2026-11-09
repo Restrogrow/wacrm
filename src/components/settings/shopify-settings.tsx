@@ -31,10 +31,16 @@ import {
 } from '@/lib/shopify/events';
 import {
   IntegrationActivity,
-  MessageRulesEditor,
   fmtActivityTime,
   useApprovedTemplates,
 } from './integration-message-rules';
+import {
+  ShopifyMessageSteps,
+  emptyStep,
+  type StepDraft,
+} from './shopify-message-steps';
+import type { DelayUnit } from '@/lib/shopify/steps';
+import type { StepStats } from '@/app/api/integrations/shopify/stats/route';
 import { SettingsPanelHead } from './settings-panel-head';
 
 interface StoreInfo {
@@ -71,13 +77,22 @@ function syncPartText(part: SyncPart | undefined): string {
   return bits.join(' · ') || 'Up to date';
 }
 
-interface Rule {
+/**
+ * One saved step as the API returns it. An event's automation is the
+ * set of rows sharing its `event`, ordered by `step_order` — see
+ * migration 093. Pre-093 rows have no step_order and arrive as step 0,
+ * i.e. a one-step sequence, which is exactly what they were.
+ */
+interface StepRow {
   event: ShopifyEvent;
+  step_order: number | null;
   enabled: boolean;
   template_name: string | null;
   template_language: string | null;
   body_variables: ShopifyVariable[];
   delay_minutes: number;
+  delay_unit: DelayUnit | null;
+  url_button_variable: ShopifyVariable | null;
 }
 
 interface ActivityRow {
@@ -107,15 +122,25 @@ const EVENT_ICONS: Record<string, LucideIcon> = {
   abandoned_checkout: ShoppingCart,
 };
 
-function emptyRule(event: ShopifyEvent): Rule {
-  return {
-    event,
-    enabled: false,
-    template_name: null,
-    template_language: null,
-    body_variables: [],
-    delay_minutes: 60,
-  };
+/**
+ * A fresh event starts with one step. Abandoned cart defaults to an
+ * hour's wait (what the old single `delay_minutes` default was);
+ * everything else defaults to immediate, which is what those events
+ * did before they had a delay at all.
+ */
+function initialSteps(event: ShopifyEvent): StepDraft[] {
+  if (event === 'abandoned_checkout') return [emptyStep(60)];
+  if (event === 'feedback_request') return [emptyStep(3 * 1440)];
+  if (event === 'reorder_reminder') return [emptyStep(30 * 1440)];
+  return [emptyStep(0)];
+}
+
+/** Sensible delay for a newly added follow-up: after the last one. */
+function nextFollowUpDelay(steps: StepDraft[]): number {
+  const last = Math.max(0, ...steps.map((s) => s.delay_minutes));
+  // Roughly double, so 30 min → 1 h → 2 h rather than three steps
+  // stacked at the same time (which the API rejects anyway).
+  return last === 0 ? 60 : last * 2;
 }
 
 function CopyField({ value }: { value: string }) {
@@ -152,12 +177,13 @@ export function ShopifySettings() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [store, setStore] = useState<StoreInfo | null>(null);
   const [sync, setSync] = useState<SyncInfo | null>(null);
-  const [rules, setRules] = useState<Record<ShopifyEvent, Rule>>(
+  const [steps, setSteps] = useState<Record<ShopifyEvent, StepDraft[]>>(
     () =>
       Object.fromEntries(
-        SHOPIFY_EVENTS.map((e) => [e, emptyRule(e)])
-      ) as Record<ShopifyEvent, Rule>
+        SHOPIFY_EVENTS.map((e) => [e, initialSteps(e)])
+      ) as Record<ShopifyEvent, StepDraft[]>
   );
+  const [stats, setStats] = useState<StepStats[]>([]);
   const [activity, setActivity] = useState<ActivityRow[]>([]);
   const templates = useApprovedTemplates();
 
@@ -188,10 +214,28 @@ export function ShopifySettings() {
       setSync(json.sync ?? null);
       setCountryCode(json.store?.default_country_code ?? '91');
       setActivity(json.events ?? []);
-      setRules((prev) => {
+      // Group the flat step rows back into a sequence per event. Rows
+      // arrive already ordered by (event, step_order); events with no
+      // saved rows keep their defaults.
+      setSteps((prev) => {
         const next = { ...prev };
-        for (const r of (json.rules ?? []) as Rule[]) {
-          if (r.event in next) next[r.event] = { ...emptyRule(r.event), ...r };
+        const grouped = new Map<ShopifyEvent, StepDraft[]>();
+        for (const row of (json.rules ?? []) as StepRow[]) {
+          if (!(row.event in next)) continue;
+          const list = grouped.get(row.event) ?? [];
+          list.push({
+            enabled: row.enabled,
+            template_name: row.template_name,
+            template_language: row.template_language,
+            body_variables: row.body_variables ?? [],
+            delay_minutes: row.delay_minutes ?? 0,
+            delay_unit: row.delay_unit ?? 'minutes',
+            url_button_variable: row.url_button_variable ?? null,
+          });
+          grouped.set(row.event, list);
+        }
+        for (const [event, list] of grouped) {
+          if (list.length > 0) next[event] = list;
         }
         return next;
       });
@@ -201,9 +245,25 @@ export function ShopifySettings() {
     }
   }, []);
 
+  // Per-step funnel numbers. Separate from the main load because they
+  // are nice-to-have: a failure here must not blank the editor.
+  const loadStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/integrations/shopify/stats', {
+        cache: 'no-store',
+      });
+      if (!res.ok) return;
+      const json = await res.json().catch(() => ({}));
+      setStats(json.stats ?? []);
+    } catch {
+      // Leave the chips off rather than surfacing a toast for stats.
+    }
+  }, []);
+
   useEffect(() => {
     void load();
-  }, [load]);
+    void loadStats();
+  }, [load, loadStats]);
 
   // Result of the OAuth round-trip (/api/integrations/shopify/callback).
   useEffect(() => {
@@ -215,8 +275,37 @@ export function ShopifySettings() {
 
   const readOnly = !canEditSettings;
 
-  const updateRule = (event: ShopifyEvent, patch: Partial<Rule>) => {
-    setRules((prev) => ({ ...prev, [event]: { ...prev[event], ...patch } }));
+  const updateStep = (
+    event: ShopifyEvent,
+    index: number,
+    patch: Partial<StepDraft>
+  ) => {
+    setSteps((prev) => ({
+      ...prev,
+      [event]: prev[event].map((s, i) => (i === index ? { ...s, ...patch } : s)),
+    }));
+    setDirty(true);
+  };
+
+  const addStep = (event: ShopifyEvent) => {
+    setSteps((prev) => {
+      const list = prev[event];
+      // Enabled straight away: someone who clicked "Add follow-up"
+      // wants a follow-up, not a switch to find afterwards.
+      const added: StepDraft = {
+        ...emptyStep(nextFollowUpDelay(list)),
+        enabled: true,
+      };
+      return { ...prev, [event]: [...list, added] };
+    });
+    setDirty(true);
+  };
+
+  const removeStep = (event: ShopifyEvent, index: number) => {
+    setSteps((prev) => ({
+      ...prev,
+      [event]: prev[event].filter((_, i) => i !== index),
+    }));
     setDirty(true);
   };
 
@@ -283,7 +372,12 @@ export function ShopifySettings() {
       const res = await fetch('/api/integrations/shopify/rules', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rules: Object.values(rules) }),
+        body: JSON.stringify({
+          rules: SHOPIFY_EVENTS.map((event) => ({
+            event,
+            steps: steps[event],
+          })),
+        }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -292,6 +386,7 @@ export function ShopifySettings() {
       }
       toast.success('Messages saved');
       setDirty(false);
+      void loadStats();
     } finally {
       setBusy(null);
     }
@@ -374,7 +469,10 @@ export function ShopifySettings() {
         {[
           { label: 'Store', value: connected ? (store?.shop_name || store?.shop_domain || '—') : 'Not connected', icon: ShoppingBag, tone: 'bg-primary text-primary-foreground shadow-primary/30' },
           { label: 'Messages sent', value: String(activity.filter((r) => r.status === 'sent').length), icon: MessageSquare, tone: 'bg-sky-500 text-white shadow-sky-500/30' },
-          { label: 'Active automations', value: `${Object.values(rules).filter((r) => r.enabled).length} / ${SHOPIFY_EVENTS.length}`, icon: Zap, tone: 'bg-amber-500 text-white shadow-amber-500/30' },
+          // Counts events with at least one live step, not steps — "3 / 9
+          // automations on" is the useful reading; a cart chase with three
+          // follow-ups is still one automation.
+          { label: 'Active automations', value: `${SHOPIFY_EVENTS.filter((e) => steps[e]?.some((s) => s.enabled)).length} / ${SHOPIFY_EVENTS.length}`, icon: Zap, tone: 'bg-amber-500 text-white shadow-amber-500/30' },
           { label: 'Last event', value: connected ? fmtActivityTime(store?.last_event_at ?? null) : '—', icon: Clock, tone: 'bg-violet-500 text-white shadow-violet-500/30' },
         ].map((st) => (
           <div key={st.label} className="rounded-3xl border border-border bg-card p-5 shadow-sm">
@@ -662,8 +760,10 @@ export function ShopifySettings() {
             </h3>
             <p className="text-muted-foreground mt-1 text-xs">
               Pick an approved template for each event and choose what fills
-              each {'{{1}}'}, {'{{2}}'}… Create templates in Settings →
-              Templates (use the Utility category for order updates).
+              each {'{{1}}'}, {'{{2}}'}… Add follow-ups to chase a cart more
+              than once. Create templates in Settings → Templates (use the
+              Utility category for order updates). Marketing steps wait out
+              the quiet hours set in Journeys.
             </p>
           </div>
           {connected && !readOnly && (
@@ -687,39 +787,23 @@ export function ShopifySettings() {
           )}
         </div>
 
-        <MessageRulesEditor
+        <ShopifyMessageSteps
           events={SHOPIFY_EVENTS}
           meta={EVENT_META}
           variables={SHOPIFY_VARIABLES}
-          rules={rules}
+          steps={steps}
           templates={templates}
+          stats={stats}
           readOnly={readOnly}
           canTest={!!connected && !readOnly}
           icons={EVENT_ICONS}
           testingEvent={
             busy?.startsWith('test:') ? (busy.slice(5) as ShopifyEvent) : null
           }
-          onChange={updateRule}
+          onChange={updateStep}
+          onAddStep={addStep}
+          onRemoveStep={removeStep}
           onTest={sendTest}
-          renderExtra={(event, rule) =>
-            event === 'abandoned_checkout' ? (
-              <div className="flex flex-col gap-1">
-                <Label className="text-muted-foreground text-xs">
-                  Send after (minutes idle)
-                </Label>
-                <Input
-                  type="number"
-                  min={15}
-                  max={10080}
-                  value={rule.delay_minutes}
-                  disabled={readOnly}
-                  onChange={(e) =>
-                    updateRule(event, { delay_minutes: Number(e.target.value) })
-                  }
-                />
-              </div>
-            ) : null
-          }
         />
 
         {!readOnly && (

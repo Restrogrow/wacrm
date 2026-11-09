@@ -51,22 +51,20 @@ import {
 } from './events';
 import { normalizeIntegrationPhone } from '@/lib/integrations/phone';
 import { HOLD_WAITING_TEXT } from '@/lib/whatsapp/billing-hold';
+import {
+  cancelPendingShopifySteps,
+  scheduleShopifySteps,
+} from './schedule';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Json = Record<string, any>;
 
-export interface ShopifyStore {
-  id: string;
-  account_id: string;
-  shop_domain: string;
-  shop_name: string | null;
-  connection_type: 'oauth' | 'webhook';
-  default_country_code: string;
-  status: 'active' | 'disconnected';
-}
-
-export const STORE_COLUMNS =
-  'id, account_id, shop_domain, shop_name, connection_type, default_country_code, status';
+// Re-exported from ./store so the existing `from './process'` imports
+// in the webhook and test routes keep working, while ./schedule can
+// take them from ./store and avoid an import cycle with this file.
+export { STORE_COLUMNS, type ShopifyStore } from './store';
+import type { ShopifyStore } from './store';
+import { STORE_COLUMNS } from './store';
 
 interface EventRule {
   enabled: boolean;
@@ -279,11 +277,11 @@ export async function handleShopifyWebhook(
         await onOrderCancelled(db, store, payload);
         break;
       case 'fulfillments/create':
-        await onFulfillment(db, store, payload, 'order_shipped', topic);
+        await onFulfillment(db, store, payload, 'order_shipped');
         break;
       case 'fulfillments/update': {
         const event = shipmentStatusEvent(payload.shipment_status);
-        await onFulfillment(db, store, payload, event, topic);
+        await onFulfillment(db, store, payload, event);
         break;
       }
       case 'checkouts/create':
@@ -362,6 +360,28 @@ async function onOrderCreated(
       .is('completed_at', null);
   }
 
+  // The stop rule. Closing the checkout above only prevents a *new*
+  // reminder being queued; steps already sitting in the queue — step 2
+  // at 7 h, step 3 at 24 h — have to be cancelled explicitly or the
+  // customer who just paid still gets chased about their cart.
+  //
+  // Matched on the phone too, not just the checkout token: abandoning
+  // on mobile and buying on desktop produces a different token for the
+  // same person, and that still has to stop.
+  const normalizedPhone = normalizeIntegrationPhone(
+    phone,
+    countryCode,
+    store.default_country_code
+  );
+  await cancelPendingShopifySteps({
+    accountId: store.account_id,
+    storeId: store.id,
+    checkoutToken: order.checkout_token ?? null,
+    phone: normalizedPhone,
+    events: ['abandoned_checkout'],
+    reason: `Order ${order.name ?? order.id} placed`,
+  });
+
   // Team alert (Slack / Discord / Telegram), once per order. Never throws.
   await fireTeamAlert(store.account_id, 'order_placed', {
     contactName: names.full,
@@ -371,24 +391,80 @@ async function onOrderCreated(
   });
 
   const cod = isCashOnDelivery(order);
-  const outcome = await sendShopifyEvent(store, {
+  await scheduleShopifySteps(store, {
     event: cod ? 'cod_order_placed' : 'order_placed',
     fallbackEvent: cod ? 'order_placed' : undefined,
-    sendKey: `order_placed:${order.id}`,
-    topic: 'orders/create',
+    entityKey: String(order.id),
+    shopifyOrderId: String(order.id),
+    checkoutToken: order.checkout_token ?? null,
     rawPhone: phone,
     countryCode,
     customerName: names.full,
     ctx: orderContext(order, store.shop_name),
-    orderName: order.name ?? null,
   });
-  if (outcome.status === 'sent') {
-    await db
-      .from('shopify_orders')
-      .update({ contact_id: outcome.contactId })
-      .eq('store_id', store.id)
-      .eq('shopify_order_id', String(order.id));
+
+  // `contact_id` used to be a by-product of the send returning one.
+  // Now the send may be minutes away (or never, if no rule is set), so
+  // resolve the contact here — it's wanted on the order either way.
+  if (normalizedPhone) {
+    try {
+      const { contactId } = await resolveConversationByPhone(
+        db,
+        store.account_id,
+        normalizedPhone,
+        names.full
+      );
+      await db
+        .from('shopify_orders')
+        .update({ contact_id: contactId })
+        .eq('store_id', store.id)
+        .eq('shopify_order_id', String(order.id));
+    } catch (err) {
+      console.error('[shopify] could not link order to contact:', err);
+    }
   }
+
+  await attributeRecoveredOrder(db, store, order, normalizedPhone);
+}
+
+/**
+ * Credit a recovered cart to the step that chased it, for the "orders
+ * recovered" figure per step in Settings.
+ *
+ * The newest cart step actually SENT to this checkout (or phone) before
+ * the order arrived gets the credit. "Newest" rather than "first"
+ * because the last nudge is the one that plausibly worked, and it's the
+ * convention the rest of the funnel reporting uses.
+ */
+async function attributeRecoveredOrder(
+  db: SupabaseClient,
+  store: ShopifyStore,
+  order: Json,
+  phone: string | null
+): Promise<void> {
+  if (!order.checkout_token && !phone) return;
+
+  let query = db
+    .from('shopify_scheduled_messages')
+    .select('id')
+    .eq('account_id', store.account_id)
+    .eq('event', 'abandoned_checkout')
+    .eq('status', 'sent')
+    .order('sent_at', { ascending: false })
+    .limit(1);
+
+  query = order.checkout_token
+    ? query.eq('checkout_token', String(order.checkout_token))
+    : query.eq('phone', phone as string);
+
+  const { data } = await query.maybeSingle<{ id: string }>();
+  if (!data) return;
+
+  await db
+    .from('shopify_orders')
+    .update({ recovered_from_scheduled_id: data.id })
+    .eq('store_id', store.id)
+    .eq('shopify_order_id', String(order.id));
 }
 
 async function onOrderCancelled(
@@ -397,15 +473,36 @@ async function onOrderCancelled(
   order: Json
 ) {
   const { phone, countryCode, names } = await upsertOrder(db, store, order);
-  await sendShopifyEvent(store, {
+
+  // A cancelled order must not go on to produce "out for delivery",
+  // "how was it?" or "buy it again" — whatever is still queued for it
+  // is now wrong.
+  await cancelPendingShopifySteps({
+    accountId: store.account_id,
+    storeId: store.id,
+    phone: normalizeIntegrationPhone(
+      phone,
+      countryCode,
+      store.default_country_code
+    ),
+    events: [
+      'order_shipped',
+      'out_for_delivery',
+      'order_delivered',
+      'feedback_request',
+      'reorder_reminder',
+    ],
+    reason: `Order ${order.name ?? order.id} cancelled`,
+  });
+
+  await scheduleShopifySteps(store, {
     event: 'order_cancelled',
-    sendKey: `order_cancelled:${order.id}`,
-    topic: 'orders/cancelled',
+    entityKey: String(order.id),
+    shopifyOrderId: String(order.id),
     rawPhone: phone,
     countryCode,
     customerName: names.full,
     ctx: orderContext(order, store.shop_name),
-    orderName: order.name ?? null,
   });
 }
 
@@ -418,8 +515,7 @@ async function onFulfillment(
   db: SupabaseClient,
   store: ShopifyStore,
   fulfillment: Json,
-  event: ShopifyEvent | null,
-  topic: string
+  event: ShopifyEvent | null
 ) {
   const orderId = fulfillment.order_id ? String(fulfillment.order_id) : null;
   const tracking = trackingOf(fulfillment);
@@ -470,16 +566,32 @@ async function onFulfillment(
     shop_name: store.shop_name,
   };
 
-  await sendShopifyEvent(store, {
-    event,
-    sendKey: `${event}:${fulfillment.id ?? orderId}`,
-    topic,
+  const entityKey = String(fulfillment.id ?? orderId);
+  const common = {
+    entityKey,
+    shopifyOrderId: orderId,
     rawPhone: order?.phone ?? destination.phone,
     countryCode: destination.countryCode,
     customerName: ctx.customer_full_name,
     ctx,
-    orderName: ctx.order_number,
-  });
+  };
+
+  await scheduleShopifySteps(store, { event, ...common });
+
+  // "Feedback request" and "Reorder reminder" are both defined as
+  // "X days after Delivered", so delivery is where they get queued.
+  // They're separate events rather than extra steps on order_delivered
+  // because the merchant configures them separately (different
+  // templates, different categories) and wants their numbers reported
+  // apart — a 30-day reorder nudge is not a delivery notification.
+  //
+  // The delay lives on each step, so nothing here knows how many days:
+  // it just enqueues, and sendAtFor applies whatever the step says.
+  if (event === 'order_delivered') {
+    for (const followUp of ['feedback_request', 'reorder_reminder'] as const) {
+      await scheduleShopifySteps(store, { event: followUp, ...common });
+    }
+  }
 }
 
 async function onCheckout(
@@ -525,13 +637,27 @@ async function onCheckout(
 // ------------------------------------------------------------
 
 /**
- * Send "Abandoned cart" reminders for checkouts idle longer than each
- * account's delay. Called from the every-minute automations cron.
- * Each checkout is reminded at most once (reminded_at claim).
+ * Queue the abandoned-cart sequence for checkouts that have gone quiet.
+ * Called from the every-minute automations cron.
+ *
+ * A cart becomes "abandoned" once it has been idle for the EARLIEST
+ * step's delay. At that moment the whole sequence is enqueued in one
+ * go, with delays measured from `last_activity_at` — so a 30 min / 7 h
+ * / 24 h setup produces one row due now and two due later, rather than
+ * this scan having to wake up three times per cart and decide which
+ * step is next.
+ *
+ * `reminded_at` is the enqueue claim: set once, so an overlapping cron
+ * run can't queue the sequence twice. (The queue's own dedupe_key would
+ * catch that too — this just avoids the wasted work.)
+ *
+ * Returns the number of carts enqueued, not messages sent; sending is
+ * processDueShopifyMessages' job.
  */
 export async function processDueCheckouts(limit = 25): Promise<number> {
   const db = supabaseAdmin();
 
+  // Earliest enabled step per account decides when a cart is "due".
   const { data: rules, error: rulesErr } = await db
     .from('shopify_event_rules')
     .select('account_id, delay_minutes')
@@ -541,16 +667,23 @@ export async function processDueCheckouts(limit = 25): Promise<number> {
   // Table missing (migration 039 not applied) or nothing enabled.
   if (rulesErr || !rules || rules.length === 0) return 0;
 
-  const delayByAccount = new Map(
-    rules.map((r) => [r.account_id as string, r.delay_minutes as number])
-  );
-  const minDelay = Math.min(...delayByAccount.values());
+  const firstDelayByAccount = new Map<string, number>();
+  for (const r of rules) {
+    const account = r.account_id as string;
+    const delay = typeof r.delay_minutes === 'number' ? r.delay_minutes : 0;
+    const current = firstDelayByAccount.get(account);
+    if (current === undefined || delay < current) {
+      firstDelayByAccount.set(account, delay);
+    }
+  }
+
+  const minDelay = Math.min(...firstDelayByAccount.values());
   const now = Date.now();
 
   const { data: due } = await db
     .from('shopify_checkouts')
     .select('*')
-    .in('account_id', [...delayByAccount.keys()])
+    .in('account_id', [...firstDelayByAccount.keys()])
     .is('completed_at', null)
     .is('reminded_at', null)
     .lte('last_activity_at', new Date(now - minDelay * 60_000).toISOString())
@@ -559,12 +692,13 @@ export async function processDueCheckouts(limit = 25): Promise<number> {
     .order('last_activity_at', { ascending: true })
     .limit(limit);
 
-  let sent = 0;
+  let enqueued = 0;
   for (const checkout of due ?? []) {
-    const delay = delayByAccount.get(checkout.account_id) ?? 60;
+    // The query used the global minimum; re-check against this
+    // account's own first step.
+    const delay = firstDelayByAccount.get(checkout.account_id) ?? 60;
     if (Date.parse(checkout.last_activity_at) > now - delay * 60_000) continue;
 
-    // Claim so an overlapping cron run can't remind twice.
     const { data: claimed } = await db
       .from('shopify_checkouts')
       .update({ reminded_at: new Date().toISOString() })
@@ -594,17 +728,19 @@ export async function processDueCheckouts(limit = 25): Promise<number> {
     ctx.customer_full_name = checkout.customer_name;
     ctx.items = checkout.items;
 
-    const outcome = await sendShopifyEvent(store, {
+    const outcome = await scheduleShopifySteps(store, {
       event: 'abandoned_checkout',
-      sendKey: `abandoned_checkout:${checkout.checkout_token}`,
-      topic: 'checkouts/update',
+      entityKey: String(checkout.checkout_token),
+      checkoutToken: String(checkout.checkout_token),
       rawPhone: checkout.phone,
       countryCode: null,
       customerName: checkout.customer_name,
       ctx,
-      orderName: null,
+      // Delays run from when the cart went quiet, not from now, so the
+      // first step fires at exactly "idle for 30 minutes".
+      eventAt: new Date(checkout.last_activity_at),
     });
-    if (outcome.status === 'sent') sent++;
+    if (outcome.queued > 0) enqueued++;
   }
-  return sent;
+  return enqueued;
 }

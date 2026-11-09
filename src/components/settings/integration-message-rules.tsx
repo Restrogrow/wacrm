@@ -32,6 +32,12 @@ export interface TemplateOption {
   language: string;
   category: string;
   body_text: string;
+  /**
+   * The template's buttons as approved. Only the Shopify step editor
+   * reads these — to spot a URL button carrying a `{{n}}` and offer
+   * the "fill it with" mapping. Other integrations ignore the field.
+   */
+  buttons?: unknown;
 }
 
 export interface MessageRule {
@@ -68,7 +74,7 @@ export function useApprovedTemplates(): TemplateOption[] {
     void (async () => {
       const { data } = await createClient()
         .from('message_templates')
-        .select('name, language, category, body_text')
+        .select('name, language, category, body_text, buttons')
         .eq('status', 'APPROVED')
         .order('name');
       setTemplates((data ?? []) as TemplateOption[]);
