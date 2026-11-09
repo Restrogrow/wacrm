@@ -28,6 +28,63 @@ import { supabaseAdmin } from '@/lib/flows/admin-client';
 import { EVENT_META, isShopifyEvent } from '@/lib/shopify/events';
 import { validateSteps, type MessageStep } from '@/lib/shopify/steps';
 
+/** What supabase-js hands back on a failed query. */
+interface DbError {
+  code?: string;
+  message: string;
+  hint?: string | null;
+}
+
+/**
+ * Turn a database failure into something the admin reading it can act on.
+ *
+ * This used to answer every error with a blank "Failed to save" and a
+ * 500, which is exactly how a schema/code mismatch hid for days:
+ * migration 093 was applied in production while the deployed route was
+ * still writing against the pre-093 primary key, so every save returned
+ * 500 and the real reason (`42P10`, no unique constraint matching the
+ * ON CONFLICT target) only ever reached the server log.
+ */
+function saveFailure(stage: string, error: DbError): NextResponse {
+  console.error(`[shopify/rules] ${stage} failed:`, error.code, error.message);
+
+  // The database is older than the app: a column, table or constraint
+  // this route needs is not there. Name the migration — "try again"
+  // would be wrong advice, nothing changes until it is applied.
+  if (error.code === '42703' || error.code === '42P01' || error.code === '42P10') {
+    return NextResponse.json(
+      {
+        error:
+          'The database is behind the app: migration 093_shopify_message_steps.sql has not been applied yet. Apply it, then save again.',
+      },
+      { status: 503 }
+    );
+  }
+
+  if (error.code === '42501') {
+    return NextResponse.json(
+      { error: 'This account is not allowed to change these settings.' },
+      { status: 403 }
+    );
+  }
+
+  // A CHECK constraint validation did not catch. Say which value.
+  if (error.code === '23514') {
+    return NextResponse.json(
+      { error: `A value was out of range: ${error.message}` },
+      { status: 400 }
+    );
+  }
+
+  // Anything else: pass the reason through. This is an admin-only
+  // settings endpoint, so there is nothing here worth hiding, and a
+  // blank 500 only buys another round of log-digging.
+  return NextResponse.json(
+    { error: `Could not save: ${error.message}` },
+    { status: 500 }
+  );
+}
+
 interface RuleInput {
   event?: unknown;
   steps?: unknown;
@@ -137,10 +194,7 @@ export async function PUT(request: Request) {
         .delete()
         .eq('account_id', ctx.accountId)
         .eq('event', event);
-      if (delErr) {
-        console.error('[shopify/rules] clear failed:', delErr.message);
-        return NextResponse.json({ error: 'Failed to save' }, { status: 500 });
-      }
+      if (delErr) return saveFailure('clear', delErr);
 
       if (steps.length === 0) continue;
 
@@ -159,10 +213,7 @@ export async function PUT(request: Request) {
           updated_at: new Date().toISOString(),
         }))
       );
-      if (insErr) {
-        console.error('[shopify/rules] save failed:', insErr.message);
-        return NextResponse.json({ error: 'Failed to save' }, { status: 500 });
-      }
+      if (insErr) return saveFailure('save', insErr);
     }
 
     return NextResponse.json({ ok: true });
