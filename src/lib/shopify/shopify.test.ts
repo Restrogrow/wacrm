@@ -5,6 +5,7 @@ import {
   checkoutContext,
   contactPhoneOf,
   countBodyVariables,
+  formatAddress,
   formatMoney,
   isCashOnDelivery,
   orderContext,
@@ -176,6 +177,83 @@ describe('order payloads', () => {
     );
     expect(ctx.checkout_url).toBe('https://shop.example/c/1');
     expect(ctx.order_total).toBe('$10.00');
+  });
+});
+
+describe('formatAddress', () => {
+  it('joins the address into one comma-separated line', () => {
+    expect(
+      formatAddress({
+        address1: '12 MG Road',
+        address2: 'Indiranagar',
+        city: 'Bengaluru',
+        province: 'Karnataka',
+        zip: '560038',
+        country: 'India',
+      })
+    ).toBe('12 MG Road, Indiranagar, Bengaluru, Karnataka, 560038, India');
+  });
+
+  it('never returns a newline, tab or long space run', () => {
+    // Meta rejects a body parameter containing any of these, and
+    // shoppers type newlines into address1 constantly.
+    const value = formatAddress({
+      address1: 'Flat 4\nTower B\tWing 2',
+      address2: '   ',
+      city: 'Mumbai',
+      country: 'India',
+    });
+    expect(value).toBe('Flat 4 Tower B Wing 2, Mumbai, India');
+    expect(value).not.toMatch(/[\n\t]|\s{5}/);
+  });
+
+  it('drops a state that just repeats the city', () => {
+    expect(
+      formatAddress({ address1: '5 Hauz Khas', city: 'Delhi', province: 'Delhi' })
+    ).toBe('5 Hauz Khas, Delhi');
+  });
+
+  it('is null when there is no address at all', () => {
+    expect(formatAddress(null)).toBeNull();
+    expect(formatAddress(undefined)).toBeNull();
+    expect(formatAddress('12 MG Road')).toBeNull();
+    expect(formatAddress({})).toBeNull();
+    expect(formatAddress({ address1: '  ', city: '' })).toBeNull();
+  });
+
+  it('keeps whatever parts Shopify did send', () => {
+    expect(formatAddress({ city: 'Pune', country: 'India' })).toBe(
+      'Pune, India'
+    );
+  });
+});
+
+describe('shipping_address in the message context', () => {
+  it('comes through on an order', () => {
+    const ctx = orderContext(
+      {
+        ...ORDER,
+        shipping_address: {
+          address1: '12 MG Road',
+          city: 'Bengaluru',
+          province: 'Karnataka',
+          zip: '560038',
+          country: 'India',
+          country_code: 'IN',
+        },
+      },
+      'My Store'
+    );
+    expect(ctx.shipping_address).toBe(
+      '12 MG Road, Bengaluru, Karnataka, 560038, India'
+    );
+  });
+
+  it('is null on an abandoned checkout with no address yet', () => {
+    const ctx = checkoutContext({ abandoned_checkout_url: 'x' }, null);
+    expect(ctx.shipping_address).toBeNull();
+    // A null body variable must still send as "-" — Meta rejects empty.
+    expect(resolveBodyParams(['shipping_address'], ctx)).toEqual(['-']);
   });
 });
 

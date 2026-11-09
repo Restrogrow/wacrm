@@ -139,6 +139,7 @@ export interface MessageContext {
   order_total: string | null;
   items: string | null;
   payment_method: string | null;
+  shipping_address: string | null;
   order_status_url: string | null;
   tracking_number: string | null;
   tracking_url: string | null;
@@ -167,6 +168,11 @@ export const SHOPIFY_VARIABLES: {
     key: 'payment_method',
     label: 'Payment method',
     example: 'Cash on Delivery (COD)',
+  },
+  {
+    key: 'shipping_address',
+    label: 'Delivery address',
+    example: '12 MG Road, Indiranagar, Bengaluru, Karnataka, 560038, India',
   },
   {
     key: 'order_status_url',
@@ -381,6 +387,40 @@ export function summarizeItems(lineItems: unknown, max = 3): string | null {
   return more > 0 ? `${parts.join(', ')} +${more} more` : parts.join(', ');
 }
 
+/**
+ * The delivery address as one comma-separated line.
+ *
+ * One line, deliberately: Meta rejects a body parameter containing a
+ * newline, a tab, or a run of more than four spaces, and shoppers type
+ * newlines into address1 all the time. So every field is squashed
+ * before it is joined — a multi-line address here would fail the send
+ * rather than look untidy.
+ *
+ * The recipient's name is left out: `customer_name` and
+ * `customer_full_name` already cover it, and most templates put the
+ * name in the greeting, so repeating it inside the address reads badly.
+ */
+export function formatAddress(address: unknown): string | null {
+  if (!address || typeof address !== 'object') return null;
+  const a = address as Record<string, unknown>;
+  const clean = (v: unknown) =>
+    typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : '';
+
+  const city = clean(a.city);
+  const province = clean(a.province);
+  const parts = [
+    clean(a.address1),
+    clean(a.address2),
+    city,
+    // Indian cities routinely repeat as the state ("Delhi, Delhi").
+    province.toLowerCase() === city.toLowerCase() ? '' : province,
+    clean(a.zip),
+    clean(a.country),
+  ].filter(Boolean);
+
+  return parts.length > 0 ? parts.join(', ') : null;
+}
+
 /** Where the customer's phone and country live on an order or checkout. */
 export function contactPhoneOf(resource: Json): {
   phone: string | null;
@@ -496,6 +536,7 @@ export function orderContext(
     order_total: formatMoney(order.total_price, order.currency),
     items: summarizeItems(order.line_items),
     payment_method: paymentMethodOf(order),
+    shipping_address: formatAddress(order.shipping_address),
     order_status_url: str(order.order_status_url),
     tracking_number: tracking.number,
     tracking_url: tracking.url,
@@ -520,6 +561,9 @@ export function checkoutContext(
     ),
     items: summarizeItems(checkout.line_items),
     payment_method: null,
+    // Usually null on an abandoned checkout — the shopper left before
+    // the address step. resolveBodyParams turns that into "-".
+    shipping_address: formatAddress(checkout.shipping_address),
     order_status_url: null,
     tracking_number: null,
     tracking_url: null,
