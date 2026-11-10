@@ -17,6 +17,7 @@ import { withHeartbeat } from '@/lib/ops/monitoring'
 import { processDueNumberHealth } from '@/lib/whatsapp/number-health'
 import { processBillingReminders } from '@/lib/billing/reminders'
 import { processSlaAlerts } from '@/lib/business-hours/sla-server'
+import { processCreditAllowances } from '@/lib/credits/allowance'
 import { processJourneys } from '@/lib/journeys/process'
 import { processAiAnalysis } from '@/lib/ai/analyze-server'
 
@@ -126,6 +127,13 @@ async function runCron() {
     return 0
   })
 
+  // Each plan's included AI credits, once per IST month. Idempotent on
+  // (plan, month), so running every minute grants once.
+  const creditAllowances = await withHeartbeat('credit-allowances', processCreditAllowances).catch((err) => {
+    console.error('[cron] credit allowances failed:', err)
+    return 0
+  })
+
   // AI lead scoring (intent, sentiment, 0-100 score): a few chats a minute,
   // quota-limited, and a no-op without a Gemini key.
   const aiScored = await withHeartbeat('ai-analysis', () => processAiAnalysis()).catch((err) => {
@@ -160,6 +168,7 @@ async function runCron() {
     journey_sends: journeySends,
     ai_scored: aiScored,
     sla_alerts: slaAlerts,
+    credit_allowances: creditAllowances,
     number_health_checks: numberHealthChecks,
     billing_reminders: billingReminders,
     scheduled_broadcast_sends: scheduledBroadcastSends,

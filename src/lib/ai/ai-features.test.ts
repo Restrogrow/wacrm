@@ -225,4 +225,15 @@ describe('consumeAiQuota', () => {
     const consume = await load({ data: null, error: { message: 'function not found' } }, 'growth')
     expect((await consume('acc', 'summary')).allowed).toBe(true)
   })
+
+  // The credit check (migration 100) hangs off the same call. If its
+  // tables or client are unavailable it must let the action through:
+  // the mock above has no `.from()`, so reading the balance throws, and
+  // an earlier version of this took the inbox's AI down with it.
+  it('fails open when the credit subsystem is unavailable', async () => {
+    const consume = await load({ data: true, error: null }, 'growth')
+    const r = await consume('acc', 'chatbot')
+    expect(r.allowed).toBe(true)
+    expect(r.reason).toBeUndefined()
+  })
 })

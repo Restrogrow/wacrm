@@ -936,6 +936,7 @@ is idempotent where possible. Recent ones:
 | `084_number_scope_policy_speed` | Cheaper current-number policies (follow-up to 083) |
 | `085_broadcast_retries_webhook_deliveries` | Broadcast retry columns (`attempts`, `next_attempt_at`), `webhook_deliveries` log with retries, locks `record_webhook_failure` |
 | `086_broadcast_pricing` | Billable flag and pricing category on broadcast recipients; `broadcast_cost_counts()` for cost per broadcast |
+| `100_ai_credits` | AI credit balance: append-only `credit_ledger`, `account_credits`, the `credit_rates` card, `accounts.credits_enforced` (off by default), and the `credit_add()` / `credit_spend()` functions |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -956,7 +957,7 @@ Hostinger calls these every minute with the header
 
 | Endpoint | Runs |
 |---|---|
-| `GET /api/automations/cron` | Delayed automation steps (`automation-steps`), **broadcasts** (`scheduled-broadcasts`: send-now and scheduled, batched, leased, with retries), **webhook delivery retries** (`webhook-retries`), **scheduled chat messages** (`scheduled-messages`), **Shopify abandoned-cart reminders** (`shopify-reminders`), **Calendly** and **Cal.com 24 h / 1 h reminders** (`calendly-reminders`, `calcom-reminders`), **daily summary emails** (`daily-summaries`), **WhatsApp number health** (`number-health`, daily per account, 10 per run), **trial / renewal reminder emails** (`billing-reminders`), **reply-time SLA alerts** (`sla-alerts`), **AI lead scoring** (`ai-analysis`, a few chats per run) and **Journeys** (`journeys`) |
+| `GET /api/automations/cron` | Delayed automation steps (`automation-steps`), **broadcasts** (`scheduled-broadcasts`: send-now and scheduled, batched, leased, with retries), **webhook delivery retries** (`webhook-retries`), **scheduled chat messages** (`scheduled-messages`), **Shopify abandoned-cart reminders** (`shopify-reminders`), **Calendly** and **Cal.com 24 h / 1 h reminders** (`calendly-reminders`, `calcom-reminders`), **daily summary emails** (`daily-summaries`), **WhatsApp number health** (`number-health`, daily per account, 10 per run), **trial / renewal reminder emails** (`billing-reminders`), **reply-time SLA alerts** (`sla-alerts`), **monthly AI credit allowances** (`credit-allowances`, idempotent per plan-month), **AI lead scoring** (`ai-analysis`, a few chats per run) and **Journeys** (`journeys`) |
 | `GET /api/flows/cron` | Flow waits and timeouts (every 5 minutes is enough) |
 | `GET /api/health` | No secret; hit it from an uptime monitor every 5 minutes |
 

@@ -81,6 +81,7 @@ Code: `src/app/api/health/route.ts`, `src/lib/ops/health.ts`.
 | Daily summary emails (`daily-summaries`) | automations cron | 10 min |
 | WhatsApp number health (`number-health`) | automations cron (each account daily) | 10 min |
 | Trial & renewal reminder emails (`billing-reminders`) | automations cron (daytime IST) | 10 min |
+| Monthly AI credit allowances (`credit-allowances`) | automations cron (once per plan-month, idempotent) | 10 min |
 | Reply-time (SLA) alerts (`sla-alerts`) | automations cron | 10 min |
 | AI lead scoring (`ai-analysis`) | automations cron (a few chats per run) | 10 min |
 | Journeys (`journeys`) | automations cron | 10 min |
