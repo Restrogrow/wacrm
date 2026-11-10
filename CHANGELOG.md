@@ -12,9 +12,23 @@ and polish.
 ## [Unreleased]
 
 **Migration required:** `082_shopify_pending_installs.sql`,
-`085_broadcast_retries_webhook_deliveries.sql`, `086_broadcast_pricing.sql`.
+`085_broadcast_retries_webhook_deliveries.sql`, `086_broadcast_pricing.sql`,
+`093_shopify_message_steps.sql`.
 
 ### Added
+
+- **Delivery address as a template variable** (9 Nov 2026): Shopify
+  automations can put the shipping address in a message — the common
+  missing piece in an order-confirmation template. Sent as one
+  comma-separated line, because Meta rejects a parameter containing a
+  newline and shoppers type newlines into their address constantly. It is
+  the fulfillment's own destination on shipping events, and usually empty
+  on an abandoned cart (the shopper left before the address step).
+- **Multi-step Shopify automations** (9 Nov 2026): an event is now a
+  sequence of steps, each with its own template, delay and dynamic
+  URL-button mapping, sent from a queue rather than off the webhook.
+  Delays apply to every event, not just abandoned cart, and `0` means
+  send immediately. Migration 093.
 
 - **WhatsApp spend page** (24 Oct 2026, sidebar → WhatsApp spend, admins):
   Meta's charges by day and category, paid vs free messages, whether a

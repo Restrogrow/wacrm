@@ -36,6 +36,7 @@ import {
   checkoutContext,
   contactPhoneOf,
   customerNamesOf,
+  formatAddress,
   formatMoney,
   isCashOnDelivery,
   isShopifyVariable,
@@ -558,6 +559,11 @@ async function onFulfillment(
     order_total: order ? formatMoney(order.total, order.currency) : null,
     items: summarizeItems(fulfillment.line_items),
     payment_method: order?.payment_method ?? null,
+    // The fulfillment's own destination, which is the right answer for
+    // a shipping event: where THIS shipment is going. `shopify_orders`
+    // keeps no address, so there is nothing to fall back to — a
+    // fulfillment without a destination sends "-".
+    shipping_address: formatAddress(fulfillment.destination),
     order_status_url: order?.order_status_url ?? null,
     tracking_number: tracking.number ?? order?.tracking_number ?? null,
     tracking_url: tracking.url ?? order?.tracking_url ?? null,
