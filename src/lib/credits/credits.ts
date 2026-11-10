@@ -33,23 +33,34 @@ export const DEFAULT_CREDIT_COSTS: Record<AiFeature, number> = {
   voice_call: 25,
 };
 
+/** Days of daily-cap headroom a monthly allowance is sized to cover. */
+export const ALLOWANCE_DAYS = 31;
+
 /**
  * Credits included with each plan, per 30-day cycle.
  *
- * PLACEHOLDERS. These are starting points, not decided prices — they
- * are set roughly in proportion to the existing daily caps so the
- * ordering between plans is sane, and they are why enforcement ships
- * OFF (`accounts.credits_enforced`). Run the dry run, look at what
- * accounts actually consume, then set these and switch enforcement on
- * per account. Guessing them and enforcing immediately would throttle
- * live accounts for no reason.
+ * These are **safety ceilings, not pricing.** Each one is at least
+ * `ALLOWANCE_DAYS` days of that plan's existing AI daily caps, priced at
+ * DEFAULT_CREDIT_COSTS — so switching enforcement on cannot restrict any
+ * account more than the daily caps already do. The caps stay the binding
+ * limit and nobody's chatbot stops who would not have been stopped
+ * anyway. `credits.test.ts` asserts that property, so lowering a daily
+ * cap or raising a cost cannot silently make a plan's allowance too
+ * small.
+ *
+ * They are deliberately NOT a commercial decision. Lower them when the
+ * numbers are actually chosen — `credit_ledger` records every spend, so
+ * query real consumption per plan first and set these from that. Until
+ * then a generous ceiling is the safe direction to be wrong in: too high
+ * means credits do not bite yet, too low means a paying customer's AI
+ * stops mid-month.
  */
 export const PLAN_MONTHLY_CREDITS: Record<EffectivePlan, number> = {
-  trial: 500,
-  starter: 2_000,
-  growth: 10_000,
-  pro: 30_000,
-  enterprise: 100_000,
+  trial: 14_000,
+  starter: 55_000,
+  growth: 270_000,
+  pro: 810_000,
+  enterprise: 2_700_000,
   // An ended plan already has every AI daily cap at 0; no allowance.
   expired: 0,
 };

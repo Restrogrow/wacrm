@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { AI_DAILY_CAPS } from '@/lib/ai/quota';
 import {
+  ALLOWANCE_DAYS,
   DEFAULT_CREDIT_COSTS,
   LOW_BALANCE_FLOOR,
   PLAN_MONTHLY_CREDITS,
@@ -46,6 +48,34 @@ describe('creditCost', () => {
     expect(DEFAULT_CREDIT_COSTS.voice_call).toBeGreaterThan(
       DEFAULT_CREDIT_COSTS.chatbot * 5
     );
+  });
+});
+
+describe('PLAN_MONTHLY_CREDITS is never stricter than the daily caps', () => {
+  // The reason enforcement can be switched on for everyone at once: a
+  // plan's allowance covers ALLOWANCE_DAYS days of maxing out every one
+  // of its daily caps, so credits cannot stop an account that the caps
+  // would have let through. If someone lowers a cap or raises a cost,
+  // this fails instead of quietly throttling a paying customer.
+  const PLANS = ['trial', 'starter', 'growth', 'pro', 'enterprise'] as const;
+
+  for (const plan of PLANS) {
+    it(`covers ${ALLOWANCE_DAYS} days of ${plan}'s caps`, () => {
+      const caps = AI_DAILY_CAPS[plan];
+      const perDay = (Object.keys(caps) as (keyof typeof caps)[]).reduce(
+        (sum, feature) => sum + caps[feature] * DEFAULT_CREDIT_COSTS[feature],
+        0
+      );
+      expect(PLAN_MONTHLY_CREDITS[plan]).toBeGreaterThanOrEqual(
+        perDay * ALLOWANCE_DAYS
+      );
+    });
+  }
+
+  it('gives an expired plan nothing, because its caps are already zero', () => {
+    const caps = AI_DAILY_CAPS.expired;
+    expect(Object.values(caps).every((c) => c === 0)).toBe(true);
+    expect(PLAN_MONTHLY_CREDITS.expired).toBe(0);
   });
 });
 

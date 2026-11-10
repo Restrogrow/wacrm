@@ -27,10 +27,11 @@ and polish.
   out the AI pauses and chats wait for the team, so no customer is lost;
   the inbox, broadcasts and everything else keep working.
 
-  **Enforcement ships off.** Usage is recorded but nothing is blocked
-  until it is switched on per account, so the per-plan amounts can be set
-  from real consumption rather than guessed. The daily caps still apply
-  alongside. Migration 100.
+  Each plan's allowance is a **safety ceiling**, not pricing: at least 31
+  days of that plan's existing AI daily caps, so switching enforcement on
+  cannot restrict an account more than the caps already do. Lower them
+  once real consumption is known — `credit_ledger` records every spend.
+  The daily caps still apply alongside. Migration 100.
 - **Accounts record where they came from** (9 Nov 2026): `install_source`
   is `shopify_app_store` for an account that arrived through Shopify's own
   signed entry point, and `website` for everyone else — which is every
