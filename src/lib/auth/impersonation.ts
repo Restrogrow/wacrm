@@ -71,7 +71,14 @@ export function decodeImpersonation(value: string | undefined | null): Impersona
     if (!state?.adminUserId || !state?.accountId) return null;
     // Belt-and-braces: the cookie's own Max-Age should already have
     // expired it, but don't trust a client-held clock.
-    if (Date.now() - new Date(state.startedAt).getTime() > IMPERSONATION_MAX_AGE_S * 1000) {
+    //
+    // An unreadable `startedAt` has to be rejected outright, not aged.
+    // `new Date('nonsense').getTime()` is NaN, every NaN comparison is
+    // false, so the age check below would wave it through and the cookie
+    // would never expire at all.
+    const startedAt = new Date(state.startedAt).getTime();
+    if (!Number.isFinite(startedAt)) return null;
+    if (Date.now() - startedAt > IMPERSONATION_MAX_AGE_S * 1000) {
       return null;
     }
     return state;
