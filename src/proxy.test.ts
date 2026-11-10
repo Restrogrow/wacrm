@@ -112,6 +112,31 @@ describe("proxy — refreshed auth cookies survive redirects", () => {
   });
 });
 
+describe("proxy — public marketing pages stay public", () => {
+  // protectedPaths is matched with startsWith, so a prefix that is also
+  // the start of a public route silently takes it down. '/partner' did
+  // exactly that to the /partners landing page: every visitor was sent
+  // to /login, on the page whose whole job is to be read by strangers.
+  it("does not send a logged-out visitor on /partners to /login", async () => {
+    mockUser = null;
+    refreshedCookies = [];
+
+    const res = await proxy(new NextRequest("https://app.test/partners"));
+
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("keeps the other marketing pages public too", async () => {
+    mockUser = null;
+    refreshedCookies = [];
+
+    for (const path of ["/", "/pricing", "/contact", "/blog", "/about"]) {
+      const res = await proxy(new NextRequest(`https://app.test${path}`));
+      expect(res.headers.get("location"), `${path} should be public`).toBeNull();
+    }
+  });
+});
+
 describe("proxy — stray auth code on the homepage", () => {
   it("forwards /?code=… to /auth/callback with a dashboard next", async () => {
     const res = await proxy(new NextRequest("https://app.test/?code=abc123"));

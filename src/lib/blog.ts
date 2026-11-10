@@ -25,6 +25,53 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: 'bulk-whatsapp-without-getting-banned',
+    title: 'How to Send Bulk WhatsApp Messages in India Without Getting Banned',
+    seoTitle: 'Bulk WhatsApp in India Without Getting Banned',
+    description:
+      'What actually gets a WhatsApp number banned or throttled in India, how the quality rating and messaging tiers really work, and the rules that keep a number healthy.',
+    category: 'WhatsApp API',
+    datePublished: '2026-11-05',
+    readMinutes: 10,
+    // Uses its own generated Open Graph card as the hero, like the
+    // cart post — no placeholder illustration shipped.
+    cover: '/blog/bulk-whatsapp-without-getting-banned/opengraph-image',
+    coverAlt:
+      'How to send bulk WhatsApp messages in India without getting banned',
+    keywords: [
+      'whatsapp bulk message without ban',
+      'whatsapp number banned marketing',
+      'whatsapp quality rating',
+      'whatsapp messaging limit india',
+      'bulk whatsapp sender ban',
+      'whatsapp business api ban reasons',
+    ],
+  },
+  {
+    slug: 'abandoned-cart-recovery-whatsapp-india',
+    title: 'Abandoned Cart Recovery on WhatsApp: A Playbook for Indian Stores',
+    seoTitle: 'WhatsApp Abandoned Cart Recovery for Indian Stores',
+    description:
+      'When to send, what the message should say, why it must be a Marketing template, and how to measure recovered orders. A practical cart-recovery playbook for Indian D2C.',
+    category: 'E-commerce',
+    datePublished: '2026-11-05',
+    readMinutes: 9,
+    // No hand-drawn cover for this one: the post's own generated Open
+    // Graph card (opengraph-image.tsx) is already 1200×630 and on-brand,
+    // so it doubles as the hero instead of shipping a placeholder.
+    cover: '/blog/abandoned-cart-recovery-whatsapp-india/opengraph-image',
+    coverAlt:
+      'Abandoned Cart Recovery on WhatsApp, a playbook for Indian stores',
+    keywords: [
+      'abandoned cart recovery whatsapp',
+      'whatsapp abandoned cart india',
+      'shopify abandoned cart whatsapp',
+      'abandoned cart message template whatsapp',
+      'recover abandoned carts whatsapp business api',
+      'cart recovery d2c india',
+    ],
+  },
+  {
     slug: 'meta-tech-provider-whatsapp',
     title: 'Repeat Grow Is a Meta Tech Provider: What It Means for Your WhatsApp Business',
     seoTitle: 'Meta Tech Provider for WhatsApp | Repeat Grow',

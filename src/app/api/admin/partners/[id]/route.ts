@@ -3,7 +3,12 @@ import { NextResponse } from 'next/server';
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 import { normalizeCode, PARTNER_STATUSES, type PartnerStatus } from '@/lib/partners/program';
-import { getPartner, notifyPartnerOfStatus } from '@/lib/partners/server';
+import {
+  ensurePartnerLogin,
+  getPartner,
+  notifyPartnerOfStatus,
+  partnerPasswordLink,
+} from '@/lib/partners/server';
 
 /**
  * PATCH /api/admin/partners/[id] — platform admin only.
@@ -59,7 +64,33 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (updates.status && updates.status !== before.status) {
     const after = await getPartner(id);
-    if (after) await notifyPartnerOfStatus({ ...after, status: updates.status as PartnerStatus });
+    if (after) {
+      const status = updates.status as PartnerStatus;
+
+      // Approval is where a public applicant gets their login: they
+      // applied from /partners with no account, and /agent needs one.
+      // A failure here must not undo the approval — the status is
+      // already saved, and a partner with no login can be given one by
+      // re-saving the status, so report it instead of throwing.
+      let passwordLink: string | null = null;
+      let loginError = false;
+      if (status === 'approved') {
+        try {
+          const login = await ensurePartnerLogin({ ...after, status });
+          if (login?.created && after.email) {
+            passwordLink = await partnerPasswordLink(after.email);
+          }
+        } catch (err) {
+          console.error('[admin/partners] could not create the partner login:', err);
+          loginError = true;
+        }
+      }
+
+      await notifyPartnerOfStatus({ ...after, status }, passwordLink);
+      if (loginError) {
+        return NextResponse.json({ ok: true, loginError: true });
+      }
+    }
   }
   return NextResponse.json({ ok: true });
 }
