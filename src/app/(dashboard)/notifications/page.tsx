@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import type { Notification } from "@/types";
-import { AlarmClock, AtSign, Bell, CheckCheck, Loader2, Package, UserPlus } from "lucide-react";
+import { AlarmClock, AtSign, Bell, CheckCheck, Coins, Loader2, Package, UserPlus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ const TYPE_ICON: Partial<Record<Notification["type"], typeof Bell>> = {
   sla_reminder: AlarmClock,
   mention: AtSign,
   low_stock: Package,
+  credits_low: Coins,
 };
 
 export default function NotificationsPage() {

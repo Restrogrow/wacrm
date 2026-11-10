@@ -127,6 +127,41 @@ export function isLowBalance(balance: number, lastTopUp: number): boolean {
   return balance <= threshold;
 }
 
+export type BalanceWarning = 'none' | 'low' | 'out';
+
+/**
+ * Does this balance deserve a warning, and which one?
+ *
+ * `allowance` is what the account gets per cycle — the plan's include —
+ * so the "low" threshold scales with the size of the account instead of
+ * being one number that is alarming for a trial and useless for an
+ * enterprise.
+ *
+ * Only meaningful while enforcement is on. With it off the balance can
+ * go negative and means nothing, so the caller filters on that first.
+ */
+export function balanceWarning(balance: number, allowance: number): BalanceWarning {
+  if (balance <= 0) return 'out';
+  return isLowBalance(balance, allowance) ? 'low' : 'none';
+}
+
+/** What the account's owners and admins are told. */
+export function balanceWarningMessage(
+  warning: Exclude<BalanceWarning, 'none'>,
+  balance: number
+): { title: string; body: string } {
+  if (warning === 'out') {
+    return {
+      title: 'AI credits have run out',
+      body: 'AI replies, suggestions, summaries and calls are paused until you top up. Your inbox, broadcasts and everything else keep working, and chats are waiting for your team as usual.',
+    };
+  }
+  return {
+    title: 'AI credits running low',
+    body: `${balance.toLocaleString('en-IN')} credits left. When they run out the AI pauses and chats wait for your team — top up before then to keep it answering.`,
+  };
+}
+
 /** How many of this action the balance still affords. */
 export function actionsAffordable(balance: number, cost: number): number {
   if (cost <= 0) return Infinity;

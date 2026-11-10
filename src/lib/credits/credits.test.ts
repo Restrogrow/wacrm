@@ -8,6 +8,8 @@ import {
   PLAN_MONTHLY_CREDITS,
   actionsAffordable,
   allowanceKey,
+  balanceWarning,
+  balanceWarningMessage,
   creditCost,
   isCreditKind,
   isLowBalance,
@@ -115,6 +117,53 @@ describe('isLowBalance', () => {
     // Running out has its own message; this would double up on it.
     expect(isLowBalance(0, 10_000)).toBe(false);
     expect(isLowBalance(-50, 10_000)).toBe(false);
+  });
+});
+
+describe('balanceWarning', () => {
+  // Thresholds scale with the plan's include, so "low" means the same
+  // thing proportionally for a trial and an enterprise.
+  const GROWTH = PLAN_MONTHLY_CREDITS.growth;
+
+  it('is none when there is plenty left', () => {
+    expect(balanceWarning(GROWTH, GROWTH)).toBe('none');
+    expect(balanceWarning(Math.floor(GROWTH / 2), GROWTH)).toBe('none');
+  });
+
+  it('is low near the bottom of the cycle', () => {
+    expect(balanceWarning(Math.floor(GROWTH * 0.05), GROWTH)).toBe('low');
+  });
+
+  it('is out at zero and below', () => {
+    // Below zero is reachable from a dry run, before enforcement went on.
+    expect(balanceWarning(0, GROWTH)).toBe('out');
+    expect(balanceWarning(-500, GROWTH)).toBe('out');
+  });
+
+  it('scales with the plan rather than using one fixed number', () => {
+    const balance = 2_000;
+    // 2,000 left out of an enterprise include is nearly nothing...
+    expect(balanceWarning(balance, PLAN_MONTHLY_CREDITS.enterprise)).toBe('low');
+    // ...but out of a trial's it is most of the month.
+    expect(balanceWarning(balance, PLAN_MONTHLY_CREDITS.trial)).toBe('none');
+  });
+});
+
+describe('balanceWarningMessage', () => {
+  it('tells an exhausted account what still works', () => {
+    // The whole point of pausing only AI: nobody should think the
+    // product is down.
+    const { title, body } = balanceWarningMessage('out', 0);
+    expect(title).toMatch(/run out/i);
+    expect(body).toMatch(/inbox/i);
+    expect(body).toMatch(/waiting for your team/i);
+  });
+
+  it('gives a low account the number and the consequence', () => {
+    const { title, body } = balanceWarningMessage('low', 12_345);
+    expect(title).toMatch(/running low/i);
+    expect(body).toContain('12,345');
+    expect(body).toMatch(/top up/i);
   });
 });
 

@@ -18,6 +18,7 @@ import { processDueNumberHealth } from '@/lib/whatsapp/number-health'
 import { processBillingReminders } from '@/lib/billing/reminders'
 import { processSlaAlerts } from '@/lib/business-hours/sla-server'
 import { processCreditAllowances } from '@/lib/credits/allowance'
+import { processLowBalanceWarnings } from '@/lib/credits/warnings'
 import { processJourneys } from '@/lib/journeys/process'
 import { processAiAnalysis } from '@/lib/ai/analyze-server'
 
@@ -134,6 +135,12 @@ async function runCron() {
     return 0
   })
 
+  // "Credits running low / out" for enforced accounts, once per descent.
+  const creditWarnings = await withHeartbeat('credit-low-warnings', processLowBalanceWarnings).catch((err) => {
+    console.error('[cron] credit low warnings failed:', err)
+    return 0
+  })
+
   // AI lead scoring (intent, sentiment, 0-100 score): a few chats a minute,
   // quota-limited, and a no-op without a Gemini key.
   const aiScored = await withHeartbeat('ai-analysis', () => processAiAnalysis()).catch((err) => {
@@ -169,6 +176,7 @@ async function runCron() {
     ai_scored: aiScored,
     sla_alerts: slaAlerts,
     credit_allowances: creditAllowances,
+    credit_warnings: creditWarnings,
     number_health_checks: numberHealthChecks,
     billing_reminders: billingReminders,
     scheduled_broadcast_sends: scheduledBroadcastSends,
