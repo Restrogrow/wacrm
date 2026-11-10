@@ -67,6 +67,15 @@ export function useSlaBreached(conversationId: string | null | undefined): boole
   return !!conversationId && set.has(conversationId);
 }
 
+/**
+ * Every conversation currently waiting past the target — the same
+ * shared store the badges use, so the inbox's "Overdue" filter costs no
+ * extra query. The identity only changes when the set's contents do.
+ */
+export function useSlaBreachedSet(): ReadonlySet<string> {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
 export function SlaBadge({
   conversationId,
   compact = false,
@@ -88,7 +97,9 @@ export function SlaBadge({
       )}
     >
       <AlarmClock className="size-3 shrink-0" />
-      {!compact && <span>SLA breached</span>}
+      {/* "Overdue", not "SLA breached": it matches the inbox filter and
+          reads to someone who has never met the term. */}
+      {!compact && <span>Overdue</span>}
     </span>
   );
 }

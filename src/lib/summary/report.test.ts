@@ -27,6 +27,7 @@ describe('renderSummaryEmail', () => {
     newContacts: 5,
     newConversations: 7,
     awaitingReply: 2,
+    overdueNow: 4,
     broadcastsSent: 1,
     dealsCreated: 3,
     dealsWon: 1,
@@ -47,5 +48,15 @@ describe('renderSummaryEmail', () => {
     expect(email.text).toContain('Messages received: 42');
     expect(email.text).toContain('Deals won: 1 (₹4,999)');
     expect(email.html).toContain('https://repeatgrow.com/inbox');
+  });
+
+  it('reports the overdue count, so a forgotten chat shows up in the email', () => {
+    const email = renderSummaryEmail({
+      accountName: 'Taste of Banaras',
+      window: summaryWindow(9, now),
+      stats,
+      appUrl: 'https://repeatgrow.com',
+    });
+    expect(email.text).toContain('Overdue — past your reply target (now): 4');
   });
 });

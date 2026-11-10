@@ -2,15 +2,18 @@ import { describe, expect, it } from 'vitest'
 
 import {
   DEFAULT_SETTINGS,
+  SLA_MAX_REMINDERS,
   businessMinutesBetween,
   isOpenNow,
   isSlaBreached,
   pickAutoReply,
   renderAutoReply,
   rowToSettings,
+  shouldRemindAgain,
   validateSettings,
   type BusinessHoursSettings,
   type DayKey,
+  type SlaReminderState,
 } from './hours'
 
 const IST_OFFSET_MIN = 330
@@ -172,6 +175,88 @@ describe('isSlaBreached', () => {
     expect(isSlaBreached(s, ist(2026, 10, 19, 17, 55), ist(2026, 10, 19, 22, 0))).toBe(false)
     // Next morning at 09:10: 5 + 10 = 15 minutes, breached.
     expect(isSlaBreached(s, ist(2026, 10, 19, 17, 55), ist(2026, 10, 20, 9, 10))).toBe(true)
+  })
+})
+
+describe('shouldRemindAgain', () => {
+  const base = {
+    sla_enabled: true,
+    sla_first_response_minutes: 15,
+    sla_repeat_enabled: true,
+    sla_repeat_minutes: 60,
+  }
+
+  /** A breach first announced at 10:00 IST, nothing reminded yet. */
+  const state = (over: Partial<SlaReminderState> = {}): SlaReminderState => ({
+    waiting_since: ist(2026, 10, 19, 9, 45),
+    breached_at: ist(2026, 10, 19, 10, 0),
+    reminders_sent: 0,
+    last_reminded_at: null,
+    ...over,
+  })
+
+  it('never reminds when repeats are off', () => {
+    const s = settings({ ...base, sla_repeat_enabled: false, enabled: false })
+    expect(shouldRemindAgain(s, state(), ist(2026, 10, 19, 23, 0))).toBe(false)
+  })
+
+  it('never reminds when the SLA itself is off', () => {
+    const s = settings({ ...base, sla_enabled: false, enabled: false })
+    expect(shouldRemindAgain(s, state(), ist(2026, 10, 19, 23, 0))).toBe(false)
+  })
+
+  it('waits a full interval after the first alert', () => {
+    const s = settings({ ...base, enabled: false })
+    expect(shouldRemindAgain(s, state(), ist(2026, 10, 19, 10, 59))).toBe(false)
+    expect(shouldRemindAgain(s, state(), ist(2026, 10, 19, 11, 0))).toBe(true)
+  })
+
+  it('measures the next interval from the last reminder, not the breach', () => {
+    const s = settings({ ...base, enabled: false })
+    const sent = state({
+      reminders_sent: 1,
+      last_reminded_at: ist(2026, 10, 19, 11, 0),
+    })
+    expect(shouldRemindAgain(s, sent, ist(2026, 10, 19, 11, 30))).toBe(false)
+    expect(shouldRemindAgain(s, sent, ist(2026, 10, 19, 12, 0))).toBe(true)
+  })
+
+  it('goes quiet once the cap is reached, however long the wait', () => {
+    const s = settings({ ...base, enabled: false })
+    const maxed = state({
+      reminders_sent: SLA_MAX_REMINDERS,
+      last_reminded_at: ist(2026, 10, 19, 11, 0),
+    })
+    expect(shouldRemindAgain(s, maxed, ist(2026, 10, 25, 11, 0))).toBe(false)
+  })
+
+  it('does not remind overnight when only business hours count', () => {
+    const s = settings({ ...base, sla_business_hours_only: true })
+    const sent = state({
+      reminders_sent: 1,
+      // 17:30, half an hour of business time left before 18:00 close.
+      last_reminded_at: ist(2026, 10, 19, 17, 30),
+    })
+    // 03:00 the same night: still only 30 business minutes elapsed.
+    expect(shouldRemindAgain(s, sent, ist(2026, 10, 20, 3, 0))).toBe(false)
+    // 09:30 next morning: 30 + 30 = 60, due.
+    expect(shouldRemindAgain(s, sent, ist(2026, 10, 20, 9, 30))).toBe(true)
+  })
+
+  it('accepts ISO strings as the database returns them', () => {
+    const s = settings({ ...base, enabled: false })
+    const iso = state({
+      breached_at: ist(2026, 10, 19, 10, 0).toISOString(),
+      last_reminded_at: null,
+    })
+    expect(shouldRemindAgain(s, iso, ist(2026, 10, 19, 11, 0))).toBe(true)
+  })
+
+  it('ignores a breach row with an unparseable timestamp', () => {
+    const s = settings({ ...base, enabled: false })
+    expect(
+      shouldRemindAgain(s, state({ breached_at: 'not a date' }), ist(2026, 10, 19, 23, 0)),
+    ).toBe(false)
   })
 })
 

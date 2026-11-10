@@ -13,11 +13,11 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { MessageAlertSettings } from "@/components/notifications/message-notifier";
 
-// Icon per notification type. Only one type exists today
-// (conversation_assigned) but this keeps future types a one-line add.
+// Icon per notification type; a new type is a one-line add.
 const TYPE_ICON: Partial<Record<Notification["type"], typeof Bell>> = {
   conversation_assigned: UserPlus,
   sla_breach: AlarmClock,
+  sla_reminder: AlarmClock,
   mention: AtSign,
   low_stock: Package,
 };

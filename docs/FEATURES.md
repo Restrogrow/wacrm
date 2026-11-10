@@ -98,14 +98,18 @@ Meta's menus change, so the exact names may differ slightly.
 ## Reports
 
 - **Where:** sidebar → **Reports** (`/reports`). **Who:** everyone, including viewers.
-- **What:** messaging volume and delivery rates, conversations and first-response / resolution times, an agent table,
-  broadcast results, deals and orders, and customer satisfaction. Date presets (7 / 30 / 90 days) or a custom range up
-  to 365 days; every table has an **Export CSV** button (spreadsheet-formula safe).
+- **What:** messaging volume and delivery rates, conversations and first-response / resolution times, **overdue
+  replies**, an agent table, broadcast results, deals and orders, and customer satisfaction. Date presets
+  (7 / 30 / 90 days) or a custom range up to 365 days; every table has an **Export CSV** button
+  (spreadsheet-formula safe).
 - **Accuracy:** volume, new conversations, first response (to the first human reply; bot replies excluded), deal
   creation and broadcast counts are exact. Delivery rates, closed dates, resolution time and won / lost dates are
   approximations because the database keeps only the latest status. Agent numbers are credited to the conversation's
-  current assignee, and messages sent before 17 Oct 2026 have no sender recorded.
-- **Migration:** 065.
+  current assignee, and messages sent before 17 Oct 2026 have no sender recorded. **Overdue replies** is read from the
+  records the cron writes, so it already applies the business-hours pause — but it counts each chat once however many
+  times that chat went overdue, because only the latest wait is kept per conversation. "Overdue now" ignores the date
+  range on purpose. The panel says "Not available yet" until migration 098 is applied, rather than showing zeros.
+- **Migration:** 065, plus 098 for the overdue-replies panel.
 
 ## Ad attribution
 
@@ -222,7 +226,7 @@ Meta's menus change, so the exact names may differ slightly.
 
 ## Business hours and SLA
 
-- **Where:** Settings → **Business hours**. **Who:** admin+ to change; everyone sees the SLA badge.
+- **Where:** Settings → **Business hours**. **Who:** admin+ to change; everyone sees the Overdue badge.
 - **Setup:** set the weekly hours per day, the time zone (default Asia/Kolkata) and holidays; turn on the **welcome
   message** (first message of a new chat) and the **away message** (messages outside hours, at most once per cooldown,
   default 12 hours); set the **first-response target** (minutes) and, if you like, count only business-hours minutes.
@@ -230,11 +234,24 @@ Meta's menus change, so the exact names may differ slightly.
 - **Behaviour:** auto-replies are plain text inside the 24-hour window and are stored as `bot` messages (they never
   count as a human reply); they are skipped for opted-out contacts, expired plans, reactions and chats handled by a
   flow or STOP. If the customer waits past the target with no human reply, the assigned agent (or all admins if
-  unassigned) gets one in-app notification and the chat shows an **SLA breached** badge. Alerts clear within about a
+  unassigned) gets one in-app notification and the chat shows an **Overdue** badge. Alerts clear within about a
   minute of a reply.
-- **Limits:** an auto-reply and an AI chatbot reply can both reach the same customer; SLA alerts are in-app only (no
-  email or push); each cron run handles up to 200 accounts and 100 chats per account.
-- **Migration:** 066.
+- **Repeat reminders** (optional, default off): "Remind me again if it stays unanswered" re-raises a chat nobody has
+  replied to every *n* minutes (5–1440), up to **3** more times per wait. From the second reminder the owners/admins
+  are notified as well, so a chat assigned to someone who is away still reaches the team. Replying or closing the chat
+  stops them within a minute. When "only count business hours" is on the interval counts business minutes too, so
+  nobody is pinged overnight. The cap lives in `SLA_MAX_REMINDERS` (`src/lib/business-hours/hours.ts`) and is mirrored
+  by the `reminders_sent >= 2` test inside `report_sla_summary` — keep them in step.
+- **Finding them:** the inbox's **Overdue** filter lists every chat past the target, pulling in matches from pages the
+  list has not scrolled to so an old forgotten chat still appears. **Reports → Overdue replies** shows how many are
+  overdue now, how many chats went overdue in the range, how many were never answered, how many needed a nudge or an
+  escalation, and the average / median time from going overdue to the first human reply. The **daily summary email**
+  carries the overdue count too.
+- **Limits:** an auto-reply and an AI chatbot reply can both reach the same customer; alerts and reminders are in-app
+  only (no email or push, and the *repeats* do not fire Slack / Discord / Telegram alerts — only the first breach
+  does); each cron run handles up to 200 accounts, 100 chats per account and 50 reminders per account. Reports count a
+  chat once however many times it went overdue: `conversation_sla` keeps only the latest wait per conversation.
+- **Migration:** 066, plus 098 for repeat reminders and the report.
 
 ## Notes, @mentions and bulk actions
 

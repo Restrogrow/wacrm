@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  AlarmClock,
   Bot,
   ClipboardList,
   CalendarCheck,
@@ -46,6 +47,7 @@ const TOPICS: { id: string; label: string; blurb: string; icon: LucideIcon }[] =
   { id: "getting-started", label: "Getting started", blurb: "Set up your account in four steps.", icon: Rocket },
   { id: "connect-whatsapp", label: "Connect WhatsApp", blurb: "Link your WhatsApp Business number.", icon: PlugZap },
   { id: "inbox", label: "Shared inbox", blurb: "Assign, reply, and add notes as a team.", icon: MessageSquare },
+  { id: "reply-times", label: "Never miss a reply", blurb: "Business hours, reply targets and reminders.", icon: AlarmClock },
   { id: "contacts", label: "Contacts", blurb: "Import, tag, and organise customers.", icon: Users },
   { id: "pipelines", label: "Pipelines", blurb: "Track deals on Kanban boards.", icon: GitBranch },
   { id: "templates", label: "Message templates", blurb: "Create and submit templates to Meta.", icon: FileText },
@@ -75,6 +77,10 @@ const FAQ = [
   {
     q: "Why didn't my message deliver?",
     a: "WhatsApp only allows free-form text and media within 24 hours of the customer's last message. Outside that window, send an approved template instead.",
+  },
+  {
+    q: "How do I make sure we never miss a customer message?",
+    a: "In Settings → Business hours, set a reply-time target. A chat nobody from your team has answered within that time gets an Overdue badge, the assigned agent (or all admins) is notified, and the inbox's Overdue filter lists every one of them. Switch on repeat reminders and Repeat Grow raises it up to three more times, telling your admins as well from the second reminder. Auto-replies and the AI chatbot never count as a reply, and it all runs on our servers, so you don't need to leave the dashboard open.",
   },
   {
     q: "Who pays Meta's messaging fees?",
@@ -286,6 +292,11 @@ export default function DocsPage() {
                 are unread. Mute the sound in <Ui to="/notifications">Notifications</Ui>.
               </li>
               <li>
+                <b>Nothing gets forgotten:</b> a chat nobody has replied to in time gets a red <b>Overdue</b> badge,
+                and the <b>Overdue</b> filter lists every one of them. Repeat Grow can keep reminding you until
+                someone answers — see <a href="#reply-times">Never miss a reply</a>.
+              </li>
+              <li>
                 <b>AI chat summary:</b> click the <b>sparkles icon</b> at the top of a chat to see what the customer
                 wants, the key points, their language and mood, and a suggested next step. Handy when you take over
                 someone else&apos;s chat.
@@ -313,12 +324,88 @@ export default function DocsPage() {
               <li>
                 The newest conversations load first. Scroll to the bottom and click <b>Load older conversations</b>{" "}
                 for more; in a chat, click <b>Load earlier messages</b> at the top to see older history. Search and
-                filters cover the conversations that are loaded.
+                filters cover the conversations that are loaded — with one exception: the <b>Overdue</b> filter also
+                goes and fetches older chats that are waiting, so a forgotten one can&apos;t hide further down the list.
               </li>
             </ul>
           </Section>
 
-          <Section id="contacts" n={4} title="Contacts" intro="Keep every customer and their history in one place.">
+          <Section
+            id="reply-times"
+            n={4}
+            title="Never miss a reply"
+            intro="Set your opening hours and a reply-time target, and Repeat Grow chases the chats nobody has answered."
+          >
+            <ol className="steps">
+              <Step title="Open Business hours">
+                Go to <Ui to="/settings?tab=business-hours">Settings → Business hours</Ui>. You need to be an admin or
+                the owner to change anything here; everyone else still sees the badges and filters.
+              </Step>
+              <Step title="Set your opening hours (optional)">
+                Turn on <b>Use business hours</b>, pick your time zone (India by default), set the open and close time
+                for each day, and add holidays you&apos;re closed. Leave this off if you answer around the clock.
+              </Step>
+              <Step title="Switch on the welcome and away messages (optional)">
+                The <b>welcome message</b> goes out on someone&apos;s first message, the <b>away message</b> when they
+                write while you&apos;re closed (at most once every few hours, which you choose). Type{" "}
+                {"{{name}}"} anywhere and it becomes the customer&apos;s first name.
+              </Step>
+              <Step title="Set your reply-time target">
+                Turn on <b>Alert me when a customer waits too long</b> and enter your target in minutes — 15 is a good
+                start. Pass that with nobody from your team having replied, and the chat gets a red <b>Overdue</b>{" "}
+                badge and the person it&apos;s assigned to is notified. If it isn&apos;t assigned to anyone, all your
+                admins are told.
+              </Step>
+              <Step title="Decide whether the clock runs at night">
+                Tick <b>Only count business hours</b> and the clock pauses while you&apos;re closed, so a message at
+                11 pm isn&apos;t overdue by morning. Leave it unticked and waiting time counts around the clock. This
+                needs <b>Use business hours</b> switched on above.
+              </Step>
+              <Step title="Turn on repeat reminders">
+                Tick <b>Remind me again if it stays unanswered</b> and choose how often. A chat nobody has replied to
+                is raised again up to <b>three</b> more times, and from the second reminder your owners and admins are
+                told as well — so a chat assigned to someone on leave still reaches somebody. Replying or closing the
+                chat stops the reminders within a minute.
+              </Step>
+              <Step title="Save">
+                Click <b>Save</b>. That&apos;s it — everything runs on our servers, so you don&apos;t need to keep
+                Repeat Grow open in a browser tab.
+              </Step>
+            </ol>
+
+            <h3>Finding the chats that are waiting</h3>
+            <ul className="bullets">
+              <li>
+                In <Ui to="/inbox">Inbox</Ui>, open the filter dropdown and pick <b>Overdue</b>. Unlike the other
+                filters, this one also goes and fetches waiting chats from further down your history, so an old
+                forgotten chat can&apos;t stay hidden.
+              </li>
+              <li>
+                Reminders and alerts appear in <Ui to="/notifications">Notifications</Ui>, and the chat itself carries
+                the <b>Overdue</b> badge until someone replies.
+              </li>
+              <li>
+                <Ui to="/reports">Reports</Ui> → <b>Overdue replies</b> shows how many chats are overdue right now,
+                how many went overdue in the period you picked, how many were never answered, how many needed a
+                reminder, and how long it usually takes your team to catch up.
+              </li>
+              <li>
+                If you have the <b>daily summary email</b> switched on, it now carries the overdue count too.
+              </li>
+            </ul>
+
+            <Tip>
+              Auto-replies and the AI chatbot never count as a reply. A chat the bot has been handling still goes
+              overdue if it actually needs a person — which is the point.
+            </Tip>
+
+            <Tip warn>
+              Reminders and alerts are shown inside Repeat Grow (and on Slack, Discord or Telegram if you&apos;ve set
+              up alert channels for the first alert). They are not sent by email or as a phone push notification yet.
+            </Tip>
+          </Section>
+
+          <Section id="contacts" n={5} title="Contacts" intro="Keep every customer and their history in one place.">
             <ul className="bullets">
               <li>Contacts are created automatically when someone messages you.</li>
               <li>
@@ -333,7 +420,7 @@ export default function DocsPage() {
             </ul>
           </Section>
 
-          <Section id="pipelines" n={5} title="Pipelines" intro="Track deals from first message to closed.">
+          <Section id="pipelines" n={6} title="Pipelines" intro="Track deals from first message to closed.">
             <p>
               Track deals on Kanban boards in <Ui to="/pipelines">Pipelines</Ui>. Create a pipeline with your own
               stages, add deals with a value, and drag them between stages. Each deal links to its
@@ -345,7 +432,7 @@ export default function DocsPage() {
             </p>
           </Section>
 
-          <Section id="templates" n={6} title="Message templates" intro="Create WhatsApp templates in Repeat Grow and submit them to Meta for approval, with no need to open Meta Business Manager.">
+          <Section id="templates" n={7} title="Message templates" intro="Create WhatsApp templates in Repeat Grow and submit them to Meta for approval, with no need to open Meta Business Manager.">
             <p>
               WhatsApp needs an approved template to message a customer who hasn&apos;t written to you
               in the last 24 hours, and for every broadcast. Manage all of yours in{" "}
@@ -397,7 +484,7 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="orders" n={7} title="Orders & payments" intro="Take orders and payments in the chat, share your catalog, and keep customers updated on delivery.">
+          <Section id="orders" n={8} title="Orders & payments" intro="Take orders and payments in the chat, share your catalog, and keep customers updated on delivery.">
             <ol className="steps">
               <Step title="Choose how customers pay">
                 In <Ui to="/orders">Orders & payments</Ui>, pick <b>WhatsApp Pay</b> (customers
@@ -419,7 +506,7 @@ export default function DocsPage() {
             </p>
           </Section>
 
-          <Section id="forms" n={8} title="WhatsApp forms" intro="Collect leads, booking requests or feedback in a form that opens inside WhatsApp.">
+          <Section id="forms" n={9} title="WhatsApp forms" intro="Collect leads, booking requests or feedback in a form that opens inside WhatsApp.">
             <ol className="steps">
               <Step title="Build the form">
                 In <Ui to="/settings?tab=forms">Settings → WhatsApp forms</Ui>, click <b>New form</b>, add fields (text,
@@ -436,7 +523,7 @@ export default function DocsPage() {
             </ol>
           </Section>
 
-          <Section id="broadcasts" n={9} title="Broadcasts" intro="Send an approved template to many customers at once.">
+          <Section id="broadcasts" n={10} title="Broadcasts" intro="Send an approved template to many customers at once.">
             <ol className="steps">
               <Step title="Pick an approved template">
                 Open <Ui to="/broadcasts">Broadcasts</Ui> and choose the template to send.
@@ -461,7 +548,7 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="automations" n={10} title="Automations & flows" intro="Let Repeat Grow handle the repetitive work.">
+          <Section id="automations" n={11} title="Automations & flows" intro="Let Repeat Grow handle the repetitive work.">
             <p>
               <Ui to="/automations">Automations</Ui> run actions when something happens, such as a new inbound
               message, a customer&apos;s first message, a keyword match, or a tag being added.
@@ -476,7 +563,7 @@ export default function DocsPage() {
             </p>
           </Section>
 
-          <Section id="ai-chatbot" n={11} title="AI chatbot" intro="Answer common questions instantly, day or night.">
+          <Section id="ai-chatbot" n={12} title="AI chatbot" intro="Answer common questions instantly, day or night.">
             <p>
               In <Ui to="/settings?tab=ai-chatbot">Settings → AI chatbot</Ui>, add your business knowledge (FAQs, policies,
               product details) and switch the chatbot on. It answers WhatsApp chats naturally from
@@ -485,7 +572,7 @@ export default function DocsPage() {
             </p>
           </Section>
 
-          <Section id="shopify" n={12} title="Shopify" intro="Send order confirmations, shipping updates, and abandoned-cart reminders on WhatsApp automatically.">
+          <Section id="shopify" n={13} title="Shopify" intro="Send order confirmations, shipping updates, and abandoned-cart reminders on WhatsApp automatically.">
             <ol className="steps">
               <Step title="Create your templates">
                 In <Ui to="/settings?tab=templates">Settings → Templates</Ui>, create a template for each message you want, such
@@ -510,7 +597,7 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="calendly" n={13} title="Calendly" intro="Confirm bookings and send reminders on WhatsApp so fewer people miss their meetings.">
+          <Section id="calendly" n={14} title="Calendly" intro="Confirm bookings and send reminders on WhatsApp so fewer people miss their meetings.">
             <ol className="steps">
               <Step title="Collect a phone number">
                 Calendly doesn&apos;t ask for one by default. In each Calendly event type, add a booking question of
@@ -532,7 +619,7 @@ export default function DocsPage() {
             </Tip>
           </Section>
 
-          <Section id="team" n={14} title="Team members" intro="Invite teammates by link and control what they can do.">
+          <Section id="team" n={15} title="Team members" intro="Invite teammates by link and control what they can do.">
             <p>Invite teammates from <Ui to="/settings?tab=members">Settings → Team members</Ui>. Each person gets one role:</p>
             <div className="docs-table-wrap">
               <table className="docs-table">
@@ -549,7 +636,7 @@ export default function DocsPage() {
             </div>
           </Section>
 
-          <Section id="plans" n={15} title="Plans & free trial" intro="Try everything free for 7 days, then pick the plan that fits.">
+          <Section id="plans" n={16} title="Plans & free trial" intro="Try everything free for 7 days, then pick the plan that fits.">
             <ul className="bullets">
               <li>New accounts get a <b>7-day free trial</b> with Growth features. The bar at the top shows the days left.</li>
               <li>
@@ -574,7 +661,7 @@ export default function DocsPage() {
             </ul>
           </Section>
 
-          <Section id="your-data" n={16} title="Your data & privacy" intro="Get a copy of your data or delete your account, any time.">
+          <Section id="your-data" n={17} title="Your data & privacy" intro="Get a copy of your data or delete your account, any time.">
             <ul className="bullets">
               <li>
                 Go to <Ui to="/settings?tab=your-data">Settings → Your data</Ui>.

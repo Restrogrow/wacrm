@@ -13,8 +13,8 @@ and polish.
 
 **Migration required:** `082_shopify_pending_installs.sql`,
 `085_broadcast_retries_webhook_deliveries.sql`, `086_broadcast_pricing.sql`,
-`093_shopify_message_steps.sql`, `099_install_source.sql`,
-`100_ai_credits.sql`.
+`093_shopify_message_steps.sql`, `098_sla_escalation.sql`,
+`099_install_source.sql`, `100_ai_credits.sql`.
 
 ### Added
 
@@ -53,6 +53,20 @@ and polish.
   URL-button mapping, sent from a queue rather than off the webhook.
   Delays apply to every event, not just abandoned cart, and `0` means
   send immediately. Migration 093.
+- **Nothing-gets-missed inbox** (9 Nov 2026): an **Overdue** filter lists
+  every chat past your reply target, fetching the ones on pages the list
+  has not loaded — which is exactly where a forgotten chat hides. Plus
+  optional **repeat reminders** (Settings → Business hours): a chat still
+  unanswered is raised up to 3 more times at your chosen interval, and
+  from the second reminder your owners/admins are told too, in case the
+  assigned agent is away. Replying stops them immediately; the interval
+  honours "only count business hours". Default off. The "SLA breached"
+  badge now reads **Overdue**. Migration 098.
+- **Reports → Overdue replies** (9 Nov 2026): overdue now, chats that went
+  overdue in the range, how many were never answered, how many needed a
+  reminder or an escalation, and the average / median time from going
+  overdue to the first human reply. The **daily summary email** now carries
+  the overdue count as well. Migration 098.
 
 - **WhatsApp spend page** (24 Oct 2026, sidebar → WhatsApp spend, admins):
   Meta's charges by day and category, paid vs free messages, whether a

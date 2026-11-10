@@ -170,6 +170,7 @@ export const EMAIL_CATALOG: CatalogEntry[] = [
           newContacts: 12,
           newConversations: 17,
           awaitingReply: 5,
+          overdueNow: 3,
           broadcastsSent: 2,
           dealsCreated: 4,
           dealsWon: 2,
