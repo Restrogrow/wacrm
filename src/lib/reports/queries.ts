@@ -123,6 +123,66 @@ export async function loadConversations(db: DB, accountId: string, range: Report
   return { daily, summary }
 }
 
+// ---- 2b. Overdue replies (SLA) -----------------------------------------
+
+export interface SlaSummary {
+  /** Waiting past the target right now — not bounded by the range. */
+  overdueNow: number
+  breachedChats: number
+  stillWaiting: number
+  remindedChats: number
+  escalatedChats: number
+  recoveryAvgS: number | null
+  recoveryMedianS: number | null
+  recoverySamples: number
+}
+
+export const EMPTY_SLA_SUMMARY: SlaSummary = {
+  overdueNow: 0,
+  breachedChats: 0,
+  stillWaiting: 0,
+  remindedChats: 0,
+  escalatedChats: 0,
+  recoveryAvgS: null,
+  recoveryMedianS: null,
+  recoverySamples: 0,
+}
+
+export function parseSlaSummary(row: Record<string, unknown> | undefined): SlaSummary {
+  if (!row) return EMPTY_SLA_SUMMARY
+  return {
+    overdueNow: num(row.overdue_now),
+    breachedChats: num(row.breached_chats),
+    stillWaiting: num(row.still_waiting),
+    remindedChats: num(row.reminded_chats),
+    escalatedChats: num(row.escalated_chats),
+    recoveryAvgS: numOrNull(row.recovery_avg_s),
+    recoveryMedianS: numOrNull(row.recovery_median_s),
+    recoverySamples: num(row.recovery_samples),
+  }
+}
+
+/**
+ * Overdue-reply figures, or `null` when the account cannot produce them
+ * yet: migration 098 not applied (no `report_sla_summary`). That is a
+ * missing feature, not a broken report, so the panel says so instead of
+ * showing a red error — and a genuine permission or network failure
+ * still throws.
+ */
+export async function loadSla(
+  db: DB,
+  accountId: string,
+  range: ReportRange,
+): Promise<SlaSummary | null> {
+  const { data, error } = await db.rpc('report_sla_summary', rpcArgs(accountId, range))
+  if (error) {
+    if (/report_sla_summary/.test(error.message)) return null
+    throw new Error(error.message)
+  }
+  const rows = (data ?? []) as Record<string, unknown>[]
+  return parseSlaSummary(rows[0])
+}
+
 // ---- 3. Agents ---------------------------------------------------------
 
 export interface AgentRow {

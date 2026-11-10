@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SlaBadge } from "@/components/inbox/sla-badge";
+import { SlaBadge, useSlaBreachedSet } from "@/components/inbox/sla-badge";
 import { LeadBadge } from "@/components/inbox/lead-badge";
 import { BulkActionsBar } from "@/components/inbox/bulk-actions-bar";
 import { useCan } from "@/hooks/use-can";
@@ -54,7 +54,7 @@ const STATUS_COLORS: Record<ConversationStatus, string> = {
   closed: "bg-muted-foreground",
 };
 
-type InboxFilter = ConversationStatus | "all" | "unread" | "recent";
+type InboxFilter = ConversationStatus | "all" | "unread" | "recent" | "overdue";
 
 /** Conversations fetched per page (newest activity first). */
 export const CONVERSATIONS_PAGE_SIZE = 50;
@@ -62,10 +62,18 @@ export const CONVERSATIONS_PAGE_SIZE = 50;
 /** "Recent" shows conversations with a message in this window. */
 const RECENT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Overdue conversations are pulled in by id when the filter is on;
+ * batch size keeps the `in(...)` URL sane. Remaining ids come on the
+ * next pass, which the appended rows retrigger.
+ */
+const OVERDUE_FETCH_BATCH = 200;
+
 const FILTER_OPTIONS: { label: string; value: InboxFilter }[] = [
   { label: "All", value: "all" },
   { label: "Recent (24h)", value: "recent" },
   { label: "Unread", value: "unread" },
+  { label: "Overdue", value: "overdue" },
   { label: "Open", value: "open" },
   { label: "Pending", value: "pending" },
   { label: "Closed", value: "closed" },
@@ -216,6 +224,58 @@ export function ConversationList({
     };
   }, []);
 
+  // Overdue chats are old by definition — that is what being overdue
+  // means — so most of them sit on pages this list has never loaded.
+  // Filtering only what's in memory would quietly hide exactly the
+  // chats the filter exists to surface, so when it's on we fetch the
+  // missing ones by id. `attemptedOverdueRef` stops a row that never
+  // comes back (deleted, or invisible under RLS) from being requested
+  // on every subsequent render.
+  const breachedSet = useSlaBreachedSet();
+  const [overdueLoading, setOverdueLoading] = useState(false);
+  const attemptedOverdueRef = useRef<Set<string>>(new Set());
+  const loadedIds = useMemo(
+    () => new Set(conversations.map((c) => c.id)),
+    [conversations]
+  );
+
+  useEffect(() => {
+    if (filter !== "overdue" || breachedSet.size === 0) return;
+    const missing = [...breachedSet]
+      .filter(
+        (id) => !loadedIds.has(id) && !attemptedOverdueRef.current.has(id)
+      )
+      .slice(0, OVERDUE_FETCH_BATCH);
+    if (missing.length === 0) return;
+    for (const id of missing) attemptedOverdueRef.current.add(id);
+
+    let cancelled = false;
+    setOverdueLoading(true);
+    (async () => {
+      const { data, error } = await createClient()
+        .from("conversations")
+        .select(CONVERSATION_SELECT)
+        .in("id", missing);
+      if (cancelled) return;
+      setOverdueLoading(false);
+      if (error) {
+        console.error("Failed to fetch overdue conversations:", error.message);
+        return;
+      }
+      // The parent de-duplicates by id, so appending is safe even if a
+      // row arrived by realtime while this was in flight.
+      if (data && data.length > 0) {
+        onConversationsLoadedRef.current(
+          normalizeConversations(data),
+          "append"
+        );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [filter, breachedSet, loadedIds]);
+
   // Company options are derived from the loaded conversations — there's no
   // separate companies table, and only companies with a live conversation
   // are worth offering as an inbox filter.
@@ -239,6 +299,8 @@ export function ConversationList({
 
     if (filter === "unread") {
       result = result.filter((c) => c.unread_count > 0);
+    } else if (filter === "overdue") {
+      result = result.filter((c) => breachedSet.has(c.id));
     } else if (filter === "recent") {
       const cutoff = now - RECENT_WINDOW_MS;
       result = result.filter(
@@ -276,7 +338,15 @@ export function ConversationList({
     const ts = (c: Conversation) =>
       c.last_message_at ? new Date(c.last_message_at).getTime() : 0;
     return [...result].sort((a, b) => ts(b) - ts(a));
-  }, [conversations, filter, search, selectedTagIds, selectedCompany, now]);
+  }, [
+    conversations,
+    filter,
+    search,
+    selectedTagIds,
+    selectedCompany,
+    now,
+    breachedSet,
+  ]);
 
   const toggleTag = useCallback((id: string) => {
     setSelectedTagIds((prev) =>
@@ -521,9 +591,19 @@ export function ConversationList({
           </div>
         ) : (
           <>
+            {/* The Overdue filter pulls in chats from pages that were
+                never loaded, so say so — otherwise a short list looks
+                like the complete answer. */}
+            {overdueLoading && (
+              <p className="px-4 py-2 text-center text-xs text-muted-foreground">
+                Checking older chats…
+              </p>
+            )}
             {filtered.length === 0 ? (
               <div className="px-4 py-12 text-center">
-                <p className="text-sm text-muted-foreground">No conversations found</p>
+                <p className="text-sm text-muted-foreground">
+                  {overdueLoading ? "Looking…" : "No conversations found"}
+                </p>
               </div>
             ) : (
               <div className="flex flex-col">

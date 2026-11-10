@@ -315,7 +315,8 @@
   picks on/off, the hour (India time) and up to 5 recipients. Morning
   emails cover yesterday, afternoon/evening ones today so far: messages
   received and sent, new conversations and contacts, chats waiting for a
-  reply, broadcasts, deals created and won, opt-outs.
+  reply, **chats overdue past the reply target**, broadcasts, deals
+  created and won, opt-outs.
 
 ### WhatsApp spend (Meta billing)
 - **WhatsApp spend** (sidebar, `/whatsapp-spend`, admins): what Meta is
@@ -343,16 +344,32 @@
 
 ### Reports
 - **Reports** (sidebar, `/reports`): messaging volume and delivery
-  rates, conversations and first-response / resolution times, agent
-  performance, broadcast results, deals and orders, and customer
-  satisfaction (CSAT), with a date range (up to 365 days) and CSV export
-  per table. Viewers can read reports. Some metrics are approximate
-  (see the notes on the page). Migration 065.
+  rates, conversations and first-response / resolution times, **overdue
+  replies**, agent performance, broadcast results, deals and orders, and
+  customer satisfaction (CSAT), with a date range (up to 365 days) and
+  CSV export per table. Viewers can read reports. Some metrics are
+  approximate (see the notes on the page). Migration 065.
+- **Overdue replies** panel: how many chats are overdue right now, how
+  many went overdue in the range, how many were never answered, how many
+  needed a reminder or an escalation, and the average / median time from
+  going overdue to the first human reply. Read from the records the cron
+  writes, so the business-hours pause is already applied; each chat is
+  counted once however many times it went overdue. Migration 098.
 
 ### Inbox productivity
 - **Business hours, welcome and away messages** (Settings → Business
-  hours) and a **first-response SLA** with an "SLA breached" badge and
+  hours) and a **first-response SLA** with an "Overdue" badge and
   in-app alerts for the assigned agent or the admins. Migration 066.
+- **Nothing gets forgotten:** an **Overdue** filter in the inbox lists
+  every chat past the reply target — including ones on pages the list
+  has not scrolled to, which is where forgotten chats actually sit — and
+  optional **repeat reminders** (Settings → Business hours → "Remind me
+  again if it stays unanswered") raise a still-unanswered chat up to 3
+  more times at your chosen interval. From the second reminder the
+  owners/admins are told too, so a chat assigned to someone who is away
+  still surfaces. Replying stops the reminders at once; the interval
+  honours "only count business hours", so nobody is pinged overnight.
+  Default off. Migration 098.
 - **Internal notes and @mentions** inside the chat thread (never sent to
   the customer, never counted as a reply), **bulk actions** on selected
   conversations (assign, close, tag, mark read), and messages now record
@@ -936,6 +953,7 @@ is idempotent where possible. Recent ones:
 | `084_number_scope_policy_speed` | Cheaper current-number policies (follow-up to 083) |
 | `085_broadcast_retries_webhook_deliveries` | Broadcast retry columns (`attempts`, `next_attempt_at`), `webhook_deliveries` log with retries, locks `record_webhook_failure` |
 | `086_broadcast_pricing` | Billable flag and pricing category on broadcast recipients; `broadcast_cost_counts()` for cost per broadcast |
+| `098_sla_escalation` | Repeat reminders for overdue replies: per-episode tally on `conversation_sla`, repeat settings on `business_hours_settings`, `sla_reminder` notification type, `report_sla_summary()` behind the Reports panel |
 | `099_install_source` | `accounts.install_source` (`website` / `shopify_app_store`) and `shopify_pending_installs.from_app_store`, so App Store merchants can be billed through Shopify's Billing API while everyone else keeps paying directly |
 | `100_ai_credits` | AI credit balance: append-only `credit_ledger`, `account_credits`, the `credit_rates` card, `accounts.credits_enforced` (off by default), and the `credit_add()` / `credit_spend()` functions |
 
@@ -958,7 +976,7 @@ Hostinger calls these every minute with the header
 
 | Endpoint | Runs |
 |---|---|
-| `GET /api/automations/cron` | Delayed automation steps (`automation-steps`), **broadcasts** (`scheduled-broadcasts`: send-now and scheduled, batched, leased, with retries), **webhook delivery retries** (`webhook-retries`), **scheduled chat messages** (`scheduled-messages`), **Shopify abandoned-cart reminders** (`shopify-reminders`), **Calendly** and **Cal.com 24 h / 1 h reminders** (`calendly-reminders`, `calcom-reminders`), **daily summary emails** (`daily-summaries`), **WhatsApp number health** (`number-health`, daily per account, 10 per run), **trial / renewal reminder emails** (`billing-reminders`), **reply-time SLA alerts** (`sla-alerts`), **monthly AI credit allowances** (`credit-allowances`, idempotent per plan-month), **AI lead scoring** (`ai-analysis`, a few chats per run) and **Journeys** (`journeys`) |
+| `GET /api/automations/cron` | Delayed automation steps (`automation-steps`), **broadcasts** (`scheduled-broadcasts`: send-now and scheduled, batched, leased, with retries), **webhook delivery retries** (`webhook-retries`), **scheduled chat messages** (`scheduled-messages`), **Shopify abandoned-cart reminders** (`shopify-reminders`), **Calendly** and **Cal.com 24 h / 1 h reminders** (`calendly-reminders`, `calcom-reminders`), **daily summary emails** (`daily-summaries`), **WhatsApp number health** (`number-health`, daily per account, 10 per run), **trial / renewal reminder emails** (`billing-reminders`), **reply-time SLA alerts** (`sla-alerts`: the first breach, plus repeat reminders for accounts that enabled them, 50 per account per run), **monthly AI credit allowances** (`credit-allowances`, idempotent per plan-month), **AI lead scoring** (`ai-analysis`, a few chats per run) and **Journeys** (`journeys`) |
 | `GET /api/flows/cron` | Flow waits and timeouts (every 5 minutes is enough) |
 | `GET /api/health` | No secret; hit it from an uptime monitor every 5 minutes |
 
@@ -1131,7 +1149,7 @@ src/lib/summary/         Daily summary email
 src/lib/catalog/         Product library, CSV, Meta catalog sync / import, store sync, stock
 src/lib/reports/         Report queries, CSV writer, date ranges
 src/lib/journeys/        Journeys engine;  src/lib/segments/ saved segments
-src/lib/business-hours/  Hours, auto-replies, SLA alerts
+src/lib/business-hours/  Hours, auto-replies, overdue-reply alerts and repeat reminders
 src/lib/csat/            CSAT surveys;  src/lib/scheduled-messages/ send-later
 src/lib/inbound-hooks/   Inbound webhooks;  src/lib/alerts/ Slack / Discord / Telegram
 src/lib/woocommerce/, shiprocket/, calcom/   Webhook integrations;  src/lib/payments/ Razorpay links

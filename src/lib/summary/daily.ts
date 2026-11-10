@@ -46,6 +46,7 @@ export async function computeSummaryStats(
     newContacts,
     newConversations,
     awaitingReply,
+    overdueNow,
     broadcastsSent,
     dealsCreated,
     optOuts,
@@ -92,6 +93,17 @@ export async function computeSummaryStats(
         .eq('account_id', accountId)
         .gt('unread_count', 0)
     ),
+    // Open breach rows, as the cron recorded them — so the email agrees
+    // with the inbox's Overdue filter. `countRows` returns 0 on error,
+    // which is also the right answer when SLA is off or migration 066
+    // has not been applied.
+    countRows(
+      db
+        .from('conversation_sla')
+        .select('conversation_id', head)
+        .eq('account_id', accountId)
+        .is('cleared_at', null)
+    ),
     countRows(
       db
         .from('broadcasts')
@@ -135,6 +147,7 @@ export async function computeSummaryStats(
     newContacts,
     newConversations,
     awaitingReply,
+    overdueNow,
     broadcastsSent,
     dealsCreated,
     dealsWon: won.length,

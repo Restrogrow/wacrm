@@ -133,6 +133,13 @@ export function BusinessHoursPanel() {
           { onConflict: 'account_id' },
         );
       if (error) {
+        // A column the app knows but the database does not means a
+        // migration is pending — saying "ask an admin" would send the
+        // reader down the wrong path.
+        if (/sla_repeat/.test(error.message)) {
+          toast.error('Run migration 098_sla_escalation.sql, then save again.');
+          return;
+        }
         toast.error('Could not save. Only admins can change these settings.');
         return;
       }
@@ -389,7 +396,7 @@ export function BusinessHoursPanel() {
           </div>
           <Toggle
             label="Alert me when a customer waits too long"
-            hint="If nobody on your team replies in time, the assigned agent (or all admins, if the chat is unassigned) gets a notification and the chat shows an “SLA breached” badge. Auto-replies and bot messages don't count as a reply."
+            hint="If nobody on your team replies in time, the assigned agent (or all admins, if the chat is unassigned) gets a notification and the chat shows an “Overdue” badge — and the inbox's Overdue filter lists every one of them. Auto-replies and bot messages don't count as a reply."
             checked={s.sla_enabled}
             onChange={(sla_enabled) => patch({ sla_enabled })}
             disabled={readOnly}
@@ -416,6 +423,33 @@ export function BusinessHoursPanel() {
               onChange={(sla_business_hours_only) => patch({ sla_business_hours_only })}
               disabled={readOnly || !s.enabled}
             />
+            <Toggle
+              label="Remind me again if it stays unanswered"
+              hint="Without this you are told once and never again. With it on, a chat nobody has replied to is raised up to 3 more times; from the second reminder your admins are told too, in case the assigned agent is away. Replying stops the reminders at once."
+              checked={s.sla_repeat_enabled}
+              onChange={(sla_repeat_enabled) => patch({ sla_repeat_enabled })}
+              disabled={readOnly}
+            />
+            <div
+              className={
+                s.sla_repeat_enabled
+                  ? 'flex items-center gap-2 text-sm'
+                  : 'pointer-events-none flex items-center gap-2 text-sm opacity-50'
+              }
+            >
+              <span className="text-muted-foreground">Remind every</span>
+              <Input
+                type="number"
+                min={5}
+                max={1440}
+                value={s.sla_repeat_minutes}
+                onChange={(e) => patch({ sla_repeat_minutes: Number(e.target.value) })}
+                className="w-24"
+                disabled={readOnly}
+                aria-label="Reminder interval in minutes"
+              />
+              <span className="text-muted-foreground">minutes</span>
+            </div>
           </div>
         </CardContent>
       </Card>

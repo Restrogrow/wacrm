@@ -434,7 +434,7 @@ const LANDING_BODY_HTML = `
     <div class="h-bento">
       <article class="h-card w2 reveal">
         <div class="h-card-visual" style="height:290px">${UI_INBOX}</div>
-        <div class="h-card-body"><span class="h-card-tag">Shared inbox</span><h3>Your whole team on one WhatsApp number</h3><p>Assign chats, add internal notes, use saved replies and voice notes, and see who is handling what. Works alongside the WhatsApp Business app.</p></div>
+        <div class="h-card-body"><span class="h-card-tag">Shared inbox</span><h3>Your whole team on one WhatsApp number</h3><p>Assign chats, add internal notes, use saved replies and voice notes, and see who is handling what. Leave a customer waiting too long and the chat is flagged <b>Overdue</b> and your team keeps getting reminded until someone replies. Works alongside the WhatsApp Business app.</p></div>
       </article>
       <article class="h-card reveal" style="--d:1">
         <div class="h-card-visual" style="height:290px">${UI_BOT}</div>
@@ -547,7 +547,7 @@ const LANDING_BODY_HTML = `
     </div>
     <div class="h-tour reveal">
       <div class="h-tabs" role="tablist" aria-label="Product tour" aria-orientation="vertical">
-        <button type="button" class="h-tab" role="tab" id="tab-inbox" aria-controls="panel-inbox" aria-selected="true"><b><i>💬</i>Answer every chat</b><p>Every WhatsApp message lands in one shared inbox. Assign it, reply with saved replies, and never lose a lead to a busy phone.</p><span class="h-prog"></span></button>
+        <button type="button" class="h-tab" role="tab" id="tab-inbox" aria-controls="panel-inbox" aria-selected="true"><b><i>💬</i>Answer every chat</b><p>Every WhatsApp message lands in one shared inbox. Assign it, reply with saved replies, and get reminded about anyone still waiting, so no lead is lost to a busy phone.</p><span class="h-prog"></span></button>
         <button type="button" class="h-tab" role="tab" id="tab-bot" aria-controls="panel-bot" aria-selected="false"><b><i>✦</i>Let AI handle the repeats</b><p>The AI chatbot answers common questions day and night, then hands over to your team when it matters.</p><span class="h-prog"></span></button>
         <button type="button" class="h-tab" role="tab" id="tab-pay" aria-controls="panel-pay" aria-selected="false"><b><i>&#8377;</i>Close the sale in chat</b><p>Send the order with a payment request. Customers pay with WhatsApp Pay or UPI without leaving WhatsApp.</p><span class="h-prog"></span></button>
         <button type="button" class="h-tab" role="tab" id="tab-camp" aria-controls="panel-camp" aria-selected="false"><b><i>📣</i>Bring them back</b><p>Broadcast offers and updates with approved templates, and see who read and replied.</p><span class="h-prog"></span></button>

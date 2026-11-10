@@ -43,6 +43,8 @@ export interface SummaryStats {
   newContacts: number;
   newConversations: number;
   awaitingReply: number;
+  /** Waiting past the reply-time target right now (0 when SLA is off). */
+  overdueNow: number;
   broadcastsSent: number;
   dealsCreated: number;
   dealsWon: number;
@@ -56,6 +58,7 @@ export const SUMMARY_ROWS: { key: keyof SummaryStats; label: string }[] = [
   { key: 'newConversations', label: 'New conversations' },
   { key: 'newContacts', label: 'New contacts' },
   { key: 'awaitingReply', label: 'Chats waiting for a reply (now)' },
+  { key: 'overdueNow', label: 'Overdue — past your reply target (now)' },
   { key: 'broadcastsSent', label: 'Broadcasts sent' },
   { key: 'dealsCreated', label: 'Deals created' },
   { key: 'dealsWon', label: 'Deals won' },

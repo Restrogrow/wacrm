@@ -115,8 +115,25 @@ review. #4 (opt-out / STOP handling) is done — see migration 036 and
       email to the owner 2 days before, on the last day, and 1 day after
       the trial ends, with a "Choose a plan" link.
 - [ ] **#8 Notifications agents can't miss:** browser notifications +
-      sound for new messages are done (2026-10-16, MessageNotifier). Still
-      to do: email digests and mobile push.
+      sound for new messages are done (2026-10-16, MessageNotifier).
+      Overdue replies done (2026-11-09, migration 098): inbox **Overdue**
+      filter that also fetches waiting chats from unloaded pages, opt-in
+      **repeat reminders** (up to 3 per wait, admins told from the second,
+      business-hours aware), **Reports → Overdue replies**, and the
+      overdue count in the daily summary email. Still to do:
+      - an email digest of the chats nobody answered. The daily summary
+        carries only the count. It has to be a throttled digest, not one
+        email per breach: SMTP is Google Workspace (~2,000 recipients/day),
+        which per-breach mail would burn through.
+      - mobile push on overdue — `src/lib/push/expo.ts` only fires for new
+        messages.
+      - Slack / Discord / Telegram on the *repeats*. The first breach
+        already fires `sla_breach`; a repeat needs a new `ALERT_EVENTS`
+        entry plus the alerts settings UI.
+      - per-occurrence history. `conversation_sla` keeps one row per
+        conversation, so a new wait overwrites the previous one and
+        Reports can only count chats, not how many times each went
+        overdue. A `conversation_sla_events` ledger would fix it.
 - [x] **#9 Contact export.** Done: Export on the Contacts page (CSV
       with tags and custom fields, formula-safe).
 - [ ] **#10 Multiple WhatsApp numbers per account.** `whatsapp_config` is

@@ -181,7 +181,13 @@ export interface Conversation {
 // Notifications (migration 027)
 // ============================================================
 
-export type NotificationType = 'conversation_assigned' | 'sla_breach' | 'mention' | 'low_stock';
+export type NotificationType =
+  | 'conversation_assigned'
+  | 'sla_breach'
+  /** Repeat "still waiting" nudge for an unanswered chat (migration 098). */
+  | 'sla_reminder'
+  | 'mention'
+  | 'low_stock';
 
 export interface Notification {
   id: string;

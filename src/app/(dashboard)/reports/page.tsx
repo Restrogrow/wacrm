@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import {
+  AlarmClock,
   BarChart3,
   Clock,
   IndianRupee,
@@ -30,6 +31,7 @@ import {
   loadConversations,
   loadMessaging,
   loadSales,
+  loadSla,
   type AgentRow,
   type BroadcastRow,
   type ConversationDay,
@@ -37,6 +39,7 @@ import {
   type DealsRow,
   type MessagingDay,
   type OrdersRow,
+  type SlaSummary,
 } from '@/lib/reports/queries'
 import { describeRange, presetRange, shortDayLabel, type ReportRange } from '@/lib/reports/range'
 
@@ -104,6 +107,7 @@ export default function ReportsPage() {
     ready ? () => loadConversations(supabase, accountId, range, tz) : null,
     key,
   )
+  const sla = useSection<SlaSummary | null>(ready ? () => loadSla(supabase, accountId, range) : null, key)
   const agents = useSection<AgentRow[]>(ready ? () => loadAgents(supabase, accountId, range) : null, key)
   const broadcasts = useSection<BroadcastRow[]>(
     ready ? () => loadBroadcasts(supabase, accountId, range) : null,
@@ -119,12 +123,13 @@ export default function ReportsPage() {
       <PageHero
         icon={BarChart3}
         title="Reports"
-        description={`Messaging, conversations, team, broadcasts and sales for ${describeRange(range)}. Days follow your local time zone (${tz}).`}
+        description={`Messaging, conversations, overdue replies, team, broadcasts and sales for ${describeRange(range)}. Days follow your local time zone (${tz}).`}
         action={<RangePicker selection={selection} onChange={setSelection} />}
       />
 
       <MessagingSection section={messaging} stamp={stamp} />
       <ConversationsSection section={conversations} stamp={stamp} />
+      <SlaSection section={sla} />
       <AgentsSection section={agents} stamp={stamp} />
       <BroadcastsSection section={broadcasts} stamp={stamp} />
       <SalesSection section={sales} stamp={stamp} defaultCurrency={defaultCurrency} />
@@ -301,6 +306,68 @@ function ConversationsSection({
                 empty={null}
               />
             </>
+          )
+        }}
+      </SectionBody>
+    </ReportPanel>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 2b. Overdue replies
+// ---------------------------------------------------------------------------
+
+function SlaSection({ section }: { section: Section<SlaSummary | null> }) {
+  return (
+    <ReportPanel
+      icon={AlarmClock}
+      title="Overdue replies"
+      subtitle="Customers who waited longer than your reply-time target"
+      note="Counted per chat, from the same records that drive the inbox's Overdue filter — so the business-hours pause is already applied, and auto-replies and bot messages never count as a reply. One chat that went overdue more than once counts once: only its latest wait is kept. “Time to recover” is measured from going overdue to the first human reply."
+    >
+      <SectionBody section={section} height="h-32">
+        {(summary) => {
+          // `null` means migration 098 has not been applied: say what to
+          // do rather than showing zeros that look like good news.
+          if (!summary) {
+            return (
+              <EmptyState
+                icon={AlarmClock}
+                title="Not available yet"
+                hint="Run migration 098_sla_escalation.sql, then reload this page."
+              />
+            )
+          }
+          if (summary.overdueNow === 0 && summary.breachedChats === 0) {
+            return (
+              <EmptyState
+                icon={AlarmClock}
+                title="Nothing overdue"
+                hint="Either every customer was answered in time, or the reply-time target is off — switch it on in Settings → Business hours."
+              />
+            )
+          }
+          return (
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+              <Kpi label="Overdue now" value={formatCount(summary.overdueNow)} hint="right now, any date" />
+              <Kpi label="Chats overdue" value={formatCount(summary.breachedChats)} hint="in this range" />
+              <Kpi
+                label="Never answered"
+                value={formatCount(summary.stillWaiting)}
+                hint="of those in range"
+              />
+              <Kpi label="Needed a nudge" value={formatCount(summary.remindedChats)} hint="got a reminder" />
+              <Kpi
+                label="Escalated"
+                value={formatCount(summary.escalatedChats)}
+                hint="admins told too"
+              />
+              <Kpi
+                label="Avg time to recover"
+                value={formatDuration(summary.recoveryAvgS)}
+                hint={`median ${formatDuration(summary.recoveryMedianS)} · ${formatCount(summary.recoverySamples)} answered`}
+              />
+            </div>
           )
         }}
       </SectionBody>

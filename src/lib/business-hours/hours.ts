@@ -50,6 +50,8 @@ export interface BusinessHoursSettings {
   sla_enabled: boolean;
   sla_first_response_minutes: number;
   sla_business_hours_only: boolean;
+  sla_repeat_enabled: boolean;
+  sla_repeat_minutes: number;
 }
 
 export const DEFAULT_TIMEZONE = 'Asia/Kolkata';
@@ -78,6 +80,8 @@ export const DEFAULT_SETTINGS: BusinessHoursSettings = {
   sla_enabled: false,
   sla_first_response_minutes: 15,
   sla_business_hours_only: false,
+  sla_repeat_enabled: false,
+  sla_repeat_minutes: 60,
 };
 
 export const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -248,6 +252,52 @@ export function isSlaBreached(
   return waited >= settings.sla_first_response_minutes;
 }
 
+/**
+ * Hard cap on repeat reminders per waiting episode. A chat nobody
+ * picks up must not notify forever; after this it stays visible in the
+ * inbox (Overdue filter, badge) but stops writing notifications.
+ * Mirrored in migration 098's comment.
+ */
+export const SLA_MAX_REMINDERS = 3;
+
+/** The reminder bookkeeping the cron keeps per breached conversation. */
+export interface SlaReminderState {
+  /** When the customer's wait began (the breach episode's identity). */
+  waiting_since: string | Date;
+  /** First alert's timestamp — the clock the first reminder runs from. */
+  breached_at: string | Date;
+  reminders_sent: number;
+  last_reminded_at: string | Date | null;
+}
+
+const asDate = (v: string | Date): Date => (v instanceof Date ? v : new Date(v));
+
+/**
+ * Is another "still waiting" reminder due for this breached chat?
+ *
+ * The clock runs from the last reminder, or from the first alert when
+ * none has been sent yet, and counts business minutes whenever the
+ * target does — so an account that only measures business hours does
+ * not get reminders overnight either.
+ */
+export function shouldRemindAgain(
+  settings: BusinessHoursSettings,
+  state: SlaReminderState,
+  now: Date = new Date(),
+): boolean {
+  if (!settings.sla_enabled || !settings.sla_repeat_enabled) return false;
+  if (state.reminders_sent >= SLA_MAX_REMINDERS) return false;
+
+  const since = asDate(state.last_reminded_at ?? state.breached_at);
+  if (Number.isNaN(since.getTime())) return false;
+
+  const elapsed =
+    settings.sla_business_hours_only && settings.enabled
+      ? businessMinutesBetween(settings, since, now)
+      : (now.getTime() - since.getTime()) / 60000;
+  return elapsed >= settings.sla_repeat_minutes;
+}
+
 // ------------------------------------------------------------
 // Auto-reply text
 // ------------------------------------------------------------
@@ -309,6 +359,13 @@ export function validateSettings(
   ) {
     return { ok: false, error: 'The reply target must be 1 to 1440 minutes.' };
   }
+  if (
+    !Number.isInteger(s.sla_repeat_minutes) ||
+    s.sla_repeat_minutes < 5 ||
+    s.sla_repeat_minutes > 1440
+  ) {
+    return { ok: false, error: 'The reminder interval must be 5 to 1440 minutes.' };
+  }
   return { ok: true };
 }
 
@@ -353,5 +410,7 @@ export function rowToSettings(row: Record<string, unknown> | null | undefined): 
     sla_enabled: row.sla_enabled === true,
     sla_first_response_minutes: num(row.sla_first_response_minutes, DEFAULT_SETTINGS.sla_first_response_minutes),
     sla_business_hours_only: row.sla_business_hours_only === true,
+    sla_repeat_enabled: row.sla_repeat_enabled === true,
+    sla_repeat_minutes: num(row.sla_repeat_minutes, DEFAULT_SETTINGS.sla_repeat_minutes),
   };
 }
