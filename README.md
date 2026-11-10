@@ -936,6 +936,7 @@ is idempotent where possible. Recent ones:
 | `084_number_scope_policy_speed` | Cheaper current-number policies (follow-up to 083) |
 | `085_broadcast_retries_webhook_deliveries` | Broadcast retry columns (`attempts`, `next_attempt_at`), `webhook_deliveries` log with retries, locks `record_webhook_failure` |
 | `086_broadcast_pricing` | Billable flag and pricing category on broadcast recipients; `broadcast_cost_counts()` for cost per broadcast |
+| `099_install_source` | `accounts.install_source` (`website` / `shopify_app_store`) and `shopify_pending_installs.from_app_store`, so App Store merchants can be billed through Shopify's Billing API while everyone else keeps paying directly |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 

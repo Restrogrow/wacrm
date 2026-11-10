@@ -59,6 +59,39 @@ describe("GET /api/integrations/shopify/install", () => {
     );
     expect(res.headers.get("location")).toMatch(/\/login\?next=/);
   });
+
+  // The `shopify_from_store` cookie is what later decides the account
+  // must be billed through Shopify (migration 099), so it has to be
+  // impossible to acquire without Shopify's signature.
+  it("marks a Shopify-signed install as coming from the App Store", async () => {
+    const { UnauthorizedError } = await import("@/lib/auth/account");
+    requireRole.mockRejectedValue(new UnauthorizedError());
+    const { GET } = await import("@/app/api/integrations/shopify/install/route");
+    const q = signed({ shop: "demo-store.myshopify.com", timestamp: "1700000000" });
+    const res = await GET(new Request(`https://repeatgrow.com/api/integrations/shopify/install?${q}`));
+    expect(res.cookies.get("shopify_from_store")?.value).toBe("1");
+    expect(res.cookies.get("shopify_oauth_state")?.value).toBeTruthy();
+  });
+
+  it("does not set the App Store cookie for an in-app Connect", async () => {
+    requireRole.mockResolvedValue({ accountId: "acc", userId: "user", role: "admin" });
+    const { GET } = await import("@/app/api/integrations/shopify/install/route");
+    const res = await GET(
+      new Request("https://repeatgrow.com/api/integrations/shopify/install?shop=demo-store.myshopify.com"),
+    );
+    // Went to consent as a signed-in admin, but is not an App Store install.
+    expect(res.headers.get("location")).toMatch(/\/admin\/oauth\/authorize\?/);
+    expect(res.cookies.get("shopify_from_store")).toBeUndefined();
+  });
+
+  it("does not set the App Store cookie on a forged signature", async () => {
+    requireRole.mockResolvedValue({ accountId: "acc", userId: "user", role: "admin" });
+    const { GET } = await import("@/app/api/integrations/shopify/install/route");
+    const res = await GET(
+      new Request("https://repeatgrow.com/api/integrations/shopify/install?shop=demo-store.myshopify.com&timestamp=1&hmac=deadbeef"),
+    );
+    expect(res.cookies.get("shopify_from_store")).toBeUndefined();
+  });
 });
 
 describe("hashClaimToken", () => {
