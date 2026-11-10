@@ -93,6 +93,23 @@ interface SpendData {
     source: 'pricing' | 'conversation'
   } | null
   spendError?: string | null
+  /** null unless this account has an agreed campaign management fee. */
+  managementFee?: {
+    lines: {
+      category: string
+      broadcast: number
+      conversation: number
+      messages: number
+      rate: number | null
+      spend: number | null
+    }[]
+    totalMessages: number
+    metaSpend: number
+    feePercent: number
+    fee: number
+    total: number
+    unpriced: { category: string; messages: number }[]
+  } | null
   broadcasts?: {
     rows: BroadcastCostRow[]
     totalCost: number
@@ -222,6 +239,7 @@ export default function WhatsAppSpendPage() {
 
       <BillingStatusPanel data={data} loading={!current} />
       <SpendPanel data={data} loading={!current} range={range} />
+      <ManagementFeePanel data={data} loading={!current} range={range} />
       <BroadcastCostPanel data={data} loading={!current} />
       <SentPanel data={data} loading={!current} />
       <FailuresPanel data={data} loading={!current} />
@@ -524,6 +542,103 @@ function BroadcastCostPanel({ data, loading }: { data?: SpendData; loading: bool
             empty={null}
           />
         </>
+      )}
+    </ReportPanel>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 2b. Campaign management fee (only when the account has one)
+// ---------------------------------------------------------------------------
+
+/**
+ * What Repeat Grow invoices on top of Meta's own charges, for accounts on
+ * a management-fee agreement. Shown to the customer deliberately: they
+ * get Meta's real invoice anyway, so a fee they couldn't see here would
+ * look like something we were hiding. Renders nothing at all when the
+ * account has no fee — which is every account by default.
+ */
+function ManagementFeePanel({
+  data,
+  loading,
+  range,
+}: {
+  data?: SpendData
+  loading: boolean
+  range: ReportRange
+}) {
+  const currency = data?.currency || 'INR'
+  const money = (v: number) => formatCurrency(v, currency)
+  const fee = data?.managementFee
+
+  // No fee agreed: no panel, not even an empty one.
+  if (loading || !fee) return null
+
+  const columns: Column<NonNullable<SpendData['managementFee']>['lines'][number]>[] = [
+    { header: 'Type', cell: (r) => categoryLabel(r.category), csv: (r) => r.category },
+    {
+      header: 'Broadcasts',
+      align: 'right',
+      cell: (r) => formatCount(r.broadcast),
+      csv: (r) => r.broadcast,
+    },
+    {
+      header: 'Inbox & automations',
+      align: 'right',
+      cell: (r) => formatCount(r.conversation),
+      csv: (r) => r.conversation,
+    },
+    {
+      header: 'Paid messages',
+      align: 'right',
+      cell: (r) => formatCount(r.messages),
+      csv: (r) => r.messages,
+    },
+    {
+      header: 'Rate',
+      align: 'right',
+      cell: (r) => (r.rate === null ? '—' : money(r.rate)),
+      csv: (r) => r.rate ?? '',
+    },
+    {
+      header: 'Message cost',
+      align: 'right',
+      cell: (r) => (r.spend === null ? '—' : money(r.spend)),
+      csv: (r) => r.spend ?? '',
+    },
+  ]
+
+  return (
+    <ReportPanel
+      icon={Wallet}
+      title="Campaign management fee"
+      subtitle={`Agreed service fee on your message spend, for ${describeRange(range)}`}
+      note="Meta charges your own payment method for the messages themselves — we never add to Meta's rates. This fee is our separate charge for running your campaigns, and we invoice it per calendar month, so a custom date range above won't match an invoice exactly."
+    >
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi label="Paid messages" value={formatCount(fee.totalMessages)} />
+        <Kpi label="Message cost (billed by Meta)" value={money(fee.metaSpend)} />
+        <Kpi label={`Management fee (${fee.feePercent}%)`} value={money(fee.fee)} />
+        <Kpi label="Messages + fee" value={money(fee.total)} />
+      </div>
+
+      {fee.unpriced.length > 0 ? (
+        <p className="text-xs text-muted-foreground">
+          {fee.unpriced.map((u) => `${formatCount(u.messages)} ${categoryLabel(u.category)}`).join(', ')}{' '}
+          messages aren&apos;t priced here yet, so they are not included in the totals above.
+        </p>
+      ) : null}
+
+      {fee.lines.length > 0 ? (
+        <DataTable
+          columns={columns}
+          rows={fee.lines}
+          rowKey={(r) => r.category}
+          filename="management-fee.csv"
+          empty={null}
+        />
+      ) : (
+        <EmptyState icon={Wallet} title="No paid messages in this range" />
       )}
     </ReportPanel>
   )

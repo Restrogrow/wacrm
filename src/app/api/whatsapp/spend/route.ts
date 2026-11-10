@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
+import { loadFeeForRange } from '@/lib/billing/management-fee-server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { decrypt } from '@/lib/whatsapp/encryption'
@@ -219,6 +220,17 @@ export async function GET(request: Request) {
     const rates = s ? ratesByCategory(s.byCategory) : {}
     const broadcastCosts = await loadBroadcastCosts(db, accountId, fromIso, toIso, rates)
 
+    // ---- Campaign management fee ----------------------------------------
+    // Shown to the customer on purpose: they can see Meta's real invoice,
+    // so a fee they can't see here would look like something we hid.
+    // null unless the account actually has a fee.
+    const managementFee = await loadFeeForRange(
+      accountId,
+      fromIso,
+      toIso,
+      w?.currency ?? 'INR',
+    )
+
     return NextResponse.json({
       connected: true,
       wabaId,
@@ -237,6 +249,7 @@ export async function GET(request: Request) {
       },
       spend,
       spendError,
+      managementFee,
       broadcasts: broadcastCosts,
       sent,
       failures,

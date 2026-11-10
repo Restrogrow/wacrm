@@ -57,7 +57,7 @@ const FAQ: FaqItem[] = [
   {
     question: 'Does Repeat Grow add a markup to WhatsApp message fees?',
     answer:
-      'No. Meta bills WhatsApp message fees straight to the payment method on your WhatsApp Business Account. Repeat Grow charges only its plan price.',
+      "No. Meta bills WhatsApp message fees straight to the payment method on your WhatsApp Business Account, at Meta's own published rates — we are never in between, so we cannot change what Meta charges you. Separately, some accounts agree a campaign management fee charged as a percentage of message spend; where that applies it is quoted before you sign up and invoiced by us, never added to Meta's rates.",
   },
   {
     question: 'Can my number get banned for using Repeat Grow?',
@@ -173,8 +173,9 @@ export default function MetaTechProviderPost() {
           any time.
         </li>
         <li>
-          <strong>No markup on message fees.</strong> Meta bills WhatsApp fees directly to you at its
-          published rates. See{' '}
+          <strong>No markup on Meta&apos;s message fees.</strong> Meta bills WhatsApp fees directly
+          to you at its published rates, so we cannot add to them. Any campaign management fee is
+          agreed separately and invoiced by us. See{' '}
           <Link href="/blog/whatsapp-service-message-pricing-2026">how WhatsApp pricing works</Link>.
         </li>
         <li>
