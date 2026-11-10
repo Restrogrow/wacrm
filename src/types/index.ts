@@ -186,6 +186,8 @@ export type NotificationType =
   | 'sla_breach'
   /** Repeat "still waiting" nudge for an unanswered chat (migration 098). */
   | 'sla_reminder'
+  /** AI credits low or exhausted (migration 101). */
+  | 'credits_low'
   | 'mention'
   | 'low_stock';
 

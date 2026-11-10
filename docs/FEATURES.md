@@ -351,6 +351,11 @@ Meta's menus change, so the exact names may differ slightly.
   - **Charged once:** a spend takes an idempotency key, so a retried Meta webhook answering the same customer message
     is not billed twice. The daily cap is charged before the credit, because losing a daily unit costs the customer
     nothing and losing a credit costs them money.
+  - **Warned before it stops:** the owners and admins get a notification when the balance is running low (a tenth of the
+    plan's include, floored so a small account is not nagged about nothing) and again when it reaches zero. Once per
+    descent, not per message — `account_credits.low_warned_at` is stamped when sent and cleared by a top-up, so
+    re-filling re-arms it. The "out" message names what still works, since pausing AI is not an outage. Runs from the
+    cron (`credit-low-warnings`), not from the spend path, which every chatbot reply goes through. Migration 101.
   - **Fails open:** if the credit tables are missing or unreachable, AI keeps working. A credit system that breaks the
     product when its own plumbing is absent is worse than one that occasionally lets an action through free.
 - **Timeouts:** every AI request gives up after 60 seconds (3 minutes for voice notes and call recordings) and shows

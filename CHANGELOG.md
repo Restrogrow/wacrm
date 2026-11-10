@@ -14,10 +14,17 @@ and polish.
 **Migration required:** `082_shopify_pending_installs.sql`,
 `085_broadcast_retries_webhook_deliveries.sql`, `086_broadcast_pricing.sql`,
 `093_shopify_message_steps.sql`, `098_sla_escalation.sql`,
-`099_install_source.sql`, `100_ai_credits.sql`.
+`099_install_source.sql`, `100_ai_credits.sql`,
+`101_credit_low_notification.sql`.
 
 ### Added
 
+- **Warning before the AI stops** (10 Nov 2026): the owners and admins of
+  an account get a notification when its AI credits are running low, and
+  again if they run out — so a paused chatbot is never the first sign.
+  Warned once per descent, not per message; topping up re-arms it. The
+  "out" message names what still works, because pausing AI is not an
+  outage. Migration 101.
 - **AI credits** (9 Nov 2026): AI usage now draws on a credit balance that
   can be topped up, instead of only a daily cap that resets. Each plan
   includes credits per 30-day cycle, Repeat Grow support can add more from
