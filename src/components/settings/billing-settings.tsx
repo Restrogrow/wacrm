@@ -38,6 +38,7 @@ import {
 } from '@/lib/billing/plans';
 import { SUPPORT_EMAIL, SUPPORT_PHONE } from '@/lib/seo';
 import { SettingsPanelHead } from './settings-panel-head';
+import { CreditsPanel } from './credits-panel';
 
 interface Billing {
   enabled: boolean;
@@ -163,6 +164,8 @@ export function BillingSettings() {
       </div>
 
       {/* ---------------- Usage ---------------- */}
+      <CreditsPanel />
+
       <div>
         <h3 className="text-foreground mb-3 flex items-center gap-2 text-base font-bold tracking-tight">
           <IconChip icon={BarChart3} className="size-9 rounded-xl" />

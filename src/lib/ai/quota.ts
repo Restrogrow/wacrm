@@ -7,6 +7,8 @@
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { loadEffectivePlan } from '@/lib/billing/server'
 import type { EffectivePlan } from '@/lib/billing/plans'
+import { outOfCreditsMessage } from '@/lib/credits/credits'
+import { spendCredits } from '@/lib/credits/server'
 
 export type AiFeature = 'suggest' | 'analysis' | 'summary' | 'voice_call' | 'chatbot'
 
@@ -48,14 +50,49 @@ export interface QuotaResult {
   cap: number
   plan: EffectivePlan | null
   message?: string
+  /** Which limit stopped it, for callers that treat the two differently. */
+  reason?: 'daily_cap' | 'plan_ended' | 'out_of_credits'
+  /** Credits left afterwards. Undefined when migration 100 is not applied. */
+  balance?: number
 }
 
 let warnedMissing = false
 
-export async function consumeAiQuota(accountId: string, feature: AiFeature): Promise<QuotaResult> {
+/**
+ * Spend one unit of AI for this account, against BOTH limits.
+ *
+ * Two independent things have to allow it: the per-plan daily cap
+ * (migration 074), which stops one account flooding us in a day, and
+ * the credit balance (migration 100), which is what actually runs out
+ * and can be topped up.
+ *
+ * The cap is charged first on purpose. If the order were reversed and
+ * the cap then refused, the account would have paid a credit for an
+ * action that never ran; this way it loses one unit of a counter that
+ * resets at midnight instead. Losing a credit costs the customer
+ * money, losing a daily unit costs them nothing.
+ */
+export async function consumeAiQuota(
+  accountId: string,
+  feature: AiFeature,
+  /**
+   * Makes a retry of the same work free. Pass one wherever the caller
+   * can run twice for one piece of work — a webhook retry, a re-run
+   * cron, a double-clicked button. Omit it and every call charges.
+   */
+  idempotencyKey?: string
+): Promise<QuotaResult> {
   const plan = await loadEffectivePlan(accountId).catch(() => null)
   const cap = aiDailyCap(plan, feature)
-  if (cap <= 0) return { allowed: false, cap, plan, message: quotaMessage(feature, plan, cap) }
+  if (cap <= 0) {
+    return {
+      allowed: false,
+      cap,
+      plan,
+      message: quotaMessage(feature, plan, cap),
+      reason: plan === 'expired' ? 'plan_ended' : 'daily_cap',
+    }
+  }
 
   const { data, error } = await supabaseAdmin().rpc('ai_usage_bump', {
     p_account_id: accountId,
@@ -69,6 +106,26 @@ export async function consumeAiQuota(accountId: string, feature: AiFeature): Pro
     }
     return { allowed: true, cap, plan }
   }
-  if (data === false) return { allowed: false, cap, plan, message: quotaMessage(feature, plan, cap) }
-  return { allowed: true, cap, plan }
+  if (data === false) {
+    return {
+      allowed: false,
+      cap,
+      plan,
+      message: quotaMessage(feature, plan, cap),
+      reason: 'daily_cap',
+    }
+  }
+
+  const spend = await spendCredits(accountId, feature, idempotencyKey)
+  if (!spend.ok) {
+    return {
+      allowed: false,
+      cap,
+      plan,
+      message: outOfCreditsMessage(feature),
+      reason: 'out_of_credits',
+      balance: spend.balance,
+    }
+  }
+  return { allowed: true, cap, plan, balance: spend.balance }
 }

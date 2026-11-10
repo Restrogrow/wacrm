@@ -16,6 +16,8 @@ export const AUDIT_ACTIONS = [
   'integration.connected',
   'integration.disconnected',
   'plan.changed',
+  'credits.added',
+  'credits.enforcement_changed',
   'contact.bulk_deleted',
   'account.deletion_requested',
 ] as const
@@ -36,6 +38,8 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   'integration.connected': 'Connected an integration',
   'integration.disconnected': 'Disconnected an integration',
   'plan.changed': 'Plan changed',
+  'credits.added': 'AI credits added',
+  'credits.enforcement_changed': 'AI credit enforcement changed',
   'contact.bulk_deleted': 'Deleted contacts in bulk',
   'account.deletion_requested': 'Requested account deletion',
 }

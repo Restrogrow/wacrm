@@ -27,6 +27,7 @@ export const MONITORED_JOBS = {
   'number-health': { label: 'WhatsApp number health', maxAgeMinutes: 10 },
   'billing-reminders': { label: 'Trial & renewal reminder emails', maxAgeMinutes: 10 },
   'sla-alerts': { label: 'Reply-time (SLA) alerts', maxAgeMinutes: 10 },
+  'credit-allowances': { label: 'Monthly AI credit allowances', maxAgeMinutes: 10 },
   journeys: { label: 'Journeys (lifecycle messages)', maxAgeMinutes: 10 },
   'ai-analysis': { label: 'AI lead scoring', maxAgeMinutes: 10 },
   'shopify-sync': { label: 'Shopify store sync (every 30 min)', maxAgeMinutes: 10 },

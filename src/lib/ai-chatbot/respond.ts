@@ -6,6 +6,7 @@
 import { supabaseAdmin } from "@/lib/flows/admin-client";
 import { engineSendText } from "@/lib/flows/meta-send";
 import { consumeAiQuota } from "@/lib/ai/quota";
+import { spendKey } from "@/lib/credits/credits";
 import { markConversationRead } from "@/lib/whatsapp/read-receipts";
 import { audioMime, mediaIdFromUrl, MAX_VOICE_NOTE_BYTES } from "@/lib/ai/voice-note";
 import { decrypt } from "@/lib/whatsapp/encryption";
@@ -180,11 +181,22 @@ export async function maybeReplyWithAI(input: ChatbotInbound): Promise<void> {
     });
     if (!decision.reply) return;
 
-    // Account-wide daily cap. Over it, the bot stays quiet and the
-    // message waits in the inbox for the team like any other.
-    const quota = await consumeAiQuota(input.accountId, "chatbot");
+    // Account-wide daily cap and AI credits. Over either, the bot stays
+    // quiet and the message waits in the inbox for the team like any
+    // other message — which is why running out pauses the bot rather
+    // than losing the customer.
+    //
+    // Keyed on the customer message being answered: Meta retries this
+    // webhook, and a retry must not be charged twice for one reply.
+    const quota = await consumeAiQuota(
+      input.accountId,
+      "chatbot",
+      spendKey("chatbot", before?.id)
+    );
     if (!quota.allowed) {
-      console.warn(`[ai-chatbot] daily cap reached for account ${input.accountId}; not replying`);
+      console.warn(
+        `[ai-chatbot] not replying for account ${input.accountId}: ${quota.reason ?? "quota"}`
+      );
       return;
     }
 

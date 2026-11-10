@@ -21,6 +21,7 @@ import {
 } from "@/lib/auth/business-profile";
 import { WhatsappDiagnosticsPanel } from "@/components/admin/whatsapp-diagnostics-panel";
 import { PlanEditor } from "@/components/admin/plan-editor";
+import { CreditsCard } from "@/components/admin/credits-card";
 import { getReferrerOf } from "@/lib/partners/server";
 import { ResetPasswordButton } from "@/components/admin/reset-password-button";
 import { EFFECTIVE_PLAN_LABELS, effectivePlan, type AccountBilling } from "@/lib/billing/plans";
@@ -393,6 +394,7 @@ export default async function AdminAccountDetailPage({
             planExpiresAt={account.billing.plan_expires_at}
             billingNote={account.billing.billing_note}
           />
+          <CreditsCard accountId={account.id} />
         </div>
       )}
 

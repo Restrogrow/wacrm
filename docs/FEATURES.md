@@ -318,6 +318,24 @@ Meta's menus change, so the exact names may differ slightly.
 - **AI chatbot replies** (automatic answers to customers) have their own daily cap: trial 200, Starter 1,000, Growth
   5,000, Pro 15,000, Enterprise 50,000, plus a cap per chat per hour. Over the cap the bot stays quiet and the chat
   waits in the inbox. The chatbot also removes card numbers, OTPs and passwords before the chat goes to Gemini.
+- **AI credits** (migration 100): alongside the daily caps, AI draws on a balance that can be topped up and that runs
+  out. Each plan includes credits per 30-day cycle, granted by the cron (`credit-allowances`, idempotent per
+  plan-month, so a plan change mid-month grants the new include at once). Support adds more from
+  `/admin/accounts/<id>`, recorded as a paid **top-up** or a **goodwill** grant so the ledger reconciles against money
+  received. `credit_ledger` is append-only, so any balance can be explained line by line.
+  - **Costs:** one credit for a chatbot reply, suggestion, summary or lead score; 25 for an AI voice call (up to ten
+    minutes of Gemini Live). A row in `credit_rates` overrides any of these without a deploy; an empty table means the
+    defaults apply, not that everything is free. Customers see the card and their balance in **Settings → Billing**.
+  - **Running out** pauses AI only. The chat waits in the inbox for the team exactly as it does over a daily cap, so
+    no customer is dropped; the inbox, broadcasts and everything else are unaffected.
+  - **Enforcement is OFF by default** (`accounts.credits_enforced`). Usage is recorded and the balance may go negative,
+    but nothing is blocked until it is switched on per account — the per-plan amounts in
+    `lib/credits/credits.ts` are placeholders meant to be set from real consumption first.
+  - **Charged once:** a spend takes an idempotency key, so a retried Meta webhook answering the same customer message
+    is not billed twice. The daily cap is charged before the credit, because losing a daily unit costs the customer
+    nothing and losing a credit costs them money.
+  - **Fails open:** if the credit tables are missing or unreachable, AI keeps working. A credit system that breaks the
+    product when its own plumbing is absent is worse than one that occasionally lets an action through free.
 - **Timeouts:** every AI request gives up after 60 seconds (3 minutes for voice notes and call recordings) and shows
   "AI took too long to answer. Try again."
 - **Needs** `GEMINI_KEY`. Without it the buttons say "AI is not set up for this workspace yet" and nothing else breaks.

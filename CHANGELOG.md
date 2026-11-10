@@ -13,10 +13,24 @@ and polish.
 
 **Migration required:** `082_shopify_pending_installs.sql`,
 `085_broadcast_retries_webhook_deliveries.sql`, `086_broadcast_pricing.sql`,
-`093_shopify_message_steps.sql`, `099_install_source.sql`.
+`093_shopify_message_steps.sql`, `099_install_source.sql`,
+`100_ai_credits.sql`.
 
 ### Added
 
+- **AI credits** (9 Nov 2026): AI usage now draws on a credit balance that
+  can be topped up, instead of only a daily cap that resets. Each plan
+  includes credits per 30-day cycle, Repeat Grow support can add more from
+  the account page, and **Settings → Billing** shows the balance beside a
+  rate card — what a chatbot reply, a summary, a lead score and an AI call
+  each cost, and how many of each the balance still buys. When credits run
+  out the AI pauses and chats wait for the team, so no customer is lost;
+  the inbox, broadcasts and everything else keep working.
+
+  **Enforcement ships off.** Usage is recorded but nothing is blocked
+  until it is switched on per account, so the per-plan amounts can be set
+  from real consumption rather than guessed. The daily caps still apply
+  alongside. Migration 100.
 - **Accounts record where they came from** (9 Nov 2026): `install_source`
   is `shopify_app_store` for an account that arrived through Shopify's own
   signed entry point, and `website` for everyone else — which is every
