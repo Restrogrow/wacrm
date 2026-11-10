@@ -13,7 +13,8 @@ and polish.
 
 **Migration required:** `082_shopify_pending_installs.sql`,
 `085_broadcast_retries_webhook_deliveries.sql`, `086_broadcast_pricing.sql`,
-`093_shopify_message_steps.sql`, `100_ai_credits.sql`.
+`093_shopify_message_steps.sql`, `099_install_source.sql`,
+`100_ai_credits.sql`.
 
 ### Added
 
@@ -30,6 +31,14 @@ and polish.
   until it is switched on per account, so the per-plan amounts can be set
   from real consumption rather than guessed. The daily caps still apply
   alongside. Migration 100.
+- **Accounts record where they came from** (9 Nov 2026): `install_source`
+  is `shopify_app_store` for an account that arrived through Shopify's own
+  signed entry point, and `website` for everyone else — which is every
+  existing account, so they are grandfathered by the default and no cut-off
+  date is needed. Groundwork for Shopify App Store requirement 1.2.1, which
+  requires App Store merchants to be billed through Shopify's Billing API
+  while everyone else keeps paying us directly. Nothing is gated on it yet.
+  Migration 099.
 
 - **Delivery address as a template variable** (9 Nov 2026): Shopify
   automations can put the shipping address in a message — the common
