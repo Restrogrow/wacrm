@@ -41,6 +41,8 @@ const PUBLIC_ROUTES: Record<string, string> = {
   'widget/[publicId]/route.ts': 'public website-widget config for visitors; returns only a non-sensitive subset, rate limited per IP',
   'widget/[publicId]/event/route.ts': 'public website-widget impression/click counter; no visitor data stored, rate limited per IP+widget',
   'demo-request/route.ts': 'public demo request form; honeypot, validation and rate limit per IP, writes with the service role',
+  'admin/impersonation/route.ts':
+    'reads/ends the caller\'s own impersonation marker. It cannot use requirePlatformAdmin: while impersonating, the session is the *customer\'s*, so that guard would 404 and strand the admin with no way out. Authority comes from the HMAC-signed cookie (lib/auth/impersonation.ts) — GET reports "not impersonating" to anyone without a valid signature, and DELETE only ever signs out the caller\'s own session',
   'integrations/woocommerce/wc-auth/callback/route.ts':
     "WooCommerce's server-to-server app-authorization callback; only accepted with our HMAC-signed, 1-hour state naming the account and store (must match the saved store), rate limited per IP, body capped",
 }

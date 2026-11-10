@@ -20,6 +20,9 @@ export const AUDIT_ACTIONS = [
   'credits.enforcement_changed',
   'contact.bulk_deleted',
   'account.deletion_requested',
+  'account.impersonated',
+  'account.impersonation_ended',
+  'account.fee_changed',
 ] as const
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number]
@@ -42,6 +45,9 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   'credits.enforcement_changed': 'AI credit enforcement changed',
   'contact.bulk_deleted': 'Deleted contacts in bulk',
   'account.deletion_requested': 'Requested account deletion',
+  'account.impersonated': 'Repeat Grow support signed in to this account',
+  'account.impersonation_ended': 'Repeat Grow support signed out of this account',
+  'account.fee_changed': 'Changed the campaign management fee',
 }
 
 export function auditActionLabel(action: string): string {
