@@ -22,6 +22,7 @@ import {
 import { WhatsappDiagnosticsPanel } from "@/components/admin/whatsapp-diagnostics-panel";
 import { PlanEditor } from "@/components/admin/plan-editor";
 import { CreditsCard } from "@/components/admin/credits-card";
+import { ManagementFeeCard } from "@/components/admin/management-fee-card";
 import { getReferrerOf } from "@/lib/partners/server";
 import { ResetPasswordButton } from "@/components/admin/reset-password-button";
 import { LoginAsButton } from "@/components/admin/login-as-button";
@@ -399,6 +400,7 @@ export default async function AdminAccountDetailPage({
             billingNote={account.billing.billing_note}
           />
           <CreditsCard accountId={account.id} />
+          <ManagementFeeCard accountId={account.id} />
         </div>
       )}
 

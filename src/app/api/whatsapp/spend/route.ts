@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
+import { billsThroughShopify } from '@/lib/billing/install-source'
 import { loadFeeForRange } from '@/lib/billing/management-fee-server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
@@ -67,6 +68,18 @@ export async function GET(request: Request) {
       .from('whatsapp_config')
       .select('waba_id, phone_number_id, access_token')
       .eq('account_id', accountId)
+      .maybeSingle()
+
+    // Decides whether the management fee may be shown at all — see the
+    // note at the fee below. `.maybeSingle()` with no error handling on
+    // purpose: if the column is missing (migration 099 not applied),
+    // `install_source` reads as undefined, which billsThroughShopify
+    // treats as 'website' — the safe default, since no account can be
+    // an App Store install before that migration exists.
+    const { data: account } = await db
+      .from('accounts')
+      .select('install_source')
+      .eq('id', accountId)
       .maybeSingle()
 
     // ---- What the account sent (our database) ---------------------------
@@ -224,12 +237,26 @@ export async function GET(request: Request) {
     // Shown to the customer on purpose: they can see Meta's real invoice,
     // so a fee they can't see here would look like something we hid.
     // null unless the account actually has a fee.
-    const managementFee = await loadFeeForRange(
-      accountId,
-      fromIso,
-      toIso,
-      w?.currency ?? 'INR',
-    )
+    //
+    // Withheld entirely from an account that arrived through the Shopify
+    // App Store. The fee is Repeat Grow's own revenue invoiced
+    // off-platform, and Shopify App Store requirement 1.2.1 says an App
+    // Store merchant's charges must go through Shopify's Billing API —
+    // which is what the app was rejected on. Showing them an
+    // off-platform fee is the clearest possible violation, and a second
+    // rejection carries a longer cooldown. Gated here rather than in the
+    // UI so the figure never leaves the server for those accounts.
+    //
+    // Remove this gate only once the fee is charged as a Billing API
+    // usage record. See lib/billing/install-source.ts.
+    const managementFee = billsThroughShopify(account?.install_source)
+      ? null
+      : await loadFeeForRange(
+          accountId,
+          fromIso,
+          toIso,
+          w?.currency ?? 'INR',
+        )
 
     return NextResponse.json({
       connected: true,
