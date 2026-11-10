@@ -184,7 +184,10 @@ export function OrderButton({ conversationId }: { conversationId: string }) {
                   <Plus className="size-4" />
                   Add item
                 </Button>
-                <div className="grid grid-cols-3 gap-2">
+                {/* Three columns only once there's room: at phone width
+                    ~115px per cell wraps "Shipping ₹" onto two lines and
+                    leaves the inputs too narrow to read an amount in. */}
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Tax ₹</Label>
                     <Input value={tax} onChange={(e) => setTax(e.target.value)} inputMode="decimal" />

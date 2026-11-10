@@ -82,7 +82,9 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
       </div>
 
       <section className="border-border flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="grid grid-cols-3 gap-6">
+        {/* gap-6 across three columns leaves ~100px per tile on a phone,
+            which clips a large formatInr amount at text-xl. */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
           <div>
             <p className="text-muted-foreground text-xs">Owed now</p>
             <p className="text-xl font-bold tabular-nums">{formatInr(ledger.earnings.pending)}</p>
