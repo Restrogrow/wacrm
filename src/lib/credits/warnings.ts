@@ -126,7 +126,20 @@ export async function processLowBalanceWarnings(): Promise<number> {
       }))
     );
     if (notifyErr) {
+      // Put the marker back. The claim has to happen before the insert
+      // to keep two cron runs from both warning, but leaving it set
+      // after a failed insert would mark the account as warned when
+      // nobody was told — and it would never be warned again.
+      //
+      // Reachable: migration 101 widens the `notifications` type
+      // constraint, and until it is applied every insert here fails the
+      // CHECK (23514). Without this the first sweep would silently burn
+      // the one warning each account gets.
       console.error('[credits] low-balance notification failed:', notifyErr.message);
+      await db
+        .from('account_credits')
+        .update({ low_warned_at: null })
+        .eq('account_id', item.accountId);
       continue;
     }
     warned++;
