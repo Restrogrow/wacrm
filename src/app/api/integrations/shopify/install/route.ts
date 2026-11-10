@@ -26,8 +26,9 @@ import {
 } from '@/lib/shopify/config';
 import { normalizeShopDomain, verifyShopifyOAuthQuery } from '@/lib/shopify/verify';
 
-// Read back by ../callback/route.ts.
+// Both read back by ../callback/route.ts.
 const STATE_COOKIE = 'shopify_oauth_state';
+const FROM_STORE_COOKIE = 'shopify_from_store';
 
 function backToSettings(error: string) {
   const url = new URL('/integrations/shopify', appBaseUrl());
@@ -77,12 +78,21 @@ export async function GET(request: Request) {
   authorize.searchParams.set('state', state);
 
   const response = NextResponse.redirect(authorize);
-  response.cookies.set(STATE_COOKIE, state, {
+  const cookieOptions = {
     httpOnly: true,
     secure: appBaseUrl().startsWith('https://'),
-    sameSite: 'lax',
+    sameSite: 'lax' as const,
     path: '/api/integrations/shopify',
     maxAge: 600,
-  });
+  };
+  response.cookies.set(STATE_COOKIE, state, cookieOptions);
+  // Carry "Shopify started this" to /callback, which decides whether the
+  // account must be billed through Shopify (migration 099). It cannot be
+  // re-derived there: Shopify's signature is on THIS request, and the
+  // callback's query is signed the same way whichever entry point was
+  // used. Only set when true, so a stale cookie cannot imply App Store.
+  if (fromShopify) {
+    response.cookies.set(FROM_STORE_COOKIE, '1', cookieOptions);
+  }
   return response;
 }

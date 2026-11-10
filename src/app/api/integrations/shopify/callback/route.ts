@@ -13,6 +13,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { requireRole, UnauthorizedError } from '@/lib/auth/account';
+import { markInstallSource } from '@/lib/billing/install-source-server';
 import {
   exchangeCodeForToken,
   fetchShopName,
@@ -30,17 +31,19 @@ import {
 } from '@/lib/shopify/verify';
 
 const STATE_COOKIE = 'shopify_oauth_state';
+const FROM_STORE_COOKIE = 'shopify_from_store';
 const CLAIM_PATH = '/api/integrations/shopify/claim';
+
+const SHOPIFY_COOKIE_PATH = '/api/integrations/shopify';
 
 function backToSettings(params: Record<string, string>) {
   const url = new URL('/integrations/shopify', appBaseUrl());
   for (const [key, value] of Object.entries(params))
     url.searchParams.set(key, value);
   const response = NextResponse.redirect(url);
-  response.cookies.delete({
-    name: STATE_COOKIE,
-    path: '/api/integrations/shopify',
-  });
+  for (const name of [STATE_COOKIE, FROM_STORE_COOKIE]) {
+    response.cookies.delete({ name, path: SHOPIFY_COOKIE_PATH });
+  }
   return response;
 }
 
@@ -53,7 +56,12 @@ export async function GET(request: Request) {
   const shop = params.get('shop');
   const code = params.get('code');
   const state = params.get('state');
-  const cookieState = (await cookies()).get(STATE_COOKIE)?.value;
+  const jar = await cookies();
+  const cookieState = jar.get(STATE_COOKIE)?.value;
+  // Set by ../install only when Shopify signed that request, so it
+  // cannot be forged into existence by a merchant typing their store
+  // into Settings.
+  const fromAppStore = jar.get(FROM_STORE_COOKIE)?.value === '1';
 
   if (
     !verifyShopifyOAuthQuery(params, creds.clientSecret) ||
@@ -84,11 +92,17 @@ export async function GET(request: Request) {
     // it on /claim once they sign in or sign up.
     try {
       const tokens = await exchangeCodeForToken(shop, code);
-      const { claimToken, maxAge } = await createPendingInstall(shop, tokens);
+      const { claimToken, maxAge } = await createPendingInstall(
+        shop,
+        tokens,
+        fromAppStore
+      );
       const login = new URL('/login', appBaseUrl());
       login.searchParams.set('next', CLAIM_PATH);
       const response = NextResponse.redirect(login);
-      response.cookies.delete({ name: STATE_COOKIE, path: '/api/integrations/shopify' });
+      for (const name of [STATE_COOKIE, FROM_STORE_COOKIE]) {
+        response.cookies.delete({ name, path: SHOPIFY_COOKIE_PATH });
+      }
       response.cookies.set(PENDING_INSTALL_COOKIE, claimToken, {
         httpOnly: true,
         secure: appBaseUrl().startsWith('https://'),
@@ -118,6 +132,11 @@ export async function GET(request: Request) {
       columns: tokenColumns(tokens),
       request,
     });
+    // Signed-in merchant installing from Shopify's own entry point.
+    // Never throws, and deliberately not fatal: the app is already
+    // approved on Shopify's side, so failing the connection over a
+    // billing flag would be the worse outcome. Migration 099.
+    await markInstallSource(ctx.accountId, fromAppStore);
   } catch (err) {
     const message =
       err instanceof Error ? err.message : 'Could not connect the store';

@@ -103,7 +103,14 @@ export async function saveOAuthConnection(args: {
  */
 export async function createPendingInstall(
   shop: string,
-  tokens: ShopifyTokenSet
+  tokens: ShopifyTokenSet,
+  /**
+   * True when Shopify signed the install request (App Store listing or
+   * Shopify admin). Parked with the install because at this point there
+   * is no account yet to write `install_source` to — the merchant has
+   * not signed up. /claim reads it back. Migration 099.
+   */
+  fromAppStore = false
 ): Promise<{ claimToken: string; maxAge: number }> {
   const db = supabaseAdmin();
   // Sweep old rows so abandoned installs don't pile up.
@@ -120,6 +127,7 @@ export async function createPendingInstall(
     claim_hash: hashClaimToken(claimToken),
     shop_domain: shop,
     shop_name: shopName,
+    from_app_store: fromAppStore,
     ...tokenColumns(tokens),
     expires_at: new Date(Date.now() + PENDING_TTL_SECONDS * 1000).toISOString(),
   });
@@ -135,6 +143,7 @@ export async function takePendingInstall(claimToken: string): Promise<{
   shop: string;
   shopName: string | null;
   columns: TokenColumns;
+  fromAppStore: boolean;
 } | null> {
   const db = supabaseAdmin();
   const { data } = await db
@@ -143,13 +152,14 @@ export async function takePendingInstall(claimToken: string): Promise<{
     .eq('claim_hash', hashClaimToken(claimToken))
     .gt('expires_at', new Date().toISOString())
     .select(
-      'shop_domain, shop_name, access_token, refresh_token, access_token_expires_at, scopes'
+      'shop_domain, shop_name, from_app_store, access_token, refresh_token, access_token_expires_at, scopes'
     )
     .maybeSingle();
   if (!data) return null;
   return {
     shop: data.shop_domain,
     shopName: data.shop_name,
+    fromAppStore: data.from_app_store === true,
     columns: {
       access_token: data.access_token,
       refresh_token: data.refresh_token,

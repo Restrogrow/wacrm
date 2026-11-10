@@ -12,6 +12,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import { requireRole, UnauthorizedError } from '@/lib/auth/account';
+import { markInstallSource } from '@/lib/billing/install-source-server';
 import { appBaseUrl } from '@/lib/shopify/config';
 import {
   PENDING_INSTALL_COOKIE,
@@ -59,6 +60,10 @@ export async function GET(request: Request) {
       columns: pending.columns,
       request,
     });
+    // The App Store path: the merchant approved the app before they had
+    // an account, so this is the first moment there is one to mark.
+    // Migration 099.
+    await markInstallSource(ctx.accountId, pending.fromAppStore);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Could not connect the store';
     console.error('[shopify/claim]', message);
