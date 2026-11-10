@@ -63,7 +63,7 @@ const FAQ: FaqItem[] = [
   {
     question: 'Who bills me for these messages if I use Repeat Grow?',
     answer:
-      'Meta bills WhatsApp message fees directly to the payment method on your WhatsApp Business Account. Repeat Grow’s plan price does not add a markup on Meta’s message fees.',
+      'Meta bills WhatsApp message fees directly to the payment method on your WhatsApp Business Account, at Meta’s own rates — Repeat Grow does not add a markup to them. Some accounts separately agree a campaign management fee, charged as a percentage of message spend and invoiced by us; where that applies it is quoted up front.',
   },
 ];
 
@@ -230,7 +230,8 @@ export default function ServiceMessagePricingPost() {
       <h2 id="repeat-grow">How Repeat Grow handles it</h2>
       <p>
         <Link href="/">Repeat Grow</Link> is a WhatsApp CRM on the official WhatsApp Business API.
-        Meta bills message fees directly to your WhatsApp Business Account, with no markup from us.
+        Meta bills message fees directly to your WhatsApp Business Account at its own rates, with no
+        markup from us; a campaign management fee, where agreed, is invoiced separately.
         The shared inbox has saved replies, interactive buttons and lists, and business-hours rules
         for auto-replies, so your team answers in fewer messages. See{' '}
         <Link href="/pricing">plans and pricing</Link>, or read how{' '}

@@ -14,6 +14,7 @@ import { PlanBanner } from "@/components/billing/plan-banner";
 import { CallProvider } from "@/components/calls/call-provider";
 import { NumberHealthBanner } from "@/components/settings/number-health-banner";
 import { BillingHoldBanner } from "@/components/settings/billing-hold-banner";
+import { ImpersonationBanner } from "@/components/layout/impersonation-banner";
 import { ReferralClaim } from "@/components/partners/referral-claim";
 
 // Auth-gated dashboard shell. Extracted from the layout so the layout
@@ -99,6 +100,9 @@ function DashboardShellInner({ children }: { children: React.ReactNode }) {
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <HelpWidget />
       <div className="flex flex-1 flex-col overflow-hidden">
+        {/* First, above the account's own banners: whose account this is
+            matters more than anything it has to say. */}
+        <ImpersonationBanner />
         <PlanBanner />
         <NumberHealthBanner />
         <BillingHoldBanner />

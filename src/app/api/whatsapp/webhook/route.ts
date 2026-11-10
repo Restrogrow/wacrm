@@ -666,6 +666,27 @@ async function handleStatusUpdate(status: {
     .limit(1)
     .maybeSingle()
 
+  // Billable + category for a message we stored ourselves — an inbox
+  // template reply, a flow, an automation, a journey, an API send.
+  // None of those ever reach broadcast_recipients, so before migration
+  // 097 they were billable messages nobody counted.
+  //
+  // Guarded on `!recipient` so anything that somehow lands in both
+  // tables is counted once: account_billable_counts() sums the two
+  // sources and has no way to spot an overlap.
+  if (msgRow && !recipient && status.pricing && typeof status.pricing.billable === 'boolean') {
+    const { error: msgPricingErr } = await supabaseAdmin()
+      .from('messages')
+      .update({
+        billable: status.pricing.billable,
+        pricing_category: status.pricing.category?.toLowerCase() ?? null,
+      })
+      .eq('message_id', status.id)
+    if (msgPricingErr) {
+      console.warn('[whatsapp] message pricing not stored (run migration 097):', msgPricingErr.message)
+    }
+  }
+
   if (msgRow) {
     const conv = msgRow.conversations as { account_id: string } | null
     const accountId = conv?.account_id

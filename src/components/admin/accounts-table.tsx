@@ -26,6 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ResetPasswordButton } from '@/components/admin/reset-password-button';
+import { LoginAsButton } from '@/components/admin/login-as-button';
 import type { AdminAccountRow } from '@/lib/admin/dashboard';
 import { EFFECTIVE_PLAN_LABELS } from '@/lib/billing/plans';
 
@@ -217,12 +218,15 @@ export function AccountsTable({ rows }: { rows: AdminAccountRow[] }) {
                         </div>
                       </div>
                       {r.ownerUserId && r.ownerEmail && (
-                        <ResetPasswordButton
-                          accountId={r.id}
-                          userId={r.ownerUserId}
-                          email={r.ownerEmail}
-                          compact
-                        />
+                        <>
+                          <ResetPasswordButton
+                            accountId={r.id}
+                            userId={r.ownerUserId}
+                            email={r.ownerEmail}
+                            compact
+                          />
+                          <LoginAsButton accountId={r.id} accountName={r.name} compact />
+                        </>
                       )}
                     </div>
                   </TableCell>

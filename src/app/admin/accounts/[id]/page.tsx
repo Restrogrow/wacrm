@@ -22,8 +22,10 @@ import {
 import { WhatsappDiagnosticsPanel } from "@/components/admin/whatsapp-diagnostics-panel";
 import { PlanEditor } from "@/components/admin/plan-editor";
 import { CreditsCard } from "@/components/admin/credits-card";
+import { ManagementFeeCard } from "@/components/admin/management-fee-card";
 import { getReferrerOf } from "@/lib/partners/server";
 import { ResetPasswordButton } from "@/components/admin/reset-password-button";
+import { LoginAsButton } from "@/components/admin/login-as-button";
 import { EFFECTIVE_PLAN_LABELS, effectivePlan, type AccountBilling } from "@/lib/billing/plans";
 
 export const metadata: Metadata = {
@@ -202,23 +204,26 @@ export default async function AdminAccountDetailPage({
         All accounts
       </Link>
 
-      <div className="mb-8">
-        <h1 className="text-xl font-bold tracking-tight">{account.name}</h1>
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-          <span>Created {formatDate(account.createdAt)}</span>
-          {account.natureOfBusiness && (
-            <>
-              <span>·</span>
-              <span>{account.natureOfBusiness}</span>
-            </>
-          )}
-          {account.teamSize && (
-            <>
-              <span>·</span>
-              <span>{account.teamSize} people</span>
-            </>
-          )}
-        </p>
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight">{account.name}</h1>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+            <span>Created {formatDate(account.createdAt)}</span>
+            {account.natureOfBusiness && (
+              <>
+                <span>·</span>
+                <span>{account.natureOfBusiness}</span>
+              </>
+            )}
+            {account.teamSize && (
+              <>
+                <span>·</span>
+                <span>{account.teamSize} people</span>
+              </>
+            )}
+          </p>
+        </div>
+        <LoginAsButton accountId={account.id} accountName={account.name} />
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -395,6 +400,7 @@ export default async function AdminAccountDetailPage({
             billingNote={account.billing.billing_note}
           />
           <CreditsCard accountId={account.id} />
+          <ManagementFeeCard accountId={account.id} />
         </div>
       )}
 
