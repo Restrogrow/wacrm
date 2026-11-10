@@ -47,6 +47,11 @@ import {
   isBillingError,
   startBillingHold,
 } from '@/lib/whatsapp/billing-hold';
+import {
+  describeQuota,
+  isMessagingCapError,
+  readDailyQuota,
+} from '@/lib/whatsapp/messaging-limit';
 import type { SendTimeParams } from '@/lib/whatsapp/template-send-builder';
 import type { MessageTemplate } from '@/types';
 
@@ -61,6 +66,19 @@ const LEASE_MS = 55_000;
 export const MAX_ATTEMPTS = 4;
 /** Wait before try 2, 3, 4. */
 const RETRY_DELAYS_MS = [60_000, 5 * 60_000, 15 * 60_000];
+/**
+ * How long a recipient parked by the messaging limit waits before the
+ * sender looks at it again, when we can't compute the window reset.
+ */
+const CAP_DEFER_MS = 60 * 60_000;
+/**
+ * A broadcast paced across days still has to end. Past this age the
+ * remaining recipients are failed rather than deferred forever — on a
+ * TIER_250 number a very large list genuinely cannot be delivered, and
+ * a broadcast stuck on 'sending' for months is worse than one that says
+ * so. 30 days clears even a 100k list at TIER_10K with room to spare.
+ */
+const MAX_BROADCAST_AGE_MS = 30 * 24 * 60 * 60_000;
 
 /**
  * Errors worth trying again later: Meta throttling or outages, and
@@ -88,10 +106,11 @@ interface ServerBroadcast {
   template_language: string | null;
   message_params: SendTimeParams | null;
   phone_number_id: string | null;
+  created_at: string | null;
 }
 
 const BROADCAST_COLUMNS =
-  'id, account_id, user_id, template_name, template_language, message_params, phone_number_id';
+  'id, account_id, user_id, template_name, template_language, message_params, phone_number_id, created_at';
 
 /**
  * Whether migration 085 (attempts / next_attempt_at) is applied. Until it
@@ -146,6 +165,25 @@ async function failRemaining(broadcastId: string, message: string) {
     .from('broadcasts')
     .update({ status: 'failed', send_lease_until: null })
     .eq('id', broadcastId);
+}
+
+/**
+ * Park every still-pending recipient until `until` — used when the
+ * number's messaging limit is spent. These are not failed tries: they
+ * keep their `attempts`, so a broadcast paced over days never runs out
+ * of retries just because it had to wait for the window.
+ *
+ * Without migration 085 there is no `next_attempt_at` to park them in;
+ * the recipients simply stay pending and the next run re-checks the
+ * quota, which costs a query a minute but still never fails them.
+ */
+async function deferPending(broadcastId: string, until: Date, note: string): Promise<void> {
+  if (!(await hasRetryColumns())) return;
+  await supabaseAdmin()
+    .from('broadcast_recipients')
+    .update({ next_attempt_at: until.toISOString(), error_message: note })
+    .eq('broadcast_id', broadcastId)
+    .eq('status', 'pending');
 }
 
 async function finishIfDone(broadcastId: string) {
@@ -213,6 +251,38 @@ async function sendPending(broadcast: ServerBroadcast, deadline: number): Promis
   // recipients stay pending until the hold ends (billing-hold.ts).
   if (await getBillingHold(broadcast.account_id)) return 0;
   let onHold = false;
+
+  // A broadcast too large for the number's tier is paced over days, but
+  // not forever — see MAX_BROADCAST_AGE_MS.
+  const age = broadcast.created_at ? Date.now() - new Date(broadcast.created_at).getTime() : 0;
+  if (age > MAX_BROADCAST_AGE_MS) {
+    await failRemaining(
+      broadcast.id,
+      "Not sent: still waiting for this number's 24-hour messaging limit 30 days after the broadcast was created. Send the rest as a new broadcast, or raise the limit with Meta first.",
+    );
+    return 0;
+  }
+
+  // Pace against Meta's rolling 24-hour messaging limit. `remaining` is
+  // Infinity for an unlimited number and for one whose tier we don't
+  // know yet — in both cases this run sends as much as it can fit, and
+  // the cap-error branch in sendOne is the backstop.
+  const quota = await readDailyQuota(db, broadcast.account_id, config.phone_number_id);
+  if (quota.remaining === 0) {
+    const until = quota.resetsAt ?? new Date(Date.now() + CAP_DEFER_MS);
+    await deferPending(
+      broadcast.id,
+      until,
+      `Waiting for this number's 24-hour messaging limit (${describeQuota(quota)}). Sending resumes by itself.`,
+    );
+    console.log(
+      `[broadcasts] ${broadcast.id}: messaging limit spent (${describeQuota(quota)}); resuming ${until.toISOString()}`,
+    );
+    return 0;
+  }
+  /** How many more this run may hand to Meta before the cap is reached. */
+  let budget = quota.remaining;
+  let capHit = false;
 
   const accessToken = decrypt(config.access_token);
   const language = broadcast.template_language || 'en_US';
@@ -295,6 +365,25 @@ async function sendPending(broadcast: ServerBroadcast, deadline: number): Promis
       return;
     }
 
+    if (isMessagingCapError(lastError)) {
+      // The number is out of 24-hour messaging-limit headroom — either
+      // our pacing count lagged Meta's, or sends outside broadcasts ate
+      // the rest of it. Park this recipient without spending a try and
+      // stop the run; the next one re-reads the quota and parks the
+      // whole remainder precisely.
+      capHit = true;
+      if (retries) {
+        await db
+          .from('broadcast_recipients')
+          .update({
+            next_attempt_at: new Date(Date.now() + CAP_DEFER_MS).toISOString(),
+            error_message: "Waiting for this number's 24-hour messaging limit. Sending resumes by itself.",
+          })
+          .eq('id', row.id);
+      }
+      return;
+    }
+
     const attempts = (row.attempts ?? 0) + 1;
     const retryAt = retries && isTransientSendError(lastError) ? nextRetryAt(attempts) : null;
     if (retryAt) {
@@ -315,7 +404,7 @@ async function sendPending(broadcast: ServerBroadcast, deadline: number): Promis
     }
   };
 
-  while (Date.now() < deadline && !onHold) {
+  while (Date.now() < deadline && !onHold && !capHit && budget > 0) {
     const nowIso = new Date().toISOString();
     let query = db
       .from('broadcast_recipients')
@@ -323,19 +412,42 @@ async function sendPending(broadcast: ServerBroadcast, deadline: number): Promis
       .eq('broadcast_id', broadcast.id)
       .eq('status', 'pending');
     if (retries) query = query.or(`next_attempt_at.is.null,next_attempt_at.lte.${nowIso}`);
-    const { data: batch } = await query.order('created_at', { ascending: true }).limit(BATCH);
+    // Never claim more than the messaging limit still allows.
+    const take = Math.min(BATCH, budget);
+    const { data: batch } = await query.order('created_at', { ascending: true }).limit(take);
     if (!batch || batch.length === 0) break;
 
     for (let i = 0; i < batch.length; i += CONCURRENCY) {
-      if (Date.now() >= deadline || onHold) break;
+      if (Date.now() >= deadline || onHold || capHit) break;
+      const slice = batch.slice(i, i + CONCURRENCY) as unknown as RecipientRow[];
+      // Spend the budget before dispatching, not after: a rejected send
+      // may still have cost us a slot on Meta's counter.
+      budget -= slice.length;
       await Promise.all(
-        (batch.slice(i, i + CONCURRENCY) as unknown as RecipientRow[]).map((row) =>
+        slice.map((row) =>
           sendOne(row).catch((err) => {
             console.error('[broadcasts] recipient send crashed:', row.id, err);
           }),
         ),
       );
+      if (budget <= 0) break;
     }
+  }
+
+  // Stopped on the messaging limit rather than on time: park whatever is
+  // left until the window moves, so the cron doesn't spin on it every
+  // minute and nothing gets failed for waiting.
+  if ((capHit || budget <= 0) && !onHold) {
+    const after = await readDailyQuota(db, broadcast.account_id, config.phone_number_id);
+    const until = after.resetsAt ?? new Date(Date.now() + CAP_DEFER_MS);
+    await deferPending(
+      broadcast.id,
+      until,
+      `Waiting for this number's 24-hour messaging limit (${describeQuota(after)}). Sending resumes by itself.`,
+    );
+    console.log(
+      `[broadcasts] ${broadcast.id}: sent ${sent} this run, paused on the messaging limit until ${until.toISOString()}`,
+    );
   }
 
   return sent;
@@ -417,6 +529,19 @@ export async function processScheduledBroadcasts(): Promise<number> {
   // Everything in flight that the server owns. Server-sent broadcasts
   // carry scheduled_at; browser-driven sends from before migration 085
   // don't and are left alone.
+  //
+  // The window is wide because messaging-limit pacing keeps a broadcast
+  // 'sending' for days, not minutes: a 33k list on a TIER_2K number is
+  // in flight for over two weeks. Ordered oldest-first, a narrow window
+  // would let a few paced broadcasts sit at the head of the queue and
+  // starve newer ones. A paced broadcast with nothing due costs only
+  // the lease + quota reads before it returns, and the deadline check
+  // below still bounds the whole run, so a wider window is cheap.
+  //
+  // If this ever needs to scale past a few dozen concurrent broadcasts,
+  // the real fix is a `resume_after` column on `broadcasts` so the ones
+  // parked on their messaging limit can be filtered out in SQL instead
+  // of being visited and skipped.
   const { data: inFlight } = await db
     .from('broadcasts')
     .select(BROADCAST_COLUMNS)
@@ -424,7 +549,7 @@ export async function processScheduledBroadcasts(): Promise<number> {
     .not('scheduled_at', 'is', null)
     .lte('scheduled_at', nowIso)
     .order('scheduled_at', { ascending: true })
-    .limit(10);
+    .limit(50);
 
   let sent = 0;
   for (const broadcast of (inFlight ?? []) as ServerBroadcast[]) {
