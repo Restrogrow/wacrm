@@ -421,6 +421,62 @@ export function formatAddress(address: unknown): string | null {
   return parts.length > 0 ? parts.join(', ') : null;
 }
 
+// ------------------------------------------------------------
+// Crawler traffic
+// ------------------------------------------------------------
+
+/**
+ * Bot domains. Matched on the domain itself or any subdomain of it.
+ *
+ * `joonix.net` is Google's own bot domain; its checkout crawler uses
+ * addresses like `johnsmith003@storebotmail.joonix.net`.
+ */
+const BOT_EMAIL_DOMAINS = ['joonix.net'];
+
+/**
+ * Numbers a crawler types because the checkout form insists on one.
+ * National form, as Shopify sends it. A second net behind the email
+ * check, for a crawler that changes its address but not its form data.
+ */
+const BOT_PHONES = ['08067218000']; // Shopify India's support line
+
+/**
+ * True for a checkout driven by an automated price/stock crawler rather
+ * than a person.
+ *
+ * Google Shopping verifies a store's prices and availability by walking
+ * a real checkout: it fills in a throwaway name, a @joonix.net address
+ * and — because the form demands one — Shopify's own support number,
+ * then abandons the cart. Those carts are abandoned by design. Chasing
+ * them sends cart reminders to a landline that isn't on WhatsApp, which
+ * costs template sends, pollutes the recovery numbers in Settings, and
+ * earns a run of "undeliverable" failures against the sender's quality
+ * rating.
+ *
+ * Only checkouts are filtered. A crawler never completes payment, so an
+ * order with one of these addresses would be real and the merchant
+ * should still see it.
+ */
+export function isAutomatedCheckout(resource: Json): boolean {
+  const email = str(resource.email) ?? str(resource.customer?.email);
+  const domain = email?.split('@')[1]?.toLowerCase();
+  if (
+    domain &&
+    BOT_EMAIL_DOMAINS.some((d) => domain === d || domain.endsWith(`.${d}`))
+  ) {
+    return true;
+  }
+
+  const digits = contactPhoneOf(resource).phone?.replace(/\D/g, '');
+  return (
+    !!digits &&
+    BOT_PHONES.some((p) => {
+      const national = p.replace(/^0+/, '');
+      return digits === p || digits.endsWith(national);
+    })
+  );
+}
+
 /** Where the customer's phone and country live on an order or checkout. */
 export function contactPhoneOf(resource: Json): {
   phone: string | null;
