@@ -7,6 +7,7 @@ import {
   countBodyVariables,
   formatAddress,
   formatMoney,
+  isAutomatedCheckout,
   isCashOnDelivery,
   orderContext,
   resolveBodyParams,
@@ -152,6 +153,34 @@ describe('order payloads', () => {
     expect(isCashOnDelivery({ payment_gateway_names: ['razorpay'] })).toBe(
       false
     );
+  });
+
+  it('spots Google Shopping’s checkout crawler', () => {
+    // What the crawler actually sends: a throwaway Google address and
+    // Shopify's own support line in place of a customer phone.
+    const bot = {
+      token: 'abc',
+      email: 'johnsmith003@storebotmail.joonix.net',
+      billing_address: { phone: '08067218000', country_code: 'IN' },
+    };
+    expect(isAutomatedCheckout(bot)).toBe(true);
+    // Either signal alone is enough.
+    expect(
+      isAutomatedCheckout({ email: 'bot@joonix.net' })
+    ).toBe(true);
+    expect(isAutomatedCheckout({ phone: '08067218000' })).toBe(true);
+    // Already normalised to E.164 digits, as the stored rows are.
+    expect(isAutomatedCheckout({ phone: '918067218000' })).toBe(true);
+    // Real shoppers pass.
+    expect(isAutomatedCheckout(ORDER)).toBe(false);
+    expect(
+      isAutomatedCheckout({
+        email: 'priya@gmail.com',
+        phone: '9876543210',
+      })
+    ).toBe(false);
+    // A lookalike domain is not a subdomain of joonix.net.
+    expect(isAutomatedCheckout({ email: 'a@notjoonix.net' })).toBe(false);
   });
 
   it('builds the message context', () => {

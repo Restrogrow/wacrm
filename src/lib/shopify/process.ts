@@ -38,6 +38,7 @@ import {
   customerNamesOf,
   formatAddress,
   formatMoney,
+  isAutomatedCheckout,
   isCashOnDelivery,
   isShopifyVariable,
   orderContext,
@@ -608,6 +609,10 @@ async function onCheckout(
   const token = checkout.token ?? checkout.cart_token;
   if (!token) return;
 
+  // A price-check crawler, not a shopper. Don't store it: an untracked
+  // checkout can't be queued, counted, or chased.
+  if (isAutomatedCheckout(checkout)) return;
+
   if (checkout.completed_at) {
     await db
       .from('shopify_checkouts')
@@ -704,6 +709,15 @@ export async function processDueCheckouts(limit = 25): Promise<number> {
     // account's own first step.
     const delay = firstDelayByAccount.get(checkout.account_id) ?? 60;
     if (Date.parse(checkout.last_activity_at) > now - delay * 60_000) continue;
+
+    // Crawler rows stored before onCheckout started filtering them.
+    if (isAutomatedCheckout({ email: checkout.email, phone: checkout.phone })) {
+      await db
+        .from('shopify_checkouts')
+        .update({ reminded_at: new Date().toISOString() })
+        .eq('id', checkout.id);
+      continue;
+    }
 
     const { data: claimed } = await db
       .from('shopify_checkouts')
