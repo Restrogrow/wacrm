@@ -413,7 +413,7 @@ const LANDING_BODY_HTML = `
       <div class="h-stat"><b>Official</b><span>Meta WhatsApp Cloud API, no ban risk from unofficial tools</span></div>
       <div class="h-stat"><b>&#8377;999</b><span>per month to start, AI assistant included</span></div>
       <div class="h-stat"><b>7 days</b><span>free trial, no credit card needed</span></div>
-      <div class="h-stat"><b>Days</b><span>to go live, with API setup done for you</span></div>
+      <div class="h-stat"><b>Days, not months</b><span>to go live, with API setup done for you</span></div>
     </div>
     <div class="h-marquee reveal" style="--d:1">
       <p class="h-marquee-label">Works with the tools Indian businesses already use</p>
