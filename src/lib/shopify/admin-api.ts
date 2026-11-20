@@ -183,16 +183,22 @@ mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSu
 }`;
 
 /**
- * Subscribe the shop to every topic we use (plus app/uninstalled),
- * delivered to /api/integrations/shopify/webhooks and signed with the
- * app's client secret. Re-running is safe: "already taken" counts as done.
+ * Subscribe the shop to every topic we use (plus app/uninstalled and
+ * app_subscriptions/update, which lib/shopify/billing.ts needs to know
+ * when a Billing API subscription activates or lapses), delivered to
+ * /api/integrations/shopify/webhooks and signed with the app's client
+ * secret. Re-running is safe: "already taken" counts as done.
  */
 export async function registerWebhooks(
   shop: string,
   accessToken: string
 ): Promise<void> {
   const uri = `${appBaseUrl()}${OAUTH_WEBHOOK_PATH}`;
-  const topics = [...SHOPIFY_TOPICS.map((t) => t.topic), 'app/uninstalled'];
+  const topics = [
+    ...SHOPIFY_TOPICS.map((t) => t.topic),
+    'app/uninstalled',
+    'app_subscriptions/update',
+  ];
   const failures: string[] = [];
 
   for (const topic of topics) {

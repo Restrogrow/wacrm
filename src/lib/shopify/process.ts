@@ -14,6 +14,9 @@
 //   checkouts/create|update  track the checkout; processDueCheckouts()
 //                         (every-minute cron) sends "Abandoned cart"
 //   app/uninstalled       mark the store disconnected
+//   app_subscriptions/update  Billing API subscription activated,
+//                         cancelled, expired, frozen or declined — see
+//                         lib/shopify/billing.ts
 //
 // Idempotency: Shopify retries deliveries, and fulfillment status can
 // arrive more than once. Every delivery is recorded by its webhook id,
@@ -53,6 +56,7 @@ import {
 } from './events';
 import { normalizeIntegrationPhone } from '@/lib/integrations/phone';
 import { HOLD_WAITING_TEXT } from '@/lib/whatsapp/billing-hold';
+import { onAppSubscriptionUpdate } from './billing';
 import {
   cancelPendingShopifySteps,
   scheduleShopifySteps,
@@ -300,6 +304,22 @@ export async function handleShopifyWebhook(
             updated_at: new Date().toISOString(),
           })
           .eq('id', store.id);
+        // Shopify cancels the shop's AppSubscription automatically on
+        // uninstall, so the billing relationship is gone too — expire
+        // the plan rather than leave it paid with no way to pay again.
+        await db
+          .from('accounts')
+          .update({
+            plan_expires_at: new Date().toISOString(),
+            shopify_subscription_id: null,
+            shopify_pending_plan: null,
+            shopify_pending_cycle: null,
+          })
+          .eq('id', store.account_id)
+          .eq('install_source', 'shopify_app_store');
+        break;
+      case 'app_subscriptions/update':
+        await onAppSubscriptionUpdate(db, store, payload);
         break;
       default:
         break;

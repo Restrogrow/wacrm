@@ -14,6 +14,7 @@ import {
   type AccountBilling,
   type LimitKey,
 } from '@/lib/billing/plans';
+import { billsThroughShopify } from '@/lib/billing/install-source';
 
 export async function GET() {
   try {
@@ -30,6 +31,15 @@ export async function GET() {
       // Billing columns missing (migration 041 not applied): no banner.
       return NextResponse.json({ enabled: false });
     }
+
+    // Best-effort: migration 102 may not be pasted into every
+    // environment yet, and that must not take down the plan/usage
+    // response above for accounts that don't need it.
+    const { data: shopifyBilling } = await db
+      .from('accounts')
+      .select('install_source, shopify_pending_plan, shopify_pending_cycle')
+      .eq('id', accountId)
+      .maybeSingle();
 
     // Supabase's filter-builder generics don't survive a callback param.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,6 +95,9 @@ export async function GET() {
       limits: PLAN_LIMITS[effective],
       usage,
       role: ctx.role,
+      bills_through_shopify: billsThroughShopify(shopifyBilling?.install_source),
+      shopify_pending_plan: shopifyBilling?.shopify_pending_plan ?? null,
+      shopify_pending_cycle: shopifyBilling?.shopify_pending_cycle ?? null,
     });
   } catch (err) {
     return toErrorResponse(err);

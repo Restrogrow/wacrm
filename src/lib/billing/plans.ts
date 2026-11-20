@@ -73,6 +73,14 @@ export const LIMIT_LABELS: Record<LimitKey, string> = {
 export const BILLING_CYCLES = ['monthly', 'quarterly', 'yearly'] as const;
 export type BillingCycle = (typeof BILLING_CYCLES)[number];
 
+/**
+ * Shopify's AppRecurringPricing only has two intervals (EVERY_30_DAYS,
+ * ANNUAL) — there's no native 3-month cycle to map `quarterly` onto, so
+ * self-serve Shopify billing offers just these two. Account-managed
+ * (website) billing still supports all three.
+ */
+export const SHOPIFY_BILLABLE_CYCLES: readonly BillingCycle[] = ['monthly', 'yearly'];
+
 export const BILLING_CYCLE_LABELS: Record<BillingCycle, { label: string; per: string; months: number }> = {
   monthly: { label: 'Monthly', per: 'month', months: 1 },
   quarterly: { label: 'Quarterly', per: 'quarter', months: 3 },

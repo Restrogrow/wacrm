@@ -11,7 +11,8 @@
 
 import { IconChip } from '@/components/icon-chip';
 import { useEffect, useState } from 'react';
-import { Check, Loader2, Mail, MessageCircle, CreditCard, Sparkles, BarChart3, Crown } from 'lucide-react';
+import { toast } from 'sonner';
+import { Check, Loader2, Mail, MessageCircle, CreditCard, Sparkles, BarChart3, Crown, ShoppingBag, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ import {
   PLAN_INFO,
   BILLING_CYCLES,
   BILLING_CYCLE_LABELS,
+  SHOPIFY_BILLABLE_CYCLES,
   cycleSavingPercent,
   type BillingCycle,
   PLAN_LIMITS,
@@ -48,6 +50,9 @@ interface Billing {
   plan_expires_at?: string | null;
   limits?: PlanLimits;
   usage?: Record<LimitKey, number>;
+  bills_through_shopify?: boolean;
+  shopify_pending_plan?: PaidPlan | null;
+  shopify_pending_cycle?: BillingCycle | null;
 }
 
 function fmtDate(iso: string | null | undefined): string {
@@ -63,13 +68,57 @@ export function BillingSettings() {
   const { account, profile } = useAuth();
   const [billing, setBilling] = useState<Billing | null>(null);
   const [period, setPeriod] = useState<BillingCycle>('monthly');
+  const [requestingPlan, setRequestingPlan] = useState<PaidPlan | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+
+  const load = async () => {
+    const res = await fetch('/api/account/billing', { cache: 'no-store' });
+    setBilling(res.ok ? await res.json() : { enabled: false });
+  };
 
   useEffect(() => {
-    void (async () => {
-      const res = await fetch('/api/account/billing', { cache: 'no-store' });
-      setBilling(res.ok ? await res.json() : { enabled: false });
-    })();
+    void load();
   }, []);
+
+  const bySh = billing?.bills_through_shopify ?? false;
+  const cycles = bySh ? SHOPIFY_BILLABLE_CYCLES : BILLING_CYCLES;
+
+  const requestShopifyPlan = async (plan: PaidPlan) => {
+    setRequestingPlan(plan);
+    try {
+      const res = await fetch('/api/account/billing/shopify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, cycle: period }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.confirmationUrl) {
+        toast.error(json.error ?? 'Could not start the Shopify subscription');
+        setRequestingPlan(null);
+        return;
+      }
+      window.location.href = json.confirmationUrl;
+    } catch {
+      toast.error('Could not reach the server');
+      setRequestingPlan(null);
+    }
+  };
+
+  const cancelShopifyPlan = async () => {
+    setCancelling(true);
+    try {
+      const res = await fetch('/api/account/billing/shopify', { method: 'DELETE' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(json.error ?? 'Could not cancel the request');
+        return;
+      }
+      toast.success('Shopify subscription cancelled.');
+      await load();
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   if (!billing) {
     return (
@@ -163,6 +212,32 @@ export function BillingSettings() {
         </div>
       </div>
 
+      {bySh && billing.shopify_pending_plan && (
+        <Card className="border-amber-300/60 bg-amber-50 dark:bg-amber-950/20">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <p className="text-sm text-amber-900 dark:text-amber-200">
+              Waiting for approval on Shopify for the{' '}
+              <strong>{PLAN_INFO[billing.shopify_pending_plan].label}</strong>{' '}
+              ({billing.shopify_pending_cycle ?? 'monthly'}) plan. Approve it on
+              Shopify, or cancel the request below.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={cancelling}
+              onClick={cancelShopifyPlan}
+            >
+              {cancelling ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <X className="size-4" />
+              )}
+              Cancel request
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* ---------------- Usage ---------------- */}
       <CreditsPanel />
 
@@ -223,7 +298,7 @@ export function BillingSettings() {
             Plans
           </h3>
           <div className="bg-muted inline-flex rounded-full p-1 text-xs">
-            {BILLING_CYCLES.map((p) => (
+            {cycles.map((p) => (
               <button
                 key={p}
                 type="button"
@@ -299,7 +374,21 @@ export function BillingSettings() {
                       </li>
                     ))}
                   </ul>
-                  {!current && (
+                  {!current && bySh && info.prices && (
+                    <Button
+                      className="flex-1"
+                      disabled={requestingPlan !== null}
+                      onClick={() => requestShopifyPlan(plan)}
+                    >
+                      {requestingPlan === plan ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <ShoppingBag className="size-4" />
+                      )}
+                      Choose {info.label}
+                    </Button>
+                  )}
+                  {!current && (!bySh || !info.prices) && (
                     <div className="flex gap-2">
                       <Button
                         className="flex-1"
@@ -332,9 +421,9 @@ export function BillingSettings() {
           })}
         </div>
         <p className="text-muted-foreground mt-3 text-xs">
-          Choosing a plan opens WhatsApp to our team with your account details.
-          We&apos;ll share payment details (UPI or bank transfer) and activate
-          your plan as soon as it&apos;s paid.
+          {bySh
+            ? "Billed through Shopify, on your store's existing payment method — approve it on Shopify's page and it takes effect once confirmed. Enterprise is custom pricing, so that one still goes through our team."
+            : "Choosing a plan opens WhatsApp to our team with your account details. We'll share payment details (UPI or bank transfer) and activate your plan as soon as it's paid."}
         </p>
       </div>
     </section>
