@@ -6,11 +6,29 @@
 
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { loadEffectivePlan } from '@/lib/billing/server'
-import type { EffectivePlan } from '@/lib/billing/plans'
+import {
+  EFFECTIVE_PLAN_LABELS,
+  planMeetsTier,
+  type EffectivePlan,
+  type PaidPlan,
+} from '@/lib/billing/plans'
 import { outOfCreditsMessage } from '@/lib/credits/credits'
 import { spendCredits } from '@/lib/credits/server'
 
 export type AiFeature = 'suggest' | 'analysis' | 'summary' | 'voice_call' | 'chatbot'
+
+/**
+ * Features that are only on from a given plan tier up, independent of
+ * the daily caps below — "Growth adds the AI chatbot, Pro adds the AI
+ * voice agent" (/pricing) is a real on/off switch, not just a bigger
+ * number. A feature missing here (suggest/analysis/summary — the "AI
+ * assistant" Starter already includes) is available to every paying
+ * plan, limited only by the caps.
+ */
+const FEATURE_MIN_PLAN: Partial<Record<AiFeature, PaidPlan>> = {
+  chatbot: 'growth',
+  voice_call: 'pro',
+}
 
 export const AI_DAILY_CAPS: Record<EffectivePlan, Record<AiFeature, number>> = {
   // voice_call: AI-agent WhatsApp calls (up to 10 minutes of Gemini Live each).
@@ -45,13 +63,22 @@ export function quotaMessage(feature: AiFeature, plan: EffectivePlan | null, cap
   return `You have used today's limit of ${cap} AI ${FEATURE_LABEL[feature]} for this account. It resets at midnight IST.`
 }
 
+const FEATURE_NAME: Partial<Record<AiFeature, string>> = {
+  chatbot: 'The AI chatbot',
+  voice_call: 'The AI voice agent',
+}
+
+export function tierMessage(feature: AiFeature, minPlan: PaidPlan): string {
+  return `${FEATURE_NAME[feature] ?? 'This feature'} is included from the ${EFFECTIVE_PLAN_LABELS[minPlan]} plan — upgrade in Settings → Plan & billing to turn it on.`
+}
+
 export interface QuotaResult {
   allowed: boolean
   cap: number
   plan: EffectivePlan | null
   message?: string
   /** Which limit stopped it, for callers that treat the two differently. */
-  reason?: 'daily_cap' | 'plan_ended' | 'out_of_credits'
+  reason?: 'daily_cap' | 'plan_ended' | 'out_of_credits' | 'plan_tier'
   /** Credits left afterwards. Undefined when migration 100 is not applied. */
   balance?: number
 }
@@ -83,6 +110,30 @@ export async function consumeAiQuota(
   idempotencyKey?: string
 ): Promise<QuotaResult> {
   const plan = await loadEffectivePlan(accountId).catch(() => null)
+
+  // Expired first: an account whose plan lapsed should be told to
+  // renew, not to "upgrade" to a tier it may already have paid for.
+  if (plan === 'expired') {
+    return {
+      allowed: false,
+      cap: 0,
+      plan,
+      message: quotaMessage(feature, plan, 0),
+      reason: 'plan_ended',
+    }
+  }
+
+  const minPlan = FEATURE_MIN_PLAN[feature]
+  if (minPlan && !planMeetsTier(plan, minPlan)) {
+    return {
+      allowed: false,
+      cap: 0,
+      plan,
+      message: tierMessage(feature, minPlan),
+      reason: 'plan_tier',
+    }
+  }
+
   const cap = aiDailyCap(plan, feature)
   if (cap <= 0) {
     return {
@@ -90,7 +141,7 @@ export async function consumeAiQuota(
       cap,
       plan,
       message: quotaMessage(feature, plan, cap),
-      reason: plan === 'expired' ? 'plan_ended' : 'daily_cap',
+      reason: 'daily_cap',
     }
   }
 

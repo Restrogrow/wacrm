@@ -38,6 +38,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
+import { planMeetsTier, type EffectivePlan } from '@/lib/billing/plans';
 import {
   DEFAULT_CHATBOT_SETTINGS,
   INSTRUCTIONS_MAX,
@@ -47,6 +48,15 @@ import {
   type ChatbotSettings,
 } from '@/lib/ai-chatbot/chatbot';
 import { SettingsPanelHead } from './settings-panel-head';
+
+function TierNotice({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+      <Zap className="size-4 shrink-0" />
+      <span>{children}</span>
+    </p>
+  );
+}
 
 const KB_PLACEHOLDER = `Write everything the bot may tell customers. For example:
 
@@ -85,6 +95,7 @@ export function AiChatbotSettings() {
   const [dirty, setDirty] = useState(false);
   const [missingTable, setMissingTable] = useState<string | null>(null);
   const [aiConfigured, setAiConfigured] = useState(true);
+  const [effectivePlan, setEffectivePlan] = useState<EffectivePlan | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,10 +116,20 @@ export function AiChatbotSettings() {
         if (!cancelled) setLoading(false);
       }
     })();
+    (async () => {
+      const res = await fetch('/api/account/billing', { cache: 'no-store' });
+      const json = await res.json().catch(() => ({}));
+      if (!cancelled && res.ok && json.enabled) setEffectivePlan(json.effective_plan);
+    })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // null (billing not loaded yet, or migration 041 missing) reads as
+  // "unknown" — don't flash an upgrade notice before we actually know.
+  const chatbotTierOk = effectivePlan === null || planMeetsTier(effectivePlan, 'growth');
+  const voiceTierOk = effectivePlan === null || planMeetsTier(effectivePlan, 'pro');
 
   const update = (patch: Partial<ChatbotSettings>) => {
     setSettings((s) => ({ ...s, ...patch }));
@@ -181,6 +202,13 @@ export function AiChatbotSettings() {
             The server has no AI key yet. Set <code>GEMINI_KEY</code> in your hosting environment variables, then redeploy.
           </span>
         </p>
+      )}
+
+      {!chatbotTierOk && (
+        <TierNotice>
+          The AI chatbot is included from the Growth plan. You can turn it on below, but it won&apos;t reply to
+          customers until you upgrade — see Settings → Plan &amp; billing.
+        </TierNotice>
       )}
 
       {/* Status card */}
@@ -325,6 +353,12 @@ export function AiChatbotSettings() {
                 title="AI calls"
                 subtitle="The AI voice agent for WhatsApp calls: calls you start with AI call, and incoming calls if you switch that on. It uses the knowledge base and name above."
               />
+              {!voiceTierOk && (
+                <TierNotice>
+                  The AI voice agent is included from the Pro plan — upgrade in Settings → Plan &amp; billing to use
+                  AI calls.
+                </TierNotice>
+              )}
               <Field
                 label="Call goal and script (calls you start)"
                 hint="The AI says it is an AI assistant, may hang up when the call is done, and asks you to take over when the customer wants a person. AI calls are capped at 10 minutes."

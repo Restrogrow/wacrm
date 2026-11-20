@@ -38,7 +38,7 @@ const HOME_FAQS = [
   {
     question: "What does Repeat Grow cost?",
     answer:
-      "Plans start at ₹999/month (Starter), with Growth at ₹1,999 and Pro at ₹3,999, and Enterprise is custom. Growth adds the AI chatbot and Pro adds the AI voice agent. Pay monthly, or save about 10% quarterly and 17% yearly. Every new account gets a 7-day free trial with Growth limits, and there are no hidden setup fees. WhatsApp Business API setup is included on every plan. WhatsApp conversation fees are billed by Meta directly.",
+      "Plans start at ₹1,500/month (Starter), with Growth at ₹1,999 and Pro at ₹3,999, and Enterprise is custom. Growth adds the AI chatbot and Pro adds the AI voice agent. Pay monthly, or save about 10% quarterly and 17% yearly. Every new account gets a 7-day free trial with Growth limits, and there are no hidden setup fees. WhatsApp Business API setup is included on every plan. WhatsApp conversation fees are billed by Meta directly.",
   },
   {
     question: "Can I take payments and send orders on WhatsApp?",
@@ -88,7 +88,7 @@ const STRUCTURED_DATA = {
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "INR",
-        lowPrice: "999",
+        lowPrice: "1500",
         highPrice: "3999",
         offerCount: "3",
       },
@@ -378,7 +378,7 @@ const LANDING_BODY_HTML = `
         <li>${ICON_CHECK}No credit card</li>
         <li>${ICON_CHECK}Meta Tech Provider</li>
         <li>${ICON_CHECK}Setup done for you</li>
-        <li>${ICON_CHECK}Plans from &#8377;999/month</li>
+        <li>${ICON_CHECK}Plans from &#8377;1,500/month</li>
       </ul>
     </div>
 
@@ -411,7 +411,7 @@ const LANDING_BODY_HTML = `
   <div class="container">
     <div class="h-stats reveal">
       <div class="h-stat"><b>Official</b><span>Meta WhatsApp Cloud API, no ban risk from unofficial tools</span></div>
-      <div class="h-stat"><b>&#8377;999</b><span>per month to start, AI assistant included</span></div>
+      <div class="h-stat"><b>&#8377;1,500</b><span>per month to start, AI assistant included</span></div>
       <div class="h-stat"><b>7 days</b><span>free trial, no credit card needed</span></div>
       <div class="h-stat"><b>Days, not months</b><span>to go live, with API setup done for you</span></div>
     </div>

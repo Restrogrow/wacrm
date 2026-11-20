@@ -83,7 +83,7 @@ describe('reminderEmail', () => {
     expect(subject).toMatch(/2 days/)
     expect(text).toContain('Priya Stores')
     expect(text).toContain('read-only')
-    expect(text).toContain('₹999/month')
+    expect(text).toContain('₹1,500/month')
     expect(text).toContain('Pro: ₹3,999/month')
     expect(text).toContain('Enterprise: custom pricing')
     expect(text).toContain('/settings?tab=billing')

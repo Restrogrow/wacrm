@@ -653,7 +653,7 @@ export default function DocsPage() {
                 paid plan, we email 3 days before your paid-until date.
               </li>
               <li>
-                Plans: <b>Starter ₹999</b> (inbox, broadcasts, AI assistant), <b>Growth ₹1,999</b> (adds the AI chatbot,
+                Plans: <b>Starter ₹1,500</b> (inbox, broadcasts, AI assistant), <b>Growth ₹1,999</b> (adds the AI chatbot,
                 catalog and orders) and <b>Pro ₹3,999</b> (adds the AI voice agent), per month, or save with quarterly and
                 yearly billing. See <Ui to="/pricing">Pricing</Ui>.
               </li>

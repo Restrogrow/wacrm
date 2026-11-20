@@ -94,7 +94,7 @@ export const PLAN_INFO: Record<
 > = {
   starter: {
     label: 'Starter',
-    prices: { monthly: 999, quarterly: 2699, yearly: 9999 },
+    prices: { monthly: 1500, quarterly: 4049, yearly: 14999 },
     blurb: 'For a single team getting started with WhatsApp support and sales.',
   },
   growth: {
@@ -121,6 +121,39 @@ export function cycleSavingPercent(plan: PaidPlan, cycle: BillingCycle): number 
   if (!p || cycle === 'monthly') return null;
   const full = p.monthly * BILLING_CYCLE_LABELS[cycle].months;
   return Math.round(((full - p[cycle]) / full) * 100);
+}
+
+/**
+ * Feature tiers (distinct from PLAN_LIMITS' numeric caps): is this
+ * plan's tier high enough to unlock a feature gated at `min`? Used for
+ * on/off features like the AI chatbot (Growth+) and AI voice agent
+ * (Pro+) — see lib/ai/quota.ts.
+ *
+ * `trial` ranks with `growth`, matching the trial's existing "Full
+ * Growth features" promise (PLAN_LIMITS.trial = GROWTH) — it would be
+ * a bait-and-switch for a trial account to be blocked from a feature
+ * the trial banner says it has. `expired` ranks below every plan: an
+ * expired account's sends are already stopped elsewhere
+ * (accountCanSend()), this just keeps it out of a feature tier too.
+ */
+const FEATURE_TIER_RANK: Record<EffectivePlan, number> = {
+  expired: 0,
+  starter: 1,
+  trial: 2,
+  growth: 2,
+  pro: 3,
+  enterprise: 4,
+};
+
+/**
+ * Does `plan` meet the `min` feature tier? A missing plan (billing
+ * columns not migrated yet) is treated like `starter` — same
+ * fail-toward-smallest-plan behavior as aiDailyCap() — rather than
+ * fully closed, so a missing migration can't take the feature down
+ * account-wide.
+ */
+export function planMeetsTier(plan: EffectivePlan | null, min: PaidPlan): boolean {
+  return FEATURE_TIER_RANK[plan ?? 'starter'] >= FEATURE_TIER_RANK[min];
 }
 
 export const EFFECTIVE_PLAN_LABELS: Record<EffectivePlan, string> = {

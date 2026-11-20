@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PLAN_INFO, PLAN_LIMITS, cycleSavingPercent, daysLeft, effectivePlan } from './plans';
+import { PLAN_INFO, PLAN_LIMITS, cycleSavingPercent, daysLeft, effectivePlan, planMeetsTier } from './plans';
 
 const now = Date.parse('2026-10-14T12:00:00Z');
 const future = '2026-10-20T12:00:00Z';
@@ -73,7 +73,7 @@ describe('daysLeft', () => {
 
 describe('prices', () => {
   it('lists every billing cycle for paid plans and custom Enterprise', () => {
-    expect(PLAN_INFO.starter.prices).toEqual({ monthly: 999, quarterly: 2699, yearly: 9999 });
+    expect(PLAN_INFO.starter.prices).toEqual({ monthly: 1500, quarterly: 4049, yearly: 14999 });
     expect(PLAN_INFO.growth.prices).toEqual({ monthly: 1999, quarterly: 5399, yearly: 19999 });
     expect(PLAN_INFO.pro.prices).toEqual({ monthly: 3999, quarterly: 10799, yearly: 39999 });
     expect(PLAN_INFO.enterprise.prices).toBeNull();
@@ -86,5 +86,29 @@ describe('prices', () => {
       expect(cycleSavingPercent(plan, 'yearly')).toBe(17);
     }
     expect(cycleSavingPercent('enterprise', 'yearly')).toBeNull();
+  });
+});
+
+describe('planMeetsTier', () => {
+  it('ranks starter < growth/trial < pro < enterprise', () => {
+    expect(planMeetsTier('starter', 'growth')).toBe(false);
+    expect(planMeetsTier('growth', 'growth')).toBe(true);
+    expect(planMeetsTier('pro', 'growth')).toBe(true);
+    expect(planMeetsTier('enterprise', 'pro')).toBe(true);
+    expect(planMeetsTier('growth', 'pro')).toBe(false);
+  });
+
+  it('trial counts as growth — the trial\'s own "Full Growth features" promise', () => {
+    expect(planMeetsTier('trial', 'growth')).toBe(true);
+    expect(planMeetsTier('trial', 'pro')).toBe(false);
+  });
+
+  it('expired meets no feature tier, even for a plan that would otherwise qualify', () => {
+    expect(planMeetsTier('expired', 'starter')).toBe(false);
+  });
+
+  it('treats a missing plan like starter, not fully closed', () => {
+    expect(planMeetsTier(null, 'starter')).toBe(true);
+    expect(planMeetsTier(null, 'growth')).toBe(false);
   });
 });
