@@ -331,6 +331,7 @@ export const HOME_CSS = `
 .lp-page .home .h-tab:hover{ background: rgba(255,255,255,.7); }
 .lp-page .home .h-tab b{ display: flex; align-items: center; gap: 10px; font-size: 17px; color: var(--h-ink); }
 .lp-page .home .h-tab b i{ width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: #fff; border: 1px solid var(--border); font-style: normal; font-size: 15px; }
+.lp-page .home .h-tab b i svg{ width: 15px; height: 15px; }
 .lp-page .home .h-tab p{ margin-top: 6px; padding-left: 40px; font-size: 14.5px; color: var(--text-muted); line-height: 1.55; display: none; }
 .lp-page .home .h-tab[aria-selected="true"]{ background: #fff; border-color: var(--border); box-shadow: var(--h-shadow-md); }
 .lp-page .home .h-tab[aria-selected="true"] p{ display: block; }
