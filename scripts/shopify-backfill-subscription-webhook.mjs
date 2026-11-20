@@ -179,7 +179,12 @@ async function main() {
     }
   }
   console.log(`\n${ok} succeeded, ${failed} failed.`)
-  process.exit(failed > 0 ? 1 : 0)
+  // Not process.exit(): forcing the event loop closed while undici's
+  // keep-alive sockets are still around crashes Node on Windows
+  // (libuv assertion in src/win/async.c). Setting exitCode and letting
+  // main() return lets everything drain and exit zero or non-zero on
+  // its own.
+  process.exitCode = failed > 0 ? 1 : 0
 }
 
 main()
