@@ -15,7 +15,14 @@ concurrency:
 jobs:
   check:
     name: Lint, typecheck, test, build
-    runs-on: ubuntu-latest
+    # Pinned rather than ubuntu-latest: when GitHub moved the "latest"
+    # alias to 26.04, Playwright's browser installer didn't yet support
+    # it ("ERROR: Playwright does not support chromium on
+    # ubuntu26.04-x64"), and every CI run failed at the Playwright
+    # install step with no code change on our side. A floating alias
+    # means the runner OS can change under us at any time; pin it and
+    # bump deliberately instead.
+    runs-on: ubuntu-24.04
     # Dummy env vars so `next build` doesn't fail when it reads the
     # public Supabase config at build time. These never leave CI and
     # never hit a real service — they just satisfy the `!` non-null
@@ -41,7 +48,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
