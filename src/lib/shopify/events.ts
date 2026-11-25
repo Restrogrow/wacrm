@@ -147,12 +147,21 @@ export interface MessageContext {
   items: string | null;
   payment_method: string | null;
   amount_due: string | null;
+  amount_paid: string | null;
   shipping_address: string | null;
   order_status_url: string | null;
   tracking_number: string | null;
   tracking_url: string | null;
   courier: string | null;
   checkout_url: string | null;
+  /**
+   * Always null here — a Razorpay payment link can't exist until the
+   * send actually happens, so this is never looked up from context.
+   * `dispatchScheduled()` resolves it live when a step maps its URL
+   * button to this variable. Kept in `MessageContext` only so it has a
+   * place in `SHOPIFY_VARIABLES` and the button-mapping dropdown.
+   */
+  balance_payment_url: string | null;
   shop_name: string | null;
 }
 
@@ -170,7 +179,7 @@ export const SHOPIFY_VARIABLES: {
     example: 'Priya Sharma',
   },
   { key: 'order_number', label: 'Order number', example: '#1001' },
-  { key: 'order_total', label: 'Order total', example: '₹1,299.00' },
+  { key: 'order_total', label: 'Order total', example: '1,299' },
   { key: 'items', label: 'Items', example: '2 × Kurta, 1 × Dupatta' },
   {
     key: 'payment_method',
@@ -181,6 +190,11 @@ export const SHOPIFY_VARIABLES: {
     key: 'amount_due',
     label: 'Amount due on delivery',
     example: '1,799',
+  },
+  {
+    key: 'amount_paid',
+    label: 'Amount paid',
+    example: '200',
   },
   {
     key: 'shipping_address',
@@ -204,6 +218,11 @@ export const SHOPIFY_VARIABLES: {
     label: 'Checkout (cart) link',
     example: 'https://shop.example/checkouts/xyz',
   },
+  {
+    key: 'balance_payment_url',
+    label: 'Payment link for balance',
+    example: 'i/AbCdEfG',
+  },
   { key: 'shop_name', label: 'Store name', example: 'My Store' },
 ];
 
@@ -226,6 +245,7 @@ export const URL_BUTTON_VARIABLES: readonly ShopifyVariable[] = [
   'checkout_url',
   'order_status_url',
   'tracking_url',
+  'balance_payment_url',
 ] as const;
 
 export function isUrlButtonVariable(
@@ -588,6 +608,32 @@ function toFiniteNumber(value: unknown): number | null {
 }
 
 /**
+ * Plain rupee amount, no currency symbol, no decimals, e.g. "1,799" —
+ * the house style for every Shopify money variable except `order_total`
+ * historically (which is now aligned to it too, see `plainOrderTotal`).
+ * Templates supply their own ₹ in the body text.
+ */
+function formatRupeeNumber(value: number): string {
+  return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(
+    Math.round(value)
+  );
+}
+
+/** Outstanding balance in rupees, or null when it can't be determined. */
+function outstandingAmount(
+  totalOutstanding: unknown,
+  total: unknown,
+  totalReceived: unknown
+): number | null {
+  const outstanding = toFiniteNumber(totalOutstanding);
+  if (outstanding !== null) return Math.max(0, outstanding);
+  const totalNum = toFiniteNumber(total);
+  if (totalNum === null) return null;
+  const received = toFiniteNumber(totalReceived) ?? 0;
+  return Math.max(0, totalNum - received);
+}
+
+/**
  * "Amount due on delivery" — the order's `total_outstanding`, formatted
  * without a currency symbol (the template already has ₹) and without
  * decimals, e.g. "1,799". Falls back to total minus what's already
@@ -598,18 +644,48 @@ export function amountDueOf(
   total: unknown,
   totalReceived: unknown
 ): string | null {
-  const outstanding = toFiniteNumber(totalOutstanding);
-  if (outstanding !== null) {
-    return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(
-      Math.round(outstanding)
-    );
-  }
+  const outstanding = outstandingAmount(totalOutstanding, total, totalReceived);
+  return outstanding === null ? null : formatRupeeNumber(outstanding);
+}
+
+/**
+ * "Amount paid" — what the customer has already paid online. Prefers
+ * Shopify's own `total_received`; falls back to total minus outstanding
+ * when that isn't on the payload. Formatted like `amount_due`: plain
+ * number, no ₹, no decimals, e.g. "200".
+ */
+export function amountPaidOf(
+  totalReceived: unknown,
+  totalOutstanding: unknown,
+  total: unknown
+): string | null {
+  const received = toFiniteNumber(totalReceived);
+  if (received !== null) return formatRupeeNumber(Math.max(0, received));
   const totalNum = toFiniteNumber(total);
   if (totalNum === null) return null;
-  const received = toFiniteNumber(totalReceived) ?? 0;
-  return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(
-    Math.round(Math.max(0, totalNum - received))
-  );
+  const outstanding = toFiniteNumber(totalOutstanding) ?? 0;
+  return formatRupeeNumber(Math.max(0, totalNum - outstanding));
+}
+
+/**
+ * Outstanding balance in paise (integer), for handing to Razorpay's
+ * amount field. Null when there's nothing usable to charge — zero or
+ * negative balance included, since there is nothing left to collect.
+ */
+export function outstandingPaise(
+  totalOutstanding: unknown,
+  total: unknown,
+  totalReceived: unknown
+): number | null {
+  const outstanding = outstandingAmount(totalOutstanding, total, totalReceived);
+  if (outstanding === null || outstanding <= 0) return null;
+  return Math.round(outstanding * 100);
+}
+
+/** `order_total`, as a plain number with no currency symbol, e.g. "1,299". */
+export function plainOrderTotal(amount: unknown): string | null {
+  const value = toFiniteNumber(amount);
+  return value === null ? null : formatRupeeNumber(value);
 }
 
 export function trackingOf(fulfillment: Json): {
@@ -650,7 +726,7 @@ export function orderContext(
     customer_full_name: names.full,
     order_number:
       str(order.name) ?? (order.order_number ? `#${order.order_number}` : null),
-    order_total: formatMoney(order.total_price, order.currency),
+    order_total: plainOrderTotal(order.total_price),
     items: summarizeItems(order.line_items),
     payment_method: paymentMethodOf(order),
     amount_due: amountDueOf(
@@ -658,12 +734,18 @@ export function orderContext(
       order.total_price,
       order.total_received
     ),
+    amount_paid: amountPaidOf(
+      order.total_received,
+      order.total_outstanding,
+      order.total_price
+    ),
     shipping_address: formatAddress(order.shipping_address),
     order_status_url: str(order.order_status_url),
     tracking_number: tracking.number,
     tracking_url: tracking.url,
     courier: tracking.company,
     checkout_url: null,
+    balance_payment_url: null,
     shop_name: shopName,
   };
 }
@@ -677,14 +759,12 @@ export function checkoutContext(
     customer_name: names.first,
     customer_full_name: names.full,
     order_number: null,
-    order_total: formatMoney(
-      checkout.total_price,
-      checkout.currency ?? checkout.presentment_currency
-    ),
+    order_total: plainOrderTotal(checkout.total_price),
     items: summarizeItems(checkout.line_items),
     payment_method: null,
-    // Nothing is owed on a checkout that was never paid.
+    // Nothing is owed or paid on a checkout that was never completed.
     amount_due: null,
+    amount_paid: null,
     // Usually null on an abandoned checkout — the shopper left before
     // the address step. resolveBodyParams turns that into "-".
     shipping_address: formatAddress(checkout.shipping_address),
@@ -693,6 +773,7 @@ export function checkoutContext(
     tracking_url: null,
     courier: null,
     checkout_url: str(checkout.abandoned_checkout_url),
+    balance_payment_url: null,
     shop_name: shopName,
   };
 }

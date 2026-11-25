@@ -8,7 +8,10 @@ application_url = "https://repeatgrow.com/api/integrations/shopify/install"
 embedded = false
 
 [access_scopes]
-scopes = "read_customers,read_fulfillments,read_orders,read_products"
+# read_orders -> write_orders: the Razorpay balance-payment-link flow
+# needs to mark an order paid and tag it once Razorpay confirms payment
+# (src/lib/shopify/admin-api.ts: markOrderPaid, addOrderTags).
+scopes = "read_customers,read_fulfillments,read_products,write_orders"
 use_legacy_install_flow = true
 
 [auth]

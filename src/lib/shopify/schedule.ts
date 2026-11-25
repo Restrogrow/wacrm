@@ -60,6 +60,7 @@ import {
   type MessageStep,
 } from './steps';
 import { STORE_COLUMNS, type ShopifyStore } from './store';
+import { resolveBalancePaymentUrl } from './balance-payment';
 
 type Db = SupabaseClient;
 
@@ -115,6 +116,17 @@ export async function loadSteps(
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type TemplateButton = Record<string, any>;
 
+/** The index of the template's dynamic (`{{n}}`) URL button, if it has one. */
+export function findDynamicUrlButtonIndex(buttons: unknown): number | null {
+  if (!Array.isArray(buttons)) return null;
+  const index = buttons.findIndex(
+    (b: TemplateButton) =>
+      String(b?.type ?? '').toUpperCase() === 'URL' &&
+      /\{\{\s*\d+\s*\}\}/.test(String(b?.url ?? ''))
+  );
+  return index === -1 ? null : index;
+}
+
 /**
  * Find the URL button that carries a `{{n}}` and work out the suffix to
  * send for it.
@@ -128,16 +140,10 @@ export function resolveUrlButton(
   variable: ShopifyVariable,
   ctx: MessageContext
 ): { index: number; value: string } | { error: string } | null {
-  if (!Array.isArray(buttons)) return null;
+  const index = findDynamicUrlButtonIndex(buttons);
+  if (index === null) return null;
 
-  const index = buttons.findIndex(
-    (b: TemplateButton) =>
-      String(b?.type ?? '').toUpperCase() === 'URL' &&
-      /\{\{\s*\d+\s*\}\}/.test(String(b?.url ?? ''))
-  );
-  if (index === -1) return null;
-
-  const result = urlButtonParam(ctx[variable], buttons[index]?.url);
+  const result = urlButtonParam(ctx[variable], (buttons as TemplateButton[])[index]?.url);
   if (!result.ok) return { error: result.reason };
   return { index, value: result.value };
 }
@@ -227,7 +233,11 @@ export async function scheduleShopifySteps(
 
     let urlParam: string | null = null;
     let urlIndex: number | null = null;
-    if (step.url_button_variable) {
+    if (step.url_button_variable === 'balance_payment_url') {
+      // Resolved live at send time (see balance-payment.ts) — there is
+      // no value to read from `req.ctx` yet, only a button to locate.
+      urlIndex = findDynamicUrlButtonIndex(await buttonsOf(templateName));
+    } else if (step.url_button_variable) {
       const resolved = resolveUrlButton(
         await buttonsOf(templateName),
         step.url_button_variable,
@@ -261,6 +271,7 @@ export async function scheduleShopifySteps(
         body_params: resolveBodyParams(step.body_variables, req.ctx),
         url_button_param: urlParam,
         url_button_index: urlIndex,
+        url_button_variable: step.url_button_variable ?? null,
         template_name: templateName,
         template_language: step.template_language || 'en_US',
         send_at: sendAtFor(eventAt, step.delay_minutes).toISOString(),
@@ -391,13 +402,14 @@ interface ScheduledRow {
   body_params: unknown;
   url_button_param: string | null;
   url_button_index: number | null;
+  url_button_variable: string | null;
   template_name: string;
   template_language: string;
   attempts: number;
 }
 
 const ROW_COLUMNS =
-  'id, account_id, store_id, event, step_order, checkout_token, shopify_order_id, phone, customer_name, body_params, url_button_param, url_button_index, template_name, template_language, attempts';
+  'id, account_id, store_id, event, step_order, checkout_token, shopify_order_id, phone, customer_name, body_params, url_button_param, url_button_index, url_button_variable, template_name, template_language, attempts';
 
 /**
  * Send everything due. Called from the every-minute cron.
@@ -580,23 +592,49 @@ export async function dispatchScheduled(
   }
 
   try {
-    const { conversationId } = await resolveConversationByPhone(
+    const { conversationId, contactId } = await resolveConversationByPhone(
       db,
       claimed.account_id,
       claimed.phone,
       claimed.customer_name
     );
 
+    let urlButtonValue = claimed.url_button_param;
+    if (
+      claimed.url_button_variable === 'balance_payment_url' &&
+      claimed.url_button_index !== null
+    ) {
+      const { data: template } = await db
+        .from('message_templates')
+        .select('buttons')
+        .eq('account_id', claimed.account_id)
+        .eq('name', claimed.template_name)
+        .maybeSingle<{ buttons: unknown }>();
+      const buttons = Array.isArray(template?.buttons) ? template.buttons : [];
+      const resolved = await resolveBalancePaymentUrl(db, store, {
+        shopifyOrderId: claimed.shopify_order_id,
+        conversationId,
+        contactId,
+        templateButtonUrl: (buttons[claimed.url_button_index] as TemplateButton | undefined)
+          ?.url,
+      });
+      if (!resolved.ok) {
+        return finish('skipped', resolved.reason);
+      }
+      urlButtonValue = resolved.value;
+    }
+
     const messageParams: Record<string, unknown> = {
       body: Array.isArray(claimed.body_params) ? claimed.body_params : [],
     };
-    if (claimed.url_button_param !== null) {
+    if (urlButtonValue !== null) {
       // Both the value and the button index were frozen at enqueue
       // time — Meta keys the button component by index, and re-reading
       // the template now could land on a different button if it was
-      // edited mid-sequence.
+      // edited mid-sequence. (The one exception is the balance payment
+      // link above, which can only ever exist at send time.)
       messageParams.buttonParams = {
-        [claimed.url_button_index ?? 0]: claimed.url_button_param,
+        [claimed.url_button_index ?? 0]: urlButtonValue,
       };
     }
 

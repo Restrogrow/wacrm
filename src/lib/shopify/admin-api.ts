@@ -221,3 +221,49 @@ export async function registerWebhooks(
     );
   }
 }
+
+const MARK_ORDER_PAID = `
+mutation orderMarkAsPaid($input: OrderMarkAsPaidInput!) {
+  orderMarkAsPaid(input: $input) {
+    order { id }
+    userErrors { field message }
+  }
+}`;
+
+/** Marks an order fully paid. Requires the `write_orders` scope. */
+export async function markOrderPaid(
+  shop: string,
+  accessToken: string,
+  orderGid: string
+): Promise<void> {
+  const data = await shopifyGraphql<{
+    orderMarkAsPaid: { userErrors: { message: string }[] };
+  }>(shop, accessToken, MARK_ORDER_PAID, { input: { id: orderGid } });
+  const errors = data.orderMarkAsPaid.userErrors;
+  if (errors.length > 0) {
+    throw new Error(`orderMarkAsPaid: ${errors.map((e) => e.message).join('; ')}`);
+  }
+}
+
+const ADD_ORDER_TAGS = `
+mutation tagsAdd($id: ID!, $tags: [String!]!) {
+  tagsAdd(id: $id, tags: $tags) {
+    userErrors { field message }
+  }
+}`;
+
+/** Adds tags to an order (or any taggable resource). Requires `write_orders`. */
+export async function addOrderTags(
+  shop: string,
+  accessToken: string,
+  orderGid: string,
+  tags: string[]
+): Promise<void> {
+  const data = await shopifyGraphql<{
+    tagsAdd: { userErrors: { message: string }[] };
+  }>(shop, accessToken, ADD_ORDER_TAGS, { id: orderGid, tags });
+  const errors = data.tagsAdd.userErrors;
+  if (errors.length > 0) {
+    throw new Error(`tagsAdd: ${errors.map((e) => e.message).join('; ')}`);
+  }
+}

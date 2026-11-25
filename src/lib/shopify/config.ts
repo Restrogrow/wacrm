@@ -13,13 +13,17 @@ import { publicOrigin } from '@/lib/public-origin';
 export const SHOPIFY_API_VERSION = '2026-10';
 
 /**
- * Orders + checkouts topics need read_orders; fulfillments need
- * read_fulfillments. The 30-minute auto-sync (auto-sync.ts) reads
- * products and customers. Stores connected before those two were added
- * keep working; they sync products from the public feed and skip
- * customers until reconnected (see missingScopes).
+ * Orders + checkouts topics need write_orders — upgraded from
+ * read_orders so the Razorpay balance-payment-link flow can mark an
+ * order paid and tag it once Razorpay confirms the payment.
+ * Fulfillments need read_fulfillments. The 30-minute auto-sync
+ * (auto-sync.ts) reads products and customers. Stores connected before
+ * write_orders/products/customers were added keep working on their old
+ * scopes; they sync products from the public feed, skip customers, and
+ * can't use the balance-payment-link button until reconnected (see
+ * missingScopes).
  */
-export const SHOPIFY_SCOPES = 'read_orders,read_fulfillments,read_products,read_customers';
+export const SHOPIFY_SCOPES = 'write_orders,read_fulfillments,read_products,read_customers';
 
 /** Scopes from SHOPIFY_SCOPES the store's token was not granted (null scopes = unknown → none missing). */
 export function missingScopes(granted: string | null): string[] {

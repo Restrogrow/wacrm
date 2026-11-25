@@ -10,10 +10,21 @@ import { missingScopes } from './config';
 
 describe('missingScopes', () => {
   it('lists scopes the token lacks', () => {
-    expect(missingScopes('read_orders,read_fulfillments')).toEqual(['read_products', 'read_customers']);
+    expect(missingScopes('read_orders,read_fulfillments')).toEqual([
+      'write_orders',
+      'read_products',
+      'read_customers',
+    ]);
   });
-  it('treats write_x as read_x', () => {
-    expect(missingScopes('read_orders,read_fulfillments,write_products,read_customers')).toEqual([]);
+  it('treats write_x as read_x, but not the reverse', () => {
+    // write_products covers the read_products requirement either way.
+    expect(
+      missingScopes('write_orders,read_fulfillments,write_products,read_customers')
+    ).toEqual([]);
+    // Only having read_orders does NOT cover a write_orders requirement.
+    expect(missingScopes('read_orders,read_fulfillments,read_products,read_customers')).toEqual([
+      'write_orders',
+    ]);
   });
   it('reports nothing when the scopes are unknown', () => {
     expect(missingScopes(null)).toEqual([]);

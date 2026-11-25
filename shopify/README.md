@@ -9,7 +9,7 @@
 | App URL | `https://repeatgrow.com/api/integrations/shopify/install` |
 | Embedded | No (Repeat Grow runs on its own site) |
 | Redirect URL | `https://repeatgrow.com/api/integrations/shopify/callback` |
-| Scopes | `read_orders`, `read_fulfillments` |
+| Scopes | `write_orders`, `read_fulfillments`, `read_products`, `read_customers` |
 | Install flow | Authorization code grant (`use_legacy_install_flow = true`) |
 | Compliance webhooks | `https://repeatgrow.com/api/integrations/shopify/webhooks` |
 | Webhooks API version | `2026-10` |
@@ -29,6 +29,15 @@ SHOPIFY_CLI_PARTNERS_TOKEN=atkn_... npx @shopify/cli app deploy \
 This releases a new app version immediately. The distribution method
 and the App Store listing can't be set from the CLI — use the Partner
 Dashboard (partners.shopify.com → App distribution → Repeat Grow).
+
+Widening a scope (e.g. `read_orders` → `write_orders`, added for the
+Razorpay balance-payment-link flow) likely triggers a mandatory Shopify
+App Store re-review for a public app, and every merchant who already
+installed needs to reconnect once before the new access applies — see
+`missingScopes()` in `src/lib/shopify/config.ts` and the "Reconnect
+Shopify" banner in Settings → Shopify. Run the deploy above only after
+you're ready to go through that review; existing installs keep working
+on their old scopes (minus the new feature) until they reconnect.
 
 ## App Store submission checklist
 

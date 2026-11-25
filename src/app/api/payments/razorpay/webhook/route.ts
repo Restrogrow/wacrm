@@ -25,6 +25,7 @@ import {
   type RazorpayWebhookEvent,
 } from '@/lib/payments/razorpay'
 import { recordWebhookRejection, webhookBlocked } from '@/lib/rate-limit'
+import { addOrderTags, getAccessToken, markOrderPaid } from '@/lib/shopify/admin-api'
 import { customerForConversation } from '@/lib/whatsapp/calling-server'
 import { loadCommerce, rupees, sendWhatsApp } from '@/lib/whatsapp/commerce'
 import { logOutgoing } from '@/lib/whatsapp/commerce-server'
@@ -54,7 +55,9 @@ export async function POST(request: Request) {
 
   const { data: payment } = await db
     .from('payment_links')
-    .select('id, account_id, conversation_id, order_id, amount, status, created_by')
+    .select(
+      'id, account_id, conversation_id, order_id, amount, status, created_by, shopify_store_id, shopify_order_id'
+    )
     .eq('id', paymentId)
     .maybeSingle()
   // Not one of ours (e.g. other Razorpay activity on the same merchant account).
@@ -127,6 +130,32 @@ export async function POST(request: Request) {
           }
         } catch (err) {
           console.error('[razorpay] payment confirmation not sent:', err instanceof Error ? err.message : err)
+        }
+      }
+
+      // COD-to-prepaid: this link paid off a Shopify order's balance.
+      // Best effort only — a merchant whose token hasn't been refreshed
+      // with the write_orders scope yet (or a manual/webhook-only
+      // store with no Admin API access at all) just doesn't get this
+      // step; the payment itself already succeeded above.
+      if (payment.shopify_store_id && payment.shopify_order_id) {
+        try {
+          const { data: store } = await db
+            .from('shopify_stores')
+            .select('id, shop_domain, connection_type, access_token, refresh_token, access_token_expires_at')
+            .eq('id', payment.shopify_store_id as string)
+            .maybeSingle()
+          if (store && store.connection_type === 'oauth') {
+            const accessToken = await getAccessToken(store)
+            const orderGid = `gid://shopify/Order/${payment.shopify_order_id}`
+            await markOrderPaid(store.shop_domain as string, accessToken, orderGid)
+            await addOrderTags(store.shop_domain as string, accessToken, orderGid, ['cod-to-prepaid'])
+          }
+        } catch (err) {
+          console.error(
+            '[razorpay] could not mark Shopify order paid / tagged:',
+            err instanceof Error ? err.message : err
+          )
         }
       }
       break

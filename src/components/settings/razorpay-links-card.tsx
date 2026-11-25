@@ -147,7 +147,7 @@ export function RazorpayLinksCard() {
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-bold text-foreground">Razorpay payment links</h3>
             <p className="text-sm text-muted-foreground">
-              Send a pay-now link in any chat. When the customer pays, the order is marked paid and they get a confirmation.
+              Send a pay-now link in any chat. When the customer pays, the order is marked paid and they get a confirmation. Also powers the &quot;Payment link for balance&quot; button in Shopify automatic messages, for collecting the COD balance online.
             </p>
           </div>
           {status?.connected && (

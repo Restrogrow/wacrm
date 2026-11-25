@@ -554,7 +554,7 @@ export function ShopifySettings() {
                 {sync.missing_scopes.length > 0 && !readOnly && (
                   <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
                     <span>
-                      Reconnect once to allow product and customer access in Shopify.
+                      Reconnect once to allow order, product and customer access in Shopify — needed for product/customer sync and for the balance payment link to mark orders paid.
                     </span>
                     {/* A real navigation: the install route redirects to Shopify. */}
                     <a

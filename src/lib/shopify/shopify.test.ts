@@ -3,19 +3,22 @@ import { describe, expect, it } from 'vitest';
 
 import {
   amountDueOf,
+  amountPaidOf,
   checkoutContext,
   contactPhoneOf,
   countBodyVariables,
   formatAddress,
-  formatMoney,
   isAutomatedCheckout,
   isCashOnDelivery,
   isCodOrPartiallyPaid,
   orderContext,
+  outstandingPaise,
+  plainOrderTotal,
   resolveBodyParams,
   shipmentStatusEvent,
   summarizeItems,
 } from './events';
+import { findDynamicUrlButtonIndex } from './schedule';
 import { normalizeIntegrationPhone } from '@/lib/integrations/phone';
 import {
   isValidShopDomain,
@@ -190,13 +193,18 @@ describe('order payloads', () => {
     expect(ctx.customer_name).toBe('Priya');
     expect(ctx.customer_full_name).toBe('Priya Sharma');
     expect(ctx.order_number).toBe('#1001');
-    expect(ctx.order_total).toBe(formatMoney('1299.00', 'INR'));
+    // Plain number, no ₹ — the template already has it.
+    expect(ctx.order_total).toBe('1,299');
     expect(ctx.items).toBe('2 × Kurta, 1 × Dupatta');
     expect(ctx.tracking_url).toBe('https://t.example/AWB1');
     expect(ctx.courier).toBe('Delhivery');
     expect(ctx.shop_name).toBe('My Store');
-    // ORDER has no total_outstanding — falls back to total - received (0).
+    // ORDER has no total_outstanding/total_received — amount_due falls
+    // back to total - received (0), amount_paid falls back to total -
+    // outstanding (0, since outstanding also falls back to 0).
     expect(ctx.amount_due).toBe('1,299');
+    expect(ctx.amount_paid).toBe('1,299');
+    expect(ctx.balance_payment_url).toBeNull();
   });
 
   it('builds checkout context with the recovery link', () => {
@@ -209,9 +217,10 @@ describe('order payloads', () => {
       null
     );
     expect(ctx.checkout_url).toBe('https://shop.example/c/1');
-    expect(ctx.order_total).toBe('$10.00');
-    // Nothing is owed on a checkout that was never paid.
+    expect(ctx.order_total).toBe('10');
+    // Nothing is owed or paid on a checkout that was never completed.
     expect(ctx.amount_due).toBeNull();
+    expect(ctx.amount_paid).toBeNull();
   });
 });
 
@@ -249,6 +258,67 @@ describe('amountDueOf', () => {
   it('is null when nothing usable is available', () => {
     expect(amountDueOf(null, null, null)).toBeNull();
     expect(amountDueOf('not-a-number', 'also-not-a-number', null)).toBeNull();
+  });
+});
+
+describe('plainOrderTotal', () => {
+  it('formats without a currency symbol or decimals', () => {
+    expect(plainOrderTotal('1299.00')).toBe('1,299');
+    expect(plainOrderTotal(1299)).toBe('1,299');
+  });
+
+  it('is null for unusable input', () => {
+    expect(plainOrderTotal(null)).toBeNull();
+    expect(plainOrderTotal('not-a-number')).toBeNull();
+  });
+});
+
+describe('amountPaidOf', () => {
+  it('prefers total_received when Shopify provides it', () => {
+    expect(amountPaidOf('200', '1599', '1799')).toBe('200');
+  });
+
+  it('falls back to total minus outstanding when total_received is missing', () => {
+    expect(amountPaidOf(null, '1599', '1799')).toBe('200');
+    expect(amountPaidOf(undefined, null, '1299.00')).toBe('1,299');
+  });
+
+  it('never goes negative', () => {
+    expect(amountPaidOf('-50', '1799', '1799')).toBe('0');
+  });
+
+  it('is null when nothing usable is available', () => {
+    expect(amountPaidOf(null, null, null)).toBeNull();
+  });
+});
+
+describe('outstandingPaise', () => {
+  it('converts the outstanding rupee amount to paise', () => {
+    expect(outstandingPaise('200', '1799', null)).toBe(20_000);
+    expect(outstandingPaise(null, '2500', '1800')).toBe(70_000);
+  });
+
+  it('is null when there is nothing left to collect', () => {
+    expect(outstandingPaise('0', '1799', '1799')).toBeNull();
+    expect(outstandingPaise(null, '500', '900')).toBeNull();
+    expect(outstandingPaise(null, null, null)).toBeNull();
+  });
+});
+
+describe('findDynamicUrlButtonIndex', () => {
+  it('finds the URL button carrying a {{n}} placeholder', () => {
+    expect(
+      findDynamicUrlButtonIndex([
+        { type: 'QUICK_REPLY', text: 'Yes' },
+        { type: 'URL', url: 'https://rzp.io/{{1}}' },
+      ])
+    ).toBe(1);
+  });
+
+  it('is null when there is no dynamic URL button', () => {
+    expect(findDynamicUrlButtonIndex([{ type: 'URL', url: 'https://shop.example' }])).toBeNull();
+    expect(findDynamicUrlButtonIndex(null)).toBeNull();
+    expect(findDynamicUrlButtonIndex(undefined)).toBeNull();
   });
 });
 

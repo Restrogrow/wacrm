@@ -38,17 +38,18 @@ import { sendMessageToConversation } from '@/lib/whatsapp/send-message';
 import {
   EVENT_META,
   amountDueOf,
+  amountPaidOf,
   checkoutContext,
   contactPhoneOf,
   customerNamesOf,
   formatAddress,
-  formatMoney,
   isAutomatedCheckout,
   isCashOnDelivery,
   isCodOrPartiallyPaid,
   isShopifyVariable,
   orderContext,
   paymentMethodOf,
+  plainOrderTotal,
   resolveBodyParams,
   shipmentStatusEvent,
   summarizeItems,
@@ -587,11 +588,14 @@ async function onFulfillment(
     order_number:
       order?.order_name ??
       (fulfillment.name ? String(fulfillment.name).split('.')[0] : null),
-    order_total: order ? formatMoney(order.total, order.currency) : null,
+    order_total: order ? plainOrderTotal(order.total) : null,
     items: summarizeItems(fulfillment.line_items),
     payment_method: order?.payment_method ?? null,
     amount_due: order
       ? amountDueOf(order.total_outstanding, order.total, order.total_received)
+      : null,
+    amount_paid: order
+      ? amountPaidOf(order.total_received, order.total_outstanding, order.total)
       : null,
     // The fulfillment's own destination, which is the right answer for
     // a shipping event: where THIS shipment is going. `shopify_orders`
@@ -603,6 +607,7 @@ async function onFulfillment(
     tracking_url: tracking.url ?? order?.tracking_url ?? null,
     courier: tracking.company ?? order?.tracking_company ?? null,
     checkout_url: null,
+    balance_payment_url: null,
     shop_name: store.shop_name,
   };
 
