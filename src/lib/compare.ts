@@ -29,9 +29,9 @@ export interface ComparePageData {
 }
 
 const RG_PRICE =
-  "Starter ₹999, Growth ₹1,999, Pro ₹3,999 per month, Enterprise custom (save about 10% quarterly, 17% yearly)";
+  "Starter ₹1,499, Growth ₹2,999, Pro ₹5,999 per month, Enterprise custom (save about 10% quarterly, 20% yearly), all plus 18% GST";
 const RG_LIMITS =
-  "Plans differ by limits: contacts (2,000 / 50,000 / 2,00,000 / unlimited), broadcasts per month (60 / 250 / 1,000 / unlimited), automations and flows (5 / 25 / 100 / unlimited), team members (5 / 25 / 50 / unlimited)";
+  "Contacts, broadcasts and CRM automations are unlimited on every plan. Team members (3 / 5 / 10 / unlimited) and chatbot flows (2 / unlimited / unlimited / unlimited) are the only two limits by plan";
 
 export const COMPARE_PAGES: ComparePageData[] = [
   {
@@ -44,15 +44,15 @@ export const COMPARE_PAGES: ComparePageData[] = [
     intro:
       "WATI is a well-known WhatsApp platform with an omnichannel inbox and AI agents. If you are weighing it against Repeat Grow, here is a plain comparison of price, features and who each one suits.",
     quickAnswer:
-      "Repeat Grow costs less and puts an AI voice agent for WhatsApp calls on its ₹3,999 Pro plan, where WATI keeps voice AI for its ₹16,799 Business plan. WATI is the better fit if you need Instagram, Facebook, TikTok and other channels in one inbox, or several WhatsApp numbers on one account.",
+      "Repeat Grow costs less and puts an AI voice agent for WhatsApp calls on its ₹5,999 Pro plan, where WATI keeps voice AI for its ₹16,799 Business plan. WATI is the better fit if you need Instagram, Facebook, TikTok and other channels in one inbox, or several WhatsApp numbers on one account.",
     table: {
       headers: ["", "Repeat Grow", "WATI"],
       rows: [
         ["Plans and price", RG_PRICE, "Growth ₹2,699, Pro ₹5,799, Business ₹16,799 per month, billed quarterly"],
-        ["Team members", "5 / 25 / 50 / unlimited by plan", "3 users on Growth, 5 on Pro and Business; extra users ₹1,299 (Pro) or ₹2,199 (Business) each per month"],
+        ["Team members", "3 / 5 / 10 / unlimited by plan", "3 users on Growth, 5 on Pro and Business; extra users ₹1,299 (Pro) or ₹2,199 (Business) each per month"],
         ["Channels", "WhatsApp, with WhatsApp calling and an AI voice agent", "WhatsApp, calling, Facebook, Instagram, TikTok, web chat, RCS and more"],
-        ["AI", "AI assistant on every plan; AI chatbot from Growth (3,000 replies a month); AI voice agent for WhatsApp calls on Pro (300 minutes a month)", "AI in the inbox and Astra AI agents, limited by AI credits (2,000 / 5,000 / 20,000 per month by plan)"],
-        ["Broadcasts", "60 / 250 / unlimited per month by plan, scheduled sending, carousel templates", "Up to 15K per month on Growth, unlimited on Pro and Business"],
+        ["AI", "AI assistant on every plan; AI chatbot on every plan (500 / 2,000 / 5,000 replies a month); AI voice agent for WhatsApp calls on Pro (300 minutes a month)", "AI in the inbox and Astra AI agents, limited by AI credits (2,000 / 5,000 / 20,000 per month by plan)"],
+        ["Broadcasts", "Unlimited on every plan, scheduled sending, carousel templates", "Up to 15K per month on Growth, unlimited on Pro and Business"],
         ["Integrations", "Shopify on every plan; WooCommerce, Razorpay, Shiprocket and Cal.com from Growth; all integrations on Pro", "2 integrations on Growth, 5 on Pro (including HubSpot), unlimited on Business (including Salesforce)"],
         ["API and webhooks", "Public REST API and signed webhooks on Pro and Enterprise", "10k API calls and no webhooks on Growth; limited webhooks on Pro; extensive on Business"],
         ["Payments in chat", "WhatsApp Pay and UPI orders, catalog sharing", "Catalog and order templates; Shopify tools"],
@@ -73,7 +73,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       heading: "Choose Repeat Grow if",
       items: [
         "You sell and support mainly on WhatsApp and want a lower monthly price in rupees.",
-        "You want the AI chatbot from Growth and an AI voice agent on Pro, at a lower price than WATI's matching plans.",
+        "You want the AI chatbot on every plan and an AI voice agent on Pro, at a lower price than WATI's matching plans.",
         "You want WhatsApp Pay and UPI orders, Shopify order messages and Calendly reminders ready to switch on.",
         "You want us to set up the WhatsApp Business API number and import your contacts.",
       ],
@@ -96,7 +96,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       {
         question: "Is Repeat Grow cheaper than WATI?",
         answer:
-          "On published list prices, yes. Repeat Grow starts at ₹999 per month, while WATI's cheapest plan is ₹2,699 per month billed quarterly. The two differ in features, so compare what you actually need.",
+          "On published list prices, yes. Repeat Grow starts at ₹1,499 per month, while WATI's cheapest plan is ₹2,699 per month billed quarterly. The two differ in features, so compare what you actually need.",
       },
       {
         question: "Does Repeat Grow support Instagram or Facebook inboxes like WATI?",
@@ -120,14 +120,14 @@ export const COMPARE_PAGES: ComparePageData[] = [
     intro:
       "Interakt is a well-known WhatsApp platform used by many Indian businesses. Here is how it compares with Repeat Grow on price, features and fit.",
     quickAnswer:
-      "Repeat Grow is cheaper per month and adds the AI chatbot on Growth and an AI voice agent on Pro. Interakt's higher plans add branching chatbot flows, native payments and auto-assignment, and it offers unlimited agents and an RCS channel on its top plan.",
+      "Repeat Grow is cheaper per month and includes the AI chatbot on every plan, with an AI voice agent on Pro. Interakt's higher plans add branching chatbot flows, native payments and auto-assignment, and it offers unlimited agents and an RCS channel on its top plan.",
     table: {
       headers: ["", "Repeat Grow", "Interakt"],
       rows: [
         ["Plans and price", RG_PRICE, "Starter ₹3,499, Growth ₹7,699, Advanced ₹10,499 per quarter plus taxes (about ₹1,166, ₹2,566 and ₹3,500 per month); Enterprise on request"],
-        ["Team members", "5 / 25 / 50 / unlimited by plan", "Unlimited agents on every plan (owner roles only on Starter)"],
-        ["Chatbots", "Automations on every plan; AI chatbot, journeys and segments from Growth", "FAQ automations and linear flows on Growth; branching flows with API calls and conditions on Advanced"],
-        ["Broadcasts", "60 / 250 / unlimited per month by plan, scheduled sending, carousel templates", "Bulk campaigns on every plan; advanced campaigns from Growth"],
+        ["Team members", "3 / 5 / 10 / unlimited by plan", "Unlimited agents on every plan (owner roles only on Starter)"],
+        ["Chatbots", "Automations and AI chatbot on every plan; journeys and segments from Growth", "FAQ automations and linear flows on Growth; branching flows with API calls and conditions on Advanced"],
+        ["Broadcasts", "Unlimited on every plan, scheduled sending, carousel templates", "Bulk campaigns on every plan; advanced campaigns from Growth"],
         ["Payments and catalog", "WhatsApp Pay and UPI orders, catalog sharing, catalog carts to orders", "Catalogs and native payments from Growth"],
         ["API and webhooks", "Public REST API and signed webhooks on Pro and Enterprise", "Public APIs from Growth; advanced webhooks on Advanced"],
         ["Limits", RG_LIMITS, "Unlimited contacts; custom fields 15 / 25 / 30 and tags 15 / 30 / 45 by plan"],
@@ -149,7 +149,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       heading: "Choose Repeat Grow if",
       items: [
         "You want an AI voice agent that calls your leads on WhatsApp, not just chat.",
-        "You want the AI chatbot from the Growth plan, not only the highest tier.",
+        "You want the AI chatbot on every plan, not just the highest tier.",
         "You want WhatsApp Pay or UPI orders, Shopify and Calendly messages ready to switch on.",
         "You want done-for-you WhatsApp Business API setup and a demo with someone who knows your use case.",
       ],
@@ -173,7 +173,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       {
         question: "Is Repeat Grow cheaper than Interakt?",
         answer:
-          "On published list prices, yes. Interakt's Starter is ₹3,499 per quarter (about ₹1,166 per month) plus taxes; Repeat Grow Starter is ₹999 per month, or ₹2,699 per quarter. Repeat Grow also adds the AI chatbot on Growth and an AI voice agent on Pro.",
+          "On published list prices, yes. Interakt's Starter is ₹3,499 per quarter (about ₹1,166 per month) plus taxes; Repeat Grow Starter is ₹1,499 per month, or ₹4,047 per quarter. Repeat Grow's AI chatbot is on every plan, and the AI voice agent is on Pro.",
       },
       {
         question: "Does Repeat Grow limit the number of agents?",
@@ -197,15 +197,15 @@ export const COMPARE_PAGES: ComparePageData[] = [
     intro:
       "AiSensy is a popular choice for WhatsApp marketing in India, with a free plan and a Click-to-WhatsApp ads manager. Here is how it compares with Repeat Grow.",
     quickAnswer:
-      "Repeat Grow includes the AI chatbot from the Growth plan, while AiSensy sells its AI Chat Agent and Chatbot Flows as paid add-ons. AiSensy is the better fit if you want a free starter plan, a Meta ads manager or very high sending speeds.",
+      "Repeat Grow includes the AI chatbot on every plan, while AiSensy sells its AI Chat Agent and Chatbot Flows as paid add-ons. AiSensy is the better fit if you want a free starter plan, a Meta ads manager or very high sending speeds.",
     table: {
       headers: ["", "Repeat Grow", "AiSensy"],
       rows: [
         ["Plans and price", RG_PRICE, "Free plan; Basic ₹1,425, Pro ₹3,040, Premium ₹8,645, Unlimited ₹42,750 per month, billed quarterly"],
-        ["AI chatbot", "Included from Growth (3,000 replies a month)", "AI Chat Agent is an add-on at ₹1,350 per month for 1,000 AI messages"],
+        ["AI chatbot", "Included on every plan (500 / 2,000 / 5,000 replies a month)", "AI Chat Agent is an add-on at ₹1,350 per month for 1,000 AI messages"],
         ["Chatbot flows", "Automations on every plan; journeys from Growth", "Add-on at ₹2,500 per month for 5 chatbots"],
-        ["Team members", "5 / 25 / 50 / unlimited by plan", "Basic includes 1 owner and 5 agents; extra seats ₹750 per month each"],
-        ["Broadcasts", "60 / 250 / unlimited per month by plan; scheduled sending on every plan", "Broadcasting from Basic; scheduler, click tracking and budget analytics on Pro"],
+        ["Team members", "3 / 5 / 10 / unlimited by plan", "Basic includes 1 owner and 5 agents; extra seats ₹750 per month each"],
+        ["Broadcasts", "Unlimited on every plan; scheduled sending on every plan", "Broadcasting from Basic; scheduler, click tracking and budget analytics on Pro"],
         ["Integrations", "Shopify on every plan; more from Growth; API and webhooks on Pro", "Shopify and WooCommerce from Basic; webhooks from Premium"],
         ["Payments in chat", "WhatsApp Pay and UPI orders, catalog sharing", "Catalog sharing and cart management in the chatbot add-on"],
         ["Ads", "Not included", "Click-to-WhatsApp Ads Manager and Meta ad credits"],
@@ -226,7 +226,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       heading: "Choose Repeat Grow if",
       items: [
         "You want the AI chatbot and chatbot flows included instead of paying for add-ons.",
-        "You want clear plans starting at ₹999 a month.",
+        "You want clear plans starting at ₹1,499 a month.",
         "You want WhatsApp Pay or UPI orders, Shopify and Calendly messages, browser voice calls and an AI agent that calls your leads.",
         "You want us to set up your WhatsApp Business API number and walk your team through it.",
       ],
@@ -246,7 +246,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
         heading: "A rough example at list prices",
         items: [
           "AiSensy Basic with the AI Chat Agent and Chatbot Flows add-ons: ₹1,425 + ₹1,350 + ₹2,500 = ₹5,275 per month, before WhatsApp message fees.",
-          "Repeat Grow Growth, with the AI chatbot included: ₹1,999 per month, before WhatsApp message fees.",
+          "Repeat Grow Growth, with the AI chatbot included: ₹2,999 per month, before WhatsApp message fees.",
           "Feature depth and AI message allowances differ, so compare on your own volume. Book a demo and we will walk through your numbers.",
         ],
       },
@@ -260,7 +260,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       {
         question: "Does Repeat Grow have a free plan?",
         answer:
-          "No. Every new account gets a 7-day free trial with Growth limits, and paid plans start at ₹999 per month.",
+          "No. Every new account gets a 7-day free trial with Growth limits, and paid plans start at ₹1,499 per month.",
       },
       {
         question: "Can I move from AiSensy to Repeat Grow?",
@@ -279,15 +279,15 @@ export const COMPARE_PAGES: ComparePageData[] = [
     intro:
       "Choosing a WhatsApp Business API platform in India usually comes down to three popular tools and a few newer ones. This page compares WATI, Interakt, AiSensy and Repeat Grow using each provider's public pricing page.",
     quickAnswer:
-      "For an AI chatbot and AI voice agent at a lower price than WATI, Repeat Grow starts at ₹999 per month. WATI suits teams that need many channels and enterprise AI. Interakt suits teams that want unlimited agents. AiSensy suits teams that want a free plan, ads tools or very high sending speeds.",
+      "For an AI chatbot and AI voice agent at a lower price than WATI, Repeat Grow starts at ₹1,499 per month. WATI suits teams that need many channels and enterprise AI. Interakt suits teams that want unlimited agents. AiSensy suits teams that want a free plan, ads tools or very high sending speeds.",
     table: {
       headers: ["", "Repeat Grow", "WATI", "Interakt", "AiSensy"],
       rows: [
-        ["Entry price", "Starter ₹999 per month", "₹2,699 per month, billed quarterly", "₹3,499 per quarter (about ₹1,166 per month) plus taxes", "Free plan; Basic ₹1,425 per month"],
-        ["Mid plan", "Growth ₹1,999 per month", "Pro ₹5,799 per month", "Growth ₹7,699 per quarter (about ₹2,566 per month)", "Pro ₹3,040 per month"],
-        ["Top public plan", "Pro ₹3,999 per month", "Business ₹16,799 per month", "Advanced ₹10,499 per quarter (about ₹3,500 per month)", "Unlimited ₹42,750 per month"],
-        ["Team size", "5 / 25 / 50 / unlimited", "3 to 5 users included; extra users charged", "Unlimited agents", "5 agents on Basic; extra seats ₹750"],
-        ["AI", "AI assistant on every plan; AI chatbot from Growth; AI voice agent on Pro", "AI and Astra agents, limited by AI credits", "Chatbot flows by plan", "AI Chat Agent add-on, ₹1,350 per month"],
+        ["Entry price", "Starter ₹1,499 per month", "₹2,699 per month, billed quarterly", "₹3,499 per quarter (about ₹1,166 per month) plus taxes", "Free plan; Basic ₹1,425 per month"],
+        ["Mid plan", "Growth ₹2,999 per month", "Pro ₹5,799 per month", "Growth ₹7,699 per quarter (about ₹2,566 per month)", "Pro ₹3,040 per month"],
+        ["Top public plan", "Pro ₹5,999 per month", "Business ₹16,799 per month", "Advanced ₹10,499 per quarter (about ₹3,500 per month)", "Unlimited ₹42,750 per month"],
+        ["Team size", "3 / 5 / 10 / unlimited", "3 to 5 users included; extra users charged", "Unlimited agents", "5 agents on Basic; extra seats ₹750"],
+        ["AI", "AI assistant on every plan; AI chatbot on every plan; AI voice agent on Pro", "AI and Astra agents, limited by AI credits", "Chatbot flows by plan", "AI Chat Agent add-on, ₹1,350 per month"],
         ["Chatbot flows", "Every plan", "Chatbots from Growth", "Linear on Growth, branching on Advanced", "Add-on, ₹2,500 per month"],
         ["Other channels", "WhatsApp only", "Instagram, Facebook, TikTok, web chat, RCS", "Second channel on Growth and up; RCS on Enterprise", "WhatsApp, plus a Meta ads manager"],
         ["API and webhooks", "Every plan", "API calls limited by plan; webhooks from Pro", "API from Growth; webhooks on Advanced", "Template API from Basic, project APIs from Pro; webhooks from Premium"],
@@ -306,7 +306,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       heading: "Pick Repeat Grow if",
       items: [
         "You mostly work on WhatsApp and want the lowest monthly price in rupees.",
-        "You want an AI chatbot from Growth and an AI voice agent on Pro, with done-for-you setup.",
+        "You want an AI chatbot on every plan and an AI voice agent on Pro, with done-for-you setup.",
         "You want WhatsApp Pay and UPI orders, Shopify and Calendly messages, browser voice calls and an AI agent that calls your leads.",
         "You want setup done for you and a team that answers on WhatsApp.",
       ],
@@ -325,7 +325,7 @@ export const COMPARE_PAGES: ComparePageData[] = [
       {
         question: "Which is the cheapest WhatsApp Business API platform in India?",
         answer:
-          "On published list prices, Repeat Grow starts at ₹999 per month, AiSensy has a free plan (without broadcasting) and a Basic plan at ₹1,425 per month, Interakt Starter is about ₹1,166 per month, and WATI Growth is ₹2,699 per month. The right choice depends on the features and limits you need.",
+          "On published list prices, Repeat Grow starts at ₹1,499 per month, AiSensy has a free plan (without broadcasting) and a Basic plan at ₹1,425 per month, Interakt Starter is about ₹1,166 per month, and WATI Growth is ₹2,699 per month. The right choice depends on the features and limits you need.",
       },
       {
         question: "Do I still pay WhatsApp message fees?",

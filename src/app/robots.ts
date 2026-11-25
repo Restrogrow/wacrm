@@ -38,6 +38,7 @@ const PRIVATE_PATHS = [
   "/settings",
   "/partner",
   "/r/",
+  "/l/",
   "/login",
   "/signup",
   "/forgot-password",
