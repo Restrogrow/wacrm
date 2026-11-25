@@ -3,7 +3,6 @@
 import { BrandMark } from "@/components/brand-mark";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2 } from "lucide-react";
 
 import type { OnboardingState } from "@/lib/auth/onboarding";
 import {

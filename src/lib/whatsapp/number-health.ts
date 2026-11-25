@@ -19,7 +19,6 @@ import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import { isEmailConfigured, sendEmail } from '@/lib/email/mailer'
 import { numberHealthAlertEmail } from '@/lib/email/content'
-import { SITE_URL } from '@/lib/seo'
 import { startBillingHold } from '@/lib/whatsapp/billing-hold'
 import { isPaymentError } from '@/lib/whatsapp/spend'
 

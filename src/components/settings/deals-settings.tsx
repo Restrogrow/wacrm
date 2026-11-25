@@ -10,13 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { CURRENCIES, formatCurrency } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { SettingsPanelHead } from "./settings-panel-head";
 
 /**

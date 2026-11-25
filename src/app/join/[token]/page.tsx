@@ -33,7 +33,6 @@ import {
   Loader2,
   MailX,
   ShieldCheck,
-  UsersRound,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';

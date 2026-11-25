@@ -19,7 +19,7 @@ import { decrypt } from '@/lib/whatsapp/encryption'
 import { deleteWebhookSubscription, friendlyCalendlyError } from '@/lib/calendly/api'
 import { isEmailConfigured, sendEmail } from '@/lib/email/mailer'
 import { deletionDecisionEmail, deletionRequestAdminEmail, type BuiltEmail } from '@/lib/email/content'
-import { SITE_URL, SUPPORT_EMAIL } from '@/lib/seo'
+import { SUPPORT_EMAIL } from '@/lib/seo'
 
 export class DeletionError extends Error {
   constructor(
@@ -132,10 +132,6 @@ async function safeSend(message: { to: string[] } & BuiltEmail) {
   } catch (err) {
     console.warn('[account-deletion] email not sent:', err instanceof Error ? err.message : err)
   }
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
 }
 
 export async function notifyAdminsOfRequest(req: {

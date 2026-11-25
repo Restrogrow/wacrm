@@ -9,11 +9,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { THEMES } from '@/lib/themes';
 import { CURRENCIES } from '@/lib/currency';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 import { SECTION_META, type SettingsSection } from './settings-sections';
-import { SettingsChip, StatusDot } from './settings-chip';
+import { StatusDot } from './settings-chip';
 import { ROLE_META } from './role-meta';
 
 interface OverviewCounts {
