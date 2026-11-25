@@ -73,9 +73,9 @@ describe('daysLeft', () => {
 
 describe('prices', () => {
   it('lists every billing cycle for paid plans and custom Enterprise', () => {
-    expect(PLAN_INFO.starter.prices).toEqual({ monthly: 1500, quarterly: 4049, yearly: 14999 });
-    expect(PLAN_INFO.growth.prices).toEqual({ monthly: 1999, quarterly: 5399, yearly: 19999 });
-    expect(PLAN_INFO.pro.prices).toEqual({ monthly: 3999, quarterly: 10799, yearly: 39999 });
+    expect(PLAN_INFO.starter.prices).toEqual({ monthly: 1499, quarterly: 4047, yearly: 14388 });
+    expect(PLAN_INFO.growth.prices).toEqual({ monthly: 2999, quarterly: 8097, yearly: 28788 });
+    expect(PLAN_INFO.pro.prices).toEqual({ monthly: 5999, quarterly: 16197, yearly: 57588 });
     expect(PLAN_INFO.enterprise.prices).toBeNull();
   });
 
@@ -83,7 +83,7 @@ describe('prices', () => {
     for (const plan of ['starter', 'growth', 'pro'] as const) {
       expect(cycleSavingPercent(plan, 'monthly')).toBeNull();
       expect(cycleSavingPercent(plan, 'quarterly')).toBe(10);
-      expect(cycleSavingPercent(plan, 'yearly')).toBe(17);
+      expect(cycleSavingPercent(plan, 'yearly')).toBe(20);
     }
     expect(cycleSavingPercent('enterprise', 'yearly')).toBeNull();
   });

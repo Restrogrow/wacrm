@@ -153,13 +153,13 @@ function priceCard(plan: PaidPlan, cycle: BillingCycle): string {
       (saving
         ? `<p class="price-period"><span class="save">Save ${saving}%</span> &middot; &#8776; &#8377;${inr(perMonth)}/month</p>`
         : "") +
-      `<p class="price-note">+ WhatsApp per-message fees billed by Meta</p>`;
+      `<p class="price-note">+ 18% GST &middot; + WhatsApp per-message fees billed by Meta</p>`;
     const subject = encodeURIComponent(`Repeat Grow - ${info.label} plan (${cycle})`);
     cta = `<a href="mailto:support@repeatgrow.com?subject=${subject}" class="btn ${featured ? "btn-primary" : "btn-ghost"}">Choose ${info.label}</a>`;
   } else {
     priceHtml =
       `<h3>Custom</h3><p class="price-period">Priced for your volume</p>` +
-      `<p class="price-note">+ WhatsApp per-message fees billed by Meta</p>`;
+      `<p class="price-note">+ 18% GST &middot; + WhatsApp per-message fees billed by Meta</p>`;
     cta = `<a href="/demo" class="btn btn-ghost">Talk to sales</a>`;
   }
   const features = PLAN_FEATURES[plan].map((t) => `<li>${CHECK_SVG}${t}</li>`).join("");

@@ -653,9 +653,9 @@ export default function DocsPage() {
                 paid plan, we email 3 days before your paid-until date.
               </li>
               <li>
-                Plans: <b>Starter ₹1,500</b> (inbox, broadcasts, AI assistant), <b>Growth ₹1,999</b> (adds the AI chatbot,
-                catalog and orders) and <b>Pro ₹3,999</b> (adds the AI voice agent), per month, or save with quarterly and
-                yearly billing. See <Ui to="/pricing">Pricing</Ui>.
+                Plans: <b>Starter ₹1,499</b> (inbox, broadcasts, AI assistant), <b>Growth ₹2,999</b> (more AI chatbot replies,
+                catalog and orders) and <b>Pro ₹5,999</b> (adds the AI voice agent), per month plus 18% GST, or save with
+                quarterly and yearly billing. See <Ui to="/pricing">Pricing</Ui>.
               </li>
               <li>WhatsApp conversation fees are billed by Meta directly, separately from your plan.</li>
             </ul>
