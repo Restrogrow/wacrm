@@ -10,7 +10,8 @@
 //   orders/cancelled      send "Order cancelled"
 //   fulfillments/create   store tracking, send "Order shipped"
 //   fulfillments/update   carrier status out_for_delivery / delivered
-//                         → "Out for delivery" / "Delivered"
+//                         → "Out for delivery" (or "COD out for
+//                         delivery" if COD + enabled) / "Delivered"
 //   checkouts/create|update  track the checkout; processDueCheckouts()
 //                         (every-minute cron) sends "Abandoned cart"
 //   app/uninstalled       mark the store disconnected
@@ -36,6 +37,7 @@ import { sendMessageToConversation } from '@/lib/whatsapp/send-message';
 
 import {
   EVENT_META,
+  amountDueOf,
   checkoutContext,
   contactPhoneOf,
   customerNamesOf,
@@ -43,6 +45,7 @@ import {
   formatMoney,
   isAutomatedCheckout,
   isCashOnDelivery,
+  isCodOrPartiallyPaid,
   isShopifyVariable,
   orderContext,
   paymentMethodOf,
@@ -354,6 +357,12 @@ async function upsertOrder(
     total: order.total_price ?? null,
     currency: order.currency ?? null,
     payment_method: paymentMethodOf(order),
+    // Fulfillment webhooks carry no order financials — persisted here
+    // so onFulfillment can still decide "COD out for delivery" vs
+    // "Out for delivery" and fill the "Amount due on delivery" variable.
+    financial_status: order.financial_status ?? null,
+    total_outstanding: order.total_outstanding ?? null,
+    total_received: order.total_received ?? null,
     order_status_url: order.order_status_url ?? null,
     checkout_token: order.checkout_token ?? null,
     updated_at: new Date().toISOString(),
@@ -510,6 +519,7 @@ async function onOrderCancelled(
     events: [
       'order_shipped',
       'out_for_delivery',
+      'cod_out_for_delivery',
       'order_delivered',
       'feedback_request',
       'reorder_reminder',
@@ -580,6 +590,9 @@ async function onFulfillment(
     order_total: order ? formatMoney(order.total, order.currency) : null,
     items: summarizeItems(fulfillment.line_items),
     payment_method: order?.payment_method ?? null,
+    amount_due: order
+      ? amountDueOf(order.total_outstanding, order.total, order.total_received)
+      : null,
     // The fulfillment's own destination, which is the right answer for
     // a shipping event: where THIS shipment is going. `shopify_orders`
     // keeps no address, so there is nothing to fall back to — a
@@ -603,7 +616,18 @@ async function onFulfillment(
     ctx,
   };
 
-  await scheduleShopifySteps(store, { event, ...common });
+  // A COD or partially-paid order gets its own "out for delivery"
+  // template (room to say how much to keep ready); every other
+  // fulfillment event (order_shipped, order_delivered, …) is untouched.
+  if (event === 'out_for_delivery' && isCodOrPartiallyPaid(order?.financial_status, order?.payment_method)) {
+    await scheduleShopifySteps(store, {
+      event: 'cod_out_for_delivery',
+      fallbackEvent: 'out_for_delivery',
+      ...common,
+    });
+  } else {
+    await scheduleShopifySteps(store, { event, ...common });
+  }
 
   // "Feedback request" and "Reorder reminder" are both defined as
   // "X days after Delivered", so delivery is where they get queued.

@@ -2,6 +2,7 @@ import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 
 import {
+  amountDueOf,
   checkoutContext,
   contactPhoneOf,
   countBodyVariables,
@@ -9,6 +10,7 @@ import {
   formatMoney,
   isAutomatedCheckout,
   isCashOnDelivery,
+  isCodOrPartiallyPaid,
   orderContext,
   resolveBodyParams,
   shipmentStatusEvent,
@@ -193,6 +195,8 @@ describe('order payloads', () => {
     expect(ctx.tracking_url).toBe('https://t.example/AWB1');
     expect(ctx.courier).toBe('Delhivery');
     expect(ctx.shop_name).toBe('My Store');
+    // ORDER has no total_outstanding — falls back to total - received (0).
+    expect(ctx.amount_due).toBe('1,299');
   });
 
   it('builds checkout context with the recovery link', () => {
@@ -206,6 +210,45 @@ describe('order payloads', () => {
     );
     expect(ctx.checkout_url).toBe('https://shop.example/c/1');
     expect(ctx.order_total).toBe('$10.00');
+    // Nothing is owed on a checkout that was never paid.
+    expect(ctx.amount_due).toBeNull();
+  });
+});
+
+describe('isCodOrPartiallyPaid', () => {
+  it('is true for an unpaid or partially-paid financial_status', () => {
+    expect(isCodOrPartiallyPaid('pending', 'Razorpay')).toBe(true);
+    expect(isCodOrPartiallyPaid('partially_paid', 'Razorpay')).toBe(true);
+  });
+
+  it('is true for a Cash on Delivery payment method regardless of financial_status', () => {
+    expect(isCodOrPartiallyPaid('paid', 'Cash on Delivery (COD)')).toBe(true);
+  });
+
+  it('is false for a fully paid, non-COD order', () => {
+    expect(isCodOrPartiallyPaid('paid', 'Razorpay')).toBe(false);
+    expect(isCodOrPartiallyPaid(null, 'Razorpay')).toBe(false);
+  });
+});
+
+describe('amountDueOf', () => {
+  it('prefers total_outstanding when Shopify provides it', () => {
+    expect(amountDueOf('1799', '1799', null)).toBe('1,799');
+    expect(amountDueOf('1799.00', '2500.00', '701.00')).toBe('1,799');
+  });
+
+  it('falls back to total minus total_received when total_outstanding is missing', () => {
+    expect(amountDueOf(null, '2500', '701')).toBe('1,799');
+    expect(amountDueOf(undefined, '1299.00', null)).toBe('1,299');
+  });
+
+  it('never goes negative', () => {
+    expect(amountDueOf(null, '500', '900')).toBe('0');
+  });
+
+  it('is null when nothing usable is available', () => {
+    expect(amountDueOf(null, null, null)).toBeNull();
+    expect(amountDueOf('not-a-number', 'also-not-a-number', null)).toBeNull();
   });
 });
 

@@ -17,6 +17,7 @@ export const SHOPIFY_EVENTS = [
   'cod_order_placed',
   'order_shipped',
   'out_for_delivery',
+  'cod_out_for_delivery',
   'order_delivered',
   'feedback_request',
   'reorder_reminder',
@@ -61,6 +62,12 @@ export const EVENT_META: Record<ShopifyEvent, EventMeta> = {
   out_for_delivery: {
     label: 'Out for delivery',
     description: 'When the carrier marks the shipment out for delivery.',
+    marketing: false,
+  },
+  cod_out_for_delivery: {
+    label: 'COD out for delivery',
+    description:
+      'Cash-on-delivery orders when the courier is out for delivery. Use a template that tells the customer how much to keep ready. If off, COD orders use "Out for delivery".',
     marketing: false,
   },
   order_delivered: {
@@ -114,7 +121,7 @@ export const SHOPIFY_TOPICS = [
   {
     topic: 'fulfillments/update',
     adminName: 'Fulfillment update',
-    drives: 'Out for delivery, Delivered',
+    drives: 'Out for delivery, COD out for delivery, Delivered',
   },
   {
     topic: 'checkouts/create',
@@ -139,6 +146,7 @@ export interface MessageContext {
   order_total: string | null;
   items: string | null;
   payment_method: string | null;
+  amount_due: string | null;
   shipping_address: string | null;
   order_status_url: string | null;
   tracking_number: string | null;
@@ -168,6 +176,11 @@ export const SHOPIFY_VARIABLES: {
     key: 'payment_method',
     label: 'Payment method',
     example: 'Cash on Delivery (COD)',
+  },
+  {
+    key: 'amount_due',
+    label: 'Amount due on delivery',
+    example: '1,799',
   },
   {
     key: 'shipping_address',
@@ -551,6 +564,54 @@ export function paymentMethodOf(order: Json): string | null {
   return str(gateways.filter(Boolean).join(', ')) ?? str(order.gateway);
 }
 
+/**
+ * Should a fulfillment event use the COD-specific template rather than
+ * the plain one? Either signal is enough: a not-yet-fully-paid order
+ * (`financial_status`) or a Cash on Delivery gateway. `paymentMethod`
+ * is the already-formatted string `paymentMethodOf()` produces — by
+ * fulfillment time there is no live webhook payload to re-derive it
+ * from, only what was persisted on the order at orders/create.
+ */
+export function isCodOrPartiallyPaid(
+  financialStatus: unknown,
+  paymentMethod: unknown
+): boolean {
+  const status = String(financialStatus ?? '').toLowerCase();
+  if (status === 'pending' || status === 'partially_paid') return true;
+  return isCashOnDelivery({ gateway: paymentMethod });
+}
+
+function toFiniteNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * "Amount due on delivery" — the order's `total_outstanding`, formatted
+ * without a currency symbol (the template already has ₹) and without
+ * decimals, e.g. "1,799". Falls back to total minus what's already
+ * been received when `total_outstanding` isn't on the payload.
+ */
+export function amountDueOf(
+  totalOutstanding: unknown,
+  total: unknown,
+  totalReceived: unknown
+): string | null {
+  const outstanding = toFiniteNumber(totalOutstanding);
+  if (outstanding !== null) {
+    return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(
+      Math.round(outstanding)
+    );
+  }
+  const totalNum = toFiniteNumber(total);
+  if (totalNum === null) return null;
+  const received = toFiniteNumber(totalReceived) ?? 0;
+  return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(
+    Math.round(Math.max(0, totalNum - received))
+  );
+}
+
 export function trackingOf(fulfillment: Json): {
   number: string | null;
   url: string | null;
@@ -592,6 +653,11 @@ export function orderContext(
     order_total: formatMoney(order.total_price, order.currency),
     items: summarizeItems(order.line_items),
     payment_method: paymentMethodOf(order),
+    amount_due: amountDueOf(
+      order.total_outstanding,
+      order.total_price,
+      order.total_received
+    ),
     shipping_address: formatAddress(order.shipping_address),
     order_status_url: str(order.order_status_url),
     tracking_number: tracking.number,
@@ -617,6 +683,8 @@ export function checkoutContext(
     ),
     items: summarizeItems(checkout.line_items),
     payment_method: null,
+    // Nothing is owed on a checkout that was never paid.
+    amount_due: null,
     // Usually null on an abandoned checkout — the shopper left before
     // the address step. resolveBodyParams turns that into "-".
     shipping_address: formatAddress(checkout.shipping_address),

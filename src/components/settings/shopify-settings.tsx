@@ -117,6 +117,7 @@ const EVENT_ICONS: Record<string, LucideIcon> = {
   cod_order_placed: CreditCard,
   order_shipped: Truck,
   out_for_delivery: Package,
+  cod_out_for_delivery: CreditCard,
   order_delivered: PackageCheck,
   order_cancelled: XCircle,
   abandoned_checkout: ShoppingCart,
