@@ -167,11 +167,12 @@ const PLAN_TAGLINES: Record<PaidPlan, string> = {
 };
 const fmtLimit = (n: number | null, unit: string) =>
   n === null ? `Unlimited ${unit}` : `${n.toLocaleString("en-IN")} ${unit}`;
-// What each plan adds; contacts and team come from the enforced limits.
+// What each plan adds; team comes from the enforced limit, contacts are
+// unlimited on every plan (November 2026 pricing sheet).
 const PLAN_POINTS: Record<PaidPlan, string[]> = {
-  starter: ["Shared inbox &amp; broadcasts", "AI assistant (suggest, summary)"],
-  growth: ["Catalog, orders &amp; pipelines", "AI chatbot: 3,000 replies / mo"],
-  pro: ["AI voice agent: 300 min / mo", "AI chatbot: 15,000 replies / mo"],
+  starter: ["Shared inbox &amp; broadcasts", "AI chatbot: 500 replies / mo"],
+  growth: ["Catalog, orders &amp; pipelines", "AI chatbot: 2,000 replies / mo"],
+  pro: ["AI voice agent: 300 min / mo", "AI chatbot: 5,000 replies / mo"],
   enterprise: ["Multiple WhatsApp numbers", "Custom AI volume"],
 };
 const PLANS_HTML = PLANS.map((plan, i) => {
@@ -181,7 +182,7 @@ const PLANS_HTML = PLANS.map((plan, i) => {
     ? `<b>${formatInr(info.prices.monthly)}<small>/month</small></b>`
     : `<b>Custom</b>`;
   const items = [
-    fmtLimit(l.contacts, "contacts"),
+    "Unlimited contacts",
     fmtLimit(l.team_members, "team members"),
     ...PLAN_POINTS[plan],
   ]

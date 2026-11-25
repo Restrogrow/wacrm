@@ -12,45 +12,34 @@ export type AccountPlan = PaidPlan | 'trial';
 /** What the account can do right now. */
 export type EffectivePlan = AccountPlan | 'expired';
 
-export const LIMIT_KEYS = [
-  'contacts',
-  'broadcasts_per_month',
-  'automation_flows',
-  'custom_fields',
-  'team_members',
-] as const;
+/**
+ * The only two things the November 2026 pricing sheet actually caps
+ * per plan — contacts, broadcasts, custom fields and CRM automations
+ * are unlimited on every plan now (migration 103). `chatbot_flows` is
+ * the visual chatbot-flow builder specifically (the `flows` table),
+ * not CRM trigger automations.
+ */
+export const LIMIT_KEYS = ['team_members', 'chatbot_flows'] as const;
 export type LimitKey = (typeof LIMIT_KEYS)[number];
 
 /** null = unlimited. */
 export type PlanLimits = Record<LimitKey, number | null>;
 
 const STARTER: PlanLimits = {
-  contacts: 2000,
-  broadcasts_per_month: 60,
-  automation_flows: 5,
-  custom_fields: 5,
-  team_members: 5,
+  team_members: 3,
+  chatbot_flows: 2,
 };
 const GROWTH: PlanLimits = {
-  contacts: 50000,
-  broadcasts_per_month: 250,
-  automation_flows: 25,
-  custom_fields: 25,
-  team_members: 25,
+  team_members: 5,
+  chatbot_flows: null,
 };
 const PRO: PlanLimits = {
-  contacts: 200000,
-  broadcasts_per_month: 1000,
-  automation_flows: 100,
-  custom_fields: 100,
-  team_members: 50,
+  team_members: 10,
+  chatbot_flows: null,
 };
 const UNLIMITED: PlanLimits = {
-  contacts: null,
-  broadcasts_per_month: null,
-  automation_flows: null,
-  custom_fields: null,
   team_members: null,
+  chatbot_flows: null,
 };
 
 export const PLAN_LIMITS: Record<EffectivePlan, PlanLimits> = {
@@ -63,11 +52,31 @@ export const PLAN_LIMITS: Record<EffectivePlan, PlanLimits> = {
 };
 
 export const LIMIT_LABELS: Record<LimitKey, string> = {
-  contacts: 'Contacts',
-  broadcasts_per_month: 'Broadcasts this month',
-  automation_flows: 'Automations & flows',
-  custom_fields: 'Custom fields',
   team_members: 'Team members (incl. invites)',
+  chatbot_flows: 'Chatbot flows',
+};
+
+/**
+ * AI usage limits — monthly, per the pricing sheet ("AI replies and
+ * voice minutes reset every billing month"). Enforced in
+ * lib/ai/quota.ts; kept here so /pricing and the plan-limit table
+ * share one source of truth with billing, same as everything else in
+ * this file. `null` = Enterprise's "Custom" (set per client, no code
+ * cap). `chatbot_replies` are full AI-generated chatbot replies, not
+ * rate-limited scaffolding like suggest/summarize; `voice_minutes` are
+ * real call minutes (whatsapp_calls.duration_seconds), not a call count.
+ */
+export interface AiMonthlyLimits {
+  chatbot_replies: number | null;
+  voice_minutes: number | null;
+}
+export const AI_MONTHLY_LIMITS: Record<EffectivePlan, AiMonthlyLimits> = {
+  starter: { chatbot_replies: 500, voice_minutes: 0 },
+  growth: { chatbot_replies: 2000, voice_minutes: 0 },
+  pro: { chatbot_replies: 5000, voice_minutes: 300 },
+  enterprise: { chatbot_replies: null, voice_minutes: null },
+  trial: { chatbot_replies: 2000, voice_minutes: 0 },
+  expired: { chatbot_replies: 0, voice_minutes: 0 },
 };
 
 export const BILLING_CYCLES = ['monthly', 'quarterly', 'yearly'] as const;

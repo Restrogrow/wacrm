@@ -128,7 +128,9 @@ export function AiChatbotSettings() {
 
   // null (billing not loaded yet, or migration 041 missing) reads as
   // "unknown" — don't flash an upgrade notice before we actually know.
-  const chatbotTierOk = effectivePlan === null || planMeetsTier(effectivePlan, 'growth');
+  // Chatbot itself has no plan gate (every plan gets some monthly
+  // replies, Starter just gets fewer) — only the AI voice agent is
+  // Pro-exclusive.
   const voiceTierOk = effectivePlan === null || planMeetsTier(effectivePlan, 'pro');
 
   const update = (patch: Partial<ChatbotSettings>) => {
@@ -202,13 +204,6 @@ export function AiChatbotSettings() {
             The server has no AI key yet. Set <code>GEMINI_KEY</code> in your hosting environment variables, then redeploy.
           </span>
         </p>
-      )}
-
-      {!chatbotTierOk && (
-        <TierNotice>
-          The AI chatbot is included from the Growth plan. You can turn it on below, but it won&apos;t reply to
-          customers until you upgrade — see Settings → Plan &amp; billing.
-        </TierNotice>
       )}
 
       {/* Status card */}

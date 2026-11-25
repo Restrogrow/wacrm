@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { PLAN_INFO, PLAN_LIMITS, cycleSavingPercent, daysLeft, effectivePlan, planMeetsTier } from './plans';
+import {
+  AI_MONTHLY_LIMITS,
+  PLAN_INFO,
+  PLAN_LIMITS,
+  cycleSavingPercent,
+  daysLeft,
+  effectivePlan,
+  planMeetsTier,
+} from './plans';
 
 const now = Date.parse('2026-10-14T12:00:00Z');
 const future = '2026-10-20T12:00:00Z';
@@ -51,14 +59,24 @@ describe('effectivePlan', () => {
 });
 
 describe('limits', () => {
-  it('match the pricing page', () => {
-    expect(PLAN_LIMITS.starter.contacts).toBe(2000);
-    expect(PLAN_LIMITS.growth.broadcasts_per_month).toBe(250);
+  it('match the pricing sheet', () => {
+    expect(PLAN_LIMITS.starter.team_members).toBe(3);
+    expect(PLAN_LIMITS.starter.chatbot_flows).toBe(2);
+    expect(PLAN_LIMITS.growth.team_members).toBe(5);
+    expect(PLAN_LIMITS.growth.chatbot_flows).toBeNull();
+    expect(PLAN_LIMITS.pro.team_members).toBe(10);
     expect(PLAN_LIMITS.enterprise.team_members).toBeNull();
-    expect(PLAN_LIMITS.pro.contacts).toBe(200000);
-    expect(PLAN_LIMITS.pro.team_members).toBe(50);
     expect(PLAN_LIMITS.trial).toEqual(PLAN_LIMITS.growth);
     expect(PLAN_LIMITS.expired).toEqual(PLAN_LIMITS.starter);
+  });
+
+  it('AI monthly limits match the pricing sheet', () => {
+    expect(AI_MONTHLY_LIMITS.starter).toEqual({ chatbot_replies: 500, voice_minutes: 0 });
+    expect(AI_MONTHLY_LIMITS.growth).toEqual({ chatbot_replies: 2000, voice_minutes: 0 });
+    expect(AI_MONTHLY_LIMITS.pro).toEqual({ chatbot_replies: 5000, voice_minutes: 300 });
+    expect(AI_MONTHLY_LIMITS.enterprise).toEqual({ chatbot_replies: null, voice_minutes: null });
+    expect(AI_MONTHLY_LIMITS.trial).toEqual(AI_MONTHLY_LIMITS.growth);
+    expect(AI_MONTHLY_LIMITS.expired).toEqual({ chatbot_replies: 0, voice_minutes: 0 });
   });
 });
 

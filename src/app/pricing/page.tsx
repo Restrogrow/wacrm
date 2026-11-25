@@ -86,37 +86,37 @@ const CHECK_SVG =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>';
 
 const LIMIT_ROW_LABELS: Record<(typeof LIMIT_KEYS)[number], string> = {
-  contacts: "Contacts",
-  broadcasts_per_month: "Broadcasts/month",
-  automation_flows: "Automations &amp; flows",
-  custom_fields: "Custom fields",
+  chatbot_flows: "Chatbot flows",
   team_members: "Team members",
 };
 
-// Short, one-line points per plan. The numbers in the limits table are what
-// the app enforces; the AI volumes here are not enforced yet.
+// Short, one-line points per plan — matches the November 2026 pricing
+// sheet exactly. Contacts, broadcasts, custom fields and CRM
+// automations are unlimited on every plan (not shown as a limit row);
+// chatbot replies/month and AI voice minutes/month are enforced in
+// lib/ai/quota.ts.
 const PLAN_FEATURES: Record<PaidPlan, string[]> = {
   starter: [
-    "Shared inbox, contacts &amp; broadcasts",
-    "Templates &amp; basic automations",
+    "Unlimited contacts, shared inbox &amp; broadcasts",
     "AI assistant: suggest reply, summary, translate",
+    "AI chatbot: 500 replies / month",
     "Shopify integration",
-    "Docs + email support",
+    "WhatsApp support",
   ],
   growth: [
     "Everything in Starter",
     "Pipelines, journeys &amp; segments",
     "Catalog, orders &amp; payments",
-    "AI chatbot: 3,000 replies / month",
-    "WooCommerce, Razorpay, Shiprocket, Cal.com",
+    "AI chatbot: 2,000 replies / month",
+    "Abandoned-cart reminders &amp; drip campaigns",
+    "REST API &amp; webhooks",
     "Priority support (24 hrs)",
   ],
   pro: [
     "Everything in Growth",
     "AI voice agent: 300 min / month",
-    "AI chatbot: 15,000 replies / month",
-    "Ad attribution &amp; reports",
-    "REST API &amp; webhooks",
+    "AI chatbot: 5,000 replies / month",
+    "Roles &amp; permissions",
     "Priority support + onboarding call",
   ],
   enterprise: [

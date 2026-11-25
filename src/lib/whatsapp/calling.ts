@@ -23,6 +23,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/whatsapp/encryption'
 import { resolveConversationByPhone } from '@/lib/whatsapp/resolve-conversation'
 import { findExistingContact } from '@/lib/contacts/dedupe'
+import { recordVoiceMinutes } from '@/lib/ai/quota'
 
 const GRAPH = 'https://graph.facebook.com/v21.0'
 
@@ -394,7 +395,7 @@ async function onConnect(
 async function onTerminate(db: SupabaseClient, call: CallWebhookCall) {
   const { data: row } = await db
     .from('whatsapp_calls')
-    .select('id, status, answered_at')
+    .select('id, account_id, status, answered_at, ai_agent')
     .eq('call_id', call.id)
     .maybeSingle()
   if (!row) return
@@ -417,4 +418,11 @@ async function onTerminate(db: SupabaseClient, call: CallWebhookCall) {
       sdp_answer: null,
     })
     .eq('id', row.id)
+
+  // Plan quota is in real minutes, only knowable now that the call has
+  // ended — see lib/ai/quota.ts. Never blocks anything; the call
+  // already happened.
+  if (row.ai_agent && Number.isFinite(duration) && (duration ?? 0) > 0) {
+    await recordVoiceMinutes(row.account_id, (duration as number) / 60)
+  }
 }

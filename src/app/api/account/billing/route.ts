@@ -53,24 +53,8 @@ export async function GET() {
       const { count: n } = await query;
       return n ?? 0;
     };
-    const monthStart = new Date();
-    monthStart.setUTCDate(1);
-    monthStart.setUTCHours(0, 0, 0, 0);
-
-    const [
-      contacts,
-      broadcasts,
-      flows,
-      automations,
-      customFields,
-      members,
-      invites,
-    ] = await Promise.all([
-      count('contacts'),
-      count('broadcasts', (q) => q.gte('created_at', monthStart.toISOString())),
+    const [flows, members, invites] = await Promise.all([
       count('flows'),
-      count('automations'),
-      count('custom_fields'),
       count('profiles'),
       count('account_invitations', (q) =>
         q.is('accepted_at', null).gt('expires_at', new Date().toISOString())
@@ -79,10 +63,7 @@ export async function GET() {
 
     const effective = effectivePlan(account as AccountBilling);
     const usage: Record<LimitKey, number> = {
-      contacts,
-      broadcasts_per_month: broadcasts,
-      automation_flows: flows + automations,
-      custom_fields: customFields,
+      chatbot_flows: flows,
       team_members: members + invites,
     };
 
