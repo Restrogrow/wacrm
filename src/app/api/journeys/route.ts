@@ -18,6 +18,8 @@ import {
   referencesBelongToAccount,
   replaceSteps,
 } from '@/lib/journeys/server'
+import { loadEffectivePlan } from '@/lib/billing/server'
+import { planMeetsTier } from '@/lib/billing/plans'
 
 export async function GET() {
   try {
@@ -76,6 +78,16 @@ export async function POST(request: Request) {
     const ctx = await requireRole('agent')
     const limit = checkRateLimit(`journey-write:${ctx.userId}`, { limit: 30, windowMs: 60_000 })
     if (!limit.success) return rateLimitResponse(limit)
+
+    // Drip & retargeting campaigns (journeys) are Growth+ on the
+    // pricing sheet.
+    const plan = await loadEffectivePlan(ctx.accountId).catch(() => null)
+    if (!planMeetsTier(plan, 'growth')) {
+      return NextResponse.json(
+        { error: 'Journeys are included from the Growth plan — upgrade in Settings → Plan & billing to create one.' },
+        { status: 403 }
+      )
+    }
 
     const parsed = validateJourneyInput(await request.json().catch(() => null))
     if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })

@@ -27,6 +27,8 @@ import { requireRole, toErrorResponse } from '@/lib/auth/account';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
 import { EVENT_META, isShopifyEvent } from '@/lib/shopify/events';
 import { validateSteps, type MessageStep } from '@/lib/shopify/steps';
+import { loadEffectivePlan } from '@/lib/billing/server';
+import { planMeetsTier } from '@/lib/billing/plans';
 
 /** What supabase-js hands back on a failed query. */
 interface DbError {
@@ -181,6 +183,23 @@ export async function PUT(request: Request) {
       }
 
       perEvent.push({ event: rule.event, steps: result.value });
+    }
+
+    // Abandoned-cart reminders are Growth+ on the pricing sheet.
+    const abandonedCheckoutEnabled = perEvent.some(
+      (e) => e.event === 'abandoned_checkout' && e.steps.some((s) => s.enabled)
+    );
+    if (abandonedCheckoutEnabled) {
+      const plan = await loadEffectivePlan(ctx.accountId).catch(() => null);
+      if (!planMeetsTier(plan, 'growth')) {
+        return NextResponse.json(
+          {
+            error:
+              'Abandoned-cart reminders are included from the Growth plan — upgrade in Settings → Plan & billing to turn this on.',
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Replace each event's steps wholesale. An upsert alone can't do

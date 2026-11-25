@@ -32,6 +32,8 @@ import {
   rateLimitResponse,
   RATE_LIMITS,
 } from '@/lib/rate-limit';
+import { loadEffectivePlan } from '@/lib/billing/server';
+import { planMeetsTier } from '@/lib/billing/plans';
 
 const MAX_NAME_LEN = 80;
 // Hard ceiling on caller-supplied expiry (1 year), mirroring the
@@ -94,6 +96,15 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const ctx = await requireRole('admin');
+
+    // The REST API & webhooks are Growth+ on the pricing sheet.
+    const plan = await loadEffectivePlan(ctx.accountId).catch(() => null);
+    if (!planMeetsTier(plan, 'growth')) {
+      return NextResponse.json(
+        { error: 'The REST API is included from the Growth plan — upgrade in Settings → Plan & billing to create a key.' },
+        { status: 403 }
+      );
+    }
 
     const limit = checkRateLimit(
       `admin:apiKeyCreate:${ctx.userId}`,
