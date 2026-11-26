@@ -15,6 +15,14 @@ export const metadata: Metadata = {
   title: "Partner program — Repeat Grow",
   description:
     "Bring businesses to Repeat Grow and earn a share of everything they pay for their first 12 months.",
+  // The root layout defaults every page to noindex — public pages have
+  // to opt back in explicitly (see src/app/pricing/page.tsx for the
+  // same override). Without this, Search Console reports "Excluded by
+  // 'noindex' tag" even though this route is meant to be public.
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function PartnerLayout({ children }: { children: ReactNode }) {
