@@ -162,6 +162,14 @@ export interface MessageContext {
    * place in `SHOPIFY_VARIABLES` and the button-mapping dropdown.
    */
   balance_payment_url: string | null;
+  /**
+   * The product page of the order's first line item, as a path only
+   * (e.g. "products/black-oversized-tee") — resolved from the account's
+   * own synced catalog (migration 076), matched on Shopify variant id.
+   * Null when the catalog has no row for that variant (store sync never
+   * run, or the product was removed since).
+   */
+  product_url: string | null;
   shop_name: string | null;
 }
 
@@ -223,6 +231,11 @@ export const SHOPIFY_VARIABLES: {
     label: 'Payment link for balance',
     example: 'i/AbCdEfG',
   },
+  {
+    key: 'product_url',
+    label: 'Product link',
+    example: 'products/black-oversized-tee',
+  },
   { key: 'shop_name', label: 'Store name', example: 'My Store' },
 ];
 
@@ -246,6 +259,7 @@ export const URL_BUTTON_VARIABLES: readonly ShopifyVariable[] = [
   'order_status_url',
   'tracking_url',
   'balance_payment_url',
+  'product_url',
 ] as const;
 
 export function isUrlButtonVariable(
@@ -418,6 +432,31 @@ export function summarizeItems(lineItems: unknown, max = 3): string | null {
     );
   const more = lineItems.length - max;
   return more > 0 ? `${parts.join(', ')} +${more} more` : parts.join(', ');
+}
+
+/**
+ * The Shopify variant id of the order's first line item, for looking up
+ * that product in the account's own synced catalog (`products.source_id`
+ * — migration 076/077 stores one row per variant, not per product; see
+ * flattenShopifyAdmin/flattenShopifyPublic). Null when there's no first
+ * item, or it isn't a real product line (e.g. a tip or a custom charge).
+ */
+export function firstLineItemVariantId(lineItems: unknown): string | null {
+  if (!Array.isArray(lineItems) || lineItems.length === 0) return null;
+  const first = lineItems[0] as Json;
+  return str(first?.variant_id);
+}
+
+/** Path + query, no leading slash — "products/black-oversized-tee". Null if not a URL. */
+export function pathOnlyFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    const path = `${u.pathname}${u.search}`.replace(/^\/+/, '');
+    return path || null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -746,6 +785,9 @@ export function orderContext(
     courier: tracking.company,
     checkout_url: null,
     balance_payment_url: null,
+    // Resolved separately, after this call, by whoever has DB access —
+    // see firstLineItemVariantId() and process.ts's resolveProductUrl().
+    product_url: null,
     shop_name: shopName,
   };
 }
@@ -774,6 +816,7 @@ export function checkoutContext(
     courier: null,
     checkout_url: str(checkout.abandoned_checkout_url),
     balance_payment_url: null,
+    product_url: null,
     shop_name: shopName,
   };
 }

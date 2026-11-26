@@ -42,12 +42,14 @@ import {
   checkoutContext,
   contactPhoneOf,
   customerNamesOf,
+  firstLineItemVariantId,
   formatAddress,
   isAutomatedCheckout,
   isCashOnDelivery,
   isCodOrPartiallyPaid,
   isShopifyVariable,
   orderContext,
+  pathOnlyFromUrl,
   paymentMethodOf,
   plainOrderTotal,
   resolveBodyParams,
@@ -340,6 +342,34 @@ export async function handleShopifyWebhook(
   }
 }
 
+/**
+ * "Product link" — the order's first line item's product page, as a
+ * path only (e.g. "products/black-oversized-tee"), from the account's
+ * own synced catalog (migration 076/077). Matched on variant id, since
+ * `products` has one row per variant; `product_url` is the same for
+ * every variant of one product, so any match gives the right page.
+ *
+ * Null (not an error) when the catalog has no row for that variant —
+ * store sync never run, or the product was deleted since — same
+ * "nothing to fill" handling as every other URL-button variable.
+ */
+async function resolveProductUrl(
+  db: SupabaseClient,
+  accountId: string,
+  lineItems: unknown
+): Promise<string | null> {
+  const variantId = firstLineItemVariantId(lineItems);
+  if (!variantId) return null;
+  const { data } = await db
+    .from('products')
+    .select('product_url')
+    .eq('account_id', accountId)
+    .eq('source', 'shopify')
+    .eq('source_id', variantId)
+    .maybeSingle<{ product_url: string | null }>();
+  return pathOnlyFromUrl(data?.product_url ?? null);
+}
+
 async function upsertOrder(
   db: SupabaseClient,
   store: ShopifyStore,
@@ -423,6 +453,8 @@ async function onOrderCreated(
   });
 
   const cod = isCashOnDelivery(order);
+  const ctx = orderContext(order, store.shop_name);
+  ctx.product_url = await resolveProductUrl(db, store.account_id, order.line_items);
   await scheduleShopifySteps(store, {
     event: cod ? 'cod_order_placed' : 'order_placed',
     fallbackEvent: cod ? 'order_placed' : undefined,
@@ -432,7 +464,7 @@ async function onOrderCreated(
     rawPhone: phone,
     countryCode,
     customerName: names.full,
-    ctx: orderContext(order, store.shop_name),
+    ctx,
   });
 
   // `contact_id` used to be a by-product of the send returning one.
@@ -528,6 +560,8 @@ async function onOrderCancelled(
     reason: `Order ${order.name ?? order.id} cancelled`,
   });
 
+  const ctx = orderContext(order, store.shop_name);
+  ctx.product_url = await resolveProductUrl(db, store.account_id, order.line_items);
   await scheduleShopifySteps(store, {
     event: 'order_cancelled',
     entityKey: String(order.id),
@@ -535,7 +569,7 @@ async function onOrderCancelled(
     rawPhone: phone,
     countryCode,
     customerName: names.full,
-    ctx: orderContext(order, store.shop_name),
+    ctx,
   });
 }
 
@@ -608,8 +642,10 @@ async function onFulfillment(
     courier: tracking.company ?? order?.tracking_company ?? null,
     checkout_url: null,
     balance_payment_url: null,
+    product_url: null,
     shop_name: store.shop_name,
   };
+  ctx.product_url = await resolveProductUrl(db, store.account_id, fulfillment.line_items);
 
   const entityKey = String(fulfillment.id ?? orderId);
   const common = {
@@ -684,6 +720,10 @@ async function onCheckout(
       total: checkout.total_price ?? null,
       currency: checkout.currency ?? checkout.presentment_currency ?? null,
       items: summarizeItems(checkout.line_items),
+      // Resolved here, not at cron time — the cron only ever sees this
+      // stored row, not the raw webhook payload. Same reason `items`
+      // above is a pre-formatted string rather than the raw array.
+      product_url: await resolveProductUrl(db, store.account_id, checkout.line_items),
       recovery_url: checkout.abandoned_checkout_url ?? null,
       last_activity_at: checkout.updated_at ?? new Date().toISOString(),
     },
@@ -796,6 +836,7 @@ export async function processDueCheckouts(limit = 25): Promise<number> {
     );
     ctx.customer_full_name = checkout.customer_name;
     ctx.items = checkout.items;
+    ctx.product_url = checkout.product_url ?? null;
 
     const outcome = await scheduleShopifySteps(store, {
       event: 'abandoned_checkout',

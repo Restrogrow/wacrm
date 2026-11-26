@@ -7,12 +7,14 @@ import {
   checkoutContext,
   contactPhoneOf,
   countBodyVariables,
+  firstLineItemVariantId,
   formatAddress,
   isAutomatedCheckout,
   isCashOnDelivery,
   isCodOrPartiallyPaid,
   orderContext,
   outstandingPaise,
+  pathOnlyFromUrl,
   plainOrderTotal,
   resolveBodyParams,
   shipmentStatusEvent,
@@ -205,6 +207,8 @@ describe('order payloads', () => {
     expect(ctx.amount_due).toBe('1,299');
     expect(ctx.amount_paid).toBe('1,299');
     expect(ctx.balance_payment_url).toBeNull();
+    // Resolved separately (process.ts), never by the pure builder.
+    expect(ctx.product_url).toBeNull();
   });
 
   it('builds checkout context with the recovery link', () => {
@@ -221,6 +225,7 @@ describe('order payloads', () => {
     // Nothing is owed or paid on a checkout that was never completed.
     expect(ctx.amount_due).toBeNull();
     expect(ctx.amount_paid).toBeNull();
+    expect(ctx.product_url).toBeNull();
   });
 });
 
@@ -319,6 +324,37 @@ describe('findDynamicUrlButtonIndex', () => {
     expect(findDynamicUrlButtonIndex([{ type: 'URL', url: 'https://shop.example' }])).toBeNull();
     expect(findDynamicUrlButtonIndex(null)).toBeNull();
     expect(findDynamicUrlButtonIndex(undefined)).toBeNull();
+  });
+});
+
+describe('firstLineItemVariantId', () => {
+  it('reads the first line item\'s variant id', () => {
+    expect(
+      firstLineItemVariantId([{ variant_id: 48501234567, title: 'Tee' }, { variant_id: 999 }])
+    ).toBe('48501234567');
+  });
+
+  it('is null for no items, or a line with no variant id (e.g. a custom charge)', () => {
+    expect(firstLineItemVariantId([])).toBeNull();
+    expect(firstLineItemVariantId(null)).toBeNull();
+    expect(firstLineItemVariantId([{ title: 'Gift wrap' }])).toBeNull();
+  });
+});
+
+describe('pathOnlyFromUrl', () => {
+  it('strips the origin, keeping the path and query', () => {
+    expect(pathOnlyFromUrl('https://shop.example/products/black-oversized-tee')).toBe(
+      'products/black-oversized-tee'
+    );
+    expect(pathOnlyFromUrl('https://shop.example/products/tee?variant=123')).toBe(
+      'products/tee?variant=123'
+    );
+  });
+
+  it('is null for nothing, or something that is not a URL', () => {
+    expect(pathOnlyFromUrl(null)).toBeNull();
+    expect(pathOnlyFromUrl(undefined)).toBeNull();
+    expect(pathOnlyFromUrl('not a url')).toBeNull();
   });
 });
 
