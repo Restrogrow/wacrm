@@ -36,7 +36,6 @@ const PRIVATE_PATHS = [
   "/orders",
   "/integrations",
   "/settings",
-  "/partner",
   "/r/",
   "/l/",
   "/login",

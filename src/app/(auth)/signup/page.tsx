@@ -58,6 +58,14 @@ function SignupPageInner() {
   // they're joining (already set up by the owner) — and handle_new_user
   // treats them as optional, so leaving them out is safe.
   const isInvite = !!inviteToken;
+  // Someone signing up to become a partner (repeatgrow.com/partner)
+  // isn't creating a business account either — same minimal form, same
+  // reasoning. handle_new_user still creates a placeholder `accounts`
+  // row for them (it always does, unconditionally), but they're never
+  // routed into the dashboard that row would normally front, so it's
+  // inert.
+  const isPartnerSignup = !isInvite && nextPath === "/partner";
+  const simpleSignup = isInvite || isPartnerSignup;
 
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -79,17 +87,17 @@ function SignupPageInner() {
     e.preventDefault();
     setError(null);
 
-    if (!isInvite && !natureOfBusiness) {
+    if (!simpleSignup && !natureOfBusiness) {
       setError("Please select the nature of your business");
       return;
     }
 
-    if (!isInvite && !teamSize) {
+    if (!simpleSignup && !teamSize) {
       setError("Please select your team size");
       return;
     }
 
-    if (!isInvite && password !== confirmPassword) {
+    if (!simpleSignup && password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
@@ -120,7 +128,7 @@ function SignupPageInner() {
       email,
       password,
       options: {
-        data: isInvite
+        data: simpleSignup
           ? { full_name: fullName }
           : {
               full_name: fullName,
@@ -195,16 +203,18 @@ function SignupPageInner() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
-      <Card className={`w-full border-0 bg-transparent shadow-none ring-0 ${isInvite ? "max-w-md" : "max-w-xl"}`}>
+      <Card className={`w-full border-0 bg-transparent shadow-none ring-0 ${simpleSignup ? "max-w-md" : "max-w-xl"}`}>
         <CardHeader className="items-start px-0 pb-2 text-left">
           <BrandMark className="mb-4 size-12 rounded-2xl lg:hidden" />
           <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            {inviteToken ? "Create account & join" : "Create account"}
+            {inviteToken ? "Create account & join" : isPartnerSignup ? "Create partner account" : "Create account"}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
             {inviteToken
               ? "Your name, email and a password. Confirm your email and you'll join your team."
-              : "Get started with Repeat Grow"}
+              : isPartnerSignup
+                ? "Just your name, email and a password — no business details needed. You'll apply as a partner once you're in."
+                : "Get started with Repeat Grow"}
           </CardDescription>
         </CardHeader>
         <CardContent className="px-0">
@@ -224,7 +234,7 @@ function SignupPageInner() {
               </div>
             )}
 
-            {isInvite ? (
+            {simpleSignup ? (
               <>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="fullName" className="text-sm font-semibold text-foreground">
@@ -473,7 +483,9 @@ function SignupPageInner() {
                   : "Creating account..."
                 : isInvite
                   ? "Create account & join"
-                  : "Create account"}
+                  : isPartnerSignup
+                    ? "Create partner account"
+                    : "Create account"}
             </Button>
           </form>
 

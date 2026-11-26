@@ -1,10 +1,14 @@
 'use client'
 
-// Partner program page: apply, then share your link and track clients,
-// commissions and payouts. Data: GET/POST/PATCH /api/partner. Not in the
-// sidebar until the program is announced (NEXT_PUBLIC_PARTNER_PROGRAM).
+// Partner program page — a standalone public route, not inside the
+// logged-in dashboard: a signed-out visitor sees the pitch and can
+// create a partner account from here (no business account needed, see
+// migration 092 — `partners.user_id` only needs an auth user). A signed-in
+// partner sees their apply form, or their link/clients/commissions/payouts
+// dashboard. Data: GET/POST/PATCH /api/partner.
 
 import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { Check, Copy, Handshake, Loader2, MousePointerClick, Users, Wallet, BadgeIndianRupee } from 'lucide-react'
 
@@ -94,6 +98,42 @@ function Stat({ icon: Icon, label, value, sub }: { icon: typeof Users; label: st
       </div>
       <p className="mt-1.5 text-xl font-bold tabular-nums">{value}</p>
       {sub ? <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p> : null}
+    </div>
+  )
+}
+
+/** Signed-out visitor: the pitch, and a way to create an account without going through the business signup form. */
+function LoggedOutPitch() {
+  return (
+    <div className="grid gap-6 lg:grid-cols-5">
+      <div className="space-y-4 rounded-2xl border border-border bg-card p-5 lg:col-span-3">
+        <h3 className="font-semibold">How it works</h3>
+        <ol className="space-y-3 text-sm">
+          {PROGRAM_POINTS.map((point, i) => (
+            <li key={point} className="flex gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                {i + 1}
+              </span>
+              <span className="text-muted-foreground">{point}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div className="space-y-4 rounded-2xl border border-border bg-card p-5 lg:col-span-2">
+        <h3 className="font-semibold">Ready to start?</h3>
+        <p className="text-sm text-muted-foreground">
+          Create a partner account (just you — no business signup needed), then apply with a few details about how
+          you&apos;ll find clients. We review applications within 2 working days.
+        </p>
+        <div className="flex flex-col gap-2">
+          <Link href="/signup?next=%2Fpartner" className={buttonVariants({ className: 'w-full' })}>
+            Create partner account
+          </Link>
+          <Link href="/login?next=%2Fpartner" className={buttonVariants({ variant: 'outline', className: 'w-full' })}>
+            Already applied? Log in
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
@@ -432,13 +472,20 @@ function Dashboard({ data, reload }: { data: PortalData; reload: () => void }) {
 
 export default function PartnerPage() {
   const [data, setData] = useState<PortalData | null>(null)
+  const [loggedOut, setLoggedOut] = useState(false)
   const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
     try {
       const res = await fetch('/api/partner', { cache: 'no-store' })
+      if (res.status === 401) {
+        setLoggedOut(true)
+        setError(false)
+        return
+      }
       if (!res.ok) throw new Error(String(res.status))
       setData(await res.json())
+      setLoggedOut(false)
       setError(false)
     } catch {
       setError(true)
@@ -466,7 +513,9 @@ export default function PartnerPage() {
         }
       />
 
-      {error ? (
+      {loggedOut ? (
+        <LoggedOutPitch />
+      ) : error ? (
         <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
           Could not load the partner program.{' '}
           <button className="text-primary underline" onClick={() => void load()}>
