@@ -107,6 +107,11 @@ export async function PATCH(request: Request) {
   if (!partner) return NextResponse.json({ error: 'Apply first' }, { status: 404 })
 
   const updates: Record<string, string | null> = { updated_at: new Date().toISOString() }
+  if ('name' in body) {
+    const name = text(body.name, 100)
+    if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+    updates.name = name
+  }
   if ('phone' in body) {
     const phone = text(body.phone, 30)
     if (!phone) return NextResponse.json({ error: 'Phone is required' }, { status: 400 })
@@ -114,6 +119,7 @@ export async function PATCH(request: Request) {
   }
   if ('company' in body) updates.company = text(body.company, 120)
   if ('website' in body) updates.website = text(body.website, 200)
+  if ('pitch' in body) updates.pitch = text(body.pitch, 1000)
   if ('payout_method' in body || 'payout_details' in body) Object.assign(updates, payoutFields(body))
 
   const { error } = await supabaseAdmin().from('partners').update(updates).eq('id', partner.id)
