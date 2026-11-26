@@ -21,7 +21,7 @@ export const PARTNER_STATUS_LABELS: Record<PartnerStatus, string> = {
 };
 
 /** % of each payment a new partner earns. Admins can change it per partner. */
-export const DEFAULT_COMMISSION_RATE = 20;
+export const DEFAULT_COMMISSION_RATE = 40;
 /** Payments in this many months after signup earn commission. */
 export const COMMISSION_MONTHS = 12;
 /** How long a referral link click is remembered before signup. */
