@@ -29,14 +29,21 @@ export interface MetaComponent {
   };
 }
 
-interface MetaButtonPayload {
-  type: 'QUICK_REPLY' | 'URL' | 'PHONE_NUMBER' | 'COPY_CODE' | 'voice_call';
-  text: string;
-  url?: string;
-  phone_number?: string;
-  example?: string[];
-  ttl_minutes?: number;
-}
+// A union rather than one optional-everything interface, so the
+// per-type field rules are checked at compile time. Specifically:
+// COPY_CODE has NO `text`. WhatsApp renders that button with its own
+// fixed label, and Meta rejects the entire template submission with a
+// bare "Invalid parameter" if you send one — no indication of which
+// field is at fault, which makes it a miserable thing to debug. Hence
+// the type making it unrepresentable rather than a comment asking
+// nicely. Our own `TemplateButton` keeps its `text` (the builder lets
+// you type a label and previews render it); it just never reaches Meta.
+type MetaButtonPayload =
+  | { type: 'QUICK_REPLY'; text: string }
+  | { type: 'URL'; text: string; url: string; example?: string[] }
+  | { type: 'PHONE_NUMBER'; text: string; phone_number: string }
+  | { type: 'COPY_CODE'; example?: string[] }
+  | { type: 'voice_call'; text: string; ttl_minutes: number };
 
 /** Default lifetime of a "Call on WhatsApp" button: 7 days (Meta's default). */
 export const VOICE_CALL_TTL_MINUTES = 10080;
@@ -109,7 +116,12 @@ function buildButtonPayload(b: TemplateButton): MetaButtonPayload {
     case 'PHONE_NUMBER':
       return { type: 'PHONE_NUMBER', text: b.text, phone_number: b.phone_number };
     case 'COPY_CODE':
-      return { type: 'COPY_CODE', text: b.text, example: [b.example] };
+      // `text` deliberately omitted — see MetaButtonPayload. The code
+      // itself goes in `example`; an empty one is dropped rather than
+      // submitted as [''], which Meta also rejects.
+      return b.example
+        ? { type: 'COPY_CODE', example: [b.example] }
+        : { type: 'COPY_CODE' };
     case 'VOICE_CALL':
       // Meta's call-button docs spell this type in lowercase.
       return { type: 'voice_call', text: b.text, ttl_minutes: b.ttl_minutes ?? VOICE_CALL_TTL_MINUTES };

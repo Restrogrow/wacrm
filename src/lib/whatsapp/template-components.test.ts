@@ -104,8 +104,20 @@ describe('buildMetaTemplatePayload', () => {
       { type: 'QUICK_REPLY', text: 'Yes' },
       { type: 'URL', text: 'Track', url: 'https://x/{{1}}', example: ['abc'] },
       { type: 'PHONE_NUMBER', text: 'Call', phone_number: '+15551234567' },
-      { type: 'COPY_CODE', text: 'Copy', example: ['SUMMER20'] },
+      // No `text` on COPY_CODE — WhatsApp supplies its own label, and
+      // Meta answers an included `text` with a bare "Invalid parameter"
+      // that fails the whole submission.
+      { type: 'COPY_CODE', example: ['SUMMER20'] },
     ]);
+  });
+
+  it('omits the COPY_CODE example rather than submitting an empty one', () => {
+    const payload = buildMetaTemplatePayload({
+      ...base,
+      buttons: [{ type: 'COPY_CODE', text: 'Copy', example: '' }],
+    });
+    const buttons = payload.components.find((c) => c.type === 'BUTTONS');
+    expect(buttons?.buttons).toEqual([{ type: 'COPY_CODE' }]);
   });
 
   it('orders components HEADER → BODY → FOOTER → BUTTONS', () => {
