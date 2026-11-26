@@ -33,6 +33,12 @@ const toDateInput = (iso: string | null) => (iso ? iso.slice(0, 10) : '');
 /** yyyy-mm-dd → end of that day in IST, as ISO. */
 const fromDateInput = (value: string) =>
   value ? new Date(`${value}T23:59:59+05:30`).toISOString() : null;
+/** Today (IST) as yyyy-mm-dd, for date-input defaults and +N-month presets. */
+function todayInput(monthsAhead = 0): string {
+  const d = new Date(Date.now() + 5.5 * 3_600_000); // shift to IST before reading Y/M/D
+  d.setUTCMonth(d.getUTCMonth() + monthsAhead);
+  return d.toISOString().slice(0, 10);
+}
 
 export function PlanEditor({
   accountId,
@@ -108,28 +114,51 @@ export function PlanEditor({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="trial-end" className="text-muted-foreground text-xs">
-            Trial ends
-          </Label>
-          <Input
-            id="trial-end"
-            type="date"
-            value={trialEnd}
-            onChange={(e) => setTrialEnd(e.target.value)}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="paid-until" className="text-muted-foreground text-xs">
-            Paid until (blank = no end)
-          </Label>
-          <Input
-            id="paid-until"
-            type="date"
-            value={paidUntil}
-            onChange={(e) => setPaidUntil(e.target.value)}
-          />
-        </div>
+
+        {/* Only one of these two dates is ever checked (effectivePlan() in
+            lib/billing/plans.ts) — trial_ends_at while plan is "trial",
+            plan_expires_at for every paid plan. Showing only the one that
+            actually matters, instead of both at once, is what was
+            confusing: an old "Trial ends" date sitting there made it look
+            like a paid account was still partly on trial. */}
+        {value === 'trial' ? (
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="trial-end" className="text-muted-foreground text-xs">
+              Trial ends
+            </Label>
+            <Input
+              id="trial-end"
+              type="date"
+              value={trialEnd}
+              onChange={(e) => setTrialEnd(e.target.value)}
+            />
+          </div>
+        ) : (
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="paid-until" className="text-muted-foreground text-xs">
+              Paid until (blank = no end)
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="paid-until"
+                type="date"
+                value={paidUntil}
+                onChange={(e) => setPaidUntil(e.target.value)}
+                className="flex-1"
+              />
+              <Button type="button" variant="outline" onClick={() => setPaidUntil(todayInput(1))}>
+                +1 month
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setPaidUntil(todayInput(12))}>
+                +1 year
+              </Button>
+            </div>
+            <p className="text-muted-foreground text-xs">
+              The trial date above is ignored once the plan isn&apos;t &ldquo;Free trial&rdquo; — this account starts
+              working on the paid plan today, trial or no trial.
+            </p>
+          </div>
+        )}
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
