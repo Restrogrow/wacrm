@@ -21,13 +21,20 @@ business-initiated messages; messages land in the inbox like any chat.
 ### Shopify
 
 Order placed, COD order placed, shipped (tracking link), out for
-delivery, delivered, cancelled, abandoned cart. Settings → Shopify.
-Code: `src/lib/shopify/`, migration `039_shopify_integration.sql`.
+delivery, COD out for delivery, delivered, cancelled, abandoned cart.
+A step's button can also be mapped to a Razorpay payment link for the
+COD balance (needs the account's own Razorpay connection — see below —
+and the `write_orders` scope). Settings → Shopify. Code:
+`src/lib/shopify/`, migrations `039_shopify_integration.sql`,
+`082_shopify_pending_installs.sql`, `090_shopify_auto_sync.sql`,
+`093_shopify_message_steps.sql`, `102_shopify_app_billing.sql`,
+`104_shopify_cod_out_for_delivery.sql`,
+`105_shopify_balance_payment_link.sql`.
 
 | Option | Keys |
 |---|---|
 | Connect with webhooks (any store) | **Customer:** webhook signing key from Shopify admin → Settings → Notifications → Webhooks. **Server:** none. |
-| Connect Shopify (one click) | **Server:** `SHOPIFY_API_KEY` (Client ID), `SHOPIFY_API_SECRET` (Client secret) from an app in the [Shopify Dev Dashboard](https://dev.shopify.com). App settings: redirect URL `https://repeatgrow.com/api/integrations/shopify/callback`, scopes `read_orders,read_fulfillments`, protected customer data (name, phone, email, address), compliance webhooks → `https://repeatgrow.com/api/integrations/shopify/webhooks`. App config: [`shopify/shopify.app.toml`](../shopify/shopify.app.toml). Public distribution selected; App Store listing in draft — until it's approved, one-click works only on development stores. |
+| Connect Shopify (one click) | **Server:** `SHOPIFY_API_KEY` (Client ID), `SHOPIFY_API_SECRET` (Client secret) from an app in the [Shopify Dev Dashboard](https://dev.shopify.com). App settings: redirect URL `https://repeatgrow.com/api/integrations/shopify/callback`, scopes `read_customers,read_fulfillments,read_products,write_orders`, protected customer data (name, phone, email, address), compliance webhooks → `https://repeatgrow.com/api/integrations/shopify/webhooks`. App config: [`shopify/shopify.app.toml`](../shopify/shopify.app.toml). Public distribution selected; App Store listing in draft — until it's approved, one-click works only on development stores. `write_orders` (added for the Razorpay balance-link flow) needs a CLI deploy and likely a re-review; already-connected stores need to reconnect once it's live. |
 
 ### Calendly
 
@@ -70,6 +77,9 @@ sends a confirmation. sidebar → Orders & payments → Razorpay card. Code:
 |---|---|
 | **Customer** | Razorpay **Key ID + Key Secret** (Dashboard → Account & Settings → API Keys). Repeat Grow generates a webhook secret and shows the URL once; in Razorpay → Webhooks add the events `payment_link.paid`, `payment_link.expired`, `payment_link.cancelled`, `payment.failed`. |
 | **Server** | None. (Our *own* plan billing is still manual: TODO #1.) |
+
+Same connection also creates the links behind Shopify's "Payment link for
+balance" button (migration `105_shopify_balance_payment_link.sql`).
 
 ### Shiprocket
 

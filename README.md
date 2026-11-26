@@ -515,7 +515,7 @@ Limits must match `plan_limit()` in the database (migration 056).
 
 | Integration | Status | What it does |
 |---|---|---|
-| **Shopify** | Live | Order placed, COD order placed, shipped (tracking), out for delivery, delivered, cancelled, abandoned cart |
+| **Shopify** | Live | Order placed, COD order placed, shipped (tracking), out for delivery, COD out for delivery, delivered, cancelled, abandoned cart; a button can collect the COD balance via a Razorpay payment link |
 | **Calendly** | Live | Booking confirmed / rescheduled / cancelled, no-show follow-up, reminders 24 h and 1 h before |
 | **WooCommerce** | Live | Order placed / COD, completed, cancelled and refunded messages from signed store webhooks; optional REST keys to sync products |
 | **Razorpay payment links** | Live | Request a payment inside a chat; a signed webhook marks it paid / expired / failed |
@@ -548,6 +548,16 @@ per-connection country code).
 - **Connect with webhooks (any store):** paste the signing key from
   Shopify admin → Settings → Notifications → Webhooks and create the
   listed webhooks pointing at the account's unique URL.
+- **COD balance via Razorpay:** a message's button can be mapped to
+  "Payment link for balance" — sends a 48-hour Razorpay payment link for
+  what's still owed on a COD/partially-paid order, and marks the order
+  paid + tags it `cod-to-prepaid` once Razorpay confirms the payment
+  (`payment_link.paid` webhook). Needs the account's own Razorpay
+  connection (Settings → Orders & payments) and the `write_orders` scope
+  — OAuth-connected stores need to reconnect once that scope is deployed.
+  `order_total`/`amount_due`/`amount_paid` are plain numbers, no ₹
+  (templates supply their own). Code: `src/lib/shopify/balance-payment.ts`,
+  `src/lib/shopify/schedule.ts`. Migration 105.
 - Abandoned-cart reminders are sent by the cron after a configurable
   idle time and skip opted-out customers.
 - App configuration: [`shopify/shopify.app.toml`](./shopify/shopify.app.toml)
@@ -957,6 +967,10 @@ is idempotent where possible. Recent ones:
 | `099_install_source` | `accounts.install_source` (`website` / `shopify_app_store`) and `shopify_pending_installs.from_app_store`, so App Store merchants can be billed through Shopify's Billing API while everyone else keeps paying directly |
 | `101_credit_low_notification` | `credits_low` notification type and the index behind the low-balance sweep |
 | `100_ai_credits` | AI credit balance: append-only `credit_ledger`, `account_credits`, the `credit_rates` card, `accounts.credits_enforced` (off by default), and the `credit_add()` / `credit_spend()` functions |
+| `102_shopify_app_billing` | Columns `lib/shopify/billing.ts` needs to run a real Shopify `AppSubscription` end to end: `shopify_subscription_id`, `shopify_pending_plan`/`shopify_pending_cycle` |
+| `103_ai_monthly_quota_and_plan_limits` | Monthly `ai_usage_monthly` table for chatbot replies and voice-agent minutes (daily quota stays for other AI actions); `plan_limit()` numbers matched to the Nov 2026 pricing sheet |
+| `104_shopify_cod_out_for_delivery` | `shopify_orders.financial_status`/`total_outstanding`/`total_received`, read by the new "COD out for delivery" event and the "Amount due on delivery" variable |
+| `105_shopify_balance_payment_link` | `shopify_scheduled_messages.url_button_variable` and `payment_links.shopify_store_id`/`shopify_order_id`, behind the "Payment link for balance" button |
 
 [CHANGELOG.md](./CHANGELOG.md) notes which release needs which migration.
 
@@ -1085,7 +1099,9 @@ Configure in the [Shopify Dev Dashboard](https://dev.shopify.com) or
 deploy [`shopify/shopify.app.toml`](./shopify/shopify.app.toml) with the
 Shopify CLI. Redirect URL `/api/integrations/shopify/callback`, App URL
 `/api/integrations/shopify/install`, scopes
-`read_orders,read_fulfillments`, compliance webhooks
+`read_customers,read_fulfillments,read_products,write_orders`
+(`write_orders` lets the balance-payment-link flow mark an order paid —
+see `src/lib/shopify/admin-api.ts`), compliance webhooks
 `/api/integrations/shopify/webhooks`, not embedded. Request protected
 customer data access (name, phone, email, address).
 

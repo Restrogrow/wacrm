@@ -11,7 +11,7 @@ Related: [README](../README.md) · [Admin handbook](./ADMIN.md) · [Operations r
 [Integrations plan](./INTEGRATIONS.md)
 
 **Contents:** [Catalog](#catalog) · [WhatsApp spend](#whatsapp-spend) · [Broadcast delivery](#broadcast-delivery) · [Reports](#reports) · [Ad attribution](#ad-attribution) ·
-[WooCommerce](#woocommerce) · [Razorpay payment links](#razorpay-payment-links) · [Shiprocket](#shiprocket) ·
+[Shopify](#shopify) · [WooCommerce](#woocommerce) · [Razorpay payment links](#razorpay-payment-links) · [Shiprocket](#shiprocket) ·
 [Cal.com](#calcom) · [Inbound webhooks and team alerts](#inbound-webhooks-and-team-alerts) ·
 [Website chat widget](#website-chat-widget) · [Short links](#short-links) · [Business hours and SLA](#business-hours-and-sla) ·
 [Notes, @mentions and bulk actions](#notes-mentions-and-bulk-actions) · [Segments and merge](#segments-and-merge) ·
@@ -123,6 +123,38 @@ Meta's menus change, so the exact names may differ slightly.
   conversion events are sent back to Meta; Facebook Lead Ads are not supported.
 - **Migration:** 062.
 
+## Shopify
+
+- **Where:** Settings → **Shopify**. **Who:** admin+ connects; everyone with settings access can edit the message steps.
+- **Connect Shopify (one click, OAuth):** click **Connect Shopify** and approve Repeat Grow in the store's admin.
+  Webhooks are registered automatically with an expiring offline token (refreshed lazily). A merchant who installs
+  from the Shopify App Store goes straight to the permission screen, then signs in or up and
+  `/api/integrations/shopify/claim` attaches the connection that was parked for up to an hour.
+- **Connect with webhooks (any store, no app review needed):** paste the signing key from Shopify admin →
+  Settings → Notifications → Webhooks, then create the listed webhooks pointing at the account's unique URL.
+- **Then:** create Utility templates for each event, choose one per step, map each `{{1}}`, `{{2}}` to a variable
+  (customer name, order number, order total, amount paid, amount due on delivery, items, tracking link, a payment
+  link for the COD balance, and more), and use **Send test**.
+- **Events:** order placed, COD order placed, shipped (tracking), out for delivery, COD out for delivery, delivered,
+  cancelled, abandoned cart (Marketing category, skips opted-out customers). The "COD" events fall back to their
+  plain counterpart's steps when switched off, so a merchant who never set up a COD-specific message still gets the
+  regular one. Each event is a sequence of steps with its own delay, sent from a queue, not straight off the webhook.
+- **Variables:** `order_total`, `amount_due` and `amount_paid` are plain numbers with no ₹ (e.g. `1,299`) — put the ₹
+  in the template text itself. `amount_paid` is the total minus what's still outstanding.
+- **Payment link for balance:** on a COD or partially-paid order, a step's button can be mapped to this variable
+  instead of a link Shopify provides. Sending the message creates a Razorpay payment link for whatever's still owed
+  (48-hour expiry, the order number in Razorpay's notes) — this is the one variable resolved live at send time, not
+  frozen when the message is queued, because the balance and the link both have to be current. Needs the account's
+  own Razorpay connection (below) and the `write_orders` Shopify scope; once that scope is deployed, already-connected
+  stores see the usual "Reconnect Shopify" prompt until they reconnect. When Razorpay confirms the payment
+  (`payment_link.paid` webhook), the Shopify order is marked paid and tagged `cod-to-prepaid`.
+- **Behaviour:** signature `X-Shopify-Hmac-Sha256` is verified; a cart that becomes an order cancels its pending
+  abandoned-cart steps (matched by checkout token, then phone, since the same shopper can abandon on one device and
+  buy on another). Numbers saved without a country code default to +91; change it in Settings → Shopify.
+- **Limits:** reading stock and syncing customers needs the `read_products`/`read_customers` scopes — a store
+  connected before those were added keeps working on the public product feed until it reconnects.
+- **Migrations:** 039, 082, 090, 093, 102, 104, 105.
+
 ## WooCommerce
 
 - **Where:** sidebar → Integrations → **WooCommerce**. **Who:** admin+.
@@ -157,7 +189,8 @@ Meta's menus change, so the exact names may differ slightly.
 - **Limits:** the confirmation is plain text, so it is skipped when the customer's 24-hour window is closed; the
   `payment.failed` match depends on Razorpay copying the link's notes onto the payment. This is for your customers'
   payments; Repeat Grow's own plan billing is still manual.
-- **Migration:** 064.
+- **Also used by:** the same connection powers Shopify's "Payment link for balance" button — see [Shopify](#shopify).
+- **Migration:** 064 (105 adds the Shopify columns on `payment_links`).
 
 ## Shiprocket
 

@@ -504,6 +504,12 @@ export default function DocsPage() {
               Add your Meta catalog ID to share your catalog or a product from the ₹ icon. Orders customers place from your
               catalog show up automatically.
             </p>
+            <Tip>
+              <b>Razorpay payment links.</b> In <Ui to="/orders">Orders &amp; payments</Ui>, connect your own Razorpay Key ID
+              and Key Secret (encrypted, never shown again) to send a pay-now link from any chat — the order is marked paid
+              and the customer gets a confirmation automatically. The same connection also powers the{" "}
+              <b>Payment link for balance</b> button in Shopify automatic messages (see <Ui to="/settings?tab=shopify">Shopify</Ui>, below).
+            </Tip>
           </Section>
 
           <Section id="forms" n={9} title="WhatsApp forms" intro="Collect leads, booking requests or feedback in a form that opens inside WhatsApp.">
@@ -585,9 +591,17 @@ export default function DocsPage() {
                 Settings → Notifications → Webhooks, then create the listed webhooks there with the URL Repeat Grow gives you.
               </Step>
               <Step title="Choose your messages">
-                For each event (order placed, COD order placed, shipped, out for delivery, delivered, cancelled, abandoned
-                cart), switch it on, pick the template, and choose what fills each {"{{1}}"}, {"{{2}}"}: customer name, order
-                number, total, items, tracking link, and more. Use <b>Send test</b> to see the real message on your phone.
+                For each event (order placed, COD order placed, COD out for delivery, shipped, out for delivery, delivered,
+                cancelled, abandoned cart), switch it on, pick the template, and choose what fills each {"{{1}}"}, {"{{2}}"}:
+                customer name, order number, order total, amount paid, amount due on delivery, items, tracking link, and
+                more. Order total, amount paid and amount due are plain numbers (e.g. &ldquo;1,299&rdquo;) with no ₹ — put
+                the ₹ in the template text itself. Use <b>Send test</b> to see the real message on your phone.
+              </Step>
+              <Step title="Collect the COD balance online (optional)">
+                On a COD or partially-paid order, a message&apos;s button can be mapped to <b>Payment link for balance</b>.
+                When that message sends, Repeat Grow creates a Razorpay payment link for whatever&apos;s still owed, valid
+                for 48 hours. Connect your Razorpay account first in <Ui to="/orders">Orders &amp; payments</Ui> — once the
+                customer pays, the Shopify order is marked paid and tagged &ldquo;cod-to-prepaid&rdquo; automatically.
               </Step>
             </ol>
             <Tip>

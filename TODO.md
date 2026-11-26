@@ -254,11 +254,16 @@ each needs a backwards-compatible rollout.
       organization-wide subscriptions for team accounts, and configurable
       reminder times.
 - [ ] **#45 Shopify follow-ups.** Core integration shipped (Settings →
-      Shopify, migration 039). Next: write COD "Confirm / Cancel" replies
-      back to Shopify (tag or cancel the order; needs `write_orders`),
-      finish the App Store submission (public distribution chosen,
-      listing in draft — checklist in `shopify/README.md`), uninstall
-      the app via the Admin API on
+      Shopify, migration 039); "COD out for delivery" event and a
+      Razorpay payment link for the COD balance shipped 26 Nov 2026
+      (migrations 104, 105 — see `docs/FEATURES.md#shopify`). The code
+      already asks for `write_orders` (used by the balance-link flow to
+      mark an order paid), but the CLI deploy is on hold — see
+      `shopify/README.md`; once it's live, write COD "Confirm / Cancel"
+      replies back to Shopify too (tag or cancel the order — same scope
+      covers it). Also still open: finish the App Store submission
+      (public distribution chosen, listing in draft — checklist in
+      `shopify/README.md`), uninstall the app via the Admin API on
       Disconnect, support more than one store per account, refund
       messages (`refunds/create`), and ready-made template suggestions
       per event.
@@ -444,8 +449,6 @@ Product
 - [ ] **Mention notification preferences** (mentions can't be switched off
       per person yet).
 - [ ] **Media and templates in scheduled messages** (text only today).
-- [ ] **Shopify `read_products` scope** so product sync can read stock
-      counts (today it uses the public product feed without stock).
 - [ ] **Facebook Lead Ads** into contacts (needs Meta app review).
       Owner liked this as a sales feature (2026-10-23), parked for later:
       lead fills a Facebook/Instagram form → instant WhatsApp message →

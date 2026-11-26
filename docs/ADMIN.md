@@ -371,6 +371,22 @@ Checks before merging: `npx tsc --noEmit`, `npx eslint src`, `npx vitest run` (a
 
 ## 11. Change log (admin-relevant)
 
+- **26 Nov 2026** — Shopify: "Order total" is a plain number (no more
+  double-₹ in templates that already had one), new "Amount paid"
+  variable, and a "Payment link for balance" button that creates a
+  48-hour Razorpay payment link for a COD order's outstanding balance
+  and marks it paid + tagged `cod-to-prepaid` once Razorpay confirms.
+  Needs the account's Razorpay connection and the new `write_orders`
+  Shopify scope — not deployed yet (CLI token is on file, deploy is
+  on hold pending a go-ahead, since it likely means an App Store
+  re-review and every connected merchant reconnecting). Migration 105.
+  Full write-up: [FEATURES.md → Shopify](./FEATURES.md#shopify).
+
+  _Entries between 24 Oct and 25 Nov 2026 were not logged here — see
+  [CHANGELOG.md](../CHANGELOG.md) for what actually shipped in that
+  window (management fee, broadcast pacing, AI credits, Billing API,
+  pricing sync, "COD out for delivery," and more)._
+
 - **23 Oct 2026** — Catalog fixes from the first live Commerce Manager test (Fetch still blocked by Meta access, see
   to-do 0). Build version label in the sidebar and `/api/health`. New prices: Starter ₹999 / Growth ₹1,999 / Pro
   ₹3,999 with plan contents (AI chatbot from Growth, AI voice agent on Pro) shown on the site but **not enforced**.

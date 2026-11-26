@@ -15,10 +15,44 @@ and polish.
 `085_broadcast_retries_webhook_deliveries.sql`, `086_broadcast_pricing.sql`,
 `093_shopify_message_steps.sql`, `098_sla_escalation.sql`,
 `099_install_source.sql`, `100_ai_credits.sql`,
-`101_credit_low_notification.sql`.
+`101_credit_low_notification.sql`, `102_shopify_app_billing.sql`,
+`103_ai_monthly_quota_and_plan_limits.sql`,
+`104_shopify_cod_out_for_delivery.sql`,
+`105_shopify_balance_payment_link.sql`.
 
 ### Added
 
+- **Order total without ₹, "Amount paid", and a Razorpay link for the COD
+  balance** (26 Nov 2026): Shopify's "Order total" variable is now a plain
+  number ("1,299") instead of a currency string — templates already had
+  their own ₹, so messages were showing "₹₹1,299.00". New "Amount paid"
+  variable (total minus outstanding, same plain-number style). A
+  message's button can now be mapped to "Payment link for balance":
+  sending it creates a Razorpay payment link for whatever's still owed on
+  a COD or partially-paid order (48-hour expiry, order number in the
+  notes), and once Razorpay confirms the payment the Shopify order is
+  marked paid and tagged "cod-to-prepaid". Needs the store's own Razorpay
+  connection (**Orders & payments**) and the `write_orders` Shopify
+  scope — already-connected stores get the usual reconnect prompt once
+  that scope is deployed. Migration 105.
+- **"COD out for delivery" automatic message** (25 Nov 2026): a new
+  Shopify event slot, alongside the existing "COD order placed", for when
+  a cash-on-delivery order is handed to the courier. Falls back to the
+  plain "Out for delivery" steps if switched off, same as "COD order
+  placed" falls back to "Order placed". New "Amount due on delivery"
+  variable. Migration 104.
+- **AI chatbot and voice calls bill per month, not per day; plan limits
+  matched to the November 2026 pricing sheet** (25 Nov 2026): chatbot
+  replies and voice-agent minutes now reset every billing month instead
+  of daily, as the official pricing sheet specifies. Contacts, broadcasts
+  and custom fields are unlimited on every plan; team members moved to
+  3/5/10/unlimited; automation flows became chatbot-flow limits of
+  2/unlimited/unlimited/unlimited. Migration 103.
+- **Shopify App Store merchants actually billed through Shopify's Billing
+  API** (20 Nov 2026): `install_source` (migration 099) could tell a
+  Shopify App Store account apart, but nothing created a real Shopify
+  `AppSubscription` for it — this does, so requirement 1.2.1 is met end to
+  end rather than just flagged. Migration 102.
 - **Warning before the AI stops** (10 Nov 2026): the owners and admins of
   an account get a notification when its AI credits are running low, and
   again if they run out — so a paused chatbot is never the first sign.
