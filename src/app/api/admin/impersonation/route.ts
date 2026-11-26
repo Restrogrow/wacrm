@@ -28,10 +28,15 @@ export async function GET() {
 
   return NextResponse.json({
     impersonating: true,
+    kind: state.kind,
     admin_email: state.adminEmail,
-    account_name: state.accountName,
-    account_id: state.accountId,
-    member_email: state.memberEmail,
+    // Kept for existing clients/tests: `account_name`/`account_id`/`member_email`
+    // alias the generic target_* fields when kind is 'account'.
+    account_name: state.kind === 'account' ? state.targetName : undefined,
+    account_id: state.kind === 'account' ? state.targetId : undefined,
+    member_email: state.kind === 'account' ? state.targetEmail : undefined,
+    target_name: state.targetName,
+    target_email: state.targetEmail,
     started_at: state.startedAt,
   });
 }
@@ -43,11 +48,11 @@ export async function DELETE(request: Request) {
   if (state) {
     await recordAudit(
       {
-        accountId: state.accountId,
+        accountId: state.kind === 'account' ? state.targetId : null,
         actorUserId: state.adminUserId,
-        action: 'account.impersonation_ended',
-        targetType: 'account',
-        targetId: state.accountId,
+        action: state.kind === 'partner' ? 'partner.impersonation_ended' : 'account.impersonation_ended',
+        targetType: state.kind,
+        targetId: state.targetId,
         metadata: {
           by: state.adminEmail ?? 'platform_admin',
           started_at: state.startedAt,

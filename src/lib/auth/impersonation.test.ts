@@ -20,9 +20,10 @@ const KEY = 'test-encryption-key-0123456789abcdef';
 const state = (over: Partial<ImpersonationState> = {}): ImpersonationState => ({
   adminUserId: 'admin-1',
   adminEmail: 'support@repeatgrow.com',
-  accountId: 'acc-1',
-  accountName: 'Taste of Banaras',
-  memberEmail: 'owner@tasteofbanaras.in',
+  kind: 'account',
+  targetId: 'acc-1',
+  targetName: 'Taste of Banaras',
+  targetEmail: 'owner@tasteofbanaras.in',
   startedAt: new Date().toISOString(),
   ...over,
 });
@@ -39,6 +40,11 @@ describe('impersonation cookie', () => {
     expect(decodeImpersonation(encodeImpersonation(s))).toEqual(s);
   });
 
+  it('round-trips a partner impersonation too', () => {
+    const s = state({ kind: 'partner', targetId: 'partner-1', targetName: 'Demo Partner', targetEmail: 'demo-partner@repeatgrow.com' });
+    expect(decodeImpersonation(encodeImpersonation(s))).toEqual(s);
+  });
+
   it('rejects a tampered payload', () => {
     // The whole point: swap in a different account and the signature
     // no longer matches, so the banner cannot be made to name the
@@ -46,7 +52,7 @@ describe('impersonation cookie', () => {
     const encoded = encodeImpersonation(state());
     const [, sig] = encoded.split('.');
     const forged = Buffer.from(
-      JSON.stringify(state({ accountId: 'someone-else', adminUserId: 'not-an-admin' })),
+      JSON.stringify(state({ targetId: 'someone-else', adminUserId: 'not-an-admin' })),
       'utf8'
     ).toString('base64url');
     expect(decodeImpersonation(`${forged}.${sig}`)).toBeNull();
@@ -82,11 +88,11 @@ describe('impersonation cookie', () => {
   };
 
   it('rejects a correctly signed cookie that is missing required fields', () => {
-    // The HMAC passes — but a state with no accountId would render a
+    // The HMAC passes — but a state with no targetId would render a
     // banner naming nothing, and one with no adminUserId would hide who
     // is inside the account.
     expect(decodeImpersonation(signedPayload({ adminUserId: 'admin-1' }))).toBeNull();
-    expect(decodeImpersonation(signedPayload({ accountId: 'acc-1' }))).toBeNull();
+    expect(decodeImpersonation(signedPayload({ targetId: 'acc-1', kind: 'account' }))).toBeNull();
     expect(decodeImpersonation(signedPayload({}))).toBeNull();
   });
 
@@ -101,7 +107,7 @@ describe('impersonation cookie', () => {
     // "not expired".
     expect(
       decodeImpersonation(
-        signedPayload({ adminUserId: 'admin-1', accountId: 'acc-1', startedAt: 'not a date' })
+        signedPayload({ adminUserId: 'admin-1', kind: 'account', targetId: 'acc-1', startedAt: 'not a date' })
       )
     ).toBeNull();
   });

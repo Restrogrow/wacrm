@@ -12,9 +12,10 @@ import { toast } from 'sonner';
 
 interface State {
   impersonating: boolean;
+  kind?: 'account' | 'partner';
   admin_email?: string | null;
-  account_name?: string;
-  member_email?: string | null;
+  target_name?: string;
+  target_email?: string | null;
 }
 
 export function ImpersonationBanner() {
@@ -56,6 +57,8 @@ export function ImpersonationBanner() {
 
   if (!state?.impersonating) return null;
 
+  const isPartner = state.kind === 'partner';
+
   return (
     <div
       role="alert"
@@ -63,10 +66,10 @@ export function ImpersonationBanner() {
     >
       <ShieldAlert className="size-4 shrink-0" />
       <p className="min-w-0 flex-1">
-        <b>Signed in as a customer.</b> You are using{' '}
-        <b>{state.account_name}</b>
-        {state.member_email ? ` (${state.member_email})` : ''} with full access — anything you
-        change here is a real change to their account.
+        <b>{isPartner ? 'Signed in as a partner.' : 'Signed in as a customer.'}</b> You are using{' '}
+        <b>{state.target_name}</b>
+        {state.target_email ? ` (${state.target_email})` : ''} with full access — anything you
+        change here is a real change to their {isPartner ? 'partner account' : 'account'}.
         {state.admin_email ? ` Started by ${state.admin_email}.` : ''}
       </p>
       <button
@@ -76,7 +79,7 @@ export function ImpersonationBanner() {
         className="flex items-center gap-1.5 rounded-lg bg-fuchsia-700 px-3 py-1 text-xs font-semibold text-white hover:bg-fuchsia-800 disabled:opacity-60"
       >
         {leaving ? <Loader2 className="size-3.5 animate-spin" /> : <LogOut className="size-3.5" />}
-        Exit customer account
+        {isPartner ? 'Exit partner account' : 'Exit customer account'}
       </button>
     </div>
   );

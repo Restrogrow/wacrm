@@ -117,9 +117,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     encodeImpersonation({
       adminUserId: admin.userId,
       adminEmail: admin.email,
-      accountId,
-      accountName: account.name,
-      memberEmail: target.email,
+      kind: 'account',
+      targetId: accountId,
+      targetName: account.name,
+      targetEmail: target.email,
       startedAt: new Date().toISOString(),
     }),
     IMPERSONATION_COOKIE_OPTIONS,

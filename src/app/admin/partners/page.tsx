@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 
 import { formatInr, PARTNER_STATUS_LABELS, type PartnerStatus } from '@/lib/partners/program';
 import { listPartners } from '@/lib/partners/server';
+import { LoginAsPartnerButton } from '@/components/admin/login-as-partner-button';
 
 export const metadata: Metadata = {
   title: 'Partners',
@@ -81,6 +82,7 @@ export default async function AdminPartnersPage() {
                 <th className="px-4 py-2.5 text-right font-medium">Owed</th>
                 <th className="px-4 py-2.5 text-right font-medium">Paid</th>
                 <th className="px-4 py-2.5 font-medium">Joined</th>
+                <th className="px-4 py-2.5 font-medium" />
               </tr>
             </thead>
             <tbody className="tabular-nums">
@@ -106,6 +108,9 @@ export default async function AdminPartnersPage() {
                   <td className="px-4 py-2.5 text-right">{formatInr(p.paid)}</td>
                   <td className="text-muted-foreground whitespace-nowrap px-4 py-2.5 text-xs">
                     {new Date(p.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    {p.email && <LoginAsPartnerButton partnerId={p.id} partnerName={p.name} compact />}
                   </td>
                 </tr>
               ))}

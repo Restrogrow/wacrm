@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { BrandMark } from "@/components/brand-mark";
+import { ImpersonationBanner } from "@/components/layout/impersonation-banner";
 
 // Standalone shell for /partner — no sidebar, no workspace chrome, works
 // for a signed-out visitor as well as a signed-in partner. Previously
@@ -27,6 +28,7 @@ export default function PartnerLayout({ children }: { children: ReactNode }) {
           </Link>
         </div>
       </header>
+      <ImpersonationBanner />
       <main className="px-4 py-8 sm:px-6">{children}</main>
     </div>
   );

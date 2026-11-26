@@ -1,15 +1,16 @@
 // ============================================================
-// Platform-admin impersonation ("Login as customer").
+// Platform-admin impersonation ("Login as customer" / "Login as partner").
 //
 // /admin can sign a platform admin straight into a customer's account
-// to reproduce what the customer is seeing. The admin gets the
-// customer's *real* session — full access, same writes the customer
-// could make — because support work routinely means fixing the thing,
-// not just looking at it.
+// — or a partner's — to reproduce what they are seeing. The admin gets
+// the target's *real* session — full access, same writes they could
+// make — because support work routinely means fixing the thing, not
+// just looking at it.
 //
 // That is deliberately a big hammer, so it leaves marks:
-//   * every use writes an `account.impersonated` audit row (who, which
-//     account, when) before the session is handed over;
+//   * every use writes an `account.impersonated` / `partner.impersonated`
+//     audit row (who, which target, when) before the session is handed
+//     over;
 //   * this cookie rides along so the app can show a permanent banner
 //     naming the admin, and offer one click back out.
 //
@@ -26,15 +27,20 @@ export const IMPERSONATION_COOKIE = 'rg_impersonation';
 /** Matches the longest session an admin should need for one support task. */
 export const IMPERSONATION_MAX_AGE_S = 8 * 60 * 60;
 
+export type ImpersonationKind = 'account' | 'partner';
+
 export interface ImpersonationState {
   /** The platform admin who started it. */
   adminUserId: string;
   adminEmail: string | null;
-  /** The account being viewed. */
-  accountId: string;
-  accountName: string;
-  /** Email of the member whose session the admin is using. */
-  memberEmail: string | null;
+  /** What's being viewed — a business account, or a partner. */
+  kind: ImpersonationKind;
+  /** The account or partner id. */
+  targetId: string;
+  /** Account name, or partner name. */
+  targetName: string;
+  /** Email of the session the admin is using (account member, or partner). */
+  targetEmail: string | null;
   startedAt: string;
 }
 
@@ -68,7 +74,7 @@ export function decodeImpersonation(value: string | undefined | null): Impersona
 
   try {
     const state = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as ImpersonationState;
-    if (!state?.adminUserId || !state?.accountId) return null;
+    if (!state?.adminUserId || !state?.targetId || !state?.kind) return null;
     // Belt-and-braces: the cookie's own Max-Age should already have
     // expired it, but don't trust a client-held clock.
     //

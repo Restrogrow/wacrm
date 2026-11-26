@@ -23,6 +23,8 @@ export const AUDIT_ACTIONS = [
   'account.impersonated',
   'account.impersonation_ended',
   'account.fee_changed',
+  'partner.impersonated',
+  'partner.impersonation_ended',
 ] as const
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number]
@@ -48,6 +50,8 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   'account.impersonated': 'Repeat Grow support signed in to this account',
   'account.impersonation_ended': 'Repeat Grow support signed out of this account',
   'account.fee_changed': 'Changed the campaign management fee',
+  'partner.impersonated': 'Repeat Grow support signed in as this partner',
+  'partner.impersonation_ended': 'Repeat Grow support signed out of this partner',
 }
 
 export function auditActionLabel(action: string): string {

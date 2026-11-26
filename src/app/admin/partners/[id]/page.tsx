@@ -9,6 +9,7 @@ import {
   PayoutButton,
   ReferralsAdmin,
 } from '@/components/admin/partner-admin';
+import { LoginAsPartnerButton } from '@/components/admin/login-as-partner-button';
 import { publicOrigin } from '@/lib/public-origin';
 import { formatInr } from '@/lib/partners/program';
 import { getPartner, loadPartnerLedger } from '@/lib/partners/server';
@@ -45,11 +46,16 @@ export default async function AdminPartnerPage({ params }: { params: Promise<{ i
           <ArrowLeft className="size-3.5" />
           Partners
         </Link>
-        <h1 className="text-xl font-bold tracking-tight">{partner.name}</h1>
-        <p className="text-muted-foreground text-sm">
-          Applied {day(partner.created_at)}
-          {partner.approved_at ? ` · approved ${day(partner.approved_at)}` : ''} · {partner.clicks} link opens
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">{partner.name}</h1>
+            <p className="text-muted-foreground text-sm">
+              Applied {day(partner.created_at)}
+              {partner.approved_at ? ` · approved ${day(partner.approved_at)}` : ''} · {partner.clicks} link opens
+            </p>
+          </div>
+          {partner.email && <LoginAsPartnerButton partnerId={partner.id} partnerName={partner.name} />}
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-2">
