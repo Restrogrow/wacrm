@@ -24,7 +24,7 @@ import {
   Wallet,
 } from 'lucide-react'
 
-import { PageHero } from '@/components/layout/page-hero'
+import { IconChip } from '@/components/icon-chip'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -104,13 +104,13 @@ const PLAN_LABEL: Record<string, string> = {
 
 function Stat({ icon: Icon, label, value, sub }: { icon: typeof Users; label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-        <Icon className="size-3.5" />
-        {label}
+    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <IconChip icon={Icon} tone="soft" className="size-10 shrink-0 rounded-xl" />
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="text-xl font-bold tabular-nums">{value}</p>
+        {sub ? <p className="text-xs text-muted-foreground">{sub}</p> : null}
       </div>
-      <p className="mt-1.5 text-xl font-bold tabular-nums">{value}</p>
-      {sub ? <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p> : null}
     </div>
   )
 }
@@ -119,7 +119,7 @@ function Stat({ icon: Icon, label, value, sub }: { icon: typeof Users; label: st
 function LoggedOutPitch() {
   return (
     <div className="grid gap-6 lg:grid-cols-5">
-      <div className="space-y-4 rounded-2xl border border-border bg-card p-5 lg:col-span-3">
+      <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm lg:col-span-3">
         <h3 className="font-semibold">How it works</h3>
         <ol className="space-y-3 text-sm">
           {PROGRAM_POINTS.map((point, i) => (
@@ -132,7 +132,7 @@ function LoggedOutPitch() {
           ))}
         </ol>
       </div>
-      <div className="space-y-4 rounded-2xl border border-border bg-card p-5 lg:col-span-2">
+      <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm lg:col-span-2">
         <h3 className="font-semibold">Ready to start?</h3>
         <p className="text-sm text-muted-foreground">
           Create a partner account (just you — no business signup needed), then apply with a few details about how
@@ -188,7 +188,7 @@ function ApplyForm({ email, onDone }: { email: string | null; onDone: () => void
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
-      <div className="space-y-4 rounded-2xl border border-border bg-card p-5 lg:col-span-2">
+      <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm lg:col-span-2">
         <h3 className="font-semibold">How it works</h3>
         <ol className="space-y-3 text-sm">
           {['Apply below. We review it within 2 working days.', 'Share your personal link with businesses.', ...PROGRAM_POINTS].map(
@@ -204,7 +204,7 @@ function ApplyForm({ email, onDone }: { email: string | null; onDone: () => void
         </ol>
       </div>
 
-      <form onSubmit={submit} className="space-y-4 rounded-2xl border border-border bg-card p-5 lg:col-span-3">
+      <form onSubmit={submit} className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm lg:col-span-3">
         <h3 className="font-semibold">Apply to become a partner</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -306,7 +306,7 @@ function OverviewTab({
 
   return (
     <div className="space-y-6">
-      <section className="space-y-3 rounded-2xl border border-border bg-card p-5">
+      <section className="space-y-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">Your referral link</h3>
           <span className="text-xs text-muted-foreground">
@@ -353,11 +353,11 @@ function OverviewTab({
           )}
         </div>
         {recent.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+          <p className="rounded-2xl border border-border bg-card p-5 shadow-sm text-sm text-muted-foreground">
             No sign-ups yet. Share your link to get started.
           </p>
         ) : (
-          <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
+          <ul className="divide-y divide-border rounded-2xl border border-border bg-card shadow-sm">
             {recent.map((r) => (
               <li key={r.account_id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
                 <div className="min-w-0">
@@ -379,11 +379,11 @@ function ClientsTab({ referrals }: { referrals: Referral[] }) {
     <section className="space-y-3">
       <h3 className="text-sm font-semibold">Your clients</h3>
       {referrals.length === 0 ? (
-        <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-border bg-card p-5 shadow-sm text-sm text-muted-foreground">
           No sign-ups yet. Share your link to get started.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+        <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
           <table className="w-full text-sm">
             <thead className="text-left text-xs text-muted-foreground">
               <tr className="border-b border-border">
@@ -425,11 +425,11 @@ function CommissionsTab({ commissions }: { commissions: Commission[] }) {
     <section className="space-y-3">
       <h3 className="text-sm font-semibold">Commissions</h3>
       {commissions.length === 0 ? (
-        <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-border bg-card p-5 shadow-sm text-sm text-muted-foreground">
           Commission appears here when your clients pay.
         </p>
       ) : (
-        <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
+        <ul className="divide-y divide-border rounded-2xl border border-border bg-card shadow-sm">
           {commissions.map((c) => (
             <li key={c.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
               <div className="min-w-0">
@@ -458,9 +458,9 @@ function PayoutsTab({ payouts }: { payouts: Payout[] }) {
     <section className="space-y-3">
       <h3 className="text-sm font-semibold">Payouts</h3>
       {payouts.length === 0 ? (
-        <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">No payouts yet.</p>
+        <p className="rounded-2xl border border-border bg-card p-5 shadow-sm text-sm text-muted-foreground">No payouts yet.</p>
       ) : (
-        <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
+        <ul className="divide-y divide-border rounded-2xl border border-border bg-card shadow-sm">
           {payouts.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
               <div className="min-w-0">
@@ -535,7 +535,7 @@ function SettingsTab({ partner, onSaved }: { partner: Partner; onSaved: () => vo
 
   return (
     <div className="space-y-6">
-      <section className="space-y-4 rounded-2xl border border-border bg-card p-5">
+      <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
         <h3 className="text-sm font-semibold">Your profile</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -567,7 +567,7 @@ function SettingsTab({ partner, onSaved }: { partner: Partner; onSaved: () => vo
         </div>
       </section>
 
-      <section className="space-y-3 rounded-2xl border border-border bg-card p-5">
+      <section className="space-y-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
         <h3 className="text-sm font-semibold">Where we send your money</h3>
         <div className="grid gap-3 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
           <select
@@ -601,39 +601,54 @@ function SettingsTab({ partner, onSaved }: { partner: Partner; onSaved: () => vo
 
 function PartnerDashboard({ data, reload }: { data: PortalData; reload: () => void }) {
   const [tab, setTab] = useState<TabId>('overview')
+  const partner = data.partner!
   const referrals = data.referrals ?? []
   const commissions = data.commissions ?? []
   const payouts = data.payouts ?? []
+  const initial = partner.name.charAt(0).toUpperCase() || 'P'
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
-      <nav className="flex gap-1.5 overflow-x-auto pb-1 lg:w-48 lg:shrink-0 lg:flex-col lg:overflow-visible lg:pb-0">
-        {TABS.map((t) => {
-          const Icon = t.icon
-          const active = tab === t.id
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-                active
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              <Icon className="size-4 shrink-0" />
-              {t.label}
-            </button>
-          )
-        })}
-      </nav>
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+      <aside className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-4 shadow-sm lg:w-56 lg:shrink-0">
+        <div className="flex items-center gap-3 border-b border-border px-1 pb-4">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+            {initial}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">{partner.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{partner.commission_rate}% commission</p>
+          </div>
+        </div>
+
+        <nav className="flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
+          {TABS.map((t) => {
+            const Icon = t.icon
+            const active = tab === t.id
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                aria-current={active ? 'page' : undefined}
+                className={`group flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                  active
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <Icon className={`size-4 shrink-0 transition-transform ${!active && 'group-hover:scale-110'}`} />
+                {t.label}
+              </button>
+            )
+          })}
+        </nav>
+      </aside>
       <div className="min-w-0 flex-1">
         {tab === 'overview' && <OverviewTab data={data} onSeeClients={() => setTab('clients')} />}
         {tab === 'clients' && <ClientsTab referrals={referrals} />}
         {tab === 'commissions' && <CommissionsTab commissions={commissions} />}
         {tab === 'payouts' && <PayoutsTab payouts={payouts} />}
-        {tab === 'settings' && <SettingsTab partner={data.partner!} onSaved={reload} />}
+        {tab === 'settings' && <SettingsTab partner={partner} onSaved={reload} />}
       </div>
     </div>
   )
@@ -669,23 +684,31 @@ export default function PartnerPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <PageHero
-        icon={Handshake}
-        title="Partner program"
-        description="Bring businesses to Repeat Grow and earn a share of everything they pay."
-        badge={
-          status ? (
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-              {PARTNER_STATUS_LABELS[status]}
-            </span>
-          ) : undefined
-        }
-      />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--rail)] via-primary to-emerald-400 p-6 text-white shadow-lg sm:p-7">
+        <div className="pointer-events-none absolute -top-16 -right-16 size-64 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-20 left-1/3 size-56 rounded-full bg-white/10 blur-3xl" />
+        <div className="relative flex flex-wrap items-center gap-4">
+          <IconChip icon={Handshake} tone="solid" className="size-12 shrink-0 rounded-2xl bg-white/15 text-white shadow-none" />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight">Partner program</h1>
+              {status ? (
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">
+                  {PARTNER_STATUS_LABELS[status]}
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-1 max-w-[60ch] text-sm text-white/80">
+              Bring businesses to Repeat Grow and earn a share of everything they pay.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {loggedOut ? (
         <LoggedOutPitch />
       ) : error ? (
-        <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-border bg-card p-5 shadow-sm text-sm text-muted-foreground">
           Could not load the partner program.{' '}
           <button className="text-primary underline" onClick={() => void load()}>
             Try again
