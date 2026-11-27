@@ -91,8 +91,17 @@
     "postcss": "^8.5.10",
     "ip-address": "^10.1.1",
     "fast-uri": "^3.1.2",
-    "hono": "^4.12.25",
+    "hono": "^4.13.23",
+    "@hono/node-server": "^2.1.11",
+    "express-rate-limit": "^8.7.5",
+    "glob": "^14.0.2",
     "js-yaml": "^4.2.0",
-    "@babel/core": "^7.29.6"
+    "@babel/core": "^7.29.6",
+    "@ts-morph/common": {
+      "minimatch": "^11.0.1"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.1"
+    }
   }
 }
