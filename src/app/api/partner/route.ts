@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/flows/admin-client'
 import { publicOrigin } from '@/lib/public-origin'
 import { PAYOUT_METHODS } from '@/lib/partners/program'
-import { createApplication, getPartnerByUser, loadPartnerLedger, type PartnerRow } from '@/lib/partners/server'
+import { createApplication, getPartnerByUser, loadPartnerLedger, publicPartner } from '@/lib/partners/server'
 
 /**
  * The signed-in user's partner page.
@@ -28,12 +28,6 @@ async function currentUser() {
 
 const text = (v: unknown, max: number) =>
   typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null
-
-function publicPartner(p: PartnerRow) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { admin_note, user_id, ...rest } = p
-  return rest
-}
 
 export async function GET() {
   const user = await currentUser()

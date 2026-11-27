@@ -89,6 +89,12 @@ export async function getPartnerByUser(userId: string): Promise<PartnerRow | nul
   return data ? toPartner(data) : null;
 }
 
+export function publicPartner(p: PartnerRow) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { admin_note, user_id, ...rest } = p;
+  return rest;
+}
+
 export async function getPartner(id: string): Promise<PartnerRow | null> {
   const { data, error } = await supabaseAdmin()
     .from('partners')
